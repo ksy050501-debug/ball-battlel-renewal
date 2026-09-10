@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v11</title>
+  <title>볼배틀 리뉴얼 v12</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v11</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v12</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1055,13 +1055,13 @@
     // 기존 스킬 처리 분기는 엔진 호환성을 위해 보존되며 해당 ID가 없으면 활성화되지 않는다.
     const characters = [
       { id: "lisa", name: "리사", mark: "♫", role: "전사", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
-        skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 → 록 10초 + 폭주 4초", desc: "숙녀는 공격하지 않는다. 록은 최근접 적 방향 음파, 폭주는 조금 넓은 음파(190)와 빠른 연주. 게이지 소진 시 완전연소." },
+        skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 또는 5초 무피격 → 인내 상승", desc: "숙녀는 공격하지 않는다. 오래 아무 일도 없으면 따분함으로 인내가 오른다. 록은 최근접 적 방향 음파, 마지막 4초는 폭주." },
       { id: "iron_mask", name: "철가면", mark: "Fe", role: "전사", color: "#dc2626", hp: 30, attack: 10, speed: 2.7, range: 160,
         skillName: "자비스 슈트", condition: "보호막 70 · 파괴 후 8초 재장착(50)", desc: "리펄서와 부스터. 슈트가 깨지면 무능력 상태, 재장착은 워머신·헐크버스터·마크42 중 하나." },
       { id: "tano", name: "타노", mark: "✦", role: "전사", color: "#9333ea", hp: 240, attack: 8, speed: 2.7, range: 80,
         skillName: "인피니티 스톤", condition: "10초마다 다음 스톤 · 소울 마지막", desc: "떠다니다 스톤에 닿으면 획득. 6개 완성 시 핑거플립, 이후 스톤 소실과 자해를 거쳐 재수집." },
       { id: "captain", name: "캡틴", mark: "★", role: "수호자", color: "#2563eb", hp: 190, attack: 9, speed: 2.65, range: 190,
-        skillName: "수호의 방패", condition: "6초마다 투척 · 충돌 5회 후 회수", desc: "방패 보유 중 피해를 줄이고 적과 충돌하면 방패로 공격한다. 투척 중에는 피해 감소가 사라지고 충돌 시 강펀치로 공격한다." },
+        skillName: "수호의 방패", condition: "6초마다 투척 · 비행 중 캐치 시 즉시 재투척", desc: "넓은 범위로 방패를 회수한다. 비행 중 잡으면 바로 다시 던지고, 5회 반사 후 멈춘 방패를 잡으면 6초 뒤 던진다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -1170,9 +1170,9 @@
     }
 
 
-    const LISA = { patience: 40, duration: 14, rageDuration: 4, rageRange: 190, period: 1.25, ragePeriod: 0.55, power: 9, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
+    const LISA = { patience: 40, idleDelay: 5, idleGain: 2, duration: 14, rageDuration: 4, rageRange: 190, period: 1.25, ragePeriod: 0.55, power: 9, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
     function initLisa(f) {
-      f.lisa = { mode: "lady", patience: 0, rock: 0, walls: 0, attack: 0, riff: 0, waves: [], speech: "", speechTime: 0 };
+      f.lisa = { mode: "lady", patience: 0, idle: 0, rock: 0, walls: 0, attack: 0, riff: 0, waves: [], speech: "", speechTime: 0 };
     }
     function lisaSay(f, text) {
       if (fastSimMode) return;
@@ -1188,13 +1188,15 @@
     }
     function enterLisaRock(f) {
       const l = f.lisa;
-      l.mode = "rock"; l.rock = 100; l.patience = 0; l.walls = 0; l.attack = 0.2; l.riff = 0;
+      l.mode = "rock"; l.rock = 100; l.patience = 0; l.idle = 0; l.walls = 0; l.attack = 0.2; l.riff = 0;
       lisaVelocity(f, LISA.speed);
       lisaSay(f, "이 불연성쓰레기가아!!!");
       spawnBlast(f.x, f.y, 70, "#f472b6");
     }
     function lisaOnDamage(f, amount) {
-      if (!f.lisa || f.lisa.mode !== "lady" || amount <= 0 || f.hp <= 0) return;
+      if (!f.lisa || amount <= 0 || f.hp <= 0) return;
+      f.lisa.idle = 0;
+      if (f.lisa.mode !== "lady") return;
       f.lisa.patience = Math.min(LISA.patience, f.lisa.patience + amount);
       if (f.lisa.patience >= LISA.patience) enterLisaRock(f);
     }
@@ -1243,10 +1245,17 @@
       if (!l) return;
       l.waves.forEach(w => w.life -= dt); l.waves = l.waves.filter(w => w.life > 0);
       l.speechTime = Math.max(0, l.speechTime - dt);
-      if (l.mode === "lady") return;
+      if (l.mode === "lady") {
+        l.idle += dt;
+        if (l.idle >= LISA.idleDelay) {
+          l.patience = Math.min(LISA.patience, l.patience + LISA.idleGain * dt);
+          if (l.patience >= LISA.patience) enterLisaRock(f);
+        }
+        return;
+      }
       l.rock = Math.max(0, l.rock - dt * 100 / LISA.duration);
       if (l.rock <= 0) {
-        l.mode = "lady"; l.patience = 0; l.walls = 0; l.attack = 0;
+        l.mode = "lady"; l.patience = 0; l.idle = 0; l.walls = 0; l.attack = 0;
         lisaVelocity(f, LISA.speed);
         lisaSay(f, "완.전.연.소!!!!");
         return;
@@ -1348,7 +1357,7 @@
       const angle = Math.atan2(target.y - f.y, target.x - f.x);
       f.captain.hasShield = false;
       captainShields.push({ owner: f, x: f.x, y: f.y, vx: Math.cos(angle) * CAPTAIN.shieldSpeed, vy: Math.sin(angle) * CAPTAIN.shieldSpeed,
-        r: 12, hits: 0, stopped: false, hitCd: new Map(), spin: 0 });
+        r: 12, hits: 0, stopped: false, hitCd: new Map(), spin: 0, age: 0 });
       spawnFloatingText(f.x, f.y - 34, "방패 투척!", "#93c5fd");
       playSound("magic", 0.65);
     }
@@ -1369,10 +1378,11 @@
     }
     function updateCaptainShields(dt) {
       captainShields.forEach(o => {
-        o.spin += dt * 14;
+        o.spin += dt * 14; o.age += dt;
         for (const [id, cd] of o.hitCd) { const next = cd - dt; if (next <= 0) o.hitCd.delete(id); else o.hitCd.set(id, next); }
+        const pickupRange = o.r + o.owner.r + 20;
         if (o.stopped) {
-          if (o.owner.alive && dist(o, o.owner) <= o.r + o.owner.r) {
+          if (o.owner.alive && dist(o, o.owner) <= pickupRange) {
             o.owner.captain.hasShield = true; o.owner.captain.throwCd = CAPTAIN.throwPeriod;
             o.collected = true; spawnFloatingText(o.owner.x, o.owner.y - 34, "방패 회수", "#bfdbfe");
           }
@@ -1396,6 +1406,11 @@
             spawnHitFlash(o.x, o.y, "#bfdbfe", 22);
           }
           if (collision && ++o.hits >= 5) { o.stopped = true; o.vx = 0; o.vy = 0; spawnFloatingText(o.x, o.y - 18, "방패 정지", "#e2e8f0"); }
+        }
+        if (!o.stopped && !o.collected && o.age >= 0.18 && o.owner.alive && dist(o, o.owner) <= pickupRange) {
+          o.owner.captain.hasShield = true; o.collected = true;
+          spawnFloatingText(o.owner.x, o.owner.y - 34, "캐치 · 재투척!", "#bfdbfe");
+          throwCaptainShield(o.owner);
         }
       });
       captainShields = captainShields.filter(o => !o.collected && o.owner.alive);
@@ -1492,7 +1507,7 @@
       const a = Math.atan2(enemy.y - f.y, enemy.x - f.x) + angleOffset;
       if (kind === "beam") {
         f.iron.beam = { angle: a, age: 0, hitIds: new Set(), path: ironBeamPath(f, a) };
-        playSound("magic", 0.6);
+        playSound("beam", 0.9);
         return;
       }
       const speed = kind === "missile" ? 230 : 500;
@@ -1787,7 +1802,10 @@
       }
       if (t.stones.includes("reality")) {
         t.reality -= dt;
-        if (t.reality <= 0) { t.hidden = TANO.realityDuration; t.reality = TANO.realityPeriod; spawnParticles(f.x, f.y, "#ef4444", 35); }
+        if (t.reality <= 0) {
+          t.hidden = TANO.realityDuration; t.reality = TANO.realityPeriod; f.punchHold = 0;
+          fighters.forEach(e => { if (e.punchImpact?.source === f) { e.punchImpact = null; e.punchHold = 0; } });
+        }
       }
       if (t.snapped) {
         t.lossClock -= dt;
@@ -1966,6 +1984,13 @@
         case "magic":
           tone(880, 0.08, "sine", 0.075 * s, 0, 1320);
           tone(1320, 0.10, "triangle", 0.04 * s, 0.035, 1760);
+          break;
+        case "beam":
+          tone(150, 0.62, "sawtooth", 0.075 * s, 0, 72);
+          tone(310, 0.58, "sawtooth", 0.05 * s, 0.015, 115);
+          tone(760, 0.48, "triangle", 0.035 * s, 0.04, 240);
+          noise(0.60, 0.055 * s, 0, 1350, "bandpass");
+          noise(0.42, 0.03 * s, 0.08, 4200, "highpass");
           break;
         case "fireball":
           tone(180, 0.20, "sawtooth", 0.06 * s, 0, 80);
@@ -2368,6 +2393,7 @@
     }
 
     const patchNotes = [
+      "v12: 캡틴 방패 회수 범위 확대. 비행 중 캐치하면 쿨 없이 즉시 재투척, 정지 후 회수만 6초 쿨. 리사는 5초 무피격 뒤 초당 인내2 상승. 철가면 리펄서 전용 지속 빔음 적용. 타노 리얼리티 은신 중 잔상 제거·파워공격 차단.",
       "v11: 캡틴 방패 밀어내기/강펀치와 헐크버스터 강타를 피격 반격에서 직접 충돌 공격으로 변경. 타노 파워스톤처럼 서로 부딪히면 발동.",
       "v10: 리사 스킬 대사의 한글 음성 합성을 제거. 화면 대사·기타·드럼·베이스 효과음은 유지.",
       "v9: 캡틴 추가. 6초마다 방패10 투척, 적·벽 총 5회 반사 후 정지·접촉 회수. 방패 보유 중 피해35% 감소·피격 반격5, 투척 중 피해 감소 없이 강펀치 반격9.",
@@ -2414,8 +2440,8 @@
     }
 
     function characterDamageInfo(c) {
-      if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 9", tick: "방패 6초 / 적·벽 총 5회 반사", tip: "방패 보유 중 일반 피해 35% 감소. 적과 충돌 시 방패 밀어내기 5와 넉백. 투척 중에는 피해 감소가 사라지고 충돌 시 강펀치 9와 강한 넉백. 5회 반사 후 멈춘 방패에 닿으면 회수." };
-      if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 / 록 14초 / 공격 1.25초(폭주 0.55초)",tip:"숙녀는 무공격. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀. 트윈테일·기타는 피격 판정에 영향 없음."};
+      if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 9", tick: "방패 6초 / 적·벽 총 5회 반사", tip: "회수 범위는 몸보다 넓다. 비행 중 방패를 잡으면 즉시 다시 던지며, 5회 반사 후 정지한 방패를 잡았을 때만 6초 쿨이 돈다. 보유 중 일반 피해 35% 감소." };
+      if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
       if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 충돌강타8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 헐크버스터는 적과 충돌하면 강타8·넉백. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
       if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 가속 8초·3초 / 정지 10초·1.5초 / 무적 12초·2.5초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백(쿨 0.8초). 타임은 획득 시 10초 전 위치와 HP로 회복(현재 HP보다 낮아지지 않음). 소울 마지막. 핑거플립 후 2초마다 스톤 1개 소실·자해 10, 모두 잃으면 재수집." };
       const data = {
@@ -3031,7 +3057,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v11`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v12`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3057,7 +3083,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v11`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v12`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -9325,8 +9351,8 @@
       if (f.lisa) { drawLisaCharacter(f); return; }
       if (f.captain) { drawCaptainCharacter(f); return; }
       if (f.tano) {
-        if (f.tano.hidden > 0 || f.tano.reform > 0) drawTanoDust(f);
         if (f.tano.hidden > 0) return;
+        if (f.tano.reform > 0) drawTanoDust(f);
         f.tano.stones.forEach((id, i) => {
           const stone = stoneTypes.find(s => s.id === id), a = battleTime + i * Math.PI / 3;
           drawGlowCircle(f.x + Math.cos(a) * 27, f.y + Math.sin(a) * 27, 4, stone.color, 0.9);
