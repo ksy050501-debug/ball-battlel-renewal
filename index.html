@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v6</title>
+  <title>볼배틀 리뉴얼 v7</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v6</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v7</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1055,7 +1055,7 @@
     // 기존 스킬 처리 분기는 엔진 호환성을 위해 보존되며 해당 ID가 없으면 활성화되지 않는다.
     const characters = [
       { id: "lisa", name: "리사", mark: "♫", role: "전사", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
-        skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 → 록 14초 / 벽 4회 → 폭주", desc: "숙녀는 공격하지 않는다. 록은 전방 음파, 폭주는 가속과 빠른 연주. 게이지 소진 시 완전연소." },
+        skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 → 록 14초 / 벽 4회 → 폭주", desc: "숙녀는 공격하지 않는다. 록은 최근접 적 방향 음파, 폭주는 벽까지 닿는 음파와 빠른 연주. 게이지 소진 시 완전연소." },
       { id: "iron_mask", name: "철가면", mark: "Fe", role: "전사", color: "#dc2626", hp: 30, attack: 10, speed: 2.7, range: 160,
         skillName: "자비스 슈트", condition: "보호막 70 · 파괴 후 8초 재장착(50)", desc: "리펄서와 부스터. 슈트가 깨지면 무능력 상태, 재장착은 워머신·헐크버스터·마크42 중 하나." },
       { id: "tano", name: "타노", mark: "✦", role: "전사", color: "#9333ea", hp: 240, attack: 8, speed: 2.7, range: 80,
@@ -1230,16 +1230,18 @@
     }
     function lisaConeTouches(f, e, angle) {
       const d = dist(f, e);
-      if (d > LISA.range + e.r) return false;
+      if (f.lisa.mode !== "rage" && d > LISA.range + e.r) return false;
       if (d <= e.r) return true;
       const delta = Math.atan2(Math.sin(Math.atan2(e.y - f.y, e.x - f.x) - angle), Math.cos(Math.atan2(e.y - f.y, e.x - f.x) - angle));
       return Math.abs(delta) <= LISA.halfAngle + Math.asin(Math.min(1, e.r / d));
     }
     function lisaAttack(f) {
       if (!f.alive || !f.lisa || f.lisa.mode === "lady") return;
-      const angle = Math.atan2(f.vy, f.vx);
+      const target = nearestEnemy(f).enemy;
+      if (!target) return;
+      const angle = Math.atan2(target.y - f.y, target.x - f.x);
       enemiesOf(f).filter(e => lisaConeTouches(f, e, angle)).forEach(e => damage(e, LISA.power, f, "파워코드 음파"));
-      if (!fastSimMode) f.lisa.waves.push({ x: f.x, y: f.y, angle, life: 0.4, rage: f.lisa.mode === "rage" });
+      if (!fastSimMode) f.lisa.waves.push({ x: f.x, y: f.y, angle, life: 0.4, rage: f.lisa.mode === "rage", range: f.lisa.mode === "rage" ? Math.hypot(arena.size, arena.size) : LISA.range });
       lisaPowerChord(f);
     }
     function updateLisa(f, dt) {
@@ -1261,8 +1263,8 @@
     }
     function drawLisaWaves() {
       fighters.forEach(f => f.lisa?.waves.forEach(w => {
-        ctx.save(); ctx.translate(w.x,w.y);ctx.rotate(w.angle);
-        const progress = 1 - w.life / 0.4, radius = LISA.range * (0.2 + progress * 0.8);
+        ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip(); ctx.translate(w.x,w.y);ctx.rotate(w.angle);
+        const progress = 1 - w.life / 0.4, radius = w.range * (0.2 + progress * 0.8);
         ctx.globalAlpha = w.life / 0.4;
         ctx.fillStyle = w.rage ? "rgba(251,113,133,.18)" : "rgba(244,114,182,.12)";
         ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,radius,-LISA.halfAngle,LISA.halfAngle);ctx.closePath();ctx.fill();
@@ -1330,7 +1332,7 @@
     }
 
 
-    const IRON = { hp: 30, shield: 70, reShield: 50, rebuild: 8, beamPeriod: 3, beamDamage: 10,
+    const IRON = { hulkDamage: 8, hulkCooldown: 0.6, hulkKnock: 650, hp: 30, shield: 70, reShield: 50, rebuild: 8, beamPeriod: 3, beamDamage: 10,
       dashPeriod: 8, dashDamage: 12, missilePeriod: 5.5, missileDamage: 8, fragmentDamage: 4, fragmentShield: 4 };
     const ironSuitNames = { basic: "기본 슈트", war: "워머신", hulk: "헐크버스터", mark42: "마크42", naked: "토니 · 슈트 없음" };
     let ironObjects = [];
@@ -1367,15 +1369,25 @@
       spawnFloatingText(f.x, f.y - 34, "슈트 파괴 · 자비스 호출", "#fbbf24");
       log("철가면 슈트 파괴 · " + IRON.rebuild + "초 후 재장착", "슈트");
     }
+    function applyIronImpulse(target, impulse) {
+      if (!target.alive || target.tano?.hidden > 0) return;
+      // 이미 더 강한 파워 넉백 중이면 그 궤적과 벽 추가 피해를 유지한다.
+      if (target.punchFlight > 0 && Math.hypot(target.vx, target.vy) > Math.hypot(impulse.vx, impulse.vy)) return;
+      target.vx = impulse.vx; target.vy = impulse.vy;
+      target.punchSource = null; target.punchFlight = impulse.duration;
+    }
     function ironKnock(source, target, speed = 540) {
       if (!target?.alive || target.tano?.hidden > 0) return;
       const dx = target.x - source.x, dy = target.y - source.y, d = Math.hypot(dx, dy) || 1;
-      target.vx = (d === 1 && dx === 0 && dy === 0 ? 1 : dx / d) * speed;
-      target.vy = dy / d * speed;
-      target.punchImpact = null; target.punchHold = 0; target.punchSource = null; target.punchFlight = 0.28;
+      const impulse = { vx: (d === 1 && dx === 0 && dy === 0 ? 1 : dx / d) * speed, vy: dy / d * speed, duration: 0.28 };
+      // 타격 예약과 히트스톱을 지우지 않고 끝난 뒤 넉백을 적용한다.
+      if (target.punchHold > 0 || target.punchImpact) {
+        const old = target.queuedIronImpulse;
+        if (!old || Math.hypot(impulse.vx, impulse.vy) > Math.hypot(old.vx, old.vy)) target.queuedIronImpulse = impulse;
+      } else applyIronImpulse(target, impulse);
       spawnBlast(target.x, target.y, 45, "#7dd3fc");
     }
-    function absorbIronDamage(f, amount, source) {
+    function absorbIronDamage(f, amount, source, reason = "공격") {
       const i = f.iron;
       if (!i || i.suit === "naked" || f.shieldHp <= 0 || amount <= 0) return { remaining: amount, absorbed: 0 };
       const absorbed = Math.min(f.shieldHp, Math.max(0, Math.round(amount)));
@@ -1384,8 +1396,10 @@
       f.hitsTaken++; f.hitsTakenSkill++;
       if (source && source !== f) { source.damageDealt = (source.damageDealt || 0) + absorbed; source.hitsDealt++; source.hitsDealtSkill++; }
       spawnFloatingText(f.x, f.y - f.r - 24, "슈트 -" + absorbed, "#7dd3fc");
-      if (i.suit === "hulk" && i.reactionCd <= 0 && source?.alive && areEnemies(f, source)) {
-        i.reactionCd = 0.6; ironKnock(f, source, 650);
+      if (i.suit === "hulk" && i.reactionCd <= 0 && source?.alive && areEnemies(f, source) && reason !== "헐크버스터 반격") {
+        i.reactionCd = IRON.hulkCooldown;
+        damage(source, IRON.hulkDamage, f, "헐크버스터 반격");
+        ironKnock(f, source, IRON.hulkKnock);
         spawnFloatingText(f.x, f.y - 45, "충격 반발", "#fca5a5");
       }
       if (i.suit === "mark42" && i.fragmentCd <= 0) {
@@ -1589,6 +1603,10 @@
           spawnParticles(f.x, f.y, "#e9d5ff", 18);
           screenShake = Math.max(screenShake, 0.25);
           playSound("explosion", 0.6);
+        }
+        if (f.punchHold <= 0 && f.queuedIronImpulse) {
+          const impulse = f.queuedIronImpulse; f.queuedIronImpulse = null;
+          applyIronImpulse(f, impulse);
         }
         return true;
       }
@@ -2268,6 +2286,7 @@
     }
 
     const patchNotes = [
+      "v7: 헐크버스터 반격 피해8 추가(쿨0.6초). 넉백이 예약 타격을 지우지 않도록 수정·상호 피격 및 반격 재귀 방지. 리사 음파는 최근접 적 조준, 폭주 시 사거리 제한 없이 벽까지.",
       "v6: 리사 추가. 체력 180·피해 40마다 록 14초, 전방 90도 음파 9(1.25초). 벽 4회 폭주: 이속 1.6배·음파 0.55초·드럼/베이스 추가. 완전연소 후 숙녀 복귀. 트윈테일·분홍 기타와 타노 외형 적용.",
       "v5: 리펄서를 몸에 연결된 폭 12 빔으로 변경. 발사각 고정·자동 추적 없음, 0.45초 예고 후 0.55초 발사·대상별 1회 피해 10. 이동 시 시작점과 2회 반사 경로 갱신. 슈트 4종과 토니 원형 외형 구분.",
       "v4: 철가면 추가. 체력 30·보호막 70, 파괴 후 8초 뒤 무작위 특별 슈트·보호막 50. 기본/마크42 리펄서 10(벽 반사 2회), 부스터 12. 워머신 유도 폭발 미사일 8×3, 헐크버스터 피격 넉백, 마크42 파편 피해/회복 4.",
@@ -2309,8 +2328,8 @@
     }
 
     function characterDamageInfo(c) {
-      if (c.id==="lisa") return {damage:"전방 90도 음파 9 · 사거리 150",tick:"인내: 받은 피해 40 / 록 14초 / 공격 1.25초(폭주 0.55초)",tip:"숙녀는 무공격. 록에서 벽 충돌 4회 시 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀. 트윈테일·기타는 피격 판정에 영향 없음."};
-      if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
+      if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주 벽까지",tick:"인내: 받은 피해 40 / 록 14초 / 공격 1.25초(폭주 0.55초)",tip:"숙녀는 무공격. 록에서 벽 충돌 4회 시 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀. 트윈테일·기타는 피격 판정에 영향 없음."};
+      if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 반격8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
       if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 가속 8초·3초 / 정지 10초·1.5초 / 무적 12초·2.5초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백(쿨 0.8초). 타임은 획득 시 10초 전 위치와 HP로 회복(현재 HP보다 낮아지지 않음). 소울 마지막. 핑거플립 후 2초마다 스톤 1개 소실·자해 10, 모두 잃으면 재수집." };
       const data = {
         flame_tori: {
@@ -2923,7 +2942,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v6`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v7`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -2949,7 +2968,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v6`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v7`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3442,7 +3461,7 @@
           extraTextHtml:'<div class="status-skill-label">'+(lady?"공격 없음":l.mode==="rage"?"이속 ×1.6 · 0.55초마다 음파":"벽 충돌 "+l.walls+"/4 · 1.25초마다 음파")+'</div>'};
       }
       if (f.iron) return { ratio: f.iron.suit === "naked" ? clamp(1 - f.iron.rebuild / IRON.rebuild, 0, 1) : f.shieldHp / f.shieldMax, className: "", text: ironSuitNames[f.iron.suit] + (f.iron.suit === "naked" ? " · 자비스 " + Math.ceil(f.iron.rebuild) + "초" : " · 보호막 " + Math.ceil(f.shieldHp) + "/" + f.shieldMax),
-        extraTextHtml: '<div class="status-skill-label">' + (f.iron.suit === "hulk" ? "피격 반발 · 리펄서/부스터 봉인" : f.iron.suit === "naked" ? "공격 불가" : (f.iron.suit === "war" ? "미사일 " : "리펄서 ") + Math.ceil(f.iron.attackCd) + "초 · 부스터 " + Math.ceil(f.iron.dashCd) + "초") + '</div>' };
+        extraTextHtml: '<div class="status-skill-label">' + (f.iron.suit === "hulk" ? "피격 반격 8·넉백 · 리펄서/부스터 봉인" : f.iron.suit === "naked" ? "공격 불가" : (f.iron.suit === "war" ? "미사일 " : "리펄서 ") + Math.ceil(f.iron.attackCd) + "초 · 부스터 " + Math.ceil(f.iron.dashCd) + "초") + '</div>' };
       if (f.tano) return { ratio: f.tano.stones.length / 6, className: "", text: "스톤 " + f.tano.stones.length + "/6 · " + (f.tano.snapped ? "소실 " + Math.ceil(f.tano.lossClock) + "초" : f.tano.spawned === 5 && f.tano.stones.length < 5 ? "남은 스톤 획득 대기" : Math.ceil(f.tano.next) + "초 후 등장"),
         extraTextHtml: '<div class="status-skill-label">' + stoneTypes.filter(s => f.tano.stones.includes(s.id)).map(s => s.name).join(" · ") + (f.tano.hidden > 0 ? " · 무적" : "") + '</div>' };
       const info = {
@@ -4886,6 +4905,7 @@
       target.hp = target.maxHp;
       target.alive = true;
       target.punchFlight = 0;
+      target.queuedIronImpulse = null;
       target.punchSource = null;
       target.punchImpact = null;
       target.punchHold = 0;
@@ -4908,7 +4928,7 @@
       if (!target || !target.alive || (target.dodoVoid || 0) > 0 || target.tano?.hidden > 0) return 0;
       if (tryHeroLeonGuardBlock(target, reason)) return 0;
       if (target.iron) {
-        const armor = absorbIronDamage(target, amount, source);
+        const armor = absorbIronDamage(target, amount, source, reason);
         amount = armor.remaining;
         if (amount <= 0) return armor.absorbed;
       }
@@ -5136,7 +5156,7 @@
       if (!target || !target.alive || (target.tano?.hidden > 0 && reason !== "스톤 소실")) return 0;
       if (tryHeroLeonGuardBlock(target, reason)) return 0;
       if (target.iron) {
-        const armor = absorbIronDamage(target, amount, source);
+        const armor = absorbIronDamage(target, amount, source, reason);
         amount = armor.remaining;
         if (amount <= 0) return armor.absorbed;
       }
