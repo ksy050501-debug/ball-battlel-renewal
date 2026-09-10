@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v4</title>
+  <title>볼배틀 리뉴얼 v5</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v4</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v5</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1061,6 +1061,111 @@
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
+    function ironBeamPath(f, angle) {
+      const dx0 = Math.cos(angle), dy0 = Math.sin(angle);
+      let dx = dx0, dy = dy0, x = clamp(f.x + dx * f.r, arena.x + 0.01, arena.x2 - 0.01),
+        y = clamp(f.y + dy * f.r, arena.y + 0.01, arena.y2 - 0.01);
+      const segments = [];
+      for (let bounce = 0; bounce <= 2; bounce++) {
+        const tx = Math.abs(dx) < 1e-9 ? Infinity : ((dx > 0 ? arena.x2 : arena.x) - x) / dx;
+        const ty = Math.abs(dy) < 1e-9 ? Infinity : ((dy > 0 ? arena.y2 : arena.y) - y) / dy;
+        const distance = Math.max(0, Math.min(tx, ty));
+        const endX = x + dx * distance, endY = y + dy * distance;
+        segments.push({ x, y, x2: endX, y2: endY });
+        if (Math.abs(tx - distance) < 0.001) dx *= -1;
+        if (Math.abs(ty - distance) < 0.001) dy *= -1;
+        x = endX + dx * 0.01; y = endY + dy * 0.01;
+      }
+      return segments;
+    }
+    function ironBeamTouches(segment, f, width = 12) {
+      const dx = segment.x2 - segment.x, dy = segment.y2 - segment.y;
+      const t = clamp(((f.x - segment.x) * dx + (f.y - segment.y) * dy) / (dx * dx + dy * dy || 1), 0, 1);
+      return Math.hypot(f.x - segment.x - t * dx, f.y - segment.y - t * dy) <= f.r + width / 2;
+    }
+    function updateIronBeams(dt) {
+      fighters.forEach(f => {
+        const cast = f.iron?.beam;
+        if (!cast) return;
+        if (!f.alive || !["basic", "mark42"].includes(f.iron.suit)) { f.iron.beam = null; return; }
+        cast.age += dt;
+        if (cast.age > 1.0) { f.iron.beam = null; return; }
+        cast.path = ironBeamPath(f, cast.angle);
+        if (cast.age < 0.45) return;
+        fighters.filter(e => e.alive && areEnemies(f, e) && !cast.hitIds.has(e.id)).forEach(e => {
+          if (cast.path.some(segment => ironBeamTouches(segment, e))) {
+            if (damage(e, IRON.beamDamage, f, "리펄서 빔") > 0) cast.hitIds.add(e.id);
+          }
+        });
+      });
+    }
+    function drawIronBeams() {
+      fighters.forEach(f => {
+        const cast = f.iron?.beam;
+        if (!f.alive || !cast) return;
+        const path = ironBeamPath(f, cast.angle);
+        ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+        if (cast.age < 0.45) {
+          ctx.setLineDash([6, 7]); ctx.lineWidth = 2; ctx.strokeStyle = "rgba(103,232,249,.38)";
+          path.forEach(s => { ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x2,s.y2); ctx.stroke(); });
+        } else {
+          ctx.shadowColor = "#22d3ee"; ctx.shadowBlur = 22;
+          for (const [width, color] of [[19,"rgba(34,211,238,.2)"],[12,"#38bdf8"],[5,"#ecfeff"]]) {
+            ctx.lineWidth = width; ctx.strokeStyle = color;
+            path.forEach(s => { ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x2,s.y2); ctx.stroke(); });
+          }
+          drawGlowCircle(f.x + Math.cos(cast.angle) * f.r, f.y + Math.sin(cast.angle) * f.r, 8, "#cffafe", 0.8);
+        }
+        ctx.restore();
+      });
+    }
+    function drawIronCharacter(f) {
+      const suit = f.iron.suit, naked = suit === "naked";
+      const metal = suit === "war" ? "#475569" : suit === "mark42" ? "#eab308" : "#b91c1c";
+      const face = suit === "war" ? "#cbd5e1" : "#facc15";
+      ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.r / 20, f.r / 20);
+      // 원형 충돌체 안에 헬멧과 장갑을 통합한다.
+      const shell = ctx.createRadialGradient(-7,-9,2,0,0,22);
+      shell.addColorStop(0,naked ? "#fed7aa" : suit === "war" ? "#94a3b8" : "#f87171");
+      shell.addColorStop(1,naked ? "#9a6547" : metal);
+      ctx.fillStyle = shell; ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 2;
+      ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();ctx.stroke();
+      if (naked) {
+        ctx.fillStyle="#292524";ctx.beginPath();ctx.moveTo(-17,-4);ctx.lineTo(-17,-12);ctx.quadraticCurveTo(-5,-26,15,-12);ctx.lineTo(17,-3);ctx.lineTo(9,-10);ctx.lineTo(-7,-8);ctx.closePath();ctx.fill();
+        ctx.fillRect(-10,-2,5,2);ctx.fillRect(5,-2,5,2);
+        ctx.beginPath();ctx.moveTo(-8,8);ctx.lineTo(-5,15);ctx.lineTo(5,15);ctx.lineTo(8,8);ctx.lineTo(3,10);ctx.lineTo(-3,10);ctx.closePath();ctx.fill();
+        ctx.fillRect(-5,6,10,2);
+      } else {
+        ctx.fillStyle=face;ctx.strokeStyle=metal;ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(-12,-13);ctx.lineTo(12,-13);ctx.lineTo(14,-2);ctx.lineTo(9,12);ctx.lineTo(5,16);ctx.lineTo(-5,16);ctx.lineTo(-9,12);ctx.lineTo(-14,-2);ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.fillStyle=suit==="war"?"#fb7185":"#a5f3fc";ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=7;
+        ctx.beginPath();ctx.moveTo(-11,-3);ctx.lineTo(-2,0);ctx.lineTo(-3,3);ctx.lineTo(-10,1);ctx.closePath();ctx.fill();
+        ctx.beginPath();ctx.moveTo(11,-3);ctx.lineTo(2,0);ctx.lineTo(3,3);ctx.lineTo(10,1);ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+        ctx.strokeStyle="#78350f";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-6,10);ctx.lineTo(6,10);ctx.stroke();
+        if(suit==="hulk"){
+          ctx.strokeStyle="#f59e0b";ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,17,0.4,2.7);ctx.stroke();
+          ctx.fillStyle="#7f1d1d";ctx.fillRect(-20,-8,7,18);ctx.fillRect(13,-8,7,18);
+          ctx.strokeStyle="#fcd34d";ctx.lineWidth=1;ctx.strokeRect(-20,-8,7,18);ctx.strokeRect(13,-8,7,18);
+        }
+        if(suit==="war"){
+          ctx.fillStyle="#1e293b";ctx.fillRect(10,-22,6,15);ctx.fillRect(8,-24,10,5);
+          ctx.fillStyle="#94a3b8";ctx.fillRect(11,-22,2,11);
+        }
+        if(suit==="mark42"){
+          ctx.strokeStyle="#7f1d1d";ctx.lineWidth=2;
+          for(const y of [-12,8]){ctx.beginPath();ctx.moveTo(-18,y);ctx.lineTo(-12,y+3);ctx.moveTo(18,y);ctx.lineTo(12,y+3);ctx.stroke();}
+          ctx.fillStyle="#dc2626";ctx.fillRect(-3,-19,6,4);
+        }
+      }
+      ctx.restore();
+      if (f.shieldHp > 0) drawRing(f.x,f.y,f.r+3,"rgba(125,211,252,.65)",2);
+      drawHealthBar(f);drawName(f);
+    }
+    function ironPortrait() {
+      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="철가면 기본 슈트"><circle cx="24" cy="24" r="22" fill="#b91c1c"/><path d="M12 10H36L39 23L33 39H15L9 23Z" fill="#facc15" stroke="#7f1d1d" stroke-width="2"/><path d="M13 21L22 24L21 27L14 25ZM35 21L26 24L27 27L34 25Z" fill="#a5f3fc"/><path d="M19 34H29" stroke="#78350f" stroke-width="2"/></svg>';
+    }
+
+
     const IRON = { hp: 30, shield: 70, reShield: 50, rebuild: 8, beamPeriod: 3, beamDamage: 10,
       dashPeriod: 8, dashDamage: 12, missilePeriod: 5.5, missileDamage: 8, fragmentDamage: 4, fragmentShield: 4 };
     const ironSuitNames = { basic: "기본 슈트", war: "워머신", hulk: "헐크버스터", mark42: "마크42", naked: "토니 · 슈트 없음" };
@@ -1076,6 +1181,7 @@
     }
     function equipIron(f, suit) {
       const i = f.iron;
+      i.beam = null;
       i.suit = suit; i.rebuild = 0; i.dash = 0; i.assembly = 0.75;
       i.attackCd = suit === "war" ? IRON.missilePeriod : IRON.beamPeriod;
       i.dashCd = IRON.dashPeriod;
@@ -1089,6 +1195,7 @@
       f.x = clamp(f.x, arena.x + f.r, arena.x2 - f.r); f.y = clamp(f.y, arena.y + f.r, arena.y2 - f.r);
     }
     function stripIron(f) {
+      f.iron.beam = null;
       f.iron.suit = "naked"; f.iron.rebuild = IRON.rebuild; f.iron.dash = 0;
       f.shieldHp = 0; f.r = 13; f.baseSpeed = 2.35; f.color = "#d6a77a"; f.mark = "T";
       normalizeIronVelocity(f);
@@ -1130,6 +1237,11 @@
       const enemy = nearestEnemy(f).enemy;
       if (!enemy) return;
       const a = Math.atan2(enemy.y - f.y, enemy.x - f.x) + angleOffset;
+      if (kind === "beam") {
+        f.iron.beam = { angle: a, age: 0, hitIds: new Set(), path: ironBeamPath(f, a) };
+        playSound("magic", 0.6);
+        return;
+      }
       const speed = kind === "missile" ? 230 : 500;
       ironObjects.push({ kind, owner: f, target: enemy, x: f.x, y: f.y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed,
         r: kind === "missile" ? 5 : 4, life: 4, distance: 0, bounces: 0, trail: [], color: kind === "missile" ? "#fb923c" : "#67e8f9" });
@@ -1235,10 +1347,12 @@
       return true;
     }
     function updateIronObjects(dt) {
+      updateIronBeams(dt);
       // 피해 처리에서 파편이 추가될 수 있으므로 새 객체를 잃지 않도록 역순 제거한다.
       for (let n = ironObjects.length - 1; n >= 0; n--) if (!stepIronObject(ironObjects[n], dt)) ironObjects.splice(n, 1);
     }
     function drawIronObjects() {
+      drawIronBeams();
       ironObjects.forEach(o => {
         ctx.save(); ctx.fillStyle = o.color; ctx.strokeStyle = o.color; ctx.shadowColor = o.color; ctx.shadowBlur = 12;
         if (o.trail?.length) {
@@ -1989,6 +2103,7 @@
     }
 
     const patchNotes = [
+      "v5: 리펄서를 몸에 연결된 폭 12 빔으로 변경. 발사각 고정·자동 추적 없음, 0.45초 예고 후 0.55초 발사·대상별 1회 피해 10. 이동 시 시작점과 2회 반사 경로 갱신. 슈트 4종과 토니 원형 외형 구분.",
       "v4: 철가면 추가. 체력 30·보호막 70, 파괴 후 8초 뒤 무작위 특별 슈트·보호막 50. 기본/마크42 리펄서 10(벽 반사 2회), 부스터 12. 워머신 유도 폭발 미사일 8×3, 헐크버스터 피격 넉백, 마크42 파편 피해/회복 4.",
       "v3: 강펀치 넉백 중 벽 반사 1회마다 추가 피해 8. 모서리 두 벽 접촉은 2회, 넉백 종료 후 일반 벽 반사는 피해 없음.",
       "v2: 리뉴얼 버전 번호 재시작. 파워 스톤을 피격 반격에서 충돌 강펀치로 수정: 0.12초 타격 정지 후 피해 8·0.3초 고속 넉백, 충돌 쿨타임 0.8초. 미획득 상태에도 10초마다 스톤 등장, 5종 획득 후 소울 등장.",
@@ -2028,7 +2143,7 @@
     }
 
     function characterDamageInfo(c) {
-      if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
+      if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
       if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 가속 8초·3초 / 정지 10초·1.5초 / 무적 12초·2.5초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백(쿨 0.8초). 타임은 획득 시 10초 전 위치와 HP로 회복(현재 HP보다 낮아지지 않음). 소울 마지막. 핑거플립 후 2초마다 스톤 1개 소실·자해 10, 모두 잃으면 재수집." };
       const data = {
         flame_tori: {
@@ -2116,7 +2231,7 @@
       const info = characterDamageInfo(c);
 
       $("damageModalTitle").innerHTML = `
-        <div class="modal-portrait" style="background:${c.color};">${escapeHtml(c.mark)}</div>
+        <div class="modal-portrait" style="background:${c.color};">${c.id === "iron_mask" ? ironPortrait() : escapeHtml(c.mark)}</div>
         <div>
           <h2 style="margin:0;">${escapeHtml(c.name)}</h2>
           <div style="color:#94a3b8;font-size:12px;margin-top:2px;">${escapeHtml(c.skillName)}</div>
@@ -2159,7 +2274,7 @@
         card.className = "char-card" + (isSelected ? " selected" : "") + (team ? ` team-${team.toLowerCase()}` : "");
         card.innerHTML = `
           <div class="selected-mark">${battleMode === "team" && team ? team : "✓"}</div>
-          <div class="portrait" style="background:${c.color};">${c.mark}</div>
+          <div class="portrait" style="background:${c.color};">${c.id === "iron_mask" ? ironPortrait() : c.mark}</div>
           <div>
             <div class="char-top">
               <div>
@@ -2639,7 +2754,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v4`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v5`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -2665,7 +2780,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v4`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v5`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -8901,6 +9016,7 @@
     function drawFighter(f) {
       drawPowerFist(f);
       drawIronSuit(f);
+      if (f.iron) { drawIronCharacter(f); return; }
       if (f.tano) {
         if (f.tano.hidden > 0 || f.tano.reform > 0) drawTanoDust(f);
         if (f.tano.hidden > 0) return;
