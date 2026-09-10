@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v7</title>
+  <title>볼배틀 리뉴얼 v8</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v7</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v8</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1055,7 +1055,7 @@
     // 기존 스킬 처리 분기는 엔진 호환성을 위해 보존되며 해당 ID가 없으면 활성화되지 않는다.
     const characters = [
       { id: "lisa", name: "리사", mark: "♫", role: "전사", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
-        skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 → 록 14초 / 벽 4회 → 폭주", desc: "숙녀는 공격하지 않는다. 록은 최근접 적 방향 음파, 폭주는 벽까지 닿는 음파와 빠른 연주. 게이지 소진 시 완전연소." },
+        skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 → 록 10초 + 폭주 4초", desc: "숙녀는 공격하지 않는다. 록은 최근접 적 방향 음파, 폭주는 조금 넓은 음파(190)와 빠른 연주. 게이지 소진 시 완전연소." },
       { id: "iron_mask", name: "철가면", mark: "Fe", role: "전사", color: "#dc2626", hp: 30, attack: 10, speed: 2.7, range: 160,
         skillName: "자비스 슈트", condition: "보호막 70 · 파괴 후 8초 재장착(50)", desc: "리펄서와 부스터. 슈트가 깨지면 무능력 상태, 재장착은 워머신·헐크버스터·마크42 중 하나." },
       { id: "tano", name: "타노", mark: "✦", role: "전사", color: "#9333ea", hp: 240, attack: 8, speed: 2.7, range: 80,
@@ -1168,7 +1168,7 @@
     }
 
 
-    const LISA = { patience: 40, duration: 14, period: 1.25, ragePeriod: 0.55, power: 9, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
+    const LISA = { patience: 40, duration: 14, rageDuration: 4, rageRange: 190, period: 1.25, ragePeriod: 0.55, power: 9, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
     function initLisa(f) {
       f.lisa = { mode: "lady", patience: 0, rock: 0, walls: 0, attack: 0, riff: 0, waves: [], speech: "", speechTime: 0 };
     }
@@ -1201,16 +1201,13 @@
       f.lisa.patience = Math.min(LISA.patience, f.lisa.patience + amount);
       if (f.lisa.patience >= LISA.patience) enterLisaRock(f);
     }
-    function lisaWallHit(f) {
+    function enterLisaRage(f) {
       const l = f.lisa;
       if (!l || l.mode !== "rock") return;
-      l.walls++;
-      if (l.walls >= 4) {
-        l.mode = "rage"; l.attack = Math.min(l.attack, 0.15);
-        lisaVelocity(f, LISA.speed * 1.6);
-        lisaSay(f, "끝까지 불태워 버려!!!");
-        spawnBlast(f.x, f.y, 90, "#fb7185");
-      }
+      l.mode = "rage"; l.attack = Math.min(l.attack, 0.15);
+      lisaVelocity(f, LISA.speed * 1.6);
+      lisaSay(f, "끝까지 불태워 버려!!!");
+      spawnBlast(f.x, f.y, 90, "#fb7185");
     }
     function lisaPowerChord(f) {
       if (fastSimMode || !soundEnabled || !canPlaySound("lisaChord", 0.12)) return;
@@ -1230,7 +1227,7 @@
     }
     function lisaConeTouches(f, e, angle) {
       const d = dist(f, e);
-      if (f.lisa.mode !== "rage" && d > LISA.range + e.r) return false;
+      if (d > (f.lisa.mode === "rage" ? LISA.rageRange : LISA.range) + e.r) return false;
       if (d <= e.r) return true;
       const delta = Math.atan2(Math.sin(Math.atan2(e.y - f.y, e.x - f.x) - angle), Math.cos(Math.atan2(e.y - f.y, e.x - f.x) - angle));
       return Math.abs(delta) <= LISA.halfAngle + Math.asin(Math.min(1, e.r / d));
@@ -1241,7 +1238,7 @@
       if (!target) return;
       const angle = Math.atan2(target.y - f.y, target.x - f.x);
       enemiesOf(f).filter(e => lisaConeTouches(f, e, angle)).forEach(e => damage(e, LISA.power, f, "파워코드 음파"));
-      if (!fastSimMode) f.lisa.waves.push({ x: f.x, y: f.y, angle, life: 0.4, rage: f.lisa.mode === "rage", range: f.lisa.mode === "rage" ? Math.hypot(arena.size, arena.size) : LISA.range });
+      if (!fastSimMode) f.lisa.waves.push({ x: f.x, y: f.y, angle, life: 0.4, rage: f.lisa.mode === "rage", range: f.lisa.mode === "rage" ? LISA.rageRange : LISA.range });
       lisaPowerChord(f);
     }
     function updateLisa(f, dt) {
@@ -1257,6 +1254,7 @@
         lisaSay(f, "완.전.연.소!!!!");
         return;
       }
+      if (l.mode === "rock" && l.rock <= 100 * LISA.rageDuration / LISA.duration + 1e-9) enterLisaRage(f);
       if (f.tanoStop > 0 || f.punchHold > 0 || f.punchFlight > 0 || f.vampSuppressed > 0) return;
       l.attack -= dt;
       if (l.attack <= 0) { lisaAttack(f); l.attack = l.mode === "rage" ? LISA.ragePeriod : LISA.period; }
@@ -1310,6 +1308,7 @@
       const ratio=rock?f.lisa.rock/100:f.lisa.patience/LISA.patience;
       ctx.fillStyle="#111827";ctx.fillRect(f.x-29,f.y-f.r-15,58,4);
       ctx.fillStyle=rage?"#fb7185":rock?"#f472b6":"#a78bfa";ctx.fillRect(f.x-29,f.y-f.r-15,58*ratio,4);
+      if(rock){const threshold=LISA.rageDuration/LISA.duration;ctx.fillStyle="#ef4444";ctx.fillRect(f.x-29,f.y-f.r-15,58*Math.min(ratio,threshold),4);ctx.fillStyle="#fff";ctx.fillRect(f.x-29+58*threshold,f.y-f.r-16,1,6);}
     }
     function drawTanoCharacter(f) {
       ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
@@ -2286,6 +2285,7 @@
     }
 
     const patchNotes = [
+      "v8: 리사 폭주는 벽 충돌 대신 록 14초 중 마지막 4초에 발동. 사거리는 일반150·폭주190으로 제한. 피해9·공격주기1.25초/0.55초 유지.",
       "v7: 헐크버스터 반격 피해8 추가(쿨0.6초). 넉백이 예약 타격을 지우지 않도록 수정·상호 피격 및 반격 재귀 방지. 리사 음파는 최근접 적 조준, 폭주 시 사거리 제한 없이 벽까지.",
       "v6: 리사 추가. 체력 180·피해 40마다 록 14초, 전방 90도 음파 9(1.25초). 벽 4회 폭주: 이속 1.6배·음파 0.55초·드럼/베이스 추가. 완전연소 후 숙녀 복귀. 트윈테일·분홍 기타와 타노 외형 적용.",
       "v5: 리펄서를 몸에 연결된 폭 12 빔으로 변경. 발사각 고정·자동 추적 없음, 0.45초 예고 후 0.55초 발사·대상별 1회 피해 10. 이동 시 시작점과 2회 반사 경로 갱신. 슈트 4종과 토니 원형 외형 구분.",
@@ -2328,7 +2328,7 @@
     }
 
     function characterDamageInfo(c) {
-      if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주 벽까지",tick:"인내: 받은 피해 40 / 록 14초 / 공격 1.25초(폭주 0.55초)",tip:"숙녀는 무공격. 록에서 벽 충돌 4회 시 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀. 트윈테일·기타는 피격 판정에 영향 없음."};
+      if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 / 록 14초 / 공격 1.25초(폭주 0.55초)",tip:"숙녀는 무공격. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀. 트윈테일·기타는 피격 판정에 영향 없음."};
       if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 반격8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
       if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 가속 8초·3초 / 정지 10초·1.5초 / 무적 12초·2.5초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백(쿨 0.8초). 타임은 획득 시 10초 전 위치와 HP로 회복(현재 HP보다 낮아지지 않음). 소울 마지막. 핑거플립 후 2초마다 스톤 1개 소실·자해 10, 모두 잃으면 재수집." };
       const data = {
@@ -2942,7 +2942,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v7`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v8`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -2968,7 +2968,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v7`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v8`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3458,7 +3458,7 @@
       if (f.lisa) {
         const l=f.lisa, lady=l.mode==="lady";
         return {ratio:lady?l.patience/LISA.patience:l.rock/100,className:"",text:lady?"숙녀 · 인내 "+Math.floor(l.patience)+"/"+LISA.patience:(l.mode==="rage"?"폭주":"록")+" · 록 게이지 "+Math.ceil(l.rock)+"%",
-          extraTextHtml:'<div class="status-skill-label">'+(lady?"공격 없음":l.mode==="rage"?"이속 ×1.6 · 0.55초마다 음파":"벽 충돌 "+l.walls+"/4 · 1.25초마다 음파")+'</div>'};
+          extraTextHtml:'<div class="status-skill-label">'+(lady?"공격 없음":l.mode==="rage"?"이속 ×1.6 · 0.55초마다 음파":"폭주까지 "+Math.max(0,l.rock*LISA.duration/100-LISA.rageDuration).toFixed(1)+"초 · 1.25초마다 음파")+'</div>'};
       }
       if (f.iron) return { ratio: f.iron.suit === "naked" ? clamp(1 - f.iron.rebuild / IRON.rebuild, 0, 1) : f.shieldHp / f.shieldMax, className: "", text: ironSuitNames[f.iron.suit] + (f.iron.suit === "naked" ? " · 자비스 " + Math.ceil(f.iron.rebuild) + "초" : " · 보호막 " + Math.ceil(f.shieldHp) + "/" + f.shieldMax),
         extraTextHtml: '<div class="status-skill-label">' + (f.iron.suit === "hulk" ? "피격 반격 8·넉백 · 리펄서/부스터 봉인" : f.iron.suit === "naked" ? "공격 불가" : (f.iron.suit === "war" ? "미사일 " : "리펄서 ") + Math.ceil(f.iron.attackCd) + "초 · 부스터 " + Math.ceil(f.iron.dashCd) + "초") + '</div>' };
@@ -6707,7 +6707,6 @@
         bounced = true;
       }
       if (bounced) {
-        lisaWallHit(f);
         const overSources = enemyOverchargeSources(f);
         const electricWall = overSources.length > 0;
         f.wallBounces += 1;
