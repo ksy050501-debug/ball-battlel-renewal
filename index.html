@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v5</title>
+  <title>볼배틀 리뉴얼 v6</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v5</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v6</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1054,6 +1054,8 @@
     // 리뉴얼 캐릭터와 훈련용 더미.
     // 기존 스킬 처리 분기는 엔진 호환성을 위해 보존되며 해당 ID가 없으면 활성화되지 않는다.
     const characters = [
+      { id: "lisa", name: "리사", mark: "♫", role: "전사", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
+        skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 → 록 14초 / 벽 4회 → 폭주", desc: "숙녀는 공격하지 않는다. 록은 전방 음파, 폭주는 가속과 빠른 연주. 게이지 소진 시 완전연소." },
       { id: "iron_mask", name: "철가면", mark: "Fe", role: "전사", color: "#dc2626", hp: 30, attack: 10, speed: 2.7, range: 160,
         skillName: "자비스 슈트", condition: "보호막 70 · 파괴 후 8초 재장착(50)", desc: "리펄서와 부스터. 슈트가 깨지면 무능력 상태, 재장착은 워머신·헐크버스터·마크42 중 하나." },
       { id: "tano", name: "타노", mark: "✦", role: "전사", color: "#9333ea", hp: 240, attack: 8, speed: 2.7, range: 80,
@@ -1163,6 +1165,168 @@
     }
     function ironPortrait() {
       return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="철가면 기본 슈트"><circle cx="24" cy="24" r="22" fill="#b91c1c"/><path d="M12 10H36L39 23L33 39H15L9 23Z" fill="#facc15" stroke="#7f1d1d" stroke-width="2"/><path d="M13 21L22 24L21 27L14 25ZM35 21L26 24L27 27L34 25Z" fill="#a5f3fc"/><path d="M19 34H29" stroke="#78350f" stroke-width="2"/></svg>';
+    }
+
+
+    const LISA = { patience: 40, duration: 14, period: 1.25, ragePeriod: 0.55, power: 9, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
+    function initLisa(f) {
+      f.lisa = { mode: "lady", patience: 0, rock: 0, walls: 0, attack: 0, riff: 0, waves: [], speech: "", speechTime: 0 };
+    }
+    function lisaSay(f, text) {
+      if (fastSimMode) return;
+      f.lisa.speech = text; f.lisa.speechTime = 2.2;
+      spawnFloatingText(f.x, f.y - f.r - 48, text, "#f9a8d4");
+      log("<strong>리사</strong> " + escapeHtml(text), "대사");
+      if (soundEnabled && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined" && !window.speechSynthesis.speaking) {
+        const line = new SpeechSynthesisUtterance(text);
+        line.lang = "ko-KR"; line.rate = 1.2; line.pitch = 1.3; line.volume = masterVolume;
+        window.speechSynthesis.speak(line);
+      }
+    }
+    function lisaVelocity(f, speed) {
+      f.baseSpeed = speed; f.speed = speed;
+      if (f.punchFlight > 0) return;
+      const length = Math.hypot(f.vx, f.vy) || 1;
+      f.vx = f.vx / length * speed * 44; f.vy = f.vy / length * speed * 44;
+    }
+    function enterLisaRock(f) {
+      const l = f.lisa;
+      l.mode = "rock"; l.rock = 100; l.patience = 0; l.walls = 0; l.attack = 0.2; l.riff = 0;
+      lisaVelocity(f, LISA.speed);
+      lisaSay(f, "이 불연성쓰레기가아!!!");
+      spawnBlast(f.x, f.y, 70, "#f472b6");
+    }
+    function lisaOnDamage(f, amount) {
+      if (!f.lisa || f.lisa.mode !== "lady" || amount <= 0 || f.hp <= 0) return;
+      f.lisa.patience = Math.min(LISA.patience, f.lisa.patience + amount);
+      if (f.lisa.patience >= LISA.patience) enterLisaRock(f);
+    }
+    function lisaWallHit(f) {
+      const l = f.lisa;
+      if (!l || l.mode !== "rock") return;
+      l.walls++;
+      if (l.walls >= 4) {
+        l.mode = "rage"; l.attack = Math.min(l.attack, 0.15);
+        lisaVelocity(f, LISA.speed * 1.6);
+        lisaSay(f, "끝까지 불태워 버려!!!");
+        spawnBlast(f.x, f.y, 90, "#fb7185");
+      }
+    }
+    function lisaPowerChord(f) {
+      if (fastSimMode || !soundEnabled || !canPlaySound("lisaChord", 0.12)) return;
+      const rage = f.lisa.mode === "rage";
+      const roots = [110, 130.81, 98, 146.83];
+      const root = roots[(f.lisa.riff++) % roots.length];
+      [1, 1.5, 2].forEach((ratio, n) => tone(root * ratio, rage ? 0.32 : 0.24, "sawtooth", 0.026, n * 0.007, root * ratio * 0.985));
+      noise(0.06, 0.035, 0, 2400, "highpass");
+      if (rage) {
+        tone(root / 2, 0.38, "triangle", 0.06);
+        tone(100, 0.14, "sine", 0.08, 0, 40);
+        noise(0.12, 0.07, 0.24, 1500, "bandpass");
+        noise(0.045, 0.025, 0.12, 7000, "highpass");
+        noise(0.045, 0.025, 0.37, 7000, "highpass");
+        tone(root * 3, 0.15, "square", 0.012, 0.25);
+      }
+    }
+    function lisaConeTouches(f, e, angle) {
+      const d = dist(f, e);
+      if (d > LISA.range + e.r) return false;
+      if (d <= e.r) return true;
+      const delta = Math.atan2(Math.sin(Math.atan2(e.y - f.y, e.x - f.x) - angle), Math.cos(Math.atan2(e.y - f.y, e.x - f.x) - angle));
+      return Math.abs(delta) <= LISA.halfAngle + Math.asin(Math.min(1, e.r / d));
+    }
+    function lisaAttack(f) {
+      if (!f.alive || !f.lisa || f.lisa.mode === "lady") return;
+      const angle = Math.atan2(f.vy, f.vx);
+      enemiesOf(f).filter(e => lisaConeTouches(f, e, angle)).forEach(e => damage(e, LISA.power, f, "파워코드 음파"));
+      if (!fastSimMode) f.lisa.waves.push({ x: f.x, y: f.y, angle, life: 0.4, rage: f.lisa.mode === "rage" });
+      lisaPowerChord(f);
+    }
+    function updateLisa(f, dt) {
+      const l = f.lisa;
+      if (!l) return;
+      l.waves.forEach(w => w.life -= dt); l.waves = l.waves.filter(w => w.life > 0);
+      l.speechTime = Math.max(0, l.speechTime - dt);
+      if (l.mode === "lady") return;
+      l.rock = Math.max(0, l.rock - dt * 100 / LISA.duration);
+      if (l.rock <= 0) {
+        l.mode = "lady"; l.patience = 0; l.walls = 0; l.attack = 0;
+        lisaVelocity(f, LISA.speed);
+        lisaSay(f, "완.전.연.소!!!!");
+        return;
+      }
+      if (f.tanoStop > 0 || f.punchHold > 0 || f.punchFlight > 0 || f.vampSuppressed > 0) return;
+      l.attack -= dt;
+      if (l.attack <= 0) { lisaAttack(f); l.attack = l.mode === "rage" ? LISA.ragePeriod : LISA.period; }
+    }
+    function drawLisaWaves() {
+      fighters.forEach(f => f.lisa?.waves.forEach(w => {
+        ctx.save(); ctx.translate(w.x,w.y);ctx.rotate(w.angle);
+        const progress = 1 - w.life / 0.4, radius = LISA.range * (0.2 + progress * 0.8);
+        ctx.globalAlpha = w.life / 0.4;
+        ctx.fillStyle = w.rage ? "rgba(251,113,133,.18)" : "rgba(244,114,182,.12)";
+        ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,radius,-LISA.halfAngle,LISA.halfAngle);ctx.closePath();ctx.fill();
+        ctx.strokeStyle = w.rage ? "#fb7185" : "#f9a8d4";ctx.lineWidth = w.rage ? 5 : 3;
+        for(let n=0;n<3;n++){ctx.beginPath();ctx.arc(0,0,Math.max(3,radius-n*17),-LISA.halfAngle,LISA.halfAngle);ctx.stroke();}
+        ctx.restore();
+      }));
+    }
+    function drawLisaCharacter(f) {
+      const rock = f.lisa.mode !== "lady", rage = f.lisa.mode === "rage";
+      ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
+      // 트윈테일과 기타는 장식일 뿐 f.r를 변경하지 않는다.
+      const swing = Math.sin(battleTime * (rage ? 16 : rock ? 9 : 3)) * (rock ? 4 : 2);
+      ctx.fillStyle="#eab44f";ctx.strokeStyle="#a16207";ctx.lineWidth=1.3;
+      for(const side of [-1,1]){
+        ctx.save();ctx.scale(side,1);ctx.beginPath();ctx.moveTo(13,-12);ctx.bezierCurveTo(29,-14,28,15,25+swing,29);ctx.quadraticCurveTo(13,19,15,2);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+      }
+      ctx.fillStyle=rock?"#1f2937":"#164e3e";ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#ffe4c7";ctx.beginPath();ctx.ellipse(0,-2,14,16,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#f5cb67";ctx.beginPath();ctx.moveTo(-15,0);ctx.lineTo(-15,-13);ctx.quadraticCurveTo(0,-28,15,-13);ctx.lineTo(15,0);ctx.lineTo(7,-10);ctx.lineTo(2,-3);ctx.lineTo(-3,-12);ctx.lineTo(-11,0);ctx.closePath();ctx.fill();
+      ctx.fillStyle="#123d32";for(const x of [-17,17]){ctx.beginPath();ctx.moveTo(x,-9);ctx.lineTo(x-6,-15);ctx.lineTo(x-5,-5);ctx.lineTo(x+5,-15);ctx.lineTo(x+6,-5);ctx.closePath();ctx.fill();}
+      ctx.fillStyle="#2563eb";ctx.fillRect(-9,-1,4,5);ctx.fillRect(5,-1,4,5);
+      ctx.strokeStyle="#422006";ctx.lineWidth=1.5;ctx.beginPath();
+      if(rock){ctx.moveTo(-10,-4);ctx.lineTo(-4,-2);ctx.moveTo(10,-4);ctx.lineTo(4,-2);}else{ctx.moveTo(-10,-3);ctx.lineTo(-4,-3);ctx.moveTo(4,-3);ctx.lineTo(10,-3);}ctx.stroke();
+      ctx.fillStyle="#9f1239";if(rock){ctx.beginPath();ctx.ellipse(0,8,5,4,0,0,Math.PI*2);ctx.fill();}else{ctx.beginPath();ctx.arc(0,5,4,0.2,Math.PI-0.2);ctx.stroke();}
+      ctx.fillStyle="#fff";ctx.beginPath();ctx.moveTo(-8,14);ctx.lineTo(0,21);ctx.lineTo(8,14);ctx.lineTo(0,16);ctx.closePath();ctx.fill();
+      if(rock){
+        // 분홍 PRS 계열 더블컷 바디, 두 픽업, 3+3 헤드와 새 모양 인레이.
+        ctx.save();ctx.translate(7,19);ctx.rotate(-0.65);
+        ctx.strokeStyle="#111827";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-19,-30);ctx.lineTo(9,1);ctx.stroke();
+        ctx.fillStyle="#f472b6";ctx.strokeStyle="#9d174d";ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.moveTo(2,-12);ctx.bezierCurveTo(12,-18,13,-7,8,-4);ctx.bezierCurveTo(20,7,11,15,0,14);ctx.bezierCurveTo(-13,17,-20,5,-8,-3);ctx.bezierCurveTo(-15,-9,-9,-20,-3,-12);ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.fillStyle="#713f12";ctx.fillRect(-2,-33,4,29);ctx.fillStyle="#eab44f";ctx.fillRect(-3,-42,6,10);
+        for(let n=0;n<3;n++){ctx.fillStyle="#cbd5e1";ctx.fillRect(-5,-41+n*3,2,1);ctx.fillRect(3,-41+n*3,2,1);}
+        ctx.fillStyle="#581c87";ctx.fillRect(-5,-6,10,3);ctx.fillRect(-5,2,10,3);ctx.fillStyle="#d1d5db";ctx.fillRect(-5,7,10,2);
+        ctx.strokeStyle="rgba(255,255,255,.75)";ctx.lineWidth=0.35;for(let n=-1;n<=1;n++){ctx.beginPath();ctx.moveTo(n,-40);ctx.lineTo(n,9);ctx.stroke();}
+        ctx.strokeStyle="#f8fafc";ctx.lineWidth=0.7;for(let y=-28;y<-7;y+=6){ctx.beginPath();ctx.moveTo(-1,y);ctx.lineTo(0,y+1);ctx.lineTo(2,y-1);ctx.stroke();}
+        ctx.fillStyle="#fef3c7";ctx.beginPath();ctx.arc(8,7,1.5,0,Math.PI*2);ctx.fill();ctx.restore();
+      }
+      ctx.restore();
+      if(rage)drawRing(f.x,f.y,f.r+5,"#fb7185",3);
+      drawHealthBar(f);drawName(f);
+      const ratio=rock?f.lisa.rock/100:f.lisa.patience/LISA.patience;
+      ctx.fillStyle="#111827";ctx.fillRect(f.x-29,f.y-f.r-15,58,4);
+      ctx.fillStyle=rage?"#fb7185":rock?"#f472b6":"#a78bfa";ctx.fillRect(f.x-29,f.y-f.r-15,58*ratio,4);
+    }
+    function drawTanoCharacter(f) {
+      ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
+      ctx.fillStyle="#312e81";ctx.strokeStyle="#d6a743";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#a77aca";ctx.beginPath();ctx.ellipse(0,-1,13,17,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#d4a33e";ctx.beginPath();ctx.moveTo(-16,-12);ctx.lineTo(-7,-19);ctx.lineTo(-6,-13);ctx.lineTo(6,-13);ctx.lineTo(7,-19);ctx.lineTo(16,-12);ctx.lineTo(13,-5);ctx.lineTo(9,-10);ctx.lineTo(-9,-10);ctx.lineTo(-13,-5);ctx.closePath();ctx.fill();
+      ctx.fillStyle="#fff7ed";ctx.fillRect(-9,-4,5,2);ctx.fillRect(4,-4,5,2);
+      ctx.strokeStyle="#4c1d65";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(-10,-7);ctx.lineTo(-3,-5);ctx.moveTo(10,-7);ctx.lineTo(3,-5);ctx.moveTo(-6,5);ctx.lineTo(6,5);ctx.stroke();
+      for(let x=-6;x<=6;x+=3){ctx.beginPath();ctx.moveTo(x,8);ctx.lineTo(x,14);ctx.stroke();}
+      ctx.fillStyle="#d4a33e";ctx.beginPath();ctx.moveTo(-19,10);ctx.lineTo(-8,14);ctx.lineTo(0,20);ctx.lineTo(8,14);ctx.lineTo(19,10);ctx.lineTo(16,19);ctx.lineTo(-16,19);ctx.closePath();ctx.fill();
+      ctx.fillStyle="#c58a2b";ctx.strokeStyle="#fef3c7";ctx.lineWidth=1;ctx.fillRect(13,2,11,14);ctx.strokeRect(13,2,11,14);
+      f.tano.stones.forEach((id,n)=>{const stone=stoneTypes.find(s=>s.id===id);ctx.fillStyle=stone.color;ctx.beginPath();ctx.arc(16+(n%3)*3,5+Math.floor(n/3)*5,1.5,0,Math.PI*2);ctx.fill();});
+      ctx.restore();drawHealthBar(f);drawName(f);
+    }
+    function lisaPortrait() {
+      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="리사 트윈테일"><circle cx="24" cy="24" r="22" fill="#164e3e"/><path d="M10 10Q-1 12 4 44L14 33ZM38 10Q49 12 44 44L34 33Z" fill="#eab44f"/><ellipse cx="24" cy="24" rx="13" ry="16" fill="#ffe4c7"/><path d="M10 24V13Q24 -1 38 13V24L30 13L25 21L21 12Z" fill="#f5cb67"/><path d="M5 9L16 15L5 18ZM43 9L32 15L43 18Z" fill="#123d32"/><path d="M17 24H21M27 24H31" stroke="#2563eb" stroke-width="3"/><path d="M20 33Q24 36 28 33" fill="none" stroke="#9f1239"/></svg>';
+    }
+    function tanoPortrait() {
+      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="타노 황금 투구"><circle cx="24" cy="24" r="22" fill="#312e81" stroke="#d4a33e" stroke-width="2"/><ellipse cx="24" cy="25" rx="14" ry="18" fill="#a77aca"/><path d="M7 16L17 4L19 13H29L31 4L41 16L36 22L32 16H16L12 22Z" fill="#d4a33e"/><path d="M15 23H21M27 23H33" stroke="#fff7ed" stroke-width="2"/><path d="M18 33H30M18 36V41M22 36V42M26 36V42M30 36V41" stroke="#4c1d65"/></svg>';
     }
 
 
@@ -1617,6 +1781,7 @@
 
     function setSoundEnabled(on) {
       soundEnabled = on;
+      if (!on && "speechSynthesis" in window) window.speechSynthesis.cancel();
       if (soundEnabled) {
         ensureAudio();
         playSound("ui");
@@ -2103,6 +2268,7 @@
     }
 
     const patchNotes = [
+      "v6: 리사 추가. 체력 180·피해 40마다 록 14초, 전방 90도 음파 9(1.25초). 벽 4회 폭주: 이속 1.6배·음파 0.55초·드럼/베이스 추가. 완전연소 후 숙녀 복귀. 트윈테일·분홍 기타와 타노 외형 적용.",
       "v5: 리펄서를 몸에 연결된 폭 12 빔으로 변경. 발사각 고정·자동 추적 없음, 0.45초 예고 후 0.55초 발사·대상별 1회 피해 10. 이동 시 시작점과 2회 반사 경로 갱신. 슈트 4종과 토니 원형 외형 구분.",
       "v4: 철가면 추가. 체력 30·보호막 70, 파괴 후 8초 뒤 무작위 특별 슈트·보호막 50. 기본/마크42 리펄서 10(벽 반사 2회), 부스터 12. 워머신 유도 폭발 미사일 8×3, 헐크버스터 피격 넉백, 마크42 파편 피해/회복 4.",
       "v3: 강펀치 넉백 중 벽 반사 1회마다 추가 피해 8. 모서리 두 벽 접촉은 2회, 넉백 종료 후 일반 벽 반사는 피해 없음.",
@@ -2143,6 +2309,7 @@
     }
 
     function characterDamageInfo(c) {
+      if (c.id==="lisa") return {damage:"전방 90도 음파 9 · 사거리 150",tick:"인내: 받은 피해 40 / 록 14초 / 공격 1.25초(폭주 0.55초)",tip:"숙녀는 무공격. 록에서 벽 충돌 4회 시 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀. 트윈테일·기타는 피격 판정에 영향 없음."};
       if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
       if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 가속 8초·3초 / 정지 10초·1.5초 / 무적 12초·2.5초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백(쿨 0.8초). 타임은 획득 시 10초 전 위치와 HP로 회복(현재 HP보다 낮아지지 않음). 소울 마지막. 핑거플립 후 2초마다 스톤 1개 소실·자해 10, 모두 잃으면 재수집." };
       const data = {
@@ -2231,7 +2398,7 @@
       const info = characterDamageInfo(c);
 
       $("damageModalTitle").innerHTML = `
-        <div class="modal-portrait" style="background:${c.color};">${c.id === "iron_mask" ? ironPortrait() : escapeHtml(c.mark)}</div>
+        <div class="modal-portrait" style="background:${c.color};">${c.id === "lisa" ? lisaPortrait() : c.id === "tano" ? tanoPortrait() : c.id === "iron_mask" ? ironPortrait() : escapeHtml(c.mark)}</div>
         <div>
           <h2 style="margin:0;">${escapeHtml(c.name)}</h2>
           <div style="color:#94a3b8;font-size:12px;margin-top:2px;">${escapeHtml(c.skillName)}</div>
@@ -2274,7 +2441,7 @@
         card.className = "char-card" + (isSelected ? " selected" : "") + (team ? ` team-${team.toLowerCase()}` : "");
         card.innerHTML = `
           <div class="selected-mark">${battleMode === "team" && team ? team : "✓"}</div>
-          <div class="portrait" style="background:${c.color};">${c.id === "iron_mask" ? ironPortrait() : c.mark}</div>
+          <div class="portrait" style="background:${c.color};">${c.id === "lisa" ? lisaPortrait() : c.id === "tano" ? tanoPortrait() : c.id === "iron_mask" ? ironPortrait() : c.mark}</div>
           <div>
             <div class="char-top">
               <div>
@@ -2686,10 +2853,12 @@
       if (fighter.baseId === "prism_iris") initializeIrisField(fighter);
       if (c.id === "tano") initTano(fighter);
       if (c.id === "iron_mask") initIron(fighter);
+      if (c.id === "lisa") initLisa(fighter);
       return fighter;
     }
 
     function prepareBattleState() {
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       ironObjects = [];
       projectiles = [];
       particles = [];
@@ -2754,7 +2923,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v5`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v6`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -2780,12 +2949,13 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v5`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v6`, "시작");
       updateHud();
       updateStatusPanel();
     }
 
     function resetBattle() {
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       ironObjects = [];
       running = false;
       paused = false;
@@ -3266,6 +3436,11 @@
     }
 
     function skillProgressInfo(f) {
+      if (f.lisa) {
+        const l=f.lisa, lady=l.mode==="lady";
+        return {ratio:lady?l.patience/LISA.patience:l.rock/100,className:"",text:lady?"숙녀 · 인내 "+Math.floor(l.patience)+"/"+LISA.patience:(l.mode==="rage"?"폭주":"록")+" · 록 게이지 "+Math.ceil(l.rock)+"%",
+          extraTextHtml:'<div class="status-skill-label">'+(lady?"공격 없음":l.mode==="rage"?"이속 ×1.6 · 0.55초마다 음파":"벽 충돌 "+l.walls+"/4 · 1.25초마다 음파")+'</div>'};
+      }
       if (f.iron) return { ratio: f.iron.suit === "naked" ? clamp(1 - f.iron.rebuild / IRON.rebuild, 0, 1) : f.shieldHp / f.shieldMax, className: "", text: ironSuitNames[f.iron.suit] + (f.iron.suit === "naked" ? " · 자비스 " + Math.ceil(f.iron.rebuild) + "초" : " · 보호막 " + Math.ceil(f.shieldHp) + "/" + f.shieldMax),
         extraTextHtml: '<div class="status-skill-label">' + (f.iron.suit === "hulk" ? "피격 반발 · 리펄서/부스터 봉인" : f.iron.suit === "naked" ? "공격 불가" : (f.iron.suit === "war" ? "미사일 " : "리펄서 ") + Math.ceil(f.iron.attackCd) + "초 · 부스터 " + Math.ceil(f.iron.dashCd) + "초") + '</div>' };
       if (f.tano) return { ratio: f.tano.stones.length / 6, className: "", text: "스톤 " + f.tano.stones.length + "/6 · " + (f.tano.snapped ? "소실 " + Math.ceil(f.tano.lossClock) + "초" : f.tano.spawned === 5 && f.tano.stones.length < 5 ? "남은 스톤 획득 대기" : Math.ceil(f.tano.next) + "초 후 등장"),
@@ -4898,6 +5073,7 @@
       target.hp -= final;
       const actualDamage = Math.min(final, hpBeforeDamage);
       target.damageTaken = (target.damageTaken || 0) + actualDamage;
+      lisaOnDamage(target, actualDamage);
       if (actualDamage > 0 && target.baseId === "prism_iris" && reason !== "성유리영역") lightIrisGlassCell(target);
       
       if (source && source.alive && source !== target) source.damageDealt = (source.damageDealt || 0) + actualDamage;
@@ -4992,6 +5168,7 @@
       target.hp -= final;
       const actualBodyDamage = Math.min(final, hpBeforeBodyDamage);
       target.damageTaken = (target.damageTaken || 0) + actualBodyDamage;
+      lisaOnDamage(target, actualBodyDamage);
       if (actualBodyDamage > 0 && target.baseId === "prism_iris" && reason !== "성유리영역") lightIrisGlassCell(target);
       
       if (source && source.alive && source !== target) source.damageDealt = (source.damageDealt || 0) + actualBodyDamage;
@@ -6279,6 +6456,7 @@
 
     function updateFighter(f, dt) {
       if (!f.alive) return;
+      updateLisa(f, dt);
       if (updatePowerPunch(f, dt)) return;
 
       updateIron(f, dt);
@@ -6509,6 +6687,7 @@
         bounced = true;
       }
       if (bounced) {
+        lisaWallHit(f);
         const overSources = enemyOverchargeSources(f);
         const electricWall = overSources.length > 0;
         f.wallBounces += 1;
@@ -8111,6 +8290,7 @@
       drawGrid();
       drawTanoStones();
       drawIronObjects();
+      drawLisaWaves();
       drawIrisGlassFields();
       drawJinOverchargeWalls();
 
@@ -9017,6 +9197,7 @@
       drawPowerFist(f);
       drawIronSuit(f);
       if (f.iron) { drawIronCharacter(f); return; }
+      if (f.lisa) { drawLisaCharacter(f); return; }
       if (f.tano) {
         if (f.tano.hidden > 0 || f.tano.reform > 0) drawTanoDust(f);
         if (f.tano.hidden > 0) return;
@@ -9024,6 +9205,7 @@
           const stone = stoneTypes.find(s => s.id === id), a = battleTime + i * Math.PI / 3;
           drawGlowCircle(f.x + Math.cos(a) * 27, f.y + Math.sin(a) * 27, 4, stone.color, 0.9);
         });
+        drawTanoCharacter(f); return;
       }
       if (f.baseId === "vampire_luka" && (f.vampVanish || 0) > 0) return;
       if ((f.dodoVoid || 0) > 0 && (f.dodoAppearFlash || 0) <= 0) return;
