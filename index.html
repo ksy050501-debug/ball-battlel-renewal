@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v10</title>
+  <title>볼배틀 리뉴얼 v11</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v10</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v11</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1061,7 +1061,7 @@
       { id: "tano", name: "타노", mark: "✦", role: "전사", color: "#9333ea", hp: 240, attack: 8, speed: 2.7, range: 80,
         skillName: "인피니티 스톤", condition: "10초마다 다음 스톤 · 소울 마지막", desc: "떠다니다 스톤에 닿으면 획득. 6개 완성 시 핑거플립, 이후 스톤 소실과 자해를 거쳐 재수집." },
       { id: "captain", name: "캡틴", mark: "★", role: "수호자", color: "#2563eb", hp: 190, attack: 9, speed: 2.65, range: 190,
-        skillName: "수호의 방패", condition: "6초마다 투척 · 충돌 5회 후 회수", desc: "방패 보유 중 피해를 줄이고 피격 시 방패로 반격한다. 투척 중에는 피해 감소가 사라지고 피격 시 강펀치로 반격한다." },
+        skillName: "수호의 방패", condition: "6초마다 투척 · 충돌 5회 후 회수", desc: "방패 보유 중 피해를 줄이고 적과 충돌하면 방패로 공격한다. 투척 중에는 피해 감소가 사라지고 충돌 시 강펀치로 공격한다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -1359,12 +1359,12 @@
       f.captain.throwCd -= dt;
       if (f.captain.throwCd <= 0) { throwCaptainShield(f); f.captain.throwCd = CAPTAIN.throwPeriod; }
     }
-    function captainOnHit(f, source, reason) {
-      if (!f.captain || f.captain.counterCd > 0 || !source?.alive || !areEnemies(f, source) || reason.startsWith("캡틴 반격")) return;
+    function captainContact(f, target) {
+      if (!f.captain || f.captain.counterCd > 0 || !target?.alive || !areEnemies(f, target)) return;
       f.captain.counterCd = CAPTAIN.counterCooldown;
       const held = f.captain.hasShield;
-      damage(source, held ? CAPTAIN.shieldCounter : CAPTAIN.punchCounter, f, held ? "캡틴 반격 · 방패 밀어내기" : "캡틴 반격 · 강펀치");
-      captainKnock(f, source, held ? CAPTAIN.knock : CAPTAIN.knock * 1.25);
+      damage(target, held ? CAPTAIN.shieldCounter : CAPTAIN.punchCounter, f, held ? "캡틴 방패 밀어내기" : "캡틴 강펀치");
+      captainKnock(f, target, held ? CAPTAIN.knock : CAPTAIN.knock * 1.25);
       spawnFloatingText(f.x, f.y - f.r - 28, held ? "방패 밀어내기" : "강펀치", held ? "#93c5fd" : "#fbbf24");
     }
     function updateCaptainShields(dt) {
@@ -1477,12 +1477,6 @@
       f.hitsTaken++; f.hitsTakenSkill++;
       if (source && source !== f) { source.damageDealt = (source.damageDealt || 0) + absorbed; source.hitsDealt++; source.hitsDealtSkill++; }
       spawnFloatingText(f.x, f.y - f.r - 24, "슈트 -" + absorbed, "#7dd3fc");
-      if (i.suit === "hulk" && i.reactionCd <= 0 && source?.alive && areEnemies(f, source) && reason !== "헐크버스터 반격") {
-        i.reactionCd = IRON.hulkCooldown;
-        damage(source, IRON.hulkDamage, f, "헐크버스터 반격");
-        ironKnock(f, source, IRON.hulkKnock);
-        spawnFloatingText(f.x, f.y - 45, "충격 반발", "#fca5a5");
-      }
       if (i.suit === "mark42" && i.fragmentCd <= 0) {
         i.fragmentCd = 0.2;
         const angle = rand(0, Math.PI * 2);
@@ -1549,6 +1543,13 @@
       f.iron.dash = 0; normalizeIronVelocity(f);
       const hit = damage(target, IRON.dashDamage, f, "추진 부스터");
       if (hit > 0 && !(target.baseId === "dummy_unit" && target.hp === target.maxHp)) ironKnock(f, target);
+    }
+    function hulkContact(f, target) {
+      if (!f.iron || f.iron.suit !== "hulk" || f.iron.reactionCd > 0 || !target?.alive || !areEnemies(f, target)) return;
+      f.iron.reactionCd = IRON.hulkCooldown;
+      damage(target, IRON.hulkDamage, f, "헐크버스터 충돌 강타");
+      ironKnock(f, target, IRON.hulkKnock);
+      spawnFloatingText(f.x, f.y - 45, "헐크버스터 강타", "#fca5a5");
     }
     function explodeIron(o, radius, power, reason) {
       fighters.filter(e => e.alive && areEnemies(o.owner, e) && dist(o, e) <= radius + e.r)
@@ -2367,6 +2368,7 @@
     }
 
     const patchNotes = [
+      "v11: 캡틴 방패 밀어내기/강펀치와 헐크버스터 강타를 피격 반격에서 직접 충돌 공격으로 변경. 타노 파워스톤처럼 서로 부딪히면 발동.",
       "v10: 리사 스킬 대사의 한글 음성 합성을 제거. 화면 대사·기타·드럼·베이스 효과음은 유지.",
       "v9: 캡틴 추가. 6초마다 방패10 투척, 적·벽 총 5회 반사 후 정지·접촉 회수. 방패 보유 중 피해35% 감소·피격 반격5, 투척 중 피해 감소 없이 강펀치 반격9.",
       "v8: 리사 폭주는 벽 충돌 대신 록 14초 중 마지막 4초에 발동. 사거리는 일반150·폭주190으로 제한. 피해9·공격주기1.25초/0.55초 유지.",
@@ -2412,9 +2414,9 @@
     }
 
     function characterDamageInfo(c) {
-      if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 반격 5 · 투척 중 강펀치 9", tick: "방패 6초 / 적·벽 총 5회 반사", tip: "방패 보유 중 일반 피해 35% 감소. 피격 시 방패 밀어내기 5와 넉백. 투척 중에는 피해 감소가 사라지고 강펀치 9와 강한 넉백. 5회 반사 후 멈춘 방패에 닿으면 회수." };
+      if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 9", tick: "방패 6초 / 적·벽 총 5회 반사", tip: "방패 보유 중 일반 피해 35% 감소. 적과 충돌 시 방패 밀어내기 5와 넉백. 투척 중에는 피해 감소가 사라지고 충돌 시 강펀치 9와 강한 넉백. 5회 반사 후 멈춘 방패에 닿으면 회수." };
       if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 / 록 14초 / 공격 1.25초(폭주 0.55초)",tip:"숙녀는 무공격. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀. 트윈테일·기타는 피격 판정에 영향 없음."};
-      if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 반격8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
+      if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 충돌강타8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 헐크버스터는 적과 충돌하면 강타8·넉백. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
       if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 가속 8초·3초 / 정지 10초·1.5초 / 무적 12초·2.5초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백(쿨 0.8초). 타임은 획득 시 10초 전 위치와 HP로 회복(현재 HP보다 낮아지지 않음). 소울 마지막. 핑거플립 후 2초마다 스톤 1개 소실·자해 10, 모두 잃으면 재수집." };
       const data = {
         flame_tori: {
@@ -3029,7 +3031,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v10`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v11`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3055,7 +3057,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v10`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v11`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3549,11 +3551,11 @@
           extraTextHtml:'<div class="status-skill-label">'+(lady?"공격 없음":l.mode==="rage"?"이속 ×1.6 · 0.55초마다 음파":"폭주까지 "+Math.max(0,l.rock*LISA.duration/100-LISA.rageDuration).toFixed(1)+"초 · 1.25초마다 음파")+'</div>'};
       }
       if (f.iron) return { ratio: f.iron.suit === "naked" ? clamp(1 - f.iron.rebuild / IRON.rebuild, 0, 1) : f.shieldHp / f.shieldMax, className: "", text: ironSuitNames[f.iron.suit] + (f.iron.suit === "naked" ? " · 자비스 " + Math.ceil(f.iron.rebuild) + "초" : " · 보호막 " + Math.ceil(f.shieldHp) + "/" + f.shieldMax),
-        extraTextHtml: '<div class="status-skill-label">' + (f.iron.suit === "hulk" ? "피격 반격 8·넉백 · 리펄서/부스터 봉인" : f.iron.suit === "naked" ? "공격 불가" : (f.iron.suit === "war" ? "미사일 " : "리펄서 ") + Math.ceil(f.iron.attackCd) + "초 · 부스터 " + Math.ceil(f.iron.dashCd) + "초") + '</div>' };
+        extraTextHtml: '<div class="status-skill-label">' + (f.iron.suit === "hulk" ? "충돌 강타 8·넉백 · 리펄서/부스터 봉인" : f.iron.suit === "naked" ? "공격 불가" : (f.iron.suit === "war" ? "미사일 " : "리펄서 ") + Math.ceil(f.iron.attackCd) + "초 · 부스터 " + Math.ceil(f.iron.dashCd) + "초") + '</div>' };
       if (f.captain) {
         const shield = captainShields.find(o => o.owner === f);
         return { ratio: f.captain.hasShield ? clamp(1 - f.captain.throwCd / CAPTAIN.throwPeriod, 0, 1) : shield ? shield.hits / 5 : 0, className: "", text: f.captain.hasShield ? "방패 보유 · 투척 " + Math.ceil(f.captain.throwCd) + "초" : shield?.stopped ? "방패 정지 · 회수 대기" : "방패 투척 중 · 반사 " + (shield?.hits || 0) + "/5",
-          extraTextHtml: '<div class="status-skill-label">' + (f.captain.hasShield ? "피해 35% 감소 · 방패 반격 5" : "피해 감소 없음 · 강펀치 반격 9") + '</div>' };
+          extraTextHtml: '<div class="status-skill-label">' + (f.captain.hasShield ? "피해 35% 감소 · 충돌 방패공격 5" : "피해 감소 없음 · 충돌 강펀치 9") + '</div>' };
       }
       if (f.tano) return { ratio: f.tano.stones.length / 6, className: "", text: "스톤 " + f.tano.stones.length + "/6 · " + (f.tano.snapped ? "소실 " + Math.ceil(f.tano.lossClock) + "초" : f.tano.spawned === 5 && f.tano.stones.length < 5 ? "남은 스톤 획득 대기" : Math.ceil(f.tano.next) + "초 후 등장"),
         extraTextHtml: '<div class="status-skill-label">' + stoneTypes.filter(s => f.tano.stones.includes(s.id)).map(s => s.name).join(" · ") + (f.tano.hidden > 0 ? " · 무적" : "") + '</div>' };
@@ -5043,7 +5045,6 @@
 
       final = Math.max(1, Math.round(final));
 
-      if (target.captain) captainOnHit(target, source, reason);
 
       if (!fixedDamage && target.baseId === "vampire_luka" && target.vampNight) {
         final = Math.max(1, Math.round(final * 0.30));
@@ -6924,6 +6925,10 @@
               ironDashContact(b, a);
               tanoPowerContact(a, b);
               tanoPowerContact(b, a);
+              captainContact(a, b);
+              captainContact(b, a);
+              hulkContact(a, b);
+              hulkContact(b, a);
               // 진 과전류 배리어는 직접 부딪힌 상대에게 방전 피해와 경직을 준다.
               if (a.baseId === "thunder_jin") zapJinBarrierContact(a, b);
               if (b.baseId === "thunder_jin") zapJinBarrierContact(b, a);
