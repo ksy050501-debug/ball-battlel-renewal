@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v2</title>
+  <title>볼배틀 리뉴얼 v3</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v2</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v3</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1095,6 +1095,8 @@
           const dealt = damage(f, TANO.power, hit.source, "파워스톤 강펀치");
           if (dealt > 0 && f.alive && !(f.baseId === "dummy_unit" && f.hp === f.maxHp)) {
             f.vx = hit.dx * 700; f.vy = hit.dy * 700; f.punchFlight = 0.3;
+            f.punchSource = hit.source;
+            f.punchWallHits = 0;
           }
           spawnBlast(f.x, f.y, 60, "#a855f7");
           spawnParticles(f.x, f.y, "#e9d5ff", 18);
@@ -1104,10 +1106,25 @@
         return true;
       }
       if (f.punchFlight > 0) {
-        f.punchFlight = Math.max(0, f.punchFlight - dt);
-        f.x += f.vx * dt; f.y += f.vy * dt;
-        bounceWalls(f);
+        // 짧은 이동 단위로 벽 접촉을 세어 배속과 모서리에서도 반사 횟수를 보존한다.
+        let remaining = Math.min(dt, f.punchFlight);
+        while (remaining > 0.000001 && f.alive && f.punchFlight > 0) {
+          const step = Math.min(remaining, 1 / 120);
+          remaining -= step;
+          f.punchFlight = Math.max(0, f.punchFlight - step);
+          f.x += f.vx * step; f.y += f.vy * step;
+          const contacts = Number(f.x - f.r < arena.x || f.x + f.r > arena.x2)
+            + Number(f.y - f.r < arena.y || f.y + f.r > arena.y2);
+          bounceWalls(f);
+          for (let i = 0; i < contacts && f.alive && f.punchSource; i++) {
+            f.punchWallHits += 1;
+            damage(f, TANO.power, f.punchSource, "강펀치 벽충돌");
+            spawnFloatingText(f.x, f.y - 42, "벽충돌 " + f.punchWallHits + "회", "#e9d5ff");
+            spawnHitFlash(f.x, f.y, "#a855f7", 40);
+          }
+        }
         if (f.punchFlight <= 0) {
+          f.punchSource = null;
           const speed = Math.hypot(f.vx, f.vy) || 1;
           f.vx = f.vx / speed * f.baseSpeed * 44;
           f.vy = f.vy / speed * f.baseSpeed * 44;
@@ -1763,6 +1780,7 @@
     }
 
     const patchNotes = [
+      "v3: 강펀치 넉백 중 벽 반사 1회마다 추가 피해 8. 모서리 두 벽 접촉은 2회, 넉백 종료 후 일반 벽 반사는 피해 없음.",
       "v2: 리뉴얼 버전 번호 재시작. 파워 스톤을 피격 반격에서 충돌 강펀치로 수정: 0.12초 타격 정지 후 피해 8·0.3초 고속 넉백, 충돌 쿨타임 0.8초. 미획득 상태에도 10초마다 스톤 등장, 5종 획득 후 소울 등장.",
       "v197: 더미 HP 500·사망 부활. 타노 스톤 추적 제거·랜덤 위치 접촉 획득. 핑거플립 후 2초마다 스톤 1개 소실 및 무적을 무시하는 자해 10, 전부 소실 후 재수집.",
       "v196: 더미 복구·타노 추가. 스톤 6초, 반격 8, 가속 8초마다 3초, 정지 10초마다 1.5초, 무적 12초마다 2.5초. 타임 획득 시 10초 되감기, 소울 마지막·핑거플립 전투당 1회.",
@@ -1800,7 +1818,7 @@
     }
 
     function characterDamageInfo(c) {
-      if (c.id === "tano") return { damage: "충돌 강펀치 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 가속 8초·3초 / 정지 10초·1.5초 / 무적 12초·2.5초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백(쿨 0.8초). 타임은 획득 시 10초 전 위치와 HP로 회복(현재 HP보다 낮아지지 않음). 소울 마지막. 핑거플립 후 2초마다 스톤 1개 소실·자해 10, 모두 잃으면 재수집." };
+      if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 가속 8초·3초 / 정지 10초·1.5초 / 무적 12초·2.5초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백(쿨 0.8초). 타임은 획득 시 10초 전 위치와 HP로 회복(현재 HP보다 낮아지지 않음). 소울 마지막. 핑거플립 후 2초마다 스톤 1개 소실·자해 10, 모두 잃으면 재수집." };
       const data = {
         flame_tori: {
           damage: "미사일 8 / 파이어볼 24 / 메테오 4",
@@ -2408,7 +2426,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v2`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v3`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -2434,7 +2452,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v2`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v3`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -4361,6 +4379,10 @@
       if (!target || target.baseId !== "dummy_unit") return false;
       target.hp = target.maxHp;
       target.alive = true;
+      target.punchFlight = 0;
+      target.punchSource = null;
+      target.punchImpact = null;
+      target.punchHold = 0;
       target.poisonTicks = [];
       target.burningTicks = [];
       target.bleedingTicks = [];
