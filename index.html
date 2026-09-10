@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v9</title>
+  <title>볼배틀 리뉴얼 v10</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v9</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v10</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1179,11 +1179,6 @@
       f.lisa.speech = text; f.lisa.speechTime = 2.2;
       spawnFloatingText(f.x, f.y - f.r - 48, text, "#f9a8d4");
       log("<strong>리사</strong> " + escapeHtml(text), "대사");
-      if (soundEnabled && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined" && !window.speechSynthesis.speaking) {
-        const line = new SpeechSynthesisUtterance(text);
-        line.lang = "ko-KR"; line.rate = 1.2; line.pitch = 1.3; line.volume = masterVolume;
-        window.speechSynthesis.speak(line);
-      }
     }
     function lisaVelocity(f, speed) {
       f.baseSpeed = speed; f.speed = speed;
@@ -2372,6 +2367,7 @@
     }
 
     const patchNotes = [
+      "v10: 리사 스킬 대사의 한글 음성 합성을 제거. 화면 대사·기타·드럼·베이스 효과음은 유지.",
       "v9: 캡틴 추가. 6초마다 방패10 투척, 적·벽 총 5회 반사 후 정지·접촉 회수. 방패 보유 중 피해35% 감소·피격 반격5, 투척 중 피해 감소 없이 강펀치 반격9.",
       "v8: 리사 폭주는 벽 충돌 대신 록 14초 중 마지막 4초에 발동. 사거리는 일반150·폭주190으로 제한. 피해9·공격주기1.25초/0.55초 유지.",
       "v7: 헐크버스터 반격 피해8 추가(쿨0.6초). 넉백이 예약 타격을 지우지 않도록 수정·상호 피격 및 반격 재귀 방지. 리사 음파는 최근접 적 조준, 폭주 시 사거리 제한 없이 벽까지.",
@@ -3033,7 +3029,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v9`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v10`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3059,7 +3055,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v9`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v10`, "시작");
       updateHud();
       updateStatusPanel();
     }
