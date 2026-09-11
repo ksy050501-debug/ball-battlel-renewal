@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v12</title>
+  <title>볼배틀 리뉴얼 v13</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v12</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v13</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1282,15 +1282,21 @@
       ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
       // 트윈테일과 기타는 장식일 뿐 f.r를 변경하지 않는다.
       const swing = Math.sin(battleTime * (rage ? 16 : rock ? 9 : 3)) * (rock ? 4 : 2);
-      ctx.fillStyle="#eab44f";ctx.strokeStyle="#a16207";ctx.lineWidth=1.3;
+      // 참고 이미지처럼 귀 옆에서 크게 묶여 아래로 길게 흐르고, 끝부분은 초록빛으로 말린 금발 트윈테일.
       for(const side of [-1,1]){
-        ctx.save();ctx.scale(side,1);ctx.beginPath();ctx.moveTo(13,-12);ctx.bezierCurveTo(29,-14,28,15,25+swing,29);ctx.quadraticCurveTo(13,19,15,2);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+        ctx.save();ctx.scale(side,1);
+        const tail=ctx.createLinearGradient(15,-8,30,42);tail.addColorStop(0,"#fff7a8");tail.addColorStop(.68,"#f4df68");tail.addColorStop(1,"#86c96b");
+        ctx.fillStyle=tail;ctx.strokeStyle="#b89b35";ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.moveTo(15,-10);ctx.bezierCurveTo(32,-8,37,10,29+swing,24);ctx.bezierCurveTo(22,35,36,39,28,47);ctx.bezierCurveTo(20,54,15,46,22,40);ctx.bezierCurveTo(28,35,16,31,20,19);ctx.bezierCurveTo(23,9,12,4,15,-10);ctx.closePath();ctx.fill();ctx.stroke();
+        // 검정·살구색 줄무늬가 들어간 큰 리본형 머리 장식.
+        ctx.fillStyle="#1f2937";ctx.beginPath();ctx.moveTo(14,-8);ctx.lineTo(29,-15);ctx.lineTo(24,-3);ctx.lineTo(31,7);ctx.lineTo(15,1);ctx.closePath();ctx.fill();
+        ctx.fillStyle="#f0a08a";ctx.beginPath();ctx.moveTo(17,-6);ctx.lineTo(26,-11);ctx.lineTo(22,-3);ctx.lineTo(27,3);ctx.lineTo(17,0);ctx.closePath();ctx.fill();
+        ctx.restore();
       }
       ctx.fillStyle=rock?"#1f2937":"#164e3e";ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();
       ctx.fillStyle="#ffe4c7";ctx.beginPath();ctx.ellipse(0,-2,14,16,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle="#f5cb67";ctx.beginPath();ctx.moveTo(-15,0);ctx.lineTo(-15,-13);ctx.quadraticCurveTo(0,-28,15,-13);ctx.lineTo(15,0);ctx.lineTo(7,-10);ctx.lineTo(2,-3);ctx.lineTo(-3,-12);ctx.lineTo(-11,0);ctx.closePath();ctx.fill();
-      ctx.fillStyle="#123d32";for(const x of [-17,17]){ctx.beginPath();ctx.moveTo(x,-9);ctx.lineTo(x-6,-15);ctx.lineTo(x-5,-5);ctx.lineTo(x+5,-15);ctx.lineTo(x+6,-5);ctx.closePath();ctx.fill();}
-      ctx.fillStyle="#2563eb";ctx.fillRect(-9,-1,4,5);ctx.fillRect(5,-1,4,5);
+      ctx.fillStyle="#fff27c";ctx.beginPath();ctx.moveTo(-15,1);ctx.lineTo(-15,-12);ctx.quadraticCurveTo(-6,-25,8,-21);ctx.quadraticCurveTo(17,-18,15,-5);ctx.lineTo(15,1);ctx.lineTo(9,-10);ctx.quadraticCurveTo(5,-3,1,0);ctx.lineTo(-1,-12);ctx.quadraticCurveTo(-7,-5,-12,0);ctx.closePath();ctx.fill();
+      ctx.fillStyle="#8a5a20";ctx.fillRect(-9,-1,4,4);ctx.fillRect(5,-1,4,4);
       ctx.strokeStyle="#422006";ctx.lineWidth=1.5;ctx.beginPath();
       if(rock){ctx.moveTo(-10,-4);ctx.lineTo(-4,-2);ctx.moveTo(10,-4);ctx.lineTo(4,-2);}else{ctx.moveTo(-10,-3);ctx.lineTo(-4,-3);ctx.moveTo(4,-3);ctx.lineTo(10,-3);}ctx.stroke();
       ctx.fillStyle="#9f1239";if(rock){ctx.beginPath();ctx.ellipse(0,8,5,4,0,0,Math.PI*2);ctx.fill();}else{ctx.beginPath();ctx.arc(0,5,4,0.2,Math.PI-0.2);ctx.stroke();}
@@ -1330,7 +1336,7 @@
       ctx.restore();drawHealthBar(f);drawName(f);
     }
     function lisaPortrait() {
-      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="리사 트윈테일"><circle cx="24" cy="24" r="22" fill="#164e3e"/><path d="M10 10Q-1 12 4 44L14 33ZM38 10Q49 12 44 44L34 33Z" fill="#eab44f"/><ellipse cx="24" cy="24" rx="13" ry="16" fill="#ffe4c7"/><path d="M10 24V13Q24 -1 38 13V24L30 13L25 21L21 12Z" fill="#f5cb67"/><path d="M5 9L16 15L5 18ZM43 9L32 15L43 18Z" fill="#123d32"/><path d="M17 24H21M27 24H31" stroke="#2563eb" stroke-width="3"/><path d="M20 33Q24 36 28 33" fill="none" stroke="#9f1239"/></svg>';
+      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="리사 리본 트윈테일"><defs><linearGradient id="lh" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff8a6"/><stop offset=".72" stop-color="#f4dc62"/><stop offset="1" stop-color="#75bf68"/></linearGradient></defs><circle cx="24" cy="24" r="22" fill="#f8fafc"/><path d="M12 13C1 15 1 34 9 39C3 43 7 48 13 43C20 37 12 29 16 19Z" fill="url(#lh)" stroke="#b89b35"/><path d="M36 13C47 15 47 34 39 39C45 43 41 48 35 43C28 37 36 29 32 19Z" fill="url(#lh)" stroke="#b89b35"/><path d="M13 11L3 8L8 17L2 23L15 19ZM35 11L45 8L40 17L46 23L33 19Z" fill="#1f2937"/><path d="M11 12L5 10L9 16L5 20L14 18ZM37 12L43 10L39 16L43 20L34 18Z" fill="#f0a08a"/><ellipse cx="24" cy="24" rx="12" ry="15" fill="#ffe7cf"/><path d="M12 23V13Q21 2 32 8Q39 12 36 23L31 13Q27 18 24 20L22 11Q17 18 12 23Z" fill="#fff27c" stroke="#c7a638"/><path d="M17 24H21M27 24H31" stroke="#8a5a20" stroke-width="2.5"/><path d="M20 33Q24 36 28 33" fill="none" stroke="#9f1239"/><path d="M18 38L24 45L30 38L27 36H21Z" fill="#fff"/><path d="M22 38L24 41L26 38L24 36Z" fill="#22b8a7"/></svg>';
     }
     function tanoPortrait() {
       return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="타노 황금 투구"><circle cx="24" cy="24" r="22" fill="#312e81" stroke="#d4a33e" stroke-width="2"/><ellipse cx="24" cy="25" rx="14" ry="18" fill="#a77aca"/><path d="M7 16L17 4L19 13H29L31 4L41 16L36 22L32 16H16L12 22Z" fill="#d4a33e"/><path d="M15 23H21M27 23H33" stroke="#fff7ed" stroke-width="2"/><path d="M18 33H30M18 36V41M22 36V42M26 36V42M30 36V41" stroke="#4c1d65"/></svg>';
@@ -1340,10 +1346,10 @@
       return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="캡틴 성조 방패"><circle cx="24" cy="24" r="22" fill="#dc2626" stroke="#f8fafc" stroke-width="2"/><circle cx="24" cy="24" r="16" fill="#f8fafc"/><circle cx="24" cy="24" r="10" fill="#2563eb"/><path d="M24 16.5l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z" fill="#fff"/></svg>';
     }
 
-    const CAPTAIN = { throwPeriod: 6, shieldDamage: 10, heldReduction: 0.65, shieldCounter: 5, punchCounter: 9, counterCooldown: 0.75, shieldSpeed: 360, knock: 480 };
+    const CAPTAIN = { throwPeriod: 6, rethrowDelay: 0.30, catchLock: 0.45, shieldDamage: 10, heldReduction: 0.65, shieldCounter: 5, punchCounter: 9, counterCooldown: 0.75, shieldSpeed: 360, knock: 480 };
     let captainShields = [];
     function initCaptain(f) {
-      f.captain = { hasShield: true, throwCd: CAPTAIN.throwPeriod, counterCd: 0 };
+      f.captain = { hasShield: true, throwCd: CAPTAIN.throwPeriod, rethrow: 0, counterCd: 0 };
     }
     function captainKnock(source, target, speed = CAPTAIN.knock) {
       if (!source?.alive || !target?.alive) return;
@@ -1364,6 +1370,11 @@
     function updateCaptain(f, dt) {
       if (!f.captain) return;
       f.captain.counterCd = Math.max(0, f.captain.counterCd - dt);
+      if (f.captain.rethrow > 0) {
+        f.captain.rethrow = Math.max(0, f.captain.rethrow - dt);
+        if (f.captain.rethrow <= 0 && f.captain.hasShield) throwCaptainShield(f);
+        return;
+      }
       if (!f.captain.hasShield) return;
       f.captain.throwCd -= dt;
       if (f.captain.throwCd <= 0) { throwCaptainShield(f); f.captain.throwCd = CAPTAIN.throwPeriod; }
@@ -1374,6 +1385,10 @@
       const held = f.captain.hasShield;
       damage(target, held ? CAPTAIN.shieldCounter : CAPTAIN.punchCounter, f, held ? "캡틴 방패 밀어내기" : "캡틴 강펀치");
       captainKnock(f, target, held ? CAPTAIN.knock : CAPTAIN.knock * 1.25);
+      triggerHitStop(held ? 0.08 : 0.11);
+      spawnHitFlash(target.x, target.y, held ? "#bfdbfe" : "#fbbf24", held ? 44 : 58);
+      spawnParticles(target.x, target.y, held ? "#bfdbfe" : "#fbbf24", held ? 10 : 16);
+      playSound(held ? "shield" : "explosion", held ? 0.8 : 0.55);
       spawnFloatingText(f.x, f.y - f.r - 28, held ? "방패 밀어내기" : "강펀치", held ? "#93c5fd" : "#fbbf24");
     }
     function updateCaptainShields(dt) {
@@ -1407,10 +1422,10 @@
           }
           if (collision && ++o.hits >= 5) { o.stopped = true; o.vx = 0; o.vy = 0; spawnFloatingText(o.x, o.y - 18, "방패 정지", "#e2e8f0"); }
         }
-        if (!o.stopped && !o.collected && o.age >= 0.18 && o.owner.alive && dist(o, o.owner) <= pickupRange) {
+        if (!o.stopped && !o.collected && o.age >= CAPTAIN.catchLock && o.owner.alive && dist(o, o.owner) <= pickupRange) {
           o.owner.captain.hasShield = true; o.collected = true;
-          spawnFloatingText(o.owner.x, o.owner.y - 34, "캐치 · 재투척!", "#bfdbfe");
-          throwCaptainShield(o.owner);
+          o.owner.captain.rethrow = CAPTAIN.rethrowDelay;
+          spawnFloatingText(o.owner.x, o.owner.y - 34, "캐치!", "#bfdbfe");
         }
       });
       captainShields = captainShields.filter(o => !o.collected && o.owner.alive);
@@ -1564,6 +1579,10 @@
       f.iron.reactionCd = IRON.hulkCooldown;
       damage(target, IRON.hulkDamage, f, "헐크버스터 충돌 강타");
       ironKnock(f, target, IRON.hulkKnock);
+      triggerHitStop(0.12);
+      spawnHitFlash(target.x, target.y, "#fca5a5", 64);
+      spawnParticles(target.x, target.y, "#fca5a5", 18);
+      playSound("explosion", 0.65);
       spawnFloatingText(f.x, f.y - 45, "헐크버스터 강타", "#fca5a5");
     }
     function explodeIron(o, radius, power, reason) {
@@ -1773,6 +1792,7 @@
       if (t.stones.length === 6 && !t.snapped) {
         t.snapped = true;
         t.lossClock = TANO.lossPeriod;
+        triggerHitStop(0.75);
         enemiesOf(f).slice().forEach(e => bodyDirectDamage(e, e.maxHp * 0.5, f, "핑거플립", "#facc15"));
         screenShake = Math.max(screenShake, 0.65);
         spawnBlast(f.x, f.y, arena.size, "#facc15");
@@ -1885,6 +1905,8 @@
     let enhancedSimMode = false;
     let fastSimMode = false;
     let screenShake = 0;
+    let cinematicFreeze = 0;
+    let deathEffects = [];
 
     // 외부 음원 없이 Web Audio API로 직접 생성하는 효과음
     let audioCtx = null;
@@ -2393,6 +2415,7 @@
     }
 
     const patchNotes = [
+      "v13: 비행 방패 재캐치 후 0.3초 뒤 재투척·새 방패 0.45초 캐치 잠금. 캡틴/헐크 강타 히트스톱·타격 효과 강화. 핑거플립 0.75초 시간정지. 모든 주요 캐릭터 사망 시 0HP 진동 후 폭발. 리사 헤어를 금발 리본 트윈테일·초록 컬 팁으로 재디자인.",
       "v12: 캡틴 방패 회수 범위 확대. 비행 중 캐치하면 쿨 없이 즉시 재투척, 정지 후 회수만 6초 쿨. 리사는 5초 무피격 뒤 초당 인내2 상승. 철가면 리펄서 전용 지속 빔음 적용. 타노 리얼리티 은신 중 잔상 제거·파워공격 차단.",
       "v11: 캡틴 방패 밀어내기/강펀치와 헐크버스터 강타를 피격 반격에서 직접 충돌 공격으로 변경. 타노 파워스톤처럼 서로 부딪히면 발동.",
       "v10: 리사 스킬 대사의 한글 음성 합성을 제거. 화면 대사·기타·드럼·베이스 효과음은 유지.",
@@ -2440,10 +2463,10 @@
     }
 
     function characterDamageInfo(c) {
-      if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 9", tick: "방패 6초 / 적·벽 총 5회 반사", tip: "회수 범위는 몸보다 넓다. 비행 중 방패를 잡으면 즉시 다시 던지며, 5회 반사 후 정지한 방패를 잡았을 때만 6초 쿨이 돈다. 보유 중 일반 피해 35% 감소." };
+      if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 9", tick: "방패 6초 / 재캐치 후 0.3초 재투척 / 적·벽 총 5회", tip: "비행 방패는 투척 후 0.45초 동안 다시 잡히지 않는다. 이후 넓은 회수 범위로 잡으면 0.3초 준비 후 재투척. 정지한 방패를 잡았을 때만 6초 쿨이 돈다." };
       if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
       if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 충돌강타8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 헐크버스터는 적과 충돌하면 강타8·넉백. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
-      if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 가속 8초·3초 / 정지 10초·1.5초 / 무적 12초·2.5초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백(쿨 0.8초). 타임은 획득 시 10초 전 위치와 HP로 회복(현재 HP보다 낮아지지 않음). 소울 마지막. 핑거플립 후 2초마다 스톤 1개 소실·자해 10, 모두 잃으면 재수집." };
+      if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 핑거플립 시간정지 0.75초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백. 스톤 6개 완성 시 시간을 0.75초 멈추고 핑거플립. 이후 2초마다 스톤 1개 소실·자해 10." };
       const data = {
         flame_tori: {
           damage: "미사일 8 / 파이어볼 24 / 메테오 4",
@@ -3001,6 +3024,8 @@
       logs = [];
       $("log").innerHTML = "";
       battleTime = 0;
+      cinematicFreeze = 0;
+      deathEffects = [];
       statusHpState = {};
       running = true;
       paused = false;
@@ -3057,7 +3082,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v12`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v13`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3083,7 +3108,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v12`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v13`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3103,6 +3128,8 @@
       zones = [];
       pylons = [];
       battleTime = 0;
+      cinematicFreeze = 0;
+      deathEffects = [];
       statusHpState = {};
       $("stateText").textContent = "대기";
       $("pauseBtn").textContent = "일시정지";
@@ -3580,7 +3607,7 @@
         extraTextHtml: '<div class="status-skill-label">' + (f.iron.suit === "hulk" ? "충돌 강타 8·넉백 · 리펄서/부스터 봉인" : f.iron.suit === "naked" ? "공격 불가" : (f.iron.suit === "war" ? "미사일 " : "리펄서 ") + Math.ceil(f.iron.attackCd) + "초 · 부스터 " + Math.ceil(f.iron.dashCd) + "초") + '</div>' };
       if (f.captain) {
         const shield = captainShields.find(o => o.owner === f);
-        return { ratio: f.captain.hasShield ? clamp(1 - f.captain.throwCd / CAPTAIN.throwPeriod, 0, 1) : shield ? shield.hits / 5 : 0, className: "", text: f.captain.hasShield ? "방패 보유 · 투척 " + Math.ceil(f.captain.throwCd) + "초" : shield?.stopped ? "방패 정지 · 회수 대기" : "방패 투척 중 · 반사 " + (shield?.hits || 0) + "/5",
+        return { ratio: f.captain.rethrow > 0 ? 1 - f.captain.rethrow / CAPTAIN.rethrowDelay : f.captain.hasShield ? clamp(1 - f.captain.throwCd / CAPTAIN.throwPeriod, 0, 1) : shield ? shield.hits / 5 : 0, className: "", text: f.captain.rethrow > 0 ? "방패 캐치 · 재투척 " + f.captain.rethrow.toFixed(1) + "초" : f.captain.hasShield ? "방패 보유 · 투척 " + Math.ceil(f.captain.throwCd) + "초" : shield?.stopped ? "방패 정지 · 회수 대기" : "방패 투척 중 · 반사 " + (shield?.hits || 0) + "/5",
           extraTextHtml: '<div class="status-skill-label">' + (f.captain.hasShield ? "피해 35% 감소 · 충돌 방패공격 5" : "피해 감소 없음 · 충돌 강펀치 9") + '</div>' };
       }
       if (f.tano) return { ratio: f.tano.stones.length / 6, className: "", text: "스톤 " + f.tano.stones.length + "/6 · " + (f.tano.snapped ? "소실 " + Math.ceil(f.tano.lossClock) + "초" : f.tano.spawned === 5 && f.tano.stones.length < 5 ? "남은 스톤 획득 대기" : Math.ceil(f.tano.next) + "초 후 등장"),
@@ -4952,10 +4979,8 @@
       baro.hp = 0;
       baro.alive = false;
       zones = zones.filter(z => !(z.kind === "baroWhirl" && z.sourceId === baro.id));
-      spawnBlast(baro.x, baro.y, 118, "#7f1d1d");
-      spawnParticles(baro.x, baro.y, "#fecaca", 52);
+      triggerDeathEffect(baro);
       spawnFloatingText(baro.x, baro.y - baro.r - 36, "불사 종료", "#fecaca");
-      playSound("ko");
       log(`<strong>${escapeHtml(baro.name)}</strong> 불사광폭 종료 · 사망`, "승리");
       return true;
     }
@@ -5043,6 +5068,56 @@
       spawnBlast(target.x, target.y, 46, "#9ca3af");
       spawnFloatingText(target.x, target.y - target.r - 24, "더미 부활", "#e5e7eb");
       return true;
+    }
+
+    function triggerHitStop(duration) {
+      if (!fastSimMode) cinematicFreeze = Math.max(cinematicFreeze, duration);
+    }
+
+    function triggerDeathEffect(target) {
+      if (fastSimMode) {
+        spawnParticles(target.x, target.y, "#ffffff", 42);
+        spawnBlast(target.x, target.y, 72, "#ffffff");
+        return;
+      }
+      cinematicFreeze = Math.max(cinematicFreeze, 0.82);
+      deathEffects.push({ x: target.x, y: target.y, r: target.r, color: target.color, mark: target.mark, name: target.name, life: 0.82, maxLife: 0.82, burst: false });
+      screenShake = Math.max(screenShake, 0.48);
+    }
+
+    function updateCinematics(dt) {
+      if (cinematicFreeze > 0) cinematicFreeze = Math.max(0, cinematicFreeze - dt);
+      deathEffects.forEach(e => {
+        e.life = Math.max(0, e.life - dt);
+        if (!e.burst && e.life <= 0.28) {
+          e.burst = true;
+          spawnParticles(e.x, e.y, "#ffffff", 48);
+          spawnBlast(e.x, e.y, 78, e.color);
+          playSound("ko");
+          screenShake = Math.max(screenShake, 0.72);
+        }
+      });
+      deathEffects = deathEffects.filter(e => e.life > 0);
+      if (cinematicFreeze > 0 || deathEffects.length) updateParticles(dt);
+      if (cinematicFreeze <= 0 && running) checkEnd();
+    }
+
+    function drawDeathEffects() {
+      deathEffects.forEach(e => {
+        if (e.burst) return;
+        const progress = 1 - e.life / e.maxLife;
+        const shake = 1.5 + progress * 7;
+        const ox = Math.sin(performance.now() * 0.075) * shake;
+        const oy = Math.cos(performance.now() * 0.091) * shake * 0.45;
+        ctx.save(); ctx.translate(e.x + ox, e.y + oy);
+        ctx.globalAlpha = 0.95; ctx.fillStyle = e.color; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(0, 0, e.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#ffffff"; ctx.font = `900 ${Math.max(11,e.r)}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(e.mark || "×", 0, 0);
+        ctx.fillStyle = "rgba(0,0,0,.72)"; ctx.fillRect(-24, e.r + 7, 48, 5);
+        ctx.fillStyle = "#ef4444"; ctx.fillRect(-24, e.r + 7, 2, 5);
+        ctx.fillStyle = "#fecaca"; ctx.font = "800 10px system-ui"; ctx.fillText("HP 0", 0, e.r + 23);
+        ctx.restore();
+      });
     }
 
     function damage(target, amount, source, reason = "공격") {
@@ -5261,9 +5336,7 @@
         }
         target.hp = 0;
         target.alive = false;
-        spawnParticles(target.x, target.y, "#ffffff", 42);
-        spawnBlast(target.x, target.y, 72, "#ffffff");
-        playSound("ko");
+        triggerDeathEffect(target);
         if (source && source.alive && !target.isSummon) {
           source.kills += 1;
           log(`<strong>${escapeHtml(source.name)}</strong>의 ${reason}! <strong>${escapeHtml(target.name)}</strong> 탈락`);
@@ -5338,9 +5411,7 @@
         }
         target.hp = 0;
         target.alive = false;
-        spawnParticles(target.x, target.y, "#ffffff", 42);
-        spawnBlast(target.x, target.y, 72, "#ffffff");
-        playSound("ko");
+        triggerDeathEffect(target);
         if (source && source.alive && !target.isSummon) {
           source.kills += 1;
           log(`<strong>${escapeHtml(source.name)}</strong>의 ${reason}! <strong>${escapeHtml(target.name)}</strong> 탈락`);
@@ -7735,7 +7806,7 @@
     }
 
     function checkEnd() {
-      if (!running || ended) return;
+      if (!running || ended || cinematicFreeze > 0) return;
 
       if (battleMode === "team") {
         handleTeamReplacements();
@@ -7783,7 +7854,7 @@
 
 
     function update(dt) {
-      if (!running || paused) return;
+      if (!running || paused || cinematicFreeze > 0) return;
 
       for (let step = 0; step < speedMultiplier; step++) {
         const sub = dt / Math.max(1, speedMultiplier);
@@ -7800,6 +7871,7 @@
 
         fighters = fighters.filter(f => f.alive || !f.isSummon);
         checkEnd();
+        if (cinematicFreeze > 0) break;
       }
       updateHud();
       updateStatusPanel();
@@ -9335,6 +9407,7 @@
       [...fighters].sort((a, b) => a.y - b.y).forEach(f => {
         if (f.alive) drawFighter(f);
       });
+      drawDeathEffects();
 
       if (!running && fighters.length === 0) {
         ctx.fillStyle = "rgba(255,255,255,.32)";
@@ -10036,12 +10109,13 @@
     function loop(now) {
       const realDt = Math.min(0.033, (now - lastFrame) / 1000 || 0);
       lastFrame = now;
+      updateCinematics(realDt);
 
       // 배속 버튼이 실제 시뮬레이션 시간에 반영되도록 처리한다.
       // 4배속에서도 충돌/투사체가 지나치게 건너뛰지 않도록 작은 단위로 쪼개 업데이트한다.
       let simLeft = realDt * speedMultiplier;
       const step = 0.033;
-      while (simLeft > 0) {
+      while (simLeft > 0 && cinematicFreeze <= 0) {
         update(Math.min(step, simLeft));
         simLeft -= step;
       }
