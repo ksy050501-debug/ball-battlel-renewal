@@ -2547,7 +2547,7 @@
     }
 
     const patchNotes = [
-      "v14: 캡틴 방패를 20초간 회수하지 못하면 무해한 귀환 상태로 자동 복귀. 방패 없는 강펀치 피해 9→13. 시험 캐릭터 쟈바미 추가: 접촉자 강제 베팅·승리 추가피해·체력/빚에 따른 확률 보정·다음 도박 종료까지 빚 불사.",
+      "v14: 캡틴 방패를 20초간 회수하지 못하면 무해한 귀환 상태로 자동 복귀. 방패 없는 강펀치 피해 9→13. 시험 캐릭터 쟈바미 추가: 최근 접촉자 전원 도박·기본 승률 1/n·저체력/빚 가중치·승리 추가피해·다음 도박 종료까지 빚 불사.",
       "v13: 비행 방패 재캐치 후 0.3초 뒤 재투척·새 방패 0.45초 캐치 잠금. 캡틴/헐크 강타 히트스톱·타격 효과 강화. 핑거플립 0.75초 시간정지. 모든 주요 캐릭터 사망 시 0HP 진동 후 폭발. 리사 헤어를 금발 리본 트윈테일·초록 컬 팁으로 재디자인.",
       "v12: 캡틴 방패 회수 범위 확대. 비행 중 캐치하면 쿨 없이 즉시 재투척, 정지 후 회수만 6초 쿨. 리사는 5초 무피격 뒤 초당 인내2 상승. 철가면 리펄서 전용 지속 빔음 적용. 타노 리얼리티 은신 중 잔상 제거·파워공격 차단.",
       "v11: 캡틴 방패 밀어내기/강펀치와 헐크버스터 강타를 피격 반격에서 직접 충돌 공격으로 변경. 타노 파워스톤처럼 서로 부딪히면 발동.",
@@ -3743,7 +3743,7 @@
       if (f.captain) {
         const shield = captainShields.find(o => o.owner === f);
         return { ratio: f.captain.rethrow > 0 ? 1 - f.captain.rethrow / CAPTAIN.rethrowDelay : f.captain.hasShield ? clamp(1 - f.captain.throwCd / CAPTAIN.throwPeriod, 0, 1) : shield ? shield.hits / 5 : 0, className: "", text: f.captain.rethrow > 0 ? "방패 캐치 · 재투척 " + f.captain.rethrow.toFixed(1) + "초" : f.captain.hasShield ? "방패 보유 · 투척 " + Math.ceil(f.captain.throwCd) + "초" : shield?.stopped ? "방패 정지 · 회수 대기" : "방패 투척 중 · 반사 " + (shield?.hits || 0) + "/5",
-          extraTextHtml: '<div class="status-skill-label">' + (f.captain.hasShield ? "피해 35% 감소 · 충돌 방패공격 5" : "피해 감소 없음 · 충돌 강펀치 9") + '</div>' };
+          extraTextHtml: '<div class="status-skill-label">' + (f.captain.hasShield ? "피해 35% 감소 · 충돌 방패공격 5" : "피해 감소 없음 · 충돌 강펀치 13") + '</div>' };
       }
       if (f.jabami) {
         const j = f.jabami;
