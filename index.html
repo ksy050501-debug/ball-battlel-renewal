@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v18</title>
+  <title>볼배틀 리뉴얼 v19</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v18</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v19</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1468,7 +1468,7 @@
       return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="쟈바미 검은 장발 붉은 교복"><circle cx="24" cy="24" r="22" fill="#f8fafc"/><path d="M7 44Q5 14 14 7Q24-1 34 7Q43 15 41 44L34 47L31 18H17L14 47Z" fill="#09090b"/><ellipse cx="24" cy="21" rx="10.5" ry="12.5" fill="#ffe4d6"/><path d="M13 20Q12 5 24 5Q37 5 35 20Q30 13 16 14Z" fill="#09090b"/><path d="M17 22h5m4 0h5" stroke="#3f2d28" stroke-width="2.2"/><path d="M20 29q4 2.8 8 0" fill="none" stroke="#9f1239"/><path d="M11 47L16 34L24 38L32 34L37 47Z" fill="#b91c1c" stroke="#7f1d1d"/><path d="M21 35L24 41L27 35L24 33Z" fill="#111827"/></svg>';
     }
     function initJabami(f) {
-      f.jabami = { clock: JABAMI.period, contacts: new Set(), phase: "collect", timer: 0, gameDuration: 0, participants: [], round: 0, debt: 0, debtUntilRound: 0, game: "", stake: 0, cards: new Map(), bombHolder: "", bombPassCd: 0, bombSound: 0, rouletteAngle: 0, savedMotion: new Map(), resultText: "", speech: "", speechTime: 0 };
+      f.jabami = { clock: JABAMI.period, contacts: new Set(), phase: "collect", timer: 0, gameDuration: 0, participants: [], round: 0, debt: 0, debtUntilRound: 0, debtEntryUsed: false, game: "", stake: 0, cards: new Map(), bombHolder: "", bombPassCd: 0, bombSound: 0, rouletteAngle: 0, savedMotion: new Map(), resultText: "", speech: "", speechTime: 0 };
     }
     function recordJabamiContact(f, enemy) {
       if (f?.jabami && f.jabami.phase === "collect" && enemy?.alive && !enemy.isSummon && areEnemies(f, enemy)) f.jabami.contacts.add(enemy.id);
@@ -1481,16 +1481,25 @@
     }
     function enterJabamiDebt(f, amount = 0) {
       const j = f.jabami;
+      if (j.debt <= 0) {
+        if (j.debtEntryUsed) return false;
+        j.debtEntryUsed = true;
+      }
       j.debt += Math.max(0, amount);
       f.hp = Math.max(1, f.hp);
       if (!j.debtUntilRound) j.debtUntilRound = j.round + 1;
       spawnFloatingText(f.x, f.y - f.r - 30, `빚 ${Math.ceil(j.debt)}`, "#fca5a5");
+      return true;
     }
     function takeJabamiStake(f, amount) {
       const available = Math.max(0, f.hp - 1);
       const paid = Math.min(amount, available);
       f.hp -= paid;
-      if (paid < amount) enterJabamiDebt(f, amount - paid);
+      if (paid < amount && !enterJabamiDebt(f, amount - paid)) {
+        f.hp=0; f.alive=false; triggerDeathEffect(f);
+        spawnFloatingText(f.x,f.y-f.r-28,"빚 기회 소진 · 탈락","#ef4444");
+        log(`<strong>${escapeHtml(f.name)}</strong> 두 번째 빚을 감당하지 못하고 탈락`,"도박");
+      }
       f.damageTaken = (f.damageTaken || 0) + paid;
       return amount;
     }
@@ -1647,9 +1656,11 @@
     }
     function convertJabamiDamageToDebt(target, final, source, reason, color = "#fca5a5") {
       if (!target?.jabami || (target.jabami.debt <= 0 && final < target.hp)) return false;
+      if (target.jabami.debt <= 0 && target.jabami.debtEntryUsed) return false;
       const value = Math.max(1, Math.round(final));
       const paid = target.jabami.debt > 0 ? 0 : Math.max(0, target.hp - 1);
-      target.hp -= paid; enterJabamiDebt(target, value - paid);
+      target.hp -= paid;
+      if (!enterJabamiDebt(target, value - paid)) return false;
       target.damageTaken = (target.damageTaken || 0) + value;
       target.hitsTaken += 1; target.hitsTakenSkill += 1;
       if (source && source.alive && source !== target) {
@@ -2692,6 +2703,7 @@
     }
 
     const patchNotes = [
+      "v19: 쟈바미의 빚쟁이 상태 진입을 전투당 1회로 제한. 첫 빚을 청산해도 진입권은 복구되지 않으며, 이후 체력이 0이 되거나 판돈을 감당하지 못하면 정상적으로 사망.",
       "v18: 도박 결과 대사와 슬로모션이 시작되는 순간 하이카드 재추첨과 폭탄 전달을 잠가 결과가 뒤집히지 않도록 수정. 룰렛 참가자를 칸 경계가 아닌 각 색상 부채꼴의 정확한 중앙에 배치.",
       "v17: 쟈바미 빚 상태 승리 보상 1.75→1.5배, 빚/극저체력 승률 가중치 1.75→1.35. 빚을 완전히 청산하면 최대 체력 20% 범위에서 회복. 도박 결과의 큰 노란 문구를 제거하고 쟈바미 승패 대사와 슬로모션으로 교체. 거대 룰렛을 색상 부채꼴·이름표·중앙축·상단 포인터 형태로 재디자인.",
       "v16: 하이카드 표시를 참가자 체력바 왼쪽의 소형 카드로 이동. 도박 종료 순간 결과 문구와 1.35초 슬로모션을 추가. 빚쟁이 쟈바미가 승리하면 보유 빚을 패배자들에게 피해로 나눠 떠넘긴다. 폭탄 보유자 표시와 남은 시간도 강화.",
@@ -3366,7 +3378,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v18`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v19`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3392,7 +3404,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v18`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v19`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3899,7 +3911,7 @@
         const max = j.phase === "reveal" ? JABAMI.revealDelay : Math.max(1,j.gameDuration);
         const text = j.phase === "collect" ? `다음 도박 ${Math.ceil(j.clock)}초 · 접촉자 ${j.contacts.size}명` : j.phase === "reveal" ? `${Math.ceil(j.timer)}초 뒤 종목 공개 · 판돈 ${j.stake}` : `${JABAMI_GAME_NAMES[j.game]} · ${j.timer.toFixed(1)}초`;
         return { ratio: j.phase === "collect" ? clamp(1-j.clock/JABAMI.period,0,1) : clamp(1-j.timer/max,0,1), className: "", text,
-          extraTextHtml: '<div class="status-skill-label">' + (j.debt > 0 ? `빚 ${Math.ceil(j.debt)} · 다음 도박 종료까지 불사 · 승리보상 ×1.5` : `누적 접촉자 ${j.contacts.size}명`) + '</div>' };
+          extraTextHtml: '<div class="status-skill-label">' + (j.debt > 0 ? `빚 ${Math.ceil(j.debt)} · 다음 도박 종료까지 불사 · 승리보상 ×1.5` : j.debtEntryUsed ? `빚 기회 사용 완료 · 다음 0HP는 사망` : `누적 접촉자 ${j.contacts.size}명 · 빚 기회 1회`) + '</div>' };
       }
       if (f.tano) return { ratio: f.tano.stones.length / 6, className: "", text: "스톤 " + f.tano.stones.length + "/6 · " + (f.tano.snapped ? "소실 " + Math.ceil(f.tano.lossClock) + "초" : f.tano.spawned === 5 && f.tano.stones.length < 5 ? "남은 스톤 획득 대기" : Math.ceil(f.tano.next) + "초 후 등장"),
         extraTextHtml: '<div class="status-skill-label">' + stoneTypes.filter(s => f.tano.stones.includes(s.id)).map(s => s.name).join(" · ") + (f.tano.hidden > 0 ? " · 무적" : "") + '</div>' };
