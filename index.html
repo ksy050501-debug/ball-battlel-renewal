@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v27</title>
+  <title>볼배틀 리뉴얼 v28</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v27</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v28</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1665,7 +1665,16 @@
     }
     function rewardJabamiWin(f, baseAmount, debtRecipients = []) {
       const debtMode = f.jabami.debt > 0;
-      if (debtMode) transferJabamiDebt(f, debtRecipients);
+      if (debtMode && debtRecipients.some(p => p?.alive && p !== f)) {
+        transferJabamiDebt(f, debtRecipients);
+      } else if (debtMode) {
+        const cleared = Math.ceil(f.jabami.debt);
+        f.jabami.debt = 0; f.jabami.debtUntilRound = 0;
+        const recovery = Math.min(cleared, Math.ceil(f.maxHp * .2));
+        if (recovery > 0) f.hp = Math.min(f.maxHp, f.hp + recovery);
+        spawnFloatingText(f.x, f.y-f.r-48, `부전승 · 빚 ${cleared} 청산`, "#fde68a");
+        log(`<strong>${escapeHtml(f.name)}</strong> 상대 전원 탈락 · 빚 ${cleared} 청산`, "도박");
+      }
       gainJabamiWinnings(f, Math.round(baseAmount * (debtMode ? 1.5 : 1)));
       if (debtMode) spawnFloatingText(f.x, f.y-f.r-48, "빚쟁이 대역전!", "#fde68a");
       return debtMode;
@@ -1813,7 +1822,6 @@
       ctx.fillStyle = "#111827"; ctx.font = "bold 12px system-ui"; ctx.textAlign = "center"; ctx.fillText("♦", 0, 11);
       if (f.jabami.debt > 0) { ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,f.r+8,0,Math.PI*2); ctx.stroke(); }
       ctx.restore();
-      if (f.jabami.debt > 0 && f.jabami.phase === "reveal") drawRing(f.x, f.y, JABAMI.debtInviteRadius, "rgba(244,63,94,.72)", 4);
       drawHealthBar(f); drawName(f);
     }
     function activeJabamiGameFor(f) { return fighters.find(j => j.alive && (j.jabami?.phase === "play" || j.jabami?.phase === "result") && j.jabami.participants.includes(f.id)); }
@@ -2882,6 +2890,7 @@
     }
 
     const patchNotes = [
+      "v28: 탈락 즉시 리사의 음파 잔상·캡틴의 투척 방패·타노의 드롭 스톤 등 소유자 기반 전투 오브젝트를 정리. 도박 상대 전원 탈락 시 빚 상태 쟈바미도 빚을 청산하고 승리하도록 수정. 빚 상태의 광역 참가 범위는 판돈 징수 순간 한 번만 표시·판정.",
       "v27: 흑조커·색조커 카드를 실제 트럼프 조커처럼 다시 그림. 미러링 J 인덱스, 광대 얼굴·삼색 모자·종·칼라·JOKER 레터링을 추가하고 일반 카드보다 조금 큰 30×38 크기로 표시.",
       "v26: 하이카드 진행 중 쟈바미 체력바 오른쪽에 붉은 종료 카운트다운, 체력바 위에 빚 액수, 맵 상단 바깥에 판돈 표시. 승자와 패자에게 금색/적색 결과 이펙트와 효과음 추가. 등록된 도박 상대가 전부 탈락하면 쟈바미의 즉시 승리로 판정.",
       "v25: 쟈바미 도박을 하이카드 전용으로 변경하고 폭탄돌리기·룰렛 제거. 빚 상태에서 도박판이 열리면 반경 155 안의 적도 강제 참가. 저체력·빚 상태는 높은 카드 확률을 소폭 보정. 쟈바미 전용 54장 덱에 흑조커·색조커를 추가하고 조커로 승리하면 빚 진입 기회 +1.",
@@ -2945,7 +2954,7 @@
 
     function characterDamageInfo(c) {
       if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 13", tick: "방패 6초 / 재캐치 후 0.3초 재투척 / 적·벽 총 5회", tip: "20초 동안 회수하지 못하면 피해 없는 귀환 방패로 바뀐다. 비행 방패는 0.45초 캐치 잠금, 정지 방패 회수만 6초 쿨." };
-      if (c.id === "jabami") return { damage: "무작위 판돈 12~28 · 게임별 추가 피해", tick: "10초 / 이전 도박 이후 접촉자 전원", tip: "하이카드는 벽 충돌마다 재추첨, 폭탄은 접촉으로 전달, 룰렛은 이동·쿨타임을 고정하고 회전한다. 쟈바미는 치명상도 빚으로 전환하며 빚 상태 승리 보상 1.5배." };
+      if (c.id === "jabami") return { damage: "무작위 판돈 12~28 · 패배 시 판돈만큼 추가 피해", tick: "10초 / 이전 도박 이후 접촉자 전원", tip: "하이카드는 벽 충돌마다 재추첨한다. 빚 상태에서는 판돈 징수 순간 반경 155 안의 적도 강제 참가하며, 치명상은 빚으로 전환되고 승리 보상은 1.5배다." };
       if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
       if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 충돌강타8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 헐크버스터는 적과 충돌하면 강타8·넉백. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
       if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 9초 / 핑거플립 시간정지 0.75초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백. 스톤 6개 완성 시 시간을 0.75초 멈추고 핑거플립. 이후 2초마다 스톤 1개 소실·자해 10." };
@@ -3565,7 +3574,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v27`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v28`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3591,7 +3600,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v27`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v28`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -5564,7 +5573,18 @@
       if (!fastSimMode) cinematicFreeze = Math.max(cinematicFreeze, duration);
     }
 
+    function clearDefeatedFighterArtifacts(target) {
+      if (!target) return;
+      if (target.lisa) target.lisa.waves.length = 0;
+      if (target.tano) target.tano.drops.length = 0;
+      captainShields = captainShields.filter(o => o.owner !== target);
+      ironObjects = ironObjects.filter(o => o.owner !== target && o.ownerId !== target.id);
+      projectiles = projectiles.filter(p => p.sourceId !== target.id);
+      zones = zones.filter(z => z.sourceId !== target.id);
+    }
+
     function triggerDeathEffect(target) {
+      clearDefeatedFighterArtifacts(target);
       if (fastSimMode) {
         spawnParticles(target.x, target.y, "#ffffff", 42);
         spawnBlast(target.x, target.y, 72, "#ffffff");
