@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v15</title>
+  <title>볼배틀 리뉴얼 v16</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v15</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v16</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1468,7 +1468,7 @@
       return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="쟈바미 검은 장발 붉은 교복"><circle cx="24" cy="24" r="22" fill="#f8fafc"/><path d="M7 44Q5 14 14 7Q24-1 34 7Q43 15 41 44L34 47L31 18H17L14 47Z" fill="#09090b"/><ellipse cx="24" cy="21" rx="10.5" ry="12.5" fill="#ffe4d6"/><path d="M13 20Q12 5 24 5Q37 5 35 20Q30 13 16 14Z" fill="#09090b"/><path d="M17 22h5m4 0h5" stroke="#3f2d28" stroke-width="2.2"/><path d="M20 29q4 2.8 8 0" fill="none" stroke="#9f1239"/><path d="M11 47L16 34L24 38L32 34L37 47Z" fill="#b91c1c" stroke="#7f1d1d"/><path d="M21 35L24 41L27 35L24 33Z" fill="#111827"/></svg>';
     }
     function initJabami(f) {
-      f.jabami = { clock: JABAMI.period, contacts: new Set(), phase: "collect", timer: 0, gameDuration: 0, participants: [], round: 0, debt: 0, debtUntilRound: 0, game: "", stake: 0, cards: new Map(), bombHolder: "", bombPassCd: 0, bombSound: 0, rouletteAngle: 0, savedMotion: new Map() };
+      f.jabami = { clock: JABAMI.period, contacts: new Set(), phase: "collect", timer: 0, gameDuration: 0, participants: [], round: 0, debt: 0, debtUntilRound: 0, game: "", stake: 0, cards: new Map(), bombHolder: "", bombPassCd: 0, bombSound: 0, rouletteAngle: 0, savedMotion: new Map(), resultText: "" };
     }
     function recordJabamiContact(f, enemy) {
       if (f?.jabami && f.jabami.phase === "collect" && enemy?.alive && !enemy.isSummon && areEnemies(f, enemy)) f.jabami.contacts.add(enemy.id);
@@ -1542,11 +1542,41 @@
       spawnFloatingText(arena.x + arena.size/2, arena.y + arena.size*.27, JABAMI_GAME_NAMES[j.game] + "!", "#fbbf24");
       log(`<strong>${JABAMI_GAME_NAMES[j.game]}</strong> 시작 · 판돈 ${j.stake}`, "도박");
     }
-    function rewardJabamiWin(f, baseAmount) {
+    function transferJabamiDebt(f, recipients) {
+      const j = f.jabami, targets = recipients.filter(p => p?.alive && p !== f);
+      if (j.debt <= 0 || !targets.length) return 0;
+      const total = Math.ceil(j.debt), share = Math.ceil(total / targets.length);
+      j.debt = 0; j.debtUntilRound = 0;
+      targets.forEach(p => {
+        bodyDirectDamage(p, share, f, "떠넘긴 빚", "#f43f5e");
+        spawnFloatingText(p.x, p.y-p.r-48, `빚 청구 -${share}`, "#fda4af");
+      });
+      spawnFloatingText(f.x, f.y-f.r-48, `빚 ${total} 떠넘김!`, "#fde68a");
+      return total;
+    }
+    function rewardJabamiWin(f, baseAmount, debtRecipients = []) {
       const debtMode = f.jabami.debt > 0;
+      if (debtMode) transferJabamiDebt(f, debtRecipients);
       gainJabamiWinnings(f, Math.round(baseAmount * (debtMode ? 1.75 : 1)));
       if (debtMode) spawnFloatingText(f.x, f.y-f.r-48, "빚쟁이 대역전!", "#fde68a");
       return debtMode;
+    }
+    function prepareJabamiResult(f) {
+      const j=f.jabami, ps=jabamiParticipants(f);
+      if (!ps.length) { finishJabamiGame(f); return; }
+      if (j.game==="highcard") {
+        const high=Math.max(...ps.map(p=>j.cards.get(p.id)?.value??0));
+        const names=ps.filter(p=>(j.cards.get(p.id)?.value??0)===high).map(p=>p.name).join(", ");
+        j.resultText=`${CARD_LABELS[high]} · ${names} 승리`;
+      } else if (j.game==="bomb") {
+        j.resultText=`폭탄 폭발 · ${fighterById(j.bombHolder)?.name||"보유자"} 패배`;
+      } else {
+        const loser=ps.reduce((best,p)=>p.y<best.y?p:best,ps[0]);
+        j.resultText=`룰렛 지목 · ${loser.name} 패배`;
+      }
+      j.phase="result"; j.timer=.24; j.gameDuration=.24;
+      gambleSlowUntil=Math.max(gambleSlowUntil,performance.now()+1350);
+      triggerHitStop(.12); playSound("card",1);
     }
     function finishJabamiGame(f) {
       const j = f.jabami, ps = jabamiParticipants(f), stake = j.stake;
@@ -1555,7 +1585,7 @@
         const winners = ps.filter(p => (j.cards.get(p.id)?.value ?? 0) === high);
         ps.forEach(p => {
           if (winners.includes(p)) {
-            if (p === f) rewardJabamiWin(f, stake * 2); else p.hp = Math.min(p.maxHp, p.hp + stake * 2);
+            if (p === f) rewardJabamiWin(f, stake * 2, ps.filter(x=>!winners.includes(x))); else p.hp = Math.min(p.maxHp, p.hp + stake * 2);
             spawnFloatingText(p.x,p.y-p.r-34,`승리 +${stake*2}`,"#fde68a");
           } else bodyDirectDamage(p, stake, f, "하이카드 패배", "#ef4444");
         });
@@ -1563,17 +1593,17 @@
       } else if (j.game === "bomb" && ps.length) {
         const loser = fighterById(j.bombHolder);
         if (loser?.alive) bodyDirectDamage(loser, stake * (loser === f && j.debt > 0 ? 2 : 3), f, "폭탄 폭발", "#fb923c");
-        if (f.alive && loser !== f) rewardJabamiWin(f, stake);
+        if (f.alive && loser !== f) rewardJabamiWin(f, stake, [loser]);
         if (loser) { spawnBlast(loser.x,loser.y,105,"#fb923c"); spawnParticles(loser.x,loser.y,"#fca5a5",32); }
         playSound("ironExplosion",1.35); screenShake=Math.max(screenShake,1);
       } else if (j.game === "roulette" && ps.length) {
         const loser = ps.reduce((best,p) => p.y < best.y ? p : best, ps[0]);
         bodyDirectDamage(loser, stake * 3, f, "룰렛 당첨", "#facc15");
-        if (f.alive && loser !== f) rewardJabamiWin(f, stake);
+        if (f.alive && loser !== f) rewardJabamiWin(f, stake, [loser]);
         spawnBlast(loser.x,loser.y,115,"#facc15"); playSound("ironExplosion",1.25);
         for (const p of ps) { const saved=j.savedMotion.get(p.id); if(saved){p.vx=saved.vx;p.vy=saved.vy;} }
       }
-      j.phase="collect"; j.timer=0; j.clock=JABAMI.period; j.participants=[]; j.cards.clear(); j.bombHolder=""; j.savedMotion.clear();
+      j.phase="collect"; j.timer=0; j.clock=JABAMI.period; j.participants=[]; j.cards.clear(); j.bombHolder=""; j.savedMotion.clear(); j.resultText="";
       if (f.alive && j.debt > 0 && j.round >= j.debtUntilRound) eliminateJabamiForDebt(f);
     }
     function updateJabami(f, dt) {
@@ -1589,7 +1619,12 @@
           j.rouletteAngle += dt * (2.4 + j.timer * .75); const ps=jabamiParticipants(f), c=arenaCenter(), radius=Math.min(arena.size*.31,150);
           ps.forEach(p=>{const s=j.savedMotion.get(p.id);if(s){const a=s.angle+j.rouletteAngle;p.x=c.x+Math.cos(a)*radius;p.y=c.y+Math.sin(a)*radius;p.vx=0;p.vy=0;}});
         }
-        if(j.timer<=0) finishJabamiGame(f); return j.game==="roulette";
+        if(j.timer<=0) prepareJabamiResult(f); return j.game==="roulette";
+      }
+      if (j.phase === "result") {
+        j.timer=Math.max(0,j.timer-dt);
+        if(j.timer<=0) finishJabamiGame(f);
+        return true;
       }
       j.clock-=dt; if(j.clock<=0) startJabamiGamble(f); return false;
     }
@@ -1619,7 +1654,7 @@
       if (f.jabami.debt > 0) { ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,f.r+8,0,Math.PI*2); ctx.stroke(); }
       ctx.restore(); drawHealthBar(f); drawName(f);
     }
-    function activeJabamiGameFor(f) { return fighters.find(j => j.alive && j.jabami?.phase === "play" && j.jabami.participants.includes(f.id)); }
+    function activeJabamiGameFor(f) { return fighters.find(j => j.alive && (j.jabami?.phase === "play" || j.jabami?.phase === "result") && j.jabami.participants.includes(f.id)); }
     function jabamiHighCardWallBounce(f) {
       const host=activeJabamiGameFor(f); if(!host || host.jabami.game!=="highcard") return;
       host.jabami.cards.set(f.id,randomCard(f)); spawnFloatingText(f.x,f.y-f.r-34,"새 카드!","#fde68a"); playSound("card",.75);
@@ -1629,9 +1664,10 @@
       const j=host.jabami; if(j.bombHolder===a.id){j.bombHolder=b.id;j.bombPassCd=.38;playSound("bombTick",1);}else if(j.bombHolder===b.id){j.bombHolder=a.id;j.bombPassCd=.38;playSound("bombTick",1);}
     }
     function drawJabamiGames() {
-      fighters.filter(f=>f.alive&&f.jabami?.phase==="play").forEach(host=>{const j=host.jabami,ps=jabamiParticipants(host);
+      fighters.filter(f=>f.alive&&(f.jabami?.phase==="play"||f.jabami?.phase==="result")).forEach(host=>{const j=host.jabami,ps=jabamiParticipants(host);
         if(j.game==="roulette"){const c=arenaCenter(),r=Math.min(arena.size*.31,150);ctx.save();ctx.strokeStyle="#facc15";ctx.lineWidth=8;ctx.beginPath();ctx.arc(c.x,c.y,r+28,0,Math.PI*2);ctx.stroke();for(let i=0;i<ps.length;i++){const a=i*Math.PI*2/ps.length+j.rouletteAngle;ctx.strokeStyle=i%2?"#7f1d1d":"#f8fafc";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x+Math.cos(a)*(r+25),c.y+Math.sin(a)*(r+25));ctx.stroke();}ctx.fillStyle="#facc15";ctx.beginPath();ctx.moveTo(c.x,c.y-r-42);ctx.lineTo(c.x-13,c.y-r-65);ctx.lineTo(c.x+13,c.y-r-65);ctx.closePath();ctx.fill();ctx.restore();}
-        ps.forEach(p=>{if(j.game==="highcard"){const card=j.cards.get(p.id)||{value:0,suit:"♠"},red=card.suit==="♥"||card.suit==="♦";ctx.save();ctx.fillStyle="#fff";ctx.strokeStyle="#111827";ctx.lineWidth=2;ctx.fillRect(p.x-15,p.y-p.r-46,30,39);ctx.strokeRect(p.x-15,p.y-p.r-46,30,39);ctx.fillStyle=red?"#dc2626":"#111827";ctx.font="900 13px system-ui";ctx.textAlign="center";ctx.fillText(CARD_LABELS[card.value]+card.suit,p.x,p.y-p.r-21);ctx.restore();}if(j.game==="bomb"&&j.bombHolder===p.id){drawGlowCircle(p.x,p.y-p.r-22,10,"#fb923c",1);ctx.fillStyle="#111827";ctx.font="bold 15px system-ui";ctx.textAlign="center";ctx.fillText("●",p.x,p.y-p.r-19);}});
+        ps.forEach(p=>{if(j.game==="bomb"&&j.bombHolder===p.id){drawGlowCircle(p.x,p.y-p.r-29,13,"#fb923c",1);ctx.fillStyle="#111827";ctx.font="bold 18px system-ui";ctx.textAlign="center";ctx.fillText("●",p.x,p.y-p.r-25);ctx.fillStyle="#fff7ed";ctx.font="900 11px system-ui";ctx.fillText(`${Math.max(0,j.timer).toFixed(1)}초`,p.x,p.y-p.r-45);}});
+        if(j.phase==="result"&&j.resultText){const c=arenaCenter();ctx.save();ctx.textAlign="center";ctx.lineWidth=7;ctx.strokeStyle="rgba(0,0,0,.85)";ctx.fillStyle="#fde68a";ctx.font="900 24px system-ui";ctx.strokeText(j.resultText,c.x,arena.y+58);ctx.fillText(j.resultText,c.x,arena.y+58);ctx.restore();}
       });
     }
 
@@ -2100,6 +2136,7 @@
     let fastSimMode = false;
     let screenShake = 0;
     let cinematicFreeze = 0;
+    let gambleSlowUntil = 0;
     let deathEffects = [];
 
     // 외부 음원 없이 Web Audio API로 직접 생성하는 효과음
@@ -2639,6 +2676,7 @@
     }
 
     const patchNotes = [
+      "v16: 하이카드 표시를 참가자 체력바 왼쪽의 소형 카드로 이동. 도박 종료 순간 결과 문구와 1.35초 슬로모션을 추가. 빚쟁이 쟈바미가 승리하면 보유 빚을 패배자들에게 피해로 나눠 떠넘긴다. 폭탄 보유자 표시와 남은 시간도 강화.",
       "v15: 철가면 빔 지속음·추진음·중량 펀치음·폭발음 강화. 쟈바미 검은 장발/갈색 눈 외형 수정. 이전 도박 이후 접촉자 전원과 무작위 판돈을 걸고 하이카드·폭탄돌리기·거대 룰렛을 실제 진행. 치명상도 빚으로 전환하며 빚 상태 승리 보상 강화.",
       "v14: 캡틴 방패를 20초간 회수하지 못하면 무해한 귀환 상태로 자동 복귀. 방패 없는 강펀치 피해 9→13. 시험 캐릭터 쟈바미 추가: 최근 접촉자 전원 도박·기본 승률 1/n·저체력/빚 가중치·승리 추가피해·다음 도박 종료까지 빚 불사.",
       "v13: 비행 방패 재캐치 후 0.3초 뒤 재투척·새 방패 0.45초 캐치 잠금. 캡틴/헐크 강타 히트스톱·타격 효과 강화. 핑거플립 0.75초 시간정지. 모든 주요 캐릭터 사망 시 0HP 진동 후 폭발. 리사 헤어를 금발 리본 트윈테일·초록 컬 팁으로 재디자인.",
@@ -3310,7 +3348,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v15`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v16`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3336,7 +3374,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v15`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v16`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -9952,6 +9990,21 @@
       const y = f.y - f.r - 24;
       const ratio = Math.max(0, f.hp / f.maxHp);
 
+      const gambleHost = activeJabamiGameFor(f);
+      if (gambleHost?.jabami.game === "highcard") {
+        const card = gambleHost.jabami.cards.get(f.id);
+        if (card) {
+          const cw=22,ch=29,cx=x-cw-5,cy=y-(ch-h)/2;
+          const red=card.suit==="♥"||card.suit==="♦";
+          ctx.fillStyle="#fff";ctx.strokeStyle="#111827";ctx.lineWidth=1.5;
+          roundRect(ctx,cx,cy,cw,ch,3,true,true);
+          ctx.fillStyle=red?"#dc2626":"#111827";ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";
+          ctx.fillText(CARD_LABELS[card.value],cx+cw/2,cy+9);
+          ctx.font="900 11px system-ui";ctx.fillText(card.suit,cx+cw/2,cy+20);
+          ctx.textBaseline="alphabetic";
+        }
+      }
+
       ctx.fillStyle = "rgba(0,0,0,.58)";
       roundRect(ctx, x, y, w, h, 4, true, false);
 
@@ -10364,7 +10417,8 @@
 
       // 배속 버튼이 실제 시뮬레이션 시간에 반영되도록 처리한다.
       // 4배속에서도 충돌/투사체가 지나치게 건너뛰지 않도록 작은 단위로 쪼개 업데이트한다.
-      let simLeft = realDt * speedMultiplier;
+      const gambleScale = performance.now() < gambleSlowUntil ? 0.18 : 1;
+      let simLeft = realDt * speedMultiplier * gambleScale;
       const step = 0.033;
       while (simLeft > 0 && cinematicFreeze <= 0) {
         update(Math.min(step, simLeft));
