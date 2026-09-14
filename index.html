@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v32</title>
+  <title>볼배틀 리뉴얼 v33</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v32</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v33</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1065,7 +1065,7 @@
       { id: "jabami", name: "쟈바미", mark: "♦", role: "마법사", color: "#991b1b", hp: 170, attack: 0, speed: 2.75, range: 120,
         skillName: "광기의 하이카드", condition: "10초마다 · 접촉자 전원 · 빚 상태는 근처 적 강제 참가", desc: "모두 같은 무작위 판돈을 내고 하이카드를 진행한다. 저체력·빚 상태에서는 높은 카드가 소폭 잘 나오며 쟈바미의 덱에만 색조커와 흑조커가 들어 있다." },
       { id: "justice_ally", name: "정의의 아군", mark: "D", role: "마법사", color: "#f8fafc", hp: 170, attack: 9, speed: 2.7, range: 135,
-        skillName: "듀얼리스트", condition: "대결 시작 5초 후", desc: "‘듀얼 개시!’를 선언하고 듀얼디스크를 장착한다. 최초 손패는 카드 3장이다." },
+        skillName: "8장 듀얼 덱", condition: "5초 후 개시 · 최초 3장 · 이후 5초마다 드로우", desc: "백룡 3장, 오벨리스크 1장, 융합 2장, 폭렬질풍탄과 함정 각 1장. 오벨리스크는 반드시 마지막에 드로우한다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -1541,21 +1541,53 @@
       return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="정의의 아군 카이바풍 헤어"><circle cx="24" cy="24" r="22" fill="#e0f2fe"/><path d="M8 22L2 12L14 14L9 4L21 10L24 1L29 10L40 5L35 15L47 13L39 24Z" fill="#6b3f2a" stroke="#2b1b16" stroke-width="2"/><ellipse cx="24" cy="27" rx="13" ry="14" fill="#f3d0b5"/><path d="M11 22Q15 8 24 10Q35 9 38 23L31 16L26 22L22 13L17 22Z" fill="#7a4930"/><path d="M15 26L21 24M33 26L27 24" stroke="#172554" stroke-width="2.2"/><path d="M20 34Q24 36 28 34" fill="none" stroke="#7f1d1d" stroke-width="1.4"/><path d="M12 46L16 36L24 40L32 36L37 46Z" fill="#f8fafc" stroke="#475569"/><path d="M21 38L24 44L27 38" fill="#1d4ed8"/></svg>';
     }
     function initJusticeAlly(f) {
-      f.duelist = { timer: 5, equipped: false, hand: 0, speech: "", speechTime: 0 };
+      const mainDeck = ["blueEyes","blueEyes","blueEyes","fusion","fusion","burst","trap"];
+      for(let i=mainDeck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[mainDeck[i],mainDeck[j]]=[mainDeck[j],mainDeck[i]];}
+      f.duelist = { timer: 5, equipped: false, hand: [], deck: [...mainDeck,"obelisk"], drawCd: 0, playCd: 0, speech: "", speechTime: 0 };
     }
     function updateJusticeAlly(f, dt) {
       const d = f.duelist;
       if (!d) return;
       d.speechTime = Math.max(0, d.speechTime - dt);
-      if (d.equipped) return;
+      if (d.equipped) {
+        d.drawCd=Math.max(0,d.drawCd-dt);d.playCd=Math.max(0,d.playCd-dt);
+        if(d.deck.length&&d.drawCd<=0){drawJusticeCard(f);d.drawCd=5;}
+        playJusticeCards(f);
+        return;
+      }
       d.timer = Math.max(0, d.timer - dt);
       if (d.timer > 0) return;
-      d.equipped = true; d.hand = 3; d.speech = "듀얼 개시!"; d.speechTime = 2.2;
+      d.equipped = true; d.speech = "듀얼 개시!"; d.speechTime = 2.2;
+      for(let i=0;i<3;i++)drawJusticeCard(f);d.drawCd=5;
       playSound("card", 1.35); playSound("start", 1.15);
       spawnBlast(f.x, f.y, 68, "#60a5fa"); spawnParticles(f.x, f.y, "#f8fafc", 18);
       spawnFloatingText(f.x, f.y - f.r - 52, d.speech, "#bfdbfe");
       log(`<strong>${escapeHtml(f.name)}</strong> ${d.speech} · 듀얼디스크 장착 · 최초 손패 3장`, "대사");
     }
+    const JUSTICE_CARD_NAMES={blueEyes:"푸른 눈의 백룡",fusion:"융합",burst:"멸망의 폭렬질풍탄",trap:"강인! 무적! 최강!",obelisk:"오벨리스크의 거신병"};
+    let duelBreaths=[];
+    function drawJusticeCard(f){const card=f.duelist.deck.shift();if(!card)return;f.duelist.hand.push(card);playSound("card");spawnFloatingText(f.x,f.y-f.r-42,JUSTICE_CARD_NAMES[card],card==="obelisk"?"#60a5fa":"#d6a36b");}
+    function consumeJusticeCard(f,id){const i=f.duelist.hand.indexOf(id);if(i<0)return false;f.duelist.hand.splice(i,1);return true;}
+    function justiceSummons(f,kind=null){return fighters.filter(e=>e.alive&&e.ownerId===f.id&&e.duelMonster&&(!kind||e.duelMonster.kind===kind));}
+    function summonJusticeMonster(owner,kind){
+      const spec=kind==="blueEyes"?{id:"blue_eyes_summon",name:"푸른 눈의 백룡",mark:"白",color:"#dbeafe",hp:55,attack:8,speed:2.45,range:190}:kind==="ultimate"?{id:"ultimate_dragon",name:"궁극의 푸른 눈의 백룡",mark:"三",color:"#bfdbfe",hp:145,attack:13,speed:2.2,range:230}:{id:"obelisk_summon",name:"오벨리스크의 거신병",mark:"神",color:"#2563eb",hp:180,attack:14,speed:1.9,range:80};
+      const a=rand(0,Math.PI*2),rr=owner.r+34,pos={x:clamp(owner.x+Math.cos(a)*rr,arena.x+22,arena.x2-22),y:clamp(owner.y+Math.sin(a)*rr,arena.y+22,arena.y2-22)};
+      const m=makeFighter({...spec,role:"소환수",skillName:"몬스터",condition:""},pos,fighterSerial++,owner.id,owner.teamId);m.duelMonster={kind,breathCd:kind==="obelisk"?999:rand(2.2,4.2),cast:0,invuln:0};fighters.push(m);
+      spawnBlast(m.x,m.y,kind==="obelisk"?105:75,spec.color);spawnParticles(m.x,m.y,spec.color,24);playSound(kind==="obelisk"?"explosion":"magic",1.3);log(`<strong>${escapeHtml(owner.name)}</strong> ${spec.name} 소환`,"소환");return m;
+    }
+    function playJusticeCards(f){
+      const d=f.duelist;if(d.playCd>0)return;
+      const blues=justiceSummons(f,"blueEyes"),ultimates=justiceSummons(f,"ultimate");
+      if(d.hand.includes("trap")&&blues.length){const low=[...blues].sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(low.hp<low.maxHp*.7){consumeJusticeCard(f,"trap");low.hp=Math.min(low.maxHp,low.hp+30);low.duelMonster.invuln=3;spawnFloatingText(low.x,low.y-low.r-30,"강인! 무적! 최강!","#fde68a");spawnBlast(low.x,low.y,72,"#facc15");playSound("reflect",1.3);d.playCd=.8;return;}}
+      if(d.hand.includes("fusion")&&blues.length>=3){consumeJusticeCard(f,"fusion");blues.slice(0,3).forEach(m=>{m.alive=false;spawnParticles(m.x,m.y,"#93c5fd",12);});summonJusticeMonster(f,"ultimate");d.playCd=1.2;return;}
+      if(d.hand.includes("burst")&&(ultimates[0]||blues[0])){consumeJusticeCard(f,"burst");startUltimateBurst(f,ultimates[0]||blues[0]);d.playCd=1.5;return;}
+      if(d.hand.includes("obelisk")){consumeJusticeCard(f,"obelisk");fighters.filter(e=>e.alive&&e.isSummon).forEach(m=>{m.alive=false;spawnParticles(m.x,m.y,m.color,10);});summonJusticeMonster(f,"obelisk");d.playCd=1.5;return;}
+      if(d.hand.includes("blueEyes")){consumeJusticeCard(f,"blueEyes");summonJusticeMonster(f,"blueEyes");d.playCd=3;}
+    }
+    function updateDuelMonster(f,dt){const m=f.duelMonster;if(!m)return;m.invuln=Math.max(0,m.invuln-dt);m.breathCd-=dt;if(m.kind!=="obelisk"&&m.breathCd<=0){m.breathCd=5;m.cast=.42;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;spawnFloatingText(f.x,f.y-f.r-26,"버스트 스트림!","#bae6fd");playSound("beam",.8);}if(m.cast>0){m.cast-=dt;f.vx=0;f.vy=0;if(m.cast<=0){f.vx=m.savedVx||0;f.vy=m.savedVy||0;fireDuelBreath(f,m.kind==="ultimate"?16:10);}}if(f.contactCd<=0){const near=nearestEnemy(f);if(near.enemy&&near.d<=f.r+near.enemy.r+3){damage(near.enemy,f.attack,f,`${f.name} 충돌`);f.contactCd=.8;}}}
+    function fireDuelBreath(dragon,power){const owner=fighterById(dragon.ownerId)||dragon,a=Math.atan2(dragon.vy,dragon.vx),range=dragon.duelMonster.kind==="ultimate"?230:190;duelBreaths.push({kind:"stream",x:dragon.x,y:dragon.y,a,range,life:.5,maxLife:.5,color:"#60a5fa"});enemiesOf(dragon).forEach(e=>{const dx=e.x-dragon.x,dy=e.y-dragon.y,d=Math.hypot(dx,dy),da=Math.abs(Math.atan2(Math.sin(Math.atan2(dy,dx)-a),Math.cos(Math.atan2(dy,dx)-a)));if(d<=range+e.r&&da<=.20)damage(e,power,owner,"버스트 스트림");});screenShake=Math.max(screenShake,.25);}
+    function startUltimateBurst(owner,dragon){const base=Math.atan2(dragon.vy,dragon.vx);duelBreaths.push({kind:"sweep",dragonId:dragon.id,ownerId:owner.id,base,range:275,life:1.6,maxLife:1.6,hit:new Set(),color:"#38bdf8"});spawnFloatingText(dragon.x,dragon.y-dragon.r-38,"멸망의 폭렬질풍탄!","#7dd3fc");playSound("beam",1.7);screenShake=Math.max(screenShake,.75);}
+    function updateDuelBreaths(dt){for(let i=duelBreaths.length-1;i>=0;i--){const b=duelBreaths[i];b.life-=dt;if(b.kind==="sweep"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;const p=1-b.life/b.maxLife;b.a=b.base-Math.PI/2+p*Math.PI;enemiesOf(dragon).forEach(e=>{if(b.hit.has(e.id))return;const dx=e.x-b.x,dy=e.y-b.y,d=Math.hypot(dx,dy),da=Math.abs(Math.atan2(Math.sin(Math.atan2(dy,dx)-b.a),Math.cos(Math.atan2(dy,dx)-b.a)));if(d<=b.range+e.r&&da<.14){b.hit.add(e.id);damage(e,28,owner||dragon,"얼티메이트 버스트");}});screenShake=Math.max(screenShake,.45);}if(b.life<=0)duelBreaths.splice(i,1);}}
     function drawDuelCardBack(x, y, angle = 0, scale = 1) {
       ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
       ctx.fillStyle="#4a2115";ctx.strokeStyle="#d6a36b";ctx.lineWidth=1.4;roundRect(ctx,-7,-10,14,20,1.8,true,true);
@@ -1565,7 +1597,7 @@
     }
     function drawJusticeAllyCharacter(f) {
       const d=f.duelist;ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
-      if(d?.equipped)for(let i=0;i<d.hand;i++)drawDuelCardBack(-14+i*14,-31-Math.abs(i-1)*2,(i-1)*.16,.9);
+      if(d?.equipped)for(let i=0;i<d.hand.length;i++)drawDuelCardBack(-14+(i-Math.min(1,d.hand.length/2))*9,-31-Math.abs(i-(d.hand.length-1)/2)*1.5,(i-(d.hand.length-1)/2)*.10,.82);
       ctx.fillStyle="#f8fafc";ctx.strokeStyle="#1e3a8a";ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();ctx.stroke();
       ctx.fillStyle="#f1cfb3";ctx.beginPath();ctx.ellipse(0,1,13,15,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle="#6b3f2a";ctx.strokeStyle="#2b1b16";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-14,-3);ctx.lineTo(-27,-14);ctx.lineTo(-13,-12);ctx.lineTo(-20,-25);ctx.lineTo(-5,-17);ctx.lineTo(-2,-31);ctx.lineTo(5,-18);ctx.lineTo(20,-27);ctx.lineTo(14,-12);ctx.lineTo(28,-15);ctx.lineTo(14,-2);ctx.lineTo(9,-12);ctx.lineTo(3,-2);ctx.lineTo(0,-16);ctx.lineTo(-6,-3);ctx.lineTo(-10,-13);ctx.closePath();ctx.fill();ctx.stroke();
@@ -2932,6 +2964,7 @@
     }
 
     const patchNotes = [
+      "v33: 정의의 아군 8장 덱 구현. 백룡 3장·오벨리스크·융합 2장·멸망의 폭렬질풍탄·강인! 무적! 최강!을 자동 운용. 백룡의 주기 브레스, 3장 릴리스 궁극룡 융합, 180도 왕복 얼티메이트 버스트, 회복·3초 무적 함정과 마지막 확정 오벨리스크 드로우를 추가.",
       "v32: 신규 캐릭터 ‘정의의 아군’ 추가. 카이바풍 갈색 가시머리를 코드 드로잉하고, 전투 5초 후 ‘듀얼 개시!’ 선언과 함께 왼팔 듀얼디스크 및 갈색 소용돌이 카드 3장을 표시.",
       "v31: 쟈바미의 저체력 보정을 확률식 추가 추첨에서 비공개 확정 다중 추첨으로 변경. 체력 10~30%는 2장, 10% 이하는 3장, 빚쟁이는 4장 중 최고 카드만 최종 카드로 표시하며 보정 문구·이펙트는 노출하지 않음.",
       "v30: 쟈바미의 저체력 승부사 보정 강화. 높은 카드만 채택하는 추가 추첨 확률을 체력 10~30%에서 20%, 10% 이하에서 35%, 빚쟁이 상태에서 45%로 상향.",
@@ -2999,7 +3032,7 @@
     }
 
     function characterDamageInfo(c) {
-      if (c.id === "justice_ally") return { damage: "기본 충돌 공격 9", tick: "전투 시작 5초 후", tip: "듀얼디스크를 장착하고 카드 3장을 든다. 카드 상세 효과는 추후 추가 예정." };
+      if (c.id === "justice_ally") return { damage: "백룡 충돌 8·버스트10 / 궁극룡 충돌13·버스트16 / 얼티메이트 버스트28 / 오벨리스크 충돌14", tick: "5초마다 드로우 · 백룡 5초마다 브레스", tip: "8장 덱. 살아 있는 백룡 3장에 융합을 사용하고, 폭렬질풍탄은 백룡 또는 궁극룡으로 180도를 쓸어낸다. 함정은 가장 약한 백룡을 30 회복하고 3초 무적으로 만든다. 오벨리스크는 마지막 드로우 후 맵의 모든 소환수를 릴리스한다." };
       if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 13", tick: "방패 6초 / 재캐치 후 0.3초 재투척 / 적·벽 총 5회", tip: "20초 동안 회수하지 못하면 피해 없는 귀환 방패로 바뀐다. 비행 방패는 0.45초 캐치 잠금, 정지 방패 회수만 6초 쿨." };
       if (c.id === "jabami") return { damage: "무작위 판돈 12~28 · 패배 시 판돈만큼 추가 피해", tick: "10초 / 이전 도박 이후 접촉자 전원", tip: "총판돈은 개인 판돈×참가자 수이며 공동 승리자는 이를 균등 분배한다. 빚 상태에서는 반경 155 안의 적도 강제 참가하고 쟈바미의 승리 몫은 1.5배다." };
       if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
@@ -3557,6 +3590,7 @@
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       ironObjects = [];
       captainShields = [];
+      duelBreaths = [];
       projectiles = [];
       particles = [];
       zones = [];
@@ -3622,7 +3656,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v32`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v33`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3648,7 +3682,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v32`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v33`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3657,6 +3691,7 @@
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       ironObjects = [];
       captainShields = [];
+      duelBreaths = [];
       running = false;
       paused = false;
       ended = false;
@@ -5680,6 +5715,7 @@
 
     function damage(target, amount, source, reason = "공격") {
       if (!target || !target.alive || (target.dodoVoid || 0) > 0 || target.tano?.hidden > 0) return 0;
+      if ((target.duelMonster?.invuln || 0) > 0) { spawnFloatingText(target.x,target.y-target.r-22,"무적","#fde68a"); return 0; }
       if (tryHeroLeonGuardBlock(target, reason)) return 0;
       if (target.iron) {
         const armor = absorbIronDamage(target, amount, source, reason);
@@ -7234,6 +7270,7 @@
 
     function updateFighter(f, dt) {
       if (!f.alive) return;
+      if (f.duelMonster) updateDuelMonster(f, dt);
       const rouletteHost = activeJabamiGameFor(f);
       if (rouletteHost?.jabami.game === "roulette") {
         if (rouletteHost === f) updateJabami(f, dt);
@@ -8440,6 +8477,7 @@
         updateProjectiles(sub);
         updateIronObjects(sub);
         updateCaptainShields(sub);
+        updateDuelBreaths(sub);
         updateZones(sub);
         updatePylons(sub);
         updateParticles(sub);
@@ -9980,6 +10018,7 @@
         ctx.restore();
       });
 
+      drawDuelBreaths();
       [...fighters].sort((a, b) => a.y - b.y).forEach(f => {
         if (f.alive) drawFighter(f);
       });
@@ -9993,9 +10032,15 @@
       }
     }
 
+    function drawDuelBreaths(){duelBreaths.forEach(b=>{const alpha=clamp(b.life/b.maxLife,0,1);ctx.save();ctx.globalAlpha=.28+.55*alpha;ctx.translate(b.x,b.y);ctx.rotate(b.a||0);const half=b.kind==="sweep"?.12:.20;const grad=ctx.createLinearGradient(0,0,b.range,0);grad.addColorStop(0,"#eff6ff");grad.addColorStop(.28,"#38bdf8");grad.addColorStop(1,"rgba(37,99,235,0)");ctx.fillStyle=grad;ctx.shadowColor="#60a5fa";ctx.shadowBlur=24;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,b.range,-half,half);ctx.closePath();ctx.fill();ctx.restore();});}
+    function drawDuelMonster(f){const kind=f.duelMonster.kind;ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
+      if(kind==="obelisk"){ctx.fillStyle="#1d4ed8";ctx.strokeStyle="#93c5fd";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#172554";ctx.beginPath();ctx.moveTo(-18,-5);ctx.lineTo(-31,-17);ctx.lineTo(-17,-14);ctx.lineTo(-9,-23);ctx.lineTo(-5,-10);ctx.lineTo(5,-10);ctx.lineTo(9,-23);ctx.lineTo(17,-14);ctx.lineTo(31,-17);ctx.lineTo(18,-5);ctx.closePath();ctx.fill();ctx.fillStyle="#f8fafc";ctx.fillRect(-9,-3,5,3);ctx.fillRect(4,-3,5,3);ctx.strokeStyle="#0f172a";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-7,9);ctx.lineTo(7,9);ctx.stroke();}
+      else{const ultimate=kind==="ultimate";ctx.fillStyle=ultimate?"#bfdbfe":"#e0f2fe";ctx.strokeStyle="#2563eb";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();ctx.stroke();const heads=ultimate?[-10,0,10]:[0];heads.forEach((hx,i)=>{ctx.fillStyle="#f8fafc";ctx.strokeStyle="#60a5fa";ctx.beginPath();ctx.moveTo(hx-7,-5);ctx.lineTo(hx-12,-17);ctx.lineTo(hx-3,-12);ctx.lineTo(hx,-24-(i===1?3:0));ctx.lineTo(hx+3,-12);ctx.lineTo(hx+12,-17);ctx.lineTo(hx+7,-5);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#2563eb";ctx.beginPath();ctx.arc(hx-3,-9,1.4,0,Math.PI*2);ctx.arc(hx+3,-9,1.4,0,Math.PI*2);ctx.fill();});ctx.strokeStyle="#93c5fd";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-13,8);ctx.lineTo(-28,16);ctx.lineTo(-15,17);ctx.moveTo(13,8);ctx.lineTo(28,16);ctx.lineTo(15,17);ctx.stroke();}
+      ctx.restore();if(f.duelMonster.invuln>0){drawRing(f.x,f.y,f.r+10,"#fde68a",4);drawRing(f.x,f.y,f.r+18,"rgba(96,165,250,.7)",2);}drawHealthBar(f);drawName(f);}
     function drawFighter(f) {
       drawPowerFist(f);
       drawIronSuit(f);
+      if (f.duelMonster) { drawDuelMonster(f); return; }
       if (f.iron) { drawIronCharacter(f); return; }
       if (f.lisa) { drawLisaCharacter(f); return; }
       if (f.captain) { drawCaptainCharacter(f); return; }
