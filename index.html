@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v20</title>
+  <title>볼배틀 리뉴얼 v21</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v20</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v21</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1059,7 +1059,7 @@
       { id: "iron_mask", name: "철가면", mark: "Fe", role: "전사", color: "#dc2626", hp: 30, attack: 10, speed: 2.7, range: 160,
         skillName: "자비스 슈트", condition: "보호막 70 · 파괴 후 8초 재장착(50)", desc: "리펄서와 부스터. 슈트가 깨지면 무능력 상태, 재장착은 워머신·헐크버스터·마크42 중 하나." },
       { id: "tano", name: "타노", mark: "✦", role: "전사", color: "#9333ea", hp: 240, attack: 8, speed: 2.7, range: 80,
-        skillName: "인피니티 스톤", condition: "10초마다 다음 스톤 · 소울 마지막", desc: "떠다니는 스톤 가까이 접근하면 넓은 범위로 획득. 6개 완성 시 핑거플립, 이후 스톤 소실과 자해를 거쳐 재수집." },
+        skillName: "인피니티 스톤", condition: "9초마다 다음 스톤 · 소울 마지막", desc: "떠다니는 스톤 가까이 접근하면 넓은 범위로 획득. 6개 완성 시 핑거플립, 이후 스톤 소실과 자해를 거쳐 재수집." },
       { id: "captain", name: "캡틴", mark: "★", role: "수호자", color: "#2563eb", hp: 190, attack: 9, speed: 2.65, range: 190,
         skillName: "수호의 방패", condition: "6초마다 투척 · 비행 중 캐치 시 즉시 재투척", desc: "넓은 범위로 방패를 회수한다. 비행 중 잡으면 바로 다시 던지고, 5회 반사 후 멈춘 방패를 잡으면 6초 뒤 던진다." },
       { id: "jabami", name: "쟈바미", mark: "♦", role: "마법사", color: "#991b1b", hp: 170, attack: 0, speed: 2.75, range: 120,
@@ -1933,7 +1933,7 @@
     }
 
 
-    const TANO = { lossPeriod: 2, lossDamage: 10, spawn: 10, pickupBonus: 34, power: 8, spacePeriod: 8, spaceDuration: 3, mindPeriod: 10, mindDuration: 1.5, realityPeriod: 12, realityDuration: 2.5 };
+    const TANO = { lossPeriod: 2, lossDamage: 10, spawn: 9, pickupBonus: 34, power: 8, spacePeriod: 8, spaceDuration: 3, mindPeriod: 10, mindDuration: 1.5, realityPeriod: 12, realityDuration: 2.5 };
     const stoneTypes = [
       { id: "power", name: "파워", color: "#a855f7" },
       { id: "space", name: "스페이스", color: "#3b82f6" },
@@ -2703,6 +2703,7 @@
     }
 
     const patchNotes = [
+      "v21: 타노 인피니티 스톤 등장 주기를 10초에서 9초로 단축. 최초 수집과 핑거플립 이후 재수집에 모두 적용.",
       "v20: 타노의 인피니티 스톤 습득 범위를 몸 충돌 반경보다 넓은 반경으로 확장. 캡틴의 방패 회수처럼 가까이 스치기만 해도 스톤을 획득.",
       "v19: 쟈바미의 빚쟁이 상태 진입을 전투당 1회로 제한. 첫 빚을 청산해도 진입권은 복구되지 않으며, 이후 체력이 0이 되거나 판돈을 감당하지 못하면 정상적으로 사망.",
       "v18: 도박 결과 대사와 슬로모션이 시작되는 순간 하이카드 재추첨과 폭탄 전달을 잠가 결과가 뒤집히지 않도록 수정. 룰렛 참가자를 칸 경계가 아닌 각 색상 부채꼴의 정확한 중앙에 배치.",
@@ -2762,7 +2763,7 @@
       if (c.id === "jabami") return { damage: "무작위 판돈 12~28 · 게임별 추가 피해", tick: "10초 / 이전 도박 이후 접촉자 전원", tip: "하이카드는 벽 충돌마다 재추첨, 폭탄은 접촉으로 전달, 룰렛은 이동·쿨타임을 고정하고 회전한다. 쟈바미는 치명상도 빚으로 전환하며 빚 상태 승리 보상 1.5배." };
       if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
       if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 충돌강타8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 헐크버스터는 적과 충돌하면 강타8·넉백. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
-      if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 핑거플립 시간정지 0.75초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백. 스톤 6개 완성 시 시간을 0.75초 멈추고 핑거플립. 이후 2초마다 스톤 1개 소실·자해 10." };
+      if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 9초 / 핑거플립 시간정지 0.75초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백. 스톤 6개 완성 시 시간을 0.75초 멈추고 핑거플립. 이후 2초마다 스톤 1개 소실·자해 10." };
       const data = {
         flame_tori: {
           damage: "미사일 8 / 파이어볼 24 / 메테오 4",
@@ -3379,7 +3380,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v20`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v21`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3405,7 +3406,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v20`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v21`, "시작");
       updateHud();
       updateStatusPanel();
     }
