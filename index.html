@@ -1064,6 +1064,8 @@
         skillName: "수호의 방패", condition: "6초마다 투척 · 비행 중 캐치 시 즉시 재투척", desc: "넓은 범위로 방패를 회수한다. 비행 중 잡으면 바로 다시 던지고, 5회 반사 후 멈춘 방패를 잡으면 6초 뒤 던진다." },
       { id: "jabami", name: "쟈바미", mark: "♦", role: "마법사", color: "#991b1b", hp: 170, attack: 0, speed: 2.75, range: 120,
         skillName: "광기의 하이카드", condition: "10초마다 · 접촉자 전원 · 빚 상태는 근처 적 강제 참가", desc: "모두 같은 무작위 판돈을 내고 하이카드를 진행한다. 저체력·빚 상태에서는 높은 카드가 소폭 잘 나오며 쟈바미의 덱에만 색조커와 흑조커가 들어 있다." },
+      { id: "justice_ally", name: "정의의 아군", mark: "D", role: "마법사", color: "#f8fafc", hp: 170, attack: 9, speed: 2.7, range: 135,
+        skillName: "듀얼리스트", condition: "대결 시작 5초 후", desc: "‘듀얼 개시!’를 선언하고 듀얼디스크를 장착한다. 최초 손패는 카드 3장이다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -1534,6 +1536,43 @@
     const CARD_SUITS = ["♠","♥","♦","♣"];
     function jabamiPortrait() {
       return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="쟈바미 검은 장발 붉은 교복"><circle cx="24" cy="24" r="22" fill="#f8fafc"/><path d="M7 44Q5 14 14 7Q24-1 34 7Q43 15 41 44L34 47L31 18H17L14 47Z" fill="#09090b"/><ellipse cx="24" cy="21" rx="10.5" ry="12.5" fill="#ffe4d6"/><path d="M13 20Q12 5 24 5Q37 5 35 20Q30 13 16 14Z" fill="#09090b"/><path d="M17 22h5m4 0h5" stroke="#3f2d28" stroke-width="2.2"/><path d="M20 29q4 2.8 8 0" fill="none" stroke="#9f1239"/><path d="M11 47L16 34L24 38L32 34L37 47Z" fill="#b91c1c" stroke="#7f1d1d"/><path d="M21 35L24 41L27 35L24 33Z" fill="#111827"/></svg>';
+    }
+    function justiceAllyPortrait() {
+      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="정의의 아군 카이바풍 헤어"><circle cx="24" cy="24" r="22" fill="#e0f2fe"/><path d="M8 22L2 12L14 14L9 4L21 10L24 1L29 10L40 5L35 15L47 13L39 24Z" fill="#6b3f2a" stroke="#2b1b16" stroke-width="2"/><ellipse cx="24" cy="27" rx="13" ry="14" fill="#f3d0b5"/><path d="M11 22Q15 8 24 10Q35 9 38 23L31 16L26 22L22 13L17 22Z" fill="#7a4930"/><path d="M15 26L21 24M33 26L27 24" stroke="#172554" stroke-width="2.2"/><path d="M20 34Q24 36 28 34" fill="none" stroke="#7f1d1d" stroke-width="1.4"/><path d="M12 46L16 36L24 40L32 36L37 46Z" fill="#f8fafc" stroke="#475569"/><path d="M21 38L24 44L27 38" fill="#1d4ed8"/></svg>';
+    }
+    function initJusticeAlly(f) {
+      f.duelist = { timer: 5, equipped: false, hand: 0, speech: "", speechTime: 0 };
+    }
+    function updateJusticeAlly(f, dt) {
+      const d = f.duelist;
+      if (!d) return;
+      d.speechTime = Math.max(0, d.speechTime - dt);
+      if (d.equipped) return;
+      d.timer = Math.max(0, d.timer - dt);
+      if (d.timer > 0) return;
+      d.equipped = true; d.hand = 3; d.speech = "듀얼 개시!"; d.speechTime = 2.2;
+      playSound("card", 1.35); playSound("start", 1.15);
+      spawnBlast(f.x, f.y, 68, "#60a5fa"); spawnParticles(f.x, f.y, "#f8fafc", 18);
+      spawnFloatingText(f.x, f.y - f.r - 52, d.speech, "#bfdbfe");
+      log(`<strong>${escapeHtml(f.name)}</strong> ${d.speech} · 듀얼디스크 장착 · 최초 손패 3장`, "대사");
+    }
+    function drawDuelCardBack(x, y, angle = 0, scale = 1) {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
+      ctx.fillStyle="#4a2115";ctx.strokeStyle="#d6a36b";ctx.lineWidth=1.4;roundRect(ctx,-7,-10,14,20,1.8,true,true);
+      ctx.strokeStyle="#9a5b32";ctx.lineWidth=1;roundRect(ctx,-5.2,-8.2,10.4,16.4,1.2,false,true);
+      ctx.strokeStyle="#d08a49";ctx.lineWidth=1.2;ctx.beginPath();
+      for(let a=0;a<=Math.PI*4.5;a+=.16){const r=a*.42,px=Math.cos(a)*r,py=Math.sin(a)*r*.72;if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();ctx.restore();
+    }
+    function drawJusticeAllyCharacter(f) {
+      const d=f.duelist;ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
+      if(d?.equipped)for(let i=0;i<d.hand;i++)drawDuelCardBack(-14+i*14,-31-Math.abs(i-1)*2,(i-1)*.16,.9);
+      ctx.fillStyle="#f8fafc";ctx.strokeStyle="#1e3a8a";ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#f1cfb3";ctx.beginPath();ctx.ellipse(0,1,13,15,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#6b3f2a";ctx.strokeStyle="#2b1b16";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-14,-3);ctx.lineTo(-27,-14);ctx.lineTo(-13,-12);ctx.lineTo(-20,-25);ctx.lineTo(-5,-17);ctx.lineTo(-2,-31);ctx.lineTo(5,-18);ctx.lineTo(20,-27);ctx.lineTo(14,-12);ctx.lineTo(28,-15);ctx.lineTo(14,-2);ctx.lineTo(9,-12);ctx.lineTo(3,-2);ctx.lineTo(0,-16);ctx.lineTo(-6,-3);ctx.lineTo(-10,-13);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle="#172554";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-10,1);ctx.lineTo(-4,-1);ctx.moveTo(10,1);ctx.lineTo(4,-1);ctx.stroke();ctx.strokeStyle="#7f1d1d";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(-3,9);ctx.quadraticCurveTo(1,11,5,8);ctx.stroke();
+      ctx.fillStyle="#f8fafc";ctx.strokeStyle="#64748b";ctx.beginPath();ctx.moveTo(-13,12);ctx.lineTo(-8,22);ctx.lineTo(8,22);ctx.lineTo(14,12);ctx.lineTo(4,16);ctx.lineTo(0,22);ctx.lineTo(-4,16);ctx.closePath();ctx.fill();ctx.stroke();
+      if(d?.equipped){ctx.save();ctx.translate(-19,12);ctx.rotate(.28);ctx.fillStyle="#e5e7eb";ctx.strokeStyle="#1e3a8a";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-4,-5);ctx.lineTo(-22,-10);ctx.lineTo(-30,-4);ctx.lineTo(-15,2);ctx.lineTo(-27,9);ctx.lineTo(-7,8);ctx.lineTo(4,2);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#334155";for(let i=0;i<3;i++)ctx.fillRect(-24+i*7,-5+i*2,7,2);ctx.fillStyle="#38bdf8";ctx.beginPath();ctx.arc(-5,1,4,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
+      ctx.restore();drawHealthBar(f);drawName(f);
     }
     function initJabami(f) {
       f.jabami = { clock: JABAMI.period, contacts: new Set(), phase: "collect", timer: 0, gameDuration: 0, participants: [], round: 0, debt: 0, debtUntilRound: 0, debtChances: 1, debtEntryUsed: false, game: "", stake: 0, cards: new Map(), bombHolder: "", bombPassCd: 0, bombSound: 0, rouletteAngle: 0, savedMotion: new Map(), resultText: "", speech: "", speechTime: 0, autoWin: false };
@@ -2893,6 +2932,7 @@
     }
 
     const patchNotes = [
+      "v32: 신규 캐릭터 ‘정의의 아군’ 추가. 카이바풍 갈색 가시머리를 코드 드로잉하고, 전투 5초 후 ‘듀얼 개시!’ 선언과 함께 왼팔 듀얼디스크 및 갈색 소용돌이 카드 3장을 표시.",
       "v31: 쟈바미의 저체력 보정을 확률식 추가 추첨에서 비공개 확정 다중 추첨으로 변경. 체력 10~30%는 2장, 10% 이하는 3장, 빚쟁이는 4장 중 최고 카드만 최종 카드로 표시하며 보정 문구·이펙트는 노출하지 않음.",
       "v30: 쟈바미의 저체력 승부사 보정 강화. 높은 카드만 채택하는 추가 추첨 확률을 체력 10~30%에서 20%, 10% 이하에서 35%, 빚쟁이 상태에서 45%로 상향.",
       "v29: 하이카드 승리 보상을 고정 2배에서 실제 누적 총판돈으로 변경. 총판돈은 개인 판돈×참가자 수이며 공동 승리 시 승자끼리 균등 분배. 빚쟁이 쟈바미는 배분받은 몫에 1.5배 적용.",
@@ -2959,6 +2999,7 @@
     }
 
     function characterDamageInfo(c) {
+      if (c.id === "justice_ally") return { damage: "기본 충돌 공격 9", tick: "전투 시작 5초 후", tip: "듀얼디스크를 장착하고 카드 3장을 든다. 카드 상세 효과는 추후 추가 예정." };
       if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 13", tick: "방패 6초 / 재캐치 후 0.3초 재투척 / 적·벽 총 5회", tip: "20초 동안 회수하지 못하면 피해 없는 귀환 방패로 바뀐다. 비행 방패는 0.45초 캐치 잠금, 정지 방패 회수만 6초 쿨." };
       if (c.id === "jabami") return { damage: "무작위 판돈 12~28 · 패배 시 판돈만큼 추가 피해", tick: "10초 / 이전 도박 이후 접촉자 전원", tip: "총판돈은 개인 판돈×참가자 수이며 공동 승리자는 이를 균등 분배한다. 빚 상태에서는 반경 155 안의 적도 강제 참가하고 쟈바미의 승리 몫은 1.5배다." };
       if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
@@ -3050,7 +3091,7 @@
       const info = characterDamageInfo(c);
 
       $("damageModalTitle").innerHTML = `
-        <div class="modal-portrait" style="background:${c.color};">${c.id === "lisa" ? lisaPortrait() : c.id === "tano" ? tanoPortrait() : c.id === "iron_mask" ? ironPortrait() : escapeHtml(c.mark)}</div>
+        <div class="modal-portrait" style="background:${c.color};">${c.id === "lisa" ? lisaPortrait() : c.id === "tano" ? tanoPortrait() : c.id === "iron_mask" ? ironPortrait() : c.id === "justice_ally" ? justiceAllyPortrait() : escapeHtml(c.mark)}</div>
         <div>
           <h2 style="margin:0;">${escapeHtml(c.name)}</h2>
           <div style="color:#94a3b8;font-size:12px;margin-top:2px;">${escapeHtml(c.skillName)}</div>
@@ -3093,7 +3134,7 @@
         card.className = "char-card" + (isSelected ? " selected" : "") + (team ? ` team-${team.toLowerCase()}` : "");
         card.innerHTML = `
           <div class="selected-mark">${battleMode === "team" && team ? team : "✓"}</div>
-          <div class="portrait" style="background:${c.color};">${c.id === "lisa" ? lisaPortrait() : c.id === "tano" ? tanoPortrait() : c.id === "iron_mask" ? ironPortrait() : c.id === "captain" ? captainPortrait() : c.id === "jabami" ? jabamiPortrait() : c.mark}</div>
+          <div class="portrait" style="background:${c.color};">${c.id === "lisa" ? lisaPortrait() : c.id === "tano" ? tanoPortrait() : c.id === "iron_mask" ? ironPortrait() : c.id === "captain" ? captainPortrait() : c.id === "jabami" ? jabamiPortrait() : c.id === "justice_ally" ? justiceAllyPortrait() : c.mark}</div>
           <div>
             <div class="char-top">
               <div>
@@ -3508,6 +3549,7 @@
       if (c.id === "lisa") initLisa(fighter);
       if (c.id === "captain") initCaptain(fighter);
       if (c.id === "jabami") initJabami(fighter);
+      if (c.id === "justice_ally") initJusticeAlly(fighter);
       return fighter;
     }
 
@@ -7206,6 +7248,7 @@
       updateTano(f, dt);
       updateCaptain(f, dt);
       updateJabami(f, dt);
+      updateJusticeAlly(f, dt);
       if (!f.alive) return;
       f.tanoStop = Math.max(0, (f.tanoStop || 0) - dt);
       updateHeroLeonGrowth(f, dt);
@@ -9957,6 +10000,7 @@
       if (f.lisa) { drawLisaCharacter(f); return; }
       if (f.captain) { drawCaptainCharacter(f); return; }
       if (f.jabami) { drawJabamiCharacter(f); return; }
+      if (f.duelist) { drawJusticeAllyCharacter(f); return; }
       if (f.tano) {
         if (f.tano.hidden > 0) return;
         if (f.tano.reform > 0) drawTanoDust(f);
