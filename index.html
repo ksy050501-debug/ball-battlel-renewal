@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v29</title>
+  <title>볼배틀 리뉴얼 v30</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v29</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v30</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1610,7 +1610,7 @@
       let card = drawCardFromDeck(f);
       if (!f.jabami) return card;
       const ratio = Math.max(0, f.hp) / f.maxHp;
-      const redrawChance = f.jabami.debt > 0 ? 0.22 : ratio <= 0.10 ? 0.17 : ratio <= 0.30 ? 0.10 : 0;
+      const redrawChance = f.jabami.debt > 0 ? 0.45 : ratio <= 0.10 ? 0.35 : ratio <= 0.30 ? 0.20 : 0;
       if (Math.random() < redrawChance) {
         const redraw = drawCardFromDeck(f);
         if (redraw.value > card.value) card = redraw;
@@ -2893,6 +2893,7 @@
     }
 
     const patchNotes = [
+      "v30: 쟈바미의 저체력 승부사 보정 강화. 높은 카드만 채택하는 추가 추첨 확률을 체력 10~30%에서 20%, 10% 이하에서 35%, 빚쟁이 상태에서 45%로 상향.",
       "v29: 하이카드 승리 보상을 고정 2배에서 실제 누적 총판돈으로 변경. 총판돈은 개인 판돈×참가자 수이며 공동 승리 시 승자끼리 균등 분배. 빚쟁이 쟈바미는 배분받은 몫에 1.5배 적용.",
       "v28: 탈락 즉시 리사의 음파 잔상·캡틴의 투척 방패·타노의 드롭 스톤 등 소유자 기반 전투 오브젝트를 정리. 도박 상대 전원 탈락 시 빚 상태 쟈바미도 빚을 청산하고 승리하도록 수정. 빚 상태의 광역 참가 범위는 판돈 징수 순간 한 번만 표시·판정.",
       "v27: 흑조커·색조커 카드를 실제 트럼프 조커처럼 다시 그림. 미러링 J 인덱스, 광대 얼굴·삼색 모자·종·칼라·JOKER 레터링을 추가하고 일반 카드보다 조금 큰 30×38 크기로 표시.",
@@ -3578,7 +3579,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v29`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v30`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3604,7 +3605,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v29`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v30`, "시작");
       updateHud();
       updateStatusPanel();
     }
