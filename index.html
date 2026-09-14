@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v22</title>
+  <title>볼배틀 리뉴얼 v23</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v22</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v23</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1056,7 +1056,7 @@
     const characters = [
       { id: "lisa", name: "리사", mark: "♫", role: "전사", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
         skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 또는 5초 무피격 → 인내 상승", desc: "숙녀는 공격하지 않는다. 오래 아무 일도 없으면 따분함으로 인내가 오른다. 록은 최근접 적 방향 음파, 마지막 4초는 폭주." },
-      { id: "iron_mask", name: "철가면", mark: "Fe", role: "전사", color: "#dc2626", hp: 30, attack: 10, speed: 2.7, range: 160,
+      { id: "iron_mask", name: "철가면", mark: "Fe", role: "전사", color: "#dc2626", hp: 170, attack: 10, speed: 2.7, range: 160,
         skillName: "자비스 슈트", condition: "보호막 70 · 파괴 후 8초 재장착(50)", desc: "리펄서와 부스터. 슈트가 깨지면 무능력 상태, 재장착은 워머신·헐크버스터·마크42 중 하나." },
       { id: "tano", name: "타노", mark: "✦", role: "전사", color: "#9333ea", hp: 240, attack: 8, speed: 2.7, range: 80,
         skillName: "인피니티 스톤", condition: "9초마다 다음 스톤 · 소울 마지막", desc: "떠다니는 스톤 가까이 접근하면 넓은 범위로 획득. 6개 완성 시 핑거플립, 이후 스톤 소실과 자해를 거쳐 재수집." },
@@ -1098,11 +1098,16 @@
         if (cast.age > 1.0) { f.iron.beam = null; return; }
         cast.path = ironBeamPath(f, cast.angle);
         if (cast.age < 0.45) return;
-        fighters.filter(e => e.alive && areEnemies(f, e) && !cast.hitIds.has(e.id)).forEach(e => {
-          if (cast.path.some(segment => ironBeamTouches(segment, e))) {
-            if (damage(e, IRON.beamDamage, f, "리펄서 빔") > 0) cast.hitIds.add(e.id);
-          }
-        });
+        cast.nextTick -= dt;
+        if (cast.nextTick <= 0) {
+          cast.nextTick += IRON.beamTick;
+          fighters.filter(e => e.alive && areEnemies(f, e)).forEach(e => {
+            if (cast.path.some(segment => ironBeamTouches(segment, e))) {
+              damage(e, IRON.beamDamage, f, "리펄서 빔 틱");
+              spawnHitFlash(e.x, e.y, "#67e8f9", 22);
+            }
+          });
+        }
       });
     }
     function drawIronBeams() {
@@ -1165,6 +1170,7 @@
       }
       ctx.restore();
       if (f.shieldHp > 0) drawRing(f.x,f.y,f.r+3,"rgba(125,211,252,.65)",2);
+      drawIronPunch(f);
       drawHealthBar(f);drawName(f);
     }
     function ironPortrait() {
@@ -1419,7 +1425,6 @@
         dx /= d; dy /= d;
         f.captain.punch = { target, dx, dy, phase: "windup", timer: CAPTAIN.punchWindup };
         target.captainPunchStun = CAPTAIN.punchWindup;
-        spawnFloatingText(f.x, f.y - f.r - 28, "강펀치", "#fbbf24");
         return;
       }
       damage(target, CAPTAIN.shieldCounter, f, "캡틴 방패 밀어내기");
@@ -1508,7 +1513,7 @@
       ctx.strokeStyle = "#1e3a8a";
       ctx.lineWidth = 10;
       ctx.beginPath(); ctx.moveTo(f.r * 0.25, 0); ctx.lineTo(extension, 0); ctx.stroke();
-      ctx.fillStyle = "#dc2626";
+      ctx.fillStyle = "#f2c6a5";
       ctx.strokeStyle = "#f8fafc";
       ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.arc(extension + 5, 0, 8.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
@@ -1762,7 +1767,7 @@
     }
 
 
-    const IRON = { hulkDamage: 8, hulkCooldown: 0.6, hulkKnock: 650, hp: 30, shield: 70, reShield: 50, rebuild: 8, beamPeriod: 3, beamDamage: 10,
+    const IRON = { hulkDamage: 8, hulkCooldown: 0.6, hulkKnock: 650, hulkWindup: 0.12, hulkFollow: 0.12, hp: 170, shield: 70, reShield: 50, rebuild: 8, beamPeriod: 3, beamDamage: 3, beamTick: 0.11,
       dashPeriod: 8, dashDamage: 12, missilePeriod: 5.5, missileDamage: 8, fragmentDamage: 4, fragmentShield: 4 };
     const ironSuitNames = { basic: "기본 슈트", war: "워머신", hulk: "헐크버스터", mark42: "마크42", naked: "토니 · 슈트 없음" };
     let ironObjects = [];
@@ -1777,7 +1782,7 @@
     }
     function equipIron(f, suit) {
       const i = f.iron;
-      i.beam = null;
+      i.beam = null; i.punch = null;
       i.suit = suit; i.rebuild = 0; i.dash = 0; i.assembly = 0.75;
       i.attackCd = suit === "war" ? IRON.missilePeriod : IRON.beamPeriod;
       i.dashCd = IRON.dashPeriod;
@@ -1791,7 +1796,7 @@
       f.x = clamp(f.x, arena.x + f.r, arena.x2 - f.r); f.y = clamp(f.y, arena.y + f.r, arena.y2 - f.r);
     }
     function stripIron(f) {
-      f.iron.beam = null;
+      f.iron.beam = null; f.iron.punch = null;
       f.iron.suit = "naked"; f.iron.rebuild = IRON.rebuild; f.iron.dash = 0;
       f.shieldHp = 0; f.r = 13; f.baseSpeed = 2.35; f.color = "#d6a77a"; f.mark = "T";
       normalizeIronVelocity(f);
@@ -1840,7 +1845,7 @@
       if (!enemy) return;
       const a = Math.atan2(enemy.y - f.y, enemy.x - f.x) + angleOffset;
       if (kind === "beam") {
-        f.iron.beam = { angle: a, age: 0, hitIds: new Set(), path: ironBeamPath(f, a) };
+        f.iron.beam = { angle: a, age: 0, nextTick: 0, path: ironBeamPath(f, a) };
         playSound("ironBeam", 1.0);
         return;
       }
@@ -1897,13 +1902,55 @@
     function hulkContact(f, target) {
       if (!f.iron || f.iron.suit !== "hulk" || f.iron.reactionCd > 0 || !target?.alive || !areEnemies(f, target)) return;
       f.iron.reactionCd = IRON.hulkCooldown;
-      damage(target, IRON.hulkDamage, f, "헐크버스터 충돌 강타");
-      ironKnock(f, target, IRON.hulkKnock);
-      triggerHitStop(0.12);
-      spawnHitFlash(target.x, target.y, "#fca5a5", 64);
-      spawnParticles(target.x, target.y, "#fca5a5", 18);
-      playSound("ironPunch", 1.3);
-      spawnFloatingText(f.x, f.y - 45, "헐크버스터 강타", "#fca5a5");
+      let dx = target.x - f.x, dy = target.y - f.y;
+      const d = Math.hypot(dx, dy) || 1;
+      dx /= d; dy /= d;
+      f.iron.punch = { target, dx, dy, phase: "windup", timer: IRON.hulkWindup };
+      target.ironPunchStun = IRON.hulkWindup;
+    }
+    function updateIronPunch(f, dt) {
+      if ((f.ironPunchStun || 0) > 0) {
+        f.ironPunchStun = Math.max(0, f.ironPunchStun - dt);
+        return true;
+      }
+      const punch = f.iron?.punch;
+      if (!punch) return false;
+      if (f.iron.suit !== "hulk") { f.iron.punch = null; return false; }
+      punch.timer = Math.max(0, punch.timer - dt);
+      if (punch.phase === "windup" && punch.timer <= 0) {
+        const target = punch.target;
+        punch.phase = "follow"; punch.timer = IRON.hulkFollow;
+        if (target?.alive && areEnemies(f, target)) {
+          target.ironPunchStun = 0;
+          const dealt = damage(target, IRON.hulkDamage, f, "헐크버스터 강타");
+          if (dealt > 0 && target.alive) ironKnock(f, target, IRON.hulkKnock);
+          triggerHitStop(0.16);
+          spawnHitFlash(target.x, target.y, "#fff7ed", 78);
+          spawnBlast(target.x, target.y, 74, "#f97316");
+          spawnParticles(target.x, target.y, "#fca5a5", 26);
+          screenShake = Math.max(screenShake, 0.38);
+          playSound("ironPunch", 1.45);
+          spawnFloatingText(target.x, target.y - target.r - 34, "헐크버스터 강타!", "#fca5a5");
+        }
+      }
+      if (punch.phase === "follow" && punch.timer <= 0) f.iron.punch = null;
+      return true;
+    }
+    function drawIronPunch(f) {
+      const punch = f.iron?.punch;
+      if (!punch || f.iron.suit !== "hulk") return;
+      const progress = punch.phase === "windup" ? 1 - punch.timer / IRON.hulkWindup : 1;
+      const extension = punch.phase === "windup" ? 8 + progress * 32 : 43 - (1 - punch.timer / IRON.hulkFollow) * 6;
+      ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(Math.atan2(punch.dy, punch.dx)); ctx.lineCap = "round";
+      ctx.strokeStyle = "#7f1d1d"; ctx.lineWidth = 18;
+      ctx.beginPath(); ctx.moveTo(f.r * .2, 0); ctx.lineTo(extension, 0); ctx.stroke();
+      ctx.fillStyle = "#991b1b"; ctx.strokeStyle = "#fbbf24"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(extension - 1, -13, 22, 26, 6); ctx.fill(); ctx.stroke();
+      if (punch.phase === "follow") {
+        ctx.strokeStyle = "rgba(254,215,170,.9)"; ctx.lineWidth = 4;
+        [-9, 0, 9].forEach(y => { ctx.beginPath(); ctx.moveTo(-25, y); ctx.lineTo(-5, y); ctx.stroke(); });
+      }
+      ctx.restore();
     }
     function explodeIron(o, radius, power, reason) {
       fighters.filter(e => e.alive && areEnemies(o.owner, e) && dist(o, e) <= radius + e.r)
@@ -2766,6 +2813,7 @@
     }
 
     const patchNotes = [
+      "v23: 캡틴 강펀치의 붉은 장갑 제거 및 명중 문구 1회로 정리. 헐크버스터 강타도 준비 동작 뒤 거대한 팔이 뻗는 펀치로 변경. 철가면 체력 30→170. 리펄서를 틱당 3 피해, 최대 5회 총 15 피해의 다단히트 빔으로 변경.",
       "v22: 캡틴의 방패 없는 강펀치를 접촉 즉시 밀치기에서 0.1초 준비 후 팔과 주먹이 실제로 뻗는 타격으로 변경. 명중 순간 히트스톱·섬광·폭발·화면 진동을 강화하고 피해량 13은 유지.",
       "v21: 타노 인피니티 스톤 등장 주기를 10초에서 9초로 단축. 최초 수집과 핑거플립 이후 재수집에 모두 적용.",
       "v20: 타노의 인피니티 스톤 습득 범위를 몸 충돌 반경보다 넓은 반경으로 확장. 캡틴의 방패 회수처럼 가까이 스치기만 해도 스톤을 획득.",
@@ -3444,7 +3492,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v22`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v23`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3470,7 +3518,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v22`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v23`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3966,7 +4014,7 @@
           extraTextHtml:'<div class="status-skill-label">'+(lady?"공격 없음":l.mode==="rage"?"이속 ×1.6 · 0.55초마다 음파":"폭주까지 "+Math.max(0,l.rock*LISA.duration/100-LISA.rageDuration).toFixed(1)+"초 · 1.25초마다 음파")+'</div>'};
       }
       if (f.iron) return { ratio: f.iron.suit === "naked" ? clamp(1 - f.iron.rebuild / IRON.rebuild, 0, 1) : f.shieldHp / f.shieldMax, className: "", text: ironSuitNames[f.iron.suit] + (f.iron.suit === "naked" ? " · 자비스 " + Math.ceil(f.iron.rebuild) + "초" : " · 보호막 " + Math.ceil(f.shieldHp) + "/" + f.shieldMax),
-        extraTextHtml: '<div class="status-skill-label">' + (f.iron.suit === "hulk" ? "충돌 강타 8·넉백 · 리펄서/부스터 봉인" : f.iron.suit === "naked" ? "공격 불가" : (f.iron.suit === "war" ? "미사일 " : "리펄서 ") + Math.ceil(f.iron.attackCd) + "초 · 부스터 " + Math.ceil(f.iron.dashCd) + "초") + '</div>' };
+        extraTextHtml: '<div class="status-skill-label">' + (f.iron.suit === "hulk" ? "충돌 펀치 8·넉백 · 리펄서/부스터 봉인" : f.iron.suit === "naked" ? "공격 불가" : (f.iron.suit === "war" ? "미사일 " : "리펄서 3×최대5 · ") + Math.ceil(f.iron.attackCd) + "초 · 부스터 " + Math.ceil(f.iron.dashCd) + "초") + '</div>' };
       if (f.captain) {
         const shield = captainShields.find(o => o.owner === f);
         return { ratio: f.captain.rethrow > 0 ? 1 - f.captain.rethrow / CAPTAIN.rethrowDelay : f.captain.hasShield ? clamp(1 - f.captain.throwCd / CAPTAIN.throwPeriod, 0, 1) : shield ? shield.hits / 5 : 0, className: "", text: f.captain.rethrow > 0 ? "방패 캐치 · 재투척 " + f.captain.rethrow.toFixed(1) + "초" : f.captain.hasShield ? "방패 보유 · 투척 " + Math.ceil(f.captain.throwCd) + "초" : shield?.stopped ? "방패 정지 · 회수 대기" : "방패 투척 중 · 반사 " + (shield?.hits || 0) + "/5",
@@ -7052,6 +7100,7 @@
       }
       updateLisa(f, dt);
       if (updateCaptainPunch(f, dt)) return;
+      if (updateIronPunch(f, dt)) return;
       if (updatePowerPunch(f, dt)) return;
 
       updateIron(f, dt);
