@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v14</title>
+  <title>볼배틀 리뉴얼 v15</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-    <h1 id="mainTitle">볼배틀 리뉴얼 v14</h1>
+    <h1 id="mainTitle">볼배틀 리뉴얼 v15</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1063,7 +1063,7 @@
       { id: "captain", name: "캡틴", mark: "★", role: "수호자", color: "#2563eb", hp: 190, attack: 9, speed: 2.65, range: 190,
         skillName: "수호의 방패", condition: "6초마다 투척 · 비행 중 캐치 시 즉시 재투척", desc: "넓은 범위로 방패를 회수한다. 비행 중 잡으면 바로 다시 던지고, 5회 반사 후 멈춘 방패를 잡으면 6초 뒤 던진다." },
       { id: "jabami", name: "쟈바미", mark: "♦", role: "마법사", color: "#991b1b", hp: 170, attack: 0, speed: 2.75, range: 120,
-        skillName: "광기의 도박", condition: "10초마다 · 최근 6초 내 접촉자 강제 참가", desc: "자신과 접촉자들이 체력 18을 건다. 승리하면 판돈을 회수하고 상대마다 도박 피해 24. 빚 상태에서는 피해가 전부 빚으로 바뀌며 다음 도박 종료까지 죽지 않는다." },
+        skillName: "광기의 도박", condition: "10초마다 · 이전 도박 이후 접촉자 전원", desc: "모두 같은 무작위 판돈을 낸 뒤 2초 후 하이카드·폭탄돌리기·거대 룰렛 중 하나를 실제로 진행한다. 쟈바미는 치명상도 빚으로 바꾼다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -1459,19 +1459,23 @@
       drawHealthBar(f);drawName(f);
     }
 
-    const JABAMI = { period: 10, contactWindow: 6, stake: 18, winDamage: 24, revealDelay: 0.72 };
+    const JABAMI = { period: 10, stakeMin: 12, stakeMax: 28, revealDelay: 2, highCardDuration: 8, rouletteDuration: 6, bombMin: 5, bombMax: 10 };
+    const JABAMI_GAMES = ["highcard", "bomb", "roulette"];
+    const JABAMI_GAME_NAMES = { highcard: "하이카드", bomb: "폭탄돌리기", roulette: "거대 룰렛" };
+    const CARD_LABELS = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+    const CARD_SUITS = ["♠","♥","♦","♣"];
     function jabamiPortrait() {
-      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="쟈바미 흑장발 붉은 교복"><circle cx="24" cy="24" r="22" fill="#450a0a"/><path d="M9 43Q5 15 15 7Q24 0 34 7Q43 16 39 43Z" fill="#111827" stroke="#020617"/><ellipse cx="24" cy="22" rx="11" ry="13" fill="#ffe4d6"/><path d="M12 21Q11 6 24 5Q38 6 36 22L31 13Q25 17 14 14Z" fill="#111827"/><path d="M17 22h5m4 0h5" stroke="#ef4444" stroke-width="2.4"/><path d="M20 30q4 3 8 0" fill="none" stroke="#9f1239"/><path d="M12 46L16 33L24 37L32 33L37 46Z" fill="#b91c1c"/><path d="M21 35L24 41L27 35L24 33Z" fill="#111827"/><path d="M10 15Q6 27 11 44M38 15Q42 27 37 44" fill="none" stroke="#020617" stroke-width="4"/></svg>';
+      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="쟈바미 검은 장발 붉은 교복"><circle cx="24" cy="24" r="22" fill="#f8fafc"/><path d="M7 44Q5 14 14 7Q24-1 34 7Q43 15 41 44L34 47L31 18H17L14 47Z" fill="#09090b"/><ellipse cx="24" cy="21" rx="10.5" ry="12.5" fill="#ffe4d6"/><path d="M13 20Q12 5 24 5Q37 5 35 20Q30 13 16 14Z" fill="#09090b"/><path d="M17 22h5m4 0h5" stroke="#3f2d28" stroke-width="2.2"/><path d="M20 29q4 2.8 8 0" fill="none" stroke="#9f1239"/><path d="M11 47L16 34L24 38L32 34L37 47Z" fill="#b91c1c" stroke="#7f1d1d"/><path d="M21 35L24 41L27 35L24 33Z" fill="#111827"/></svg>';
     }
     function initJabami(f) {
-      f.jabami = { clock: JABAMI.period, contacts: new Map(), pending: 0, participants: [], round: 0, debt: 0, debtUntilRound: 0, lastChance: 0.5 };
+      f.jabami = { clock: JABAMI.period, contacts: new Set(), phase: "collect", timer: 0, gameDuration: 0, participants: [], round: 0, debt: 0, debtUntilRound: 0, game: "", stake: 0, cards: new Map(), bombHolder: "", bombPassCd: 0, bombSound: 0, rouletteAngle: 0, savedMotion: new Map() };
     }
     function recordJabamiContact(f, enemy) {
-      if (f?.jabami && enemy?.alive && areEnemies(f, enemy)) f.jabami.contacts.set(enemy.id, battleTime);
+      if (f?.jabami && f.jabami.phase === "collect" && enemy?.alive && !enemy.isSummon && areEnemies(f, enemy)) f.jabami.contacts.add(enemy.id);
     }
     function jabamiChance(f, opponentCount = null) {
       const j = f.jabami, ratio = Math.max(0, f.hp) / f.maxHp;
-      const rivals = Math.max(1, opponentCount ?? j.participants.length ?? 1);
+      const rivals = Math.max(1, opponentCount ?? Math.max(1, j.participants.length - 1));
       const weight = (j.debt > 0 || ratio <= 0.10) ? 1.75 : ratio <= 0.30 ? 1.25 : 1;
       return weight / (rivals + weight);
     }
@@ -1503,56 +1507,97 @@
       f.hp = 0; f.alive = false; triggerDeathEffect(f);
       log(`<strong>${escapeHtml(f.name)}</strong> 빚을 갚지 못하고 탈락`, "도박");
     }
+    function jabamiParticipants(f) { return f.jabami.participants.map(fighterById).filter(e => e?.alive && !e.isSummon); }
+    function randomCard(f) {
+      const ratio = Math.max(0, f.hp) / f.maxHp, debtBoost = f.jabami?.debt > 0;
+      const boost = debtBoost ? 4 : ratio <= 0.10 ? 3 : ratio <= 0.30 ? 1 : 0;
+      return { value: Math.min(12, Math.floor(Math.random() * 13) + (Math.random() < 0.38 ? boost : 0)), suit: pick(CARD_SUITS) };
+    }
     function startJabamiGamble(f) {
       const j = f.jabami;
-      const participants = fighters.filter(e => e.alive && !e.isSummon && areEnemies(f, e) && battleTime - (j.contacts.get(e.id) ?? -Infinity) <= JABAMI.contactWindow);
-      if (!participants.length) { j.clock = 1; return; }
-      j.round += 1; j.participants = participants.map(e => e.id); j.pending = JABAMI.revealDelay;
-      takeJabamiStake(f, JABAMI.stake);
-      participants.forEach(e => bodyDirectDamage(e, JABAMI.stake, f, "강제 베팅", "#ef4444"));
-      j.lastChance = jabamiChance(f, participants.length);
+      const opponents = [...j.contacts].map(fighterById).filter(e => e?.alive && !e.isSummon && areEnemies(f, e));
+      if (!opponents.length) { j.clock = 1; return; }
+      j.contacts.clear(); j.round += 1; j.participants = [f.id, ...opponents.map(e => e.id)];
+      j.stake = Math.round(rand(JABAMI.stakeMin, JABAMI.stakeMax));
+      j.game = pick(JABAMI_GAMES); j.phase = "reveal"; j.timer = JABAMI.revealDelay;
+      takeJabamiStake(f, j.stake);
+      opponents.forEach(e => bodyDirectDamage(e, j.stake, f, "도박 판돈", "#ef4444"));
       triggerHitStop(0.55);
-      spawnFloatingText(arena.x + arena.size / 2, arena.y + arena.size * 0.30, "자, 도박에 미쳐봅시다!", "#ef4444");
-      spawnBlast(f.x, f.y, 72, "#dc2626"); playSound("magic", 0.9);
-      log(`<strong>${escapeHtml(f.name)}</strong> 도박 개시 · 판돈 ${JABAMI.stake} · 승률 ${Math.round(j.lastChance * 100)}%`, "도박");
+      spawnFloatingText(arena.x + arena.size / 2, arena.y + arena.size * 0.27, "자, 도박에 미쳐봅시다!", "#ef4444");
+      spawnBlast(f.x, f.y, 80, "#dc2626"); playSound("magic", 1.1);
+      log(`<strong>${escapeHtml(f.name)}</strong> 판돈 ${j.stake} · 참가 ${j.participants.length}명 · 2초 뒤 종목 공개`, "도박");
     }
-    function resolveJabamiGamble(f) {
-      const j = f.jabami, participants = j.participants.map(fighterById).filter(e => e?.alive && areEnemies(f, e));
-      const won = Math.random() < j.lastChance;
-      if (won) {
-        gainJabamiWinnings(f, JABAMI.stake + participants.length * Math.round(JABAMI.stake * 0.5));
-        participants.forEach(e => bodyDirectDamage(e, JABAMI.winDamage, f, "도박 승리", "#ef4444"));
-        spawnFloatingText(f.x, f.y - f.r - 38, `승리! 추가 피해 ${JABAMI.winDamage}`, "#fca5a5");
-        log(`<strong>${escapeHtml(f.name)}</strong> 도박 승리 · 상대마다 추가 피해 ${JABAMI.winDamage}`, "도박");
+    function beginJabamiGame(f) {
+      const j = f.jabami, ps = jabamiParticipants(f);
+      if (ps.length < 2) { finishJabamiGame(f); return; }
+      j.phase = "play";
+      if (j.game === "highcard") {
+        j.timer = JABAMI.highCardDuration; j.gameDuration=j.timer; j.cards.clear(); ps.forEach(p => j.cards.set(p.id, randomCard(p)));
+      } else if (j.game === "bomb") {
+        j.timer = rand(JABAMI.bombMin, JABAMI.bombMax); j.gameDuration=j.timer; j.bombHolder = pick(ps).id; j.bombPassCd = 0.5; j.bombSound=.35;
       } else {
-        const winner = participants[Math.floor(Math.random() * participants.length)];
-        if (winner?.alive) {
-          const jackpot = JABAMI.stake * (participants.length + 1);
-          winner.hp = Math.min(winner.maxHp, winner.hp + jackpot);
-          spawnFloatingText(winner.x, winner.y - winner.r - 34, `독식 +${jackpot}`, "#fbbf24");
-          log(`<strong>${escapeHtml(f.name)}</strong> 도박 패배 · <strong>${escapeHtml(winner.name)}</strong> 판돈 ${jackpot} 독식`, "도박");
-        }
-        spawnFloatingText(f.x, f.y - f.r - 38, "패배! 상대 독식", "#fecaca");
+        j.timer = JABAMI.rouletteDuration; j.gameDuration=j.timer; j.rouletteAngle = 0; j.savedMotion.clear();
+        ps.forEach((p, i) => j.savedMotion.set(p.id, { vx:p.vx, vy:p.vy, angle:i * Math.PI * 2 / ps.length }));
       }
-      j.participants = []; j.clock = JABAMI.period;
-      if (j.debt > 0 && j.round >= j.debtUntilRound) eliminateJabamiForDebt(f);
+      spawnFloatingText(arena.x + arena.size/2, arena.y + arena.size*.27, JABAMI_GAME_NAMES[j.game] + "!", "#fbbf24");
+      log(`<strong>${JABAMI_GAME_NAMES[j.game]}</strong> 시작 · 판돈 ${j.stake}`, "도박");
+    }
+    function rewardJabamiWin(f, baseAmount) {
+      const debtMode = f.jabami.debt > 0;
+      gainJabamiWinnings(f, Math.round(baseAmount * (debtMode ? 1.75 : 1)));
+      if (debtMode) spawnFloatingText(f.x, f.y-f.r-48, "빚쟁이 대역전!", "#fde68a");
+      return debtMode;
+    }
+    function finishJabamiGame(f) {
+      const j = f.jabami, ps = jabamiParticipants(f), stake = j.stake;
+      if (j.game === "highcard" && ps.length) {
+        const high = Math.max(...ps.map(p => j.cards.get(p.id)?.value ?? 0));
+        const winners = ps.filter(p => (j.cards.get(p.id)?.value ?? 0) === high);
+        ps.forEach(p => {
+          if (winners.includes(p)) {
+            if (p === f) rewardJabamiWin(f, stake * 2); else p.hp = Math.min(p.maxHp, p.hp + stake * 2);
+            spawnFloatingText(p.x,p.y-p.r-34,`승리 +${stake*2}`,"#fde68a");
+          } else bodyDirectDamage(p, stake, f, "하이카드 패배", "#ef4444");
+        });
+        log(`하이카드 ${CARD_LABELS[high]} 승리 · ${winners.map(p=>escapeHtml(p.name)).join(", ")}`, "도박");
+      } else if (j.game === "bomb" && ps.length) {
+        const loser = fighterById(j.bombHolder);
+        if (loser?.alive) bodyDirectDamage(loser, stake * (loser === f && j.debt > 0 ? 2 : 3), f, "폭탄 폭발", "#fb923c");
+        if (f.alive && loser !== f) rewardJabamiWin(f, stake);
+        if (loser) { spawnBlast(loser.x,loser.y,105,"#fb923c"); spawnParticles(loser.x,loser.y,"#fca5a5",32); }
+        playSound("ironExplosion",1.35); screenShake=Math.max(screenShake,1);
+      } else if (j.game === "roulette" && ps.length) {
+        const loser = ps.reduce((best,p) => p.y < best.y ? p : best, ps[0]);
+        bodyDirectDamage(loser, stake * 3, f, "룰렛 당첨", "#facc15");
+        if (f.alive && loser !== f) rewardJabamiWin(f, stake);
+        spawnBlast(loser.x,loser.y,115,"#facc15"); playSound("ironExplosion",1.25);
+        for (const p of ps) { const saved=j.savedMotion.get(p.id); if(saved){p.vx=saved.vx;p.vy=saved.vy;} }
+      }
+      j.phase="collect"; j.timer=0; j.clock=JABAMI.period; j.participants=[]; j.cards.clear(); j.bombHolder=""; j.savedMotion.clear();
+      if (f.alive && j.debt > 0 && j.round >= j.debtUntilRound) eliminateJabamiForDebt(f);
     }
     function updateJabami(f, dt) {
-      if (!f.jabami || !f.alive) return;
+      if (!f.jabami || !f.alive) return false;
       const j = f.jabami;
-      for (const [id, time] of j.contacts) if (battleTime - time > JABAMI.contactWindow) j.contacts.delete(id);
-      if (j.pending > 0) {
-        j.pending = Math.max(0, j.pending - dt);
-        if (j.pending <= 0) resolveJabamiGamble(f);
-        return;
+      if (j.phase === "reveal") {
+        j.timer=Math.max(0,j.timer-dt); if(j.timer<=0) beginJabamiGame(f); return false;
       }
-      j.clock -= dt;
-      if (j.clock <= 0) startJabamiGamble(f);
+      if (j.phase === "play") {
+        j.timer=Math.max(0,j.timer-dt); j.bombPassCd=Math.max(0,j.bombPassCd-dt);
+        if(j.game==="bomb"){j.bombSound-=dt;if(j.bombSound<=0){j.bombSound=.55;playSound("bombTick",.75);}}
+        if(j.game==="roulette"){
+          j.rouletteAngle += dt * (2.4 + j.timer * .75); const ps=jabamiParticipants(f), c=arenaCenter(), radius=Math.min(arena.size*.31,150);
+          ps.forEach(p=>{const s=j.savedMotion.get(p.id);if(s){const a=s.angle+j.rouletteAngle;p.x=c.x+Math.cos(a)*radius;p.y=c.y+Math.sin(a)*radius;p.vx=0;p.vy=0;}});
+        }
+        if(j.timer<=0) finishJabamiGame(f); return j.game==="roulette";
+      }
+      j.clock-=dt; if(j.clock<=0) startJabamiGamble(f); return false;
     }
     function convertJabamiDamageToDebt(target, final, source, reason, color = "#fca5a5") {
-      if (!target?.jabami || target.jabami.debt <= 0) return false;
+      if (!target?.jabami || (target.jabami.debt <= 0 && final < target.hp)) return false;
       const value = Math.max(1, Math.round(final));
-      enterJabamiDebt(target, value);
+      const paid = target.jabami.debt > 0 ? 0 : Math.max(0, target.hp - 1);
+      target.hp -= paid; enterJabamiDebt(target, value - paid);
       target.damageTaken = (target.damageTaken || 0) + value;
       target.hitsTaken += 1; target.hitsTakenSkill += 1;
       if (source && source.alive && source !== target) {
@@ -1565,13 +1610,29 @@
     }
     function drawJabamiCharacter(f) {
       ctx.save(); ctx.translate(f.x, f.y);
-      ctx.fillStyle = "#111827"; ctx.beginPath(); ctx.arc(0, -2, f.r + 3, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#b91c1c"; ctx.beginPath(); ctx.arc(0, 3, f.r, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#ffe4d6"; ctx.beginPath(); ctx.arc(0, -4, f.r * .68, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(-5, -5, 2.2, 0, Math.PI * 2); ctx.arc(5, -5, 2.2, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#111827"; ctx.font = "bold 13px system-ui"; ctx.textAlign = "center"; ctx.fillText("♦", 0, 9);
+      ctx.fillStyle = "#09090b"; ctx.beginPath(); ctx.ellipse(0,2,f.r+6,f.r+13,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#b91c1c"; ctx.fillRect(-f.r*.78,4,f.r*1.56,f.r*.95);
+      ctx.fillStyle = "#ffe4d6"; ctx.beginPath(); ctx.ellipse(0,-5,f.r*.67,f.r*.75,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#3f2d28"; ctx.beginPath(); ctx.arc(-5,-6,1.7,0,Math.PI*2); ctx.arc(5,-6,1.7,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#09090b"; ctx.beginPath(); ctx.arc(0,-12,f.r*.72,Math.PI,Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#111827"; ctx.font = "bold 12px system-ui"; ctx.textAlign = "center"; ctx.fillText("♦", 0, 11);
       if (f.jabami.debt > 0) { ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,f.r+8,0,Math.PI*2); ctx.stroke(); }
       ctx.restore(); drawHealthBar(f); drawName(f);
+    }
+    function activeJabamiGameFor(f) { return fighters.find(j => j.alive && j.jabami?.phase === "play" && j.jabami.participants.includes(f.id)); }
+    function jabamiHighCardWallBounce(f) {
+      const host=activeJabamiGameFor(f); if(!host || host.jabami.game!=="highcard") return;
+      host.jabami.cards.set(f.id,randomCard(f)); spawnFloatingText(f.x,f.y-f.r-34,"새 카드!","#fde68a"); playSound("card",.75);
+    }
+    function passJabamiBomb(a,b) {
+      const host=activeJabamiGameFor(a); if(!host || host!==activeJabamiGameFor(b) || host.jabami.game!=="bomb" || host.jabami.bombPassCd>0) return;
+      const j=host.jabami; if(j.bombHolder===a.id){j.bombHolder=b.id;j.bombPassCd=.38;playSound("bombTick",1);}else if(j.bombHolder===b.id){j.bombHolder=a.id;j.bombPassCd=.38;playSound("bombTick",1);}
+    }
+    function drawJabamiGames() {
+      fighters.filter(f=>f.alive&&f.jabami?.phase==="play").forEach(host=>{const j=host.jabami,ps=jabamiParticipants(host);
+        if(j.game==="roulette"){const c=arenaCenter(),r=Math.min(arena.size*.31,150);ctx.save();ctx.strokeStyle="#facc15";ctx.lineWidth=8;ctx.beginPath();ctx.arc(c.x,c.y,r+28,0,Math.PI*2);ctx.stroke();for(let i=0;i<ps.length;i++){const a=i*Math.PI*2/ps.length+j.rouletteAngle;ctx.strokeStyle=i%2?"#7f1d1d":"#f8fafc";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x+Math.cos(a)*(r+25),c.y+Math.sin(a)*(r+25));ctx.stroke();}ctx.fillStyle="#facc15";ctx.beginPath();ctx.moveTo(c.x,c.y-r-42);ctx.lineTo(c.x-13,c.y-r-65);ctx.lineTo(c.x+13,c.y-r-65);ctx.closePath();ctx.fill();ctx.restore();}
+        ps.forEach(p=>{if(j.game==="highcard"){const card=j.cards.get(p.id)||{value:0,suit:"♠"},red=card.suit==="♥"||card.suit==="♦";ctx.save();ctx.fillStyle="#fff";ctx.strokeStyle="#111827";ctx.lineWidth=2;ctx.fillRect(p.x-15,p.y-p.r-46,30,39);ctx.strokeRect(p.x-15,p.y-p.r-46,30,39);ctx.fillStyle=red?"#dc2626":"#111827";ctx.font="900 13px system-ui";ctx.textAlign="center";ctx.fillText(CARD_LABELS[card.value]+card.suit,p.x,p.y-p.r-21);ctx.restore();}if(j.game==="bomb"&&j.bombHolder===p.id){drawGlowCircle(p.x,p.y-p.r-22,10,"#fb923c",1);ctx.fillStyle="#111827";ctx.font="bold 15px system-ui";ctx.textAlign="center";ctx.fillText("●",p.x,p.y-p.r-19);}});
+      });
     }
 
 
@@ -1654,7 +1715,7 @@
       const a = Math.atan2(enemy.y - f.y, enemy.x - f.x) + angleOffset;
       if (kind === "beam") {
         f.iron.beam = { angle: a, age: 0, hitIds: new Set(), path: ironBeamPath(f, a) };
-        playSound("beam", 0.9);
+        playSound("ironBeam", 1.0);
         return;
       }
       const speed = kind === "missile" ? 230 : 500;
@@ -1695,6 +1756,7 @@
             const a = Math.atan2(target.y - f.y, target.x - f.x);
             f.vx = Math.cos(a) * 450; f.vy = Math.sin(a) * 450; i.dash = 0.55;
             spawnFloatingText(f.x, f.y - 30, "추진 부스터", "#38bdf8");
+            playSound("ironBooster", 1.0);
           }
           i.dashCd = IRON.dashPeriod;
         }
@@ -1704,7 +1766,7 @@
       if (!f.iron || f.iron.dash <= 0 || !target.alive || !areEnemies(f, target) || target.tano?.hidden > 0) return;
       f.iron.dash = 0; normalizeIronVelocity(f);
       const hit = damage(target, IRON.dashDamage, f, "추진 부스터");
-      if (hit > 0 && !(target.baseId === "dummy_unit" && target.hp === target.maxHp)) ironKnock(f, target);
+      if (hit > 0 && !(target.baseId === "dummy_unit" && target.hp === target.maxHp)) { ironKnock(f, target); playSound("ironPunch", 1.1); }
     }
     function hulkContact(f, target) {
       if (!f.iron || f.iron.suit !== "hulk" || f.iron.reactionCd > 0 || !target?.alive || !areEnemies(f, target)) return;
@@ -1714,7 +1776,7 @@
       triggerHitStop(0.12);
       spawnHitFlash(target.x, target.y, "#fca5a5", 64);
       spawnParticles(target.x, target.y, "#fca5a5", 18);
-      playSound("explosion", 0.65);
+      playSound("ironPunch", 1.3);
       spawnFloatingText(f.x, f.y - 45, "헐크버스터 강타", "#fca5a5");
     }
     function explodeIron(o, radius, power, reason) {
@@ -1722,7 +1784,7 @@
         .forEach(e => damage(e, power, o.owner, reason));
       spawnBlast(o.x, o.y, radius, o.color);
       spawnParticles(o.x, o.y, o.color, 12);
-      playSound("explosion", 0.5);
+      playSound("ironExplosion", 1.0);
     }
     function stepIronObject(o, dt) {
       if (!o.owner.alive) return false;
@@ -2146,6 +2208,36 @@
           noise(0.60, 0.055 * s, 0, 1350, "bandpass");
           noise(0.42, 0.03 * s, 0.08, 4200, "highpass");
           break;
+        case "ironBeam":
+          tone(118, 1.02, "sawtooth", 0.085 * s, 0, 72);
+          tone(236, 1.00, "square", 0.038 * s, 0.01, 132);
+          tone(520, 0.92, "triangle", 0.028 * s, 0.04, 210);
+          noise(1.00, 0.07 * s, 0, 980, "bandpass");
+          break;
+        case "ironBooster":
+          tone(82, 0.58, "sawtooth", 0.09 * s, 0, 190);
+          noise(0.60, 0.11 * s, 0, 720, "lowpass");
+          noise(0.42, 0.045 * s, 0.06, 2800, "highpass");
+          break;
+        case "ironPunch":
+          tone(92, 0.20, "square", 0.105 * s, 0, 42);
+          noise(0.18, 0.15 * s, 0, 520, "lowpass");
+          noise(0.07, 0.075 * s, 0, 3400, "highpass");
+          break;
+        case "ironExplosion":
+          tone(68, 0.48, "sawtooth", 0.145 * s, 0, 24);
+          tone(34, 0.62, "sine", 0.12 * s, 0.02, 20);
+          noise(0.58, 0.23 * s, 0, 420, "lowpass");
+          noise(0.22, 0.10 * s, 0.015, 2400, "highpass");
+          break;
+        case "card":
+          noise(0.07, 0.045 * s, 0, 3200, "highpass");
+          tone(740, 0.08, "triangle", 0.04 * s, 0, 980);
+          break;
+        case "bombTick":
+          tone(920, 0.06, "square", 0.055 * s);
+          tone(520, 0.07, "square", 0.04 * s, 0.06);
+          break;
         case "fireball":
           tone(180, 0.20, "sawtooth", 0.06 * s, 0, 80);
           noise(0.20, 0.055 * s, 0.02, 520, "lowpass");
@@ -2547,6 +2639,7 @@
     }
 
     const patchNotes = [
+      "v15: 철가면 빔 지속음·추진음·중량 펀치음·폭발음 강화. 쟈바미 검은 장발/갈색 눈 외형 수정. 이전 도박 이후 접촉자 전원과 무작위 판돈을 걸고 하이카드·폭탄돌리기·거대 룰렛을 실제 진행. 치명상도 빚으로 전환하며 빚 상태 승리 보상 강화.",
       "v14: 캡틴 방패를 20초간 회수하지 못하면 무해한 귀환 상태로 자동 복귀. 방패 없는 강펀치 피해 9→13. 시험 캐릭터 쟈바미 추가: 최근 접촉자 전원 도박·기본 승률 1/n·저체력/빚 가중치·승리 추가피해·다음 도박 종료까지 빚 불사.",
       "v13: 비행 방패 재캐치 후 0.3초 뒤 재투척·새 방패 0.45초 캐치 잠금. 캡틴/헐크 강타 히트스톱·타격 효과 강화. 핑거플립 0.75초 시간정지. 모든 주요 캐릭터 사망 시 0HP 진동 후 폭발. 리사 헤어를 금발 리본 트윈테일·초록 컬 팁으로 재디자인.",
       "v12: 캡틴 방패 회수 범위 확대. 비행 중 캐치하면 쿨 없이 즉시 재투척, 정지 후 회수만 6초 쿨. 리사는 5초 무피격 뒤 초당 인내2 상승. 철가면 리펄서 전용 지속 빔음 적용. 타노 리얼리티 은신 중 잔상 제거·파워공격 차단.",
@@ -2597,7 +2690,7 @@
 
     function characterDamageInfo(c) {
       if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 13", tick: "방패 6초 / 재캐치 후 0.3초 재투척 / 적·벽 총 5회", tip: "20초 동안 회수하지 못하면 피해 없는 귀환 방패로 바뀐다. 비행 방패는 0.45초 캐치 잠금, 정지 방패 회수만 6초 쿨." };
-      if (c.id === "jabami") return { damage: "판돈 18 · 승리 시 상대마다 추가피해 24", tick: "10초 / 최근 6초 접촉자 전원 참가", tip: "쟈바미 포함 n명이면 기본 승률 1/n. 체력 10~30%는 추첨 가중치 1.25, 체력 10% 이하 또는 빚 상태는 1.75. 패배 시 상대 1명이 전체 판돈을 독식한다." };
+      if (c.id === "jabami") return { damage: "무작위 판돈 12~28 · 게임별 추가 피해", tick: "10초 / 이전 도박 이후 접촉자 전원", tip: "하이카드는 벽 충돌마다 재추첨, 폭탄은 접촉으로 전달, 룰렛은 이동·쿨타임을 고정하고 회전한다. 쟈바미는 치명상도 빚으로 전환하며 빚 상태 승리 보상 1.75배." };
       if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
       if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 충돌강타8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 헐크버스터는 적과 충돌하면 강타8·넉백. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
       if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 10초 / 핑거플립 시간정지 0.75초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백. 스톤 6개 완성 시 시간을 0.75초 멈추고 핑거플립. 이후 2초마다 스톤 1개 소실·자해 10." };
@@ -3217,7 +3310,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v14`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v15`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3243,7 +3336,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v14`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v15`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3747,8 +3840,10 @@
       }
       if (f.jabami) {
         const j = f.jabami;
-        return { ratio: j.pending > 0 ? 1 - j.pending / JABAMI.revealDelay : clamp(1 - j.clock / JABAMI.period, 0, 1), className: "", text: j.pending > 0 ? "도박 결과 공개 중" : `다음 도박 ${Math.ceil(j.clock)}초 · 예상 승률 ${Math.round(jabamiChance(f, Math.max(1, j.contacts.size)) * 100)}%`,
-          extraTextHtml: '<div class="status-skill-label">' + (j.debt > 0 ? `빚 ${Math.ceil(j.debt)} · 다음 도박 종료까지 불사` : `접촉자 ${j.contacts.size}명 · 판돈 ${JABAMI.stake}`) + '</div>' };
+        const max = j.phase === "reveal" ? JABAMI.revealDelay : Math.max(1,j.gameDuration);
+        const text = j.phase === "collect" ? `다음 도박 ${Math.ceil(j.clock)}초 · 접촉자 ${j.contacts.size}명` : j.phase === "reveal" ? `${Math.ceil(j.timer)}초 뒤 종목 공개 · 판돈 ${j.stake}` : `${JABAMI_GAME_NAMES[j.game]} · ${j.timer.toFixed(1)}초`;
+        return { ratio: j.phase === "collect" ? clamp(1-j.clock/JABAMI.period,0,1) : clamp(1-j.timer/max,0,1), className: "", text,
+          extraTextHtml: '<div class="status-skill-label">' + (j.debt > 0 ? `빚 ${Math.ceil(j.debt)} · 다음 도박 종료까지 불사 · 승리보상 ×1.75` : `누적 접촉자 ${j.contacts.size}명`) + '</div>' };
       }
       if (f.tano) return { ratio: f.tano.stones.length / 6, className: "", text: "스톤 " + f.tano.stones.length + "/6 · " + (f.tano.snapped ? "소실 " + Math.ceil(f.tano.lossClock) + "초" : f.tano.spawned === 5 && f.tano.stones.length < 5 ? "남은 스톤 획득 대기" : Math.ceil(f.tano.next) + "초 후 등장"),
         extraTextHtml: '<div class="status-skill-label">' + stoneTypes.filter(s => f.tano.stones.includes(s.id)).map(s => s.name).join(" · ") + (f.tano.hidden > 0 ? " · 무적" : "") + '</div>' };
@@ -6816,6 +6911,11 @@
 
     function updateFighter(f, dt) {
       if (!f.alive) return;
+      const rouletteHost = activeJabamiGameFor(f);
+      if (rouletteHost?.jabami.game === "roulette") {
+        if (rouletteHost === f) updateJabami(f, dt);
+        return;
+      }
       updateLisa(f, dt);
       if (updatePowerPunch(f, dt)) return;
 
@@ -7049,6 +7149,7 @@
         bounced = true;
       }
       if (bounced) {
+        jabamiHighCardWallBounce(f);
         const overSources = enemyOverchargeSources(f);
         const electricWall = overSources.length > 0;
         f.wallBounces += 1;
@@ -7165,6 +7266,7 @@
             if (areEnemies(a, b)) {
               recordJabamiContact(a, b);
               recordJabamiContact(b, a);
+              passJabamiBomb(a, b);
               ironDashContact(a, b);
               ironDashContact(b, a);
               tanoPowerContact(a, b);
@@ -8661,6 +8763,7 @@
       drawIronObjects();
       drawCaptainShields();
       drawLisaWaves();
+      drawJabamiGames();
       drawIrisGlassFields();
       drawJinOverchargeWalls();
 
