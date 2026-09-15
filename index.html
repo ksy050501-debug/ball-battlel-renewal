@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v39</title>
+  <title>볼배틀 리뉴얼 v40</title>
   <style>
     :root {
       --bg: #020617;
@@ -868,7 +868,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v39</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v40</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1538,7 +1538,7 @@
       return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="쟈바미 검은 장발 붉은 교복"><circle cx="24" cy="24" r="22" fill="#f8fafc"/><path d="M7 44Q5 14 14 7Q24-1 34 7Q43 15 41 44L34 47L31 18H17L14 47Z" fill="#09090b"/><ellipse cx="24" cy="21" rx="10.5" ry="12.5" fill="#ffe4d6"/><path d="M13 20Q12 5 24 5Q37 5 35 20Q30 13 16 14Z" fill="#09090b"/><path d="M17 22h5m4 0h5" stroke="#3f2d28" stroke-width="2.2"/><path d="M20 29q4 2.8 8 0" fill="none" stroke="#9f1239"/><path d="M11 47L16 34L24 38L32 34L37 47Z" fill="#b91c1c" stroke="#7f1d1d"/><path d="M21 35L24 41L27 35L24 33Z" fill="#111827"/></svg>';
     }
     function justiceAllyPortrait() {
-      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="정의의 아군"><circle cx="24" cy="24" r="22" fill="#dbeafe"/><path d="M2 20L9 7L17 2L24 7L31 2L41 9L47 21L36 24L12 24Z" fill="#70472f" stroke="#211713" stroke-width="1.8"/><path d="M11 19Q12 12 24 11Q36 12 37 19L34 32Q30 39 24 39Q18 39 14 32Z" fill="#f0c9ab" stroke="#7c4a32"/><path d="M8 18Q24 9 41 17L34 24L31 16L27 27L24 16L19 27L17 17L12 24Z" fill="#563426"/><path d="M14 26L22 23L20 29L15 29Z M34 26L26 23L28 29L33 29Z" fill="#60a5fa" stroke="#172554" stroke-width="1.5"/><path d="M14 22L22 20.5M34 22L26 20.5" stroke="#382015" stroke-width="2"/><path d="M18 25L20 25L19 28ZM30 25L28 25L29 28Z" fill="#0f172a"/><path d="M20 34L28 34" stroke="#7c2d12" stroke-width="1.2"/><path d="M3 48L9 35L17 32L21 47ZM45 48L39 35L31 32L27 47Z" fill="#f8fafc" stroke="#475569" stroke-width="1.7"/><path d="M17 33L21 47H27L31 33L27 38L24 44L21 38Z" fill="#eef2ff" stroke="#94a3b8"/></svg>';
+      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="정의의 아군"><circle cx="24" cy="24" r="22" fill="#dbeafe"/><path d="M2 20L9 7L17 2L24 7L31 2L41 9L47 21L36 24L12 24Z" fill="#70472f" stroke="#211713" stroke-width="1.8"/><path d="M11 19Q12 12 24 11Q36 12 37 19L34 32Q30 39 24 39Q18 39 14 32Z" fill="#f0c9ab" stroke="#7c4a32"/><path d="M8 18Q24 9 41 17L34 24L31 16L27 27L24 16L19 27L17 17L12 24Z" fill="#563426"/><path d="M14 23L22 26L20 29L15 27Z M34 23L26 26L28 29L33 27Z" fill="#60a5fa" stroke="#172554" stroke-width="1.5"/><path d="M14 19L22 23M34 19L26 23" stroke="#382015" stroke-width="2.2"/><path d="M18 25L20 26L19 28ZM30 25L28 26L29 28Z" fill="#0f172a"/><path d="M20 34L28 34" stroke="#7c2d12" stroke-width="1.2"/><path d="M3 48L9 35L17 32L21 47ZM45 48L39 35L31 32L27 47Z" fill="#f8fafc" stroke="#475569" stroke-width="1.7"/><path d="M17 33L21 47H27L31 33L27 38L24 44L21 38Z" fill="#eef2ff" stroke="#94a3b8"/></svg>';
     }
     function makeJusticeDeck(){return ["blueEyes","blueEyes","blueEyes","fusion"];}
     function initJusticeAlly(f) {
@@ -1589,7 +1589,7 @@
     function updateDuelMonster(f,dt){const m=f.duelMonster;if(!m)return;m.invuln=Math.max(0,m.invuln-dt);m.emerge=Math.max(0,(m.emerge||0)-dt);if(m.fusing){f.vx=0;f.vy=0;return;}if(m.kind==="obelisk"){if(m.crusherCast>0){m.crusherCast-=dt;f.vx=0;f.vy=0;if(m.crusherCast<=0){const owner=fighterById(f.ownerId)||f;enemiesOf(f).forEach(e=>{if(Math.hypot(e.x-f.x,e.y-f.y)<=138+e.r){damage(e,18,owner,"갓 핸드 크러셔");applyFreeze(e,1.65);spawnBlast(e.x,e.y,48,"#2563eb");}});spawnBlast(f.x,f.y,145,"#1d4ed8");playSound("explosion",1.45);screenShake=Math.max(screenShake,.8);m.crusherCd=7.5;}return;}m.crusherCd-=dt;if(m.crusherCd<=0){m.crusherCast=1.15;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;spawnFloatingText(f.x,f.y-f.r-32,"갓 핸드 크러셔!","#93c5fd");playSound("charge",1.2);return;}}else if(m.channel>0){m.channel-=dt;f.vx=0;f.vy=0;if(m.channel<=0){f.vx=m.savedVx||0;f.vy=m.savedVy||0;}return;}m.breathCd-=dt;if(m.kind!=="obelisk"&&m.breathCd<=0){const near=nearestEnemy(f),target=near.enemy;m.breathCd=7.5;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;if(m.kind==="blueEyes"){m.cast=1.15;m.castA=target?Math.atan2(target.y-f.y,target.x-f.x):Math.atan2(f.vy,f.vx);spawnFloatingText(f.x,f.y-f.r-26,"버스트 스트림!","#bae6fd");playSound("beam",.8);}else{startUltimateBurst(fighterById(f.ownerId)||f,f);return;}}if(m.cast>0){m.cast-=dt;f.vx=0;f.vy=0;if(m.cast<=0){fireDuelBreath(f,14);m.channel=1.05;}}if(f.contactCd<=0){const near=nearestEnemy(f);if(near.enemy&&near.d<=f.r+near.enemy.r+3){damage(near.enemy,f.attack,f,`${f.name} 충돌`);f.contactCd=.8;}}}
     function fireDuelBreath(dragon,power){const owner=fighterById(dragon.ownerId)||dragon,a=dragon.duelMonster.castA??Math.atan2(dragon.vy,dragon.vx),kind=dragon.duelMonster.kind,range=kind==="ultimate"?230:kind==="twin"?215:190,width=kind==="ultimate"?30:kind==="twin"?27:23,hits=kind==="twin"?6:7;duelBreaths.push({kind:"stream",dragonId:dragon.id,ownerId:owner.id,x:dragon.x,y:dragon.y,a,range,width,life:1.05,maxLife:1.05,tickPower:Math.max(1,Math.round(power/hits)),maxHits:hits,hitCounts:new Map(),tickCd:0,color:"#60a5fa"});screenShake=Math.max(screenShake,.34);}
     function startUltimateBurst(owner,dragon){const m=dragon.duelMonster,near=nearestEnemy(dragon),base=near.enemy?Math.atan2(near.enemy.y-dragon.y,near.enemy.x-dragon.x):Math.atan2(dragon.vy,dragon.vx);m.savedVx=dragon.vx;m.savedVy=dragon.vy;m.channel=3.6;m.breathCd=7.5;dragon.vx=0;dragon.vy=0;duelBreaths.push({kind:"sweep",dragonId:dragon.id,ownerId:owner.id,base,x:dragon.x,y:dragon.y,range:275,life:3.6,maxLife:3.6,hitCounts:new Map(),tickCd:0,color:"#38bdf8"});spawnFloatingText(dragon.x,dragon.y-dragon.r-38,"얼티밋 버스트!","#7dd3fc");log(`<strong>${escapeHtml(owner.name)}</strong> 얼티밋 버스트!`,"공격");playSound("beam",1.7);screenShake=Math.max(screenShake,.75);}
-    function updateDuelBreaths(dt){for(let i=duelBreaths.length-1;i>=0;i--){const b=duelBreaths[i];b.life-=dt;if(b.kind==="stream"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;b.tickCd-=dt;if(b.tickCd<=0){b.tickCd=.10;enemiesOf(dragon).forEach(e=>{const count=b.hitCounts.get(e.id)||0;if(count>=b.maxHits)return;const dx=e.x-b.x,dy=e.y-b.y,along=dx*Math.cos(b.a)+dy*Math.sin(b.a),side=Math.abs(-dx*Math.sin(b.a)+dy*Math.cos(b.a));if(along>=0&&along<=b.range+e.r&&side<=b.width/2+e.r){b.hitCounts.set(e.id,count+1);damage(e,b.tickPower,owner||dragon,"버스트 스트림 다단");spawnHitFlash(e.x,e.y,"#7dd3fc",20);}});}}else if(b.kind==="sweep"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;const p=1-b.life/b.maxLife,swipe=p<.5?p*2:(1-p)*2;b.a=b.base-Math.PI/2+swipe*Math.PI;b.tickCd-=dt;if(b.tickCd<=0){b.tickCd=.11;enemiesOf(dragon).forEach(e=>{const count=b.hitCounts.get(e.id)||0;if(count>=6)return;const dx=e.x-b.x,dy=e.y-b.y,d=Math.hypot(dx,dy),da=Math.abs(Math.atan2(Math.sin(Math.atan2(dy,dx)-b.a),Math.cos(Math.atan2(dy,dx)-b.a)));if(d<=b.range+e.r&&da<.25){b.hitCounts.set(e.id,count+1);damage(e,4,owner||dragon,"얼티메이트 버스트 다단");spawnHitFlash(e.x,e.y,"#38bdf8",26);}});}screenShake=Math.max(screenShake,.38);}else if(b.kind==="godRing"){const prev=b.r;b.r+=b.speed*dt;const owner=fighterById(b.ownerId);if(owner)enemiesOf(owner).forEach(e=>{if(b.hit.has(e.id))return;const d=Math.hypot(e.x-b.x,e.y-b.y);if(d+e.r>=prev&&d-e.r<=b.r){b.hit.add(e.id);damage(e,4,owner,"갓 핸드 임팩트");spawnBlast(e.x,e.y,42,"#60a5fa");}});}if(b.life<=0||(b.maxR!==undefined&&b.r>b.maxR))duelBreaths.splice(i,1);}}
+    function updateDuelBreaths(dt){for(let i=duelBreaths.length-1;i>=0;i--){const b=duelBreaths[i];b.life-=dt;if(b.kind==="stream"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;b.tickCd-=dt;if(b.tickCd<=0){b.tickCd=.10;enemiesOf(dragon).forEach(e=>{const count=b.hitCounts.get(e.id)||0;if(count>=b.maxHits)return;const dx=e.x-b.x,dy=e.y-b.y,along=dx*Math.cos(b.a)+dy*Math.sin(b.a),side=Math.abs(-dx*Math.sin(b.a)+dy*Math.cos(b.a));if(along>=0&&along<=b.range+e.r&&side<=b.width/2+e.r){b.hitCounts.set(e.id,count+1);damage(e,b.tickPower,owner||dragon,"버스트 스트림 다단");spawnHitFlash(e.x,e.y,"#7dd3fc",20);}});}}else if(b.kind==="sweep"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;const p=1-b.life/b.maxLife,swipe=p<.5?p*2:(1-p)*2;b.a=b.base-Math.PI/2+swipe*Math.PI;b.tickCd-=dt;if(b.tickCd<=0){b.tickCd=.11;enemiesOf(dragon).forEach(e=>{const count=b.hitCounts.get(e.id)||0;if(count>=6)return;const dx=e.x-b.x,dy=e.y-b.y,d=Math.hypot(dx,dy),da=Math.abs(Math.atan2(Math.sin(Math.atan2(dy,dx)-b.a),Math.cos(Math.atan2(dy,dx)-b.a)));if(d<=b.range+e.r&&da<.25){b.hitCounts.set(e.id,count+1);const dealt=damage(e,4,owner||dragon,"얼티메이트 버스트 다단");if(dealt>0)spawnFloatingText(e.x,e.y-e.r-10-(count%3)*12,`얼티밋 -${dealt}`,"#7dd3fc");spawnHitFlash(e.x,e.y,"#38bdf8",26);}});}screenShake=Math.max(screenShake,.38);}else if(b.kind==="godRing"){const prev=b.r;b.r+=b.speed*dt;const owner=fighterById(b.ownerId);if(owner)enemiesOf(owner).forEach(e=>{if(b.hit.has(e.id))return;const d=Math.hypot(e.x-b.x,e.y-b.y);if(d+e.r>=prev&&d-e.r<=b.r){b.hit.add(e.id);damage(e,4,owner,"갓 핸드 임팩트");spawnBlast(e.x,e.y,42,"#60a5fa");}});}if(b.life<=0||(b.maxR!==undefined&&b.r>b.maxR))duelBreaths.splice(i,1);}}
     function drawDuelCardBack(x, y, angle = 0, scale = 1) {
       ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
       ctx.fillStyle="#4a2115";ctx.strokeStyle="#d6a36b";ctx.lineWidth=1.4;roundRect(ctx,-7,-10,14,20,1.8,true,true);
@@ -1604,7 +1604,7 @@
       ctx.fillStyle="#f1cfb3";ctx.beginPath();ctx.ellipse(0,1,13,15,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle="#70472f";ctx.strokeStyle="#211713";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(-19,-5);ctx.lineTo(-27,-15);ctx.lineTo(-15,-31);ctx.lineTo(-3,-24);ctx.lineTo(5,-31);ctx.lineTo(26,-14);ctx.lineTo(17,-3);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#8a5b3b";ctx.beginPath();ctx.moveTo(-22,-14);ctx.quadraticCurveTo(0,-4,23,-15);ctx.lineTo(6,-29);ctx.lineTo(-14,-29);ctx.closePath();ctx.fill();
       ctx.fillStyle="#513225";ctx.beginPath();ctx.moveTo(-18,-11);ctx.quadraticCurveTo(1,-3,20,-12);ctx.lineTo(14,2);ctx.lineTo(9,-8);ctx.lineTo(4,4);ctx.lineTo(0,-10);ctx.lineTo(-5,3);ctx.lineTo(-9,-8);ctx.lineTo(-14,1);ctx.closePath();ctx.fill();
-      ctx.fillStyle="#60a5fa";ctx.strokeStyle="#172554";ctx.lineWidth=1.7;ctx.beginPath();ctx.moveTo(-12,0);ctx.lineTo(-3,-2);ctx.lineTo(-5,3);ctx.lineTo(-10,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(12,0);ctx.lineTo(3,-2);ctx.lineTo(5,3);ctx.lineTo(10,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle="#382015";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-13,-4);ctx.lineTo(-3,-6);ctx.moveTo(13,-4);ctx.lineTo(3,-6);ctx.stroke();ctx.strokeStyle="#7f1d1d";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(-3,9);ctx.lineTo(5,9);ctx.stroke();
+      ctx.fillStyle="#60a5fa";ctx.strokeStyle="#172554";ctx.lineWidth=1.7;ctx.beginPath();ctx.moveTo(-12,-3);ctx.lineTo(-3,0);ctx.lineTo(-5,4);ctx.lineTo(-10,2);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(12,-3);ctx.lineTo(3,0);ctx.lineTo(5,4);ctx.lineTo(10,2);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle="#382015";ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(-13,-7);ctx.lineTo(-3,-3);ctx.moveTo(13,-7);ctx.lineTo(3,-3);ctx.stroke();ctx.strokeStyle="#7f1d1d";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(-3,9);ctx.lineTo(5,9);ctx.stroke();
       ctx.fillStyle="#f8fafc";ctx.strokeStyle="#64748b";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-19,8);ctx.lineTo(-12,23);ctx.lineTo(-5,14);ctx.lineTo(0,22);ctx.lineTo(5,14);ctx.lineTo(12,23);ctx.lineTo(19,8);ctx.lineTo(11,12);ctx.lineTo(7,21);ctx.lineTo(-7,21);ctx.lineTo(-11,12);ctx.closePath();ctx.fill();ctx.stroke();
       if(d?.equipped){ctx.save();ctx.translate(-18,13);ctx.rotate(.18);ctx.fillStyle="#dbeafe";ctx.strokeStyle="#1e3a8a";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(3,-7);ctx.lineTo(-12,-9);ctx.lineTo(-18,-4);ctx.lineTo(-42,-8);ctx.lineTo(-49,-2);ctx.lineTo(-29,4);ctx.lineTo(-45,11);ctx.lineTo(-20,10);ctx.lineTo(-8,5);ctx.lineTo(3,5);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#3b82f6";for(let i=0;i<4;i++){ctx.fillRect(-42+i*8,-3+i*.8,7,5);}ctx.fillStyle="#ef4444";ctx.fillRect(-14,-5,8,9);ctx.fillStyle="#38bdf8";ctx.beginPath();ctx.arc(-2,0,4,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
       ctx.restore();drawHealthBar(f);drawName(f);
@@ -2967,6 +2967,7 @@
     }
 
     const patchNotes = [
+      "v40: 정의의 아군의 눈꼬리를 바깥쪽으로 올려 날카로운 인상으로 수정했다. 얼티밋 버스트는 왕복 두 번째 타격을 포함한 매 적중마다 피해 텍스트를 표시한다.",
       "v39: 사용과 드로우를 9초로 통일. 융합 소재 무적과 완료 시 생존 수 재판정, 융합체의 주기 얼티밋 버스트를 적용했다. 마지막 소환수의 치명상을 릴리스해 이동형 오벨리스크가 등장하며 예고형 갓 핸드 크러셔로 광역 피해와 둔화를 준다. 본체 사망 시 소환수도 소멸하며 전멸 9초 뒤 덱을 초기화한다.",
       "v38: 정의의 아군 전개를 듀얼 개시 6초·소환 5.5초·드로우 9초·브레스 7.5초로 늦추고 상태창에 주기를 표시. 죽은 자의 소생을 삭제했다. 버스트 스트림은 전격 구체를 충전한 뒤 넓어지는 광선을 빠른 6~7틱으로 발사하며, 폭렬질풍탄은 3.6초 동안 느리게 왕복하며 최대 6틱을 준다. 오벨리스크는 지속시간·파동 속도·빈도·피해를 모두 하향.",
       "v37: 듀얼 몬스터가 적과 접촉해도 분신처럼 소멸하지 않도록 수정하고 전멸 시 덱 복구 안전장치를 추가. 브레스 종료 후 백룡들이 정의의 아군에게 회전하며 모여 융합하며, 버스트 스트림과 폭렬질풍탄은 최근접 적을 조준하는 4회 다단히트가 된다. 백룡·쌍폭렬룡·궁극룡·오벨리스크의 캔버스 외형을 전면 재디자인.",
@@ -3665,7 +3666,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v39`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v40`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3691,7 +3692,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v39`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v40`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -5950,7 +5951,7 @@
 
       spawnParticles(target.x, target.y, target.color, 10);
       spawnHitFlash(target.x, target.y, target.color, Math.min(42, 14 + final));
-      if (!target.isSummon) {
+      if (!target.isSummon && !reason.includes("얼티메이트 버스트")) {
         const damageTextColor = fixedDamage ? "#facc15" : (reason === "회복" ? "#34d399" : "#fee2e2");
         spawnFloatingText(target.x, target.y - target.r - 8, `-${final}`, damageTextColor);
       }
