@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v41</title>
+  <title>볼배틀 리뉴얼 v42</title>
   <style>
     :root {
       --bg: #020617;
@@ -870,7 +870,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v41</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v42</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -2274,9 +2274,7 @@
         }
         if (f.punchFlight <= 0) {
           f.punchSource = null;
-          const speed = Math.hypot(f.vx, f.vy) || 1;
-          f.vx = f.vx / speed * f.baseSpeed * 44;
-          f.vy = f.vy / speed * f.baseSpeed * 44;
+          // 비행이 끝나도 충격 속도를 즉시 덮지 않고 자체 속도로 감속한다.
         }
         return true;
       }
@@ -2974,6 +2972,7 @@
     }
 
     const patchNotes = [
+      "v42 실험: 충돌로 바뀐 이동 방향은 유지하고 속력은 각 캐릭터·소환수의 기본 속도로 부드럽게 복귀한다. 돌진·시전·펀치 비행 중에는 복귀를 적용하지 않으며, 펀치 비행 종료 직후 속도를 강제로 덮던 처리를 제거했다.",
       "v41: 융합 완료 시 정의의 아군과 융합룡의 이동 속도를 복구하고 얼티밋 버스트 종료 후 속도 0이 남는 오류를 수정했다. 모든 캐릭터 상태창의 발동/조건 게이지를 노란색으로 통일하고 정의의 아군 카드 사용·드로우 9초, 타노 스톤 생성, 철가면 공격·부스터 주기를 시각화했다.",
       "v40: 정의의 아군의 눈꼬리를 바깥쪽으로 올려 날카로운 인상으로 수정했다. 얼티밋 버스트는 왕복 두 번째 타격을 포함한 매 적중마다 피해 텍스트를 표시한다.",
       "v39: 사용과 드로우를 9초로 통일. 융합 소재 무적과 완료 시 생존 수 재판정, 융합체의 주기 얼티밋 버스트를 적용했다. 마지막 소환수의 치명상을 릴리스해 이동형 오벨리스크가 등장하며 예고형 갓 핸드 크러셔로 광역 피해와 둔화를 준다. 본체 사망 시 소환수도 소멸하며 전멸 9초 뒤 덱을 초기화한다.",
@@ -3674,7 +3673,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v41`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v42`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3700,7 +3699,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v41`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v42`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -7231,6 +7230,26 @@
       f.vy *= factor;
     }
 
+    // 충돌 방향은 유지하되 각 개체의 기본 속력으로 부드럽게 복귀한다.
+    function recoverOwnMoveSpeed(f, dt) {
+      if (!f?.alive || f.punchFlight > 0 || f.punchHold > 0 || isCasting(f)
+          || (f.iron?.dash || 0) > 0 || (f.duelMonster?.channel || 0) > 0
+          || (f.duelMonster?.cast || 0) > 0 || f.duelMonster?.fusing
+          || (f.toriMeteorWalk || 0) > 0 || (f.rioStormRush || 0) > 0
+          || f.baseId === "wind_rio") return;
+      const ownSpeed = Math.max(1, (f.baseSpeed || f.speed || 2.35) * 44);
+      const current = Math.hypot(f.vx, f.vy);
+      if (current < 0.5) {
+        const v = randomVelocity(f.baseSpeed || f.speed || 2.35);
+        f.vx = v.vx; f.vy = v.vy;
+        return;
+      }
+      if (Math.abs(current - ownSpeed) < ownSpeed * 0.04) return;
+      const recovered = current + (ownSpeed - current) * Math.min(1, dt * 3.5);
+      f.vx *= recovered / current;
+      f.vy *= recovered / current;
+    }
+
     function checkSkill(f, dt) {
       if (!f.alive || f.isSummon) return;
       f.skillClock += dt;
@@ -7531,6 +7550,7 @@
         return;
       }
 
+      recoverOwnMoveSpeed(f, dt);
       f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * dt;
       f.y += f.vy * slow * boost * gardenSlow * irisGlassSlow * dt;
 
