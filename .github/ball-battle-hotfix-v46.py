@@ -1,0 +1,84 @@
+from pathlib import Path
+import re
+
+p = Path('index.html')
+s = p.read_text(encoding='utf-8')
+original = s
+
+# Version label.
+s = s.replace('<title>볼배틀 리뉴얼 v45</title>', '<title>볼배틀 리뉴얼 v46</title>')
+
+# Naming / UI cleanup for Logo Doctor transformations.
+s = s.replace('스마크 헐크크', '스마트 헐크크')
+s = s.replace('스마크 스매시', '스마트 스매시')
+s = s.replace('체력 0 → 탈락 · 점프 없음', '점프 없음')
+s = s.replace(' 이때 0HP는 탈락.', '')
+s = s.replace(' 다음 0HP에는 탈락한다.', '')
+
+old = 'l.mode=mode; l.jump=null; l.airHeight=0; l.smashCd=0;\n      f.punchHold=0; f.punchImpact=null; f.punchFlight=0; f.punchSource=null;'
+new = 'l.mode=mode; l.jump=null; l.airHeight=0; l.smashCd=0;\n      f.name = mode==="hulk" ? "헐크크" : "스마트 헐크크";\n      f.punchHold=0; f.punchImpact=null; f.punchFlight=0; f.punchSource=null;'
+if old not in s:
+    raise SystemExit('changeLogoForm anchor not found')
+s = s.replace(old, new, 1)
+
+# Power Stone: direct contact damage and knockback; no victim punchHold freeze.
+pat = re.compile(r'    function tanoPowerContact\(source, target\) \{.*?\n    \}\n    function updatePowerPunch', re.S)
+m = pat.search(s)
+if not m:
+    raise SystemExit('tanoPowerContact block not found')
+replacement = '''    function tanoPowerContact(source, target) {
+      if (!target?.alive || !source.tano?.stones.includes("power") || source.tanoPunchCd > 0 ||
+          source.tano?.hidden > 0 || target.tano?.hidden > 0 || !areEnemies(source, target)) return;
+      let dx = target.x - source.x, dy = target.y - source.y;
+      const length = Math.hypot(dx, dy);
+      if (length < 0.001) { dx = 1; dy = 0; } else { dx /= length; dy /= length; }
+      source.tanoPunchCd = 0.8;
+      const dealt = damage(target, TANO.power, source, "파워스톤 강펀치");
+      if (dealt > 0 && target.alive && !(target.baseId === "dummy_unit" && target.hp === target.maxHp)) {
+        target.vx = dx * 700; target.vy = dy * 700; target.punchFlight = Math.max(target.punchFlight || 0, 0.3);
+        target.punchSource = source;
+        target.punchWallPower = TANO.power;
+        target.punchWallHits = 0;
+      }
+      spawnHitFlash(target.x, target.y, "#e9d5ff", 42);
+      spawnFloatingText(target.x, target.y - 38, "강펀치!", "#e9d5ff");
+      spawnBlast(target.x, target.y, 60, "#a855f7");
+      spawnParticles(target.x, target.y, "#e9d5ff", 18);
+      screenShake = Math.max(screenShake, 0.25);
+      playSound("explosion", 0.6);
+    }
+    function updatePowerPunch'''
+s = s[:m.start()] + replacement + s[m.end():]
+
+# Captain contact attack can answer an incoming contact attack in the same collision.
+old = 'if (!f.captain || f.captain.counterCd > 0 || f.punchHold > 0 || f.punchFlight > 0 || f.punchImpact || f.tanoStop > 0 || !target?.alive || !areEnemies(f, target)) return;'
+new = 'if (!f.captain || f.captain.counterCd > 0 || f.tanoStop > 0 || !target?.alive || !areEnemies(f, target)) return;'
+if old not in s:
+    raise SystemExit('captainContact guard not found')
+s = s.replace(old, new, 1)
+s = s.replace('        target.captainPunchStun = CAPTAIN.punchWindup;\n', '', 1)
+s = re.sub(r'      if \(\(f\.captainPunchStun \|\| 0\) > 0\) \{\n        f\.captainPunchStun = Math\.max\(0, f\.captainPunchStun - dt\);\n        return true;\n      \}\n', '', s, count=1)
+s = s.replace('          target.captainPunchStun = 0;\n', '', 1)
+
+# Hulkbuster: no victim windup freeze.
+s = s.replace('      target.ironPunchStun = IRON.hulkWindup;\n', '', 1)
+s = re.sub(r'      if \(\(f\.ironPunchStun \|\| 0\) > 0\) \{\n        f\.ironPunchStun = Math\.max\(0, f\.ironPunchStun - dt\);\n        return true;\n      \}\n', '', s, count=1)
+s = s.replace('          target.ironPunchStun = 0;\n', '', 1)
+
+# Hulk크 / Smart Hulk contact smash is not suppressed just because incoming knockback is scheduled.
+old = 'const l=f.logo;if(!l || l.mode==="doctor" || l.jump || l.smashCd>0 || f.punchHold>0 || f.punchFlight>0 || f.tanoStop>0 || !target?.alive || !areEnemies(f,target))return;'
+new = 'const l=f.logo;if(!l || l.mode==="doctor" || l.jump || l.smashCd>0 || f.tanoStop>0 || !target?.alive || !areEnemies(f,target))return;'
+if old not in s:
+    raise SystemExit('logoContact guard not found')
+s = s.replace(old, new, 1)
+
+# v46 patch note.
+marker = '    const patchNotes = [\n'
+note = '      "v46: 로고 박사 변신 후 이름을 헐크크·스마트 헐크크로 정상 표시하고 불필요한 탈락 안내를 제거. 파워스톤·캡틴 강펀치·헐크버스터 강타·헐크크 스매시 등 접촉 공격이 같은 충돌에서 서로 독립적으로 발동하도록 수정하고, 접촉 공격 준비 때문에 상대가 멈추던 처리를 제거.",\n'
+if marker not in s:
+    raise SystemExit('patchNotes anchor not found')
+s = s.replace(marker, marker + note, 1)
+
+if s == original:
+    raise SystemExit('no changes produced')
+p.write_text(s, encoding='utf-8')
