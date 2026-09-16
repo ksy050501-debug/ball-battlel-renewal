@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v42</title>
+  <title>볼배틀 리뉴얼 v43</title>
   <style>
     :root {
       --bg: #020617;
@@ -835,6 +835,10 @@
       background: linear-gradient(90deg, #eab308, #facc15, #fde047);
       box-shadow: 0 0 8px rgba(250,204,21,.55);
     }
+    .patience-fill { background: linear-gradient(90deg, #a78bfa, #e879f9); }
+    .rock-fill { background: linear-gradient(90deg, #f472b6, #fb7185); }
+    .rage-fill { background: linear-gradient(90deg, #ef4444, #fb7185); }
+    .stone-segment { position:absolute; top:0; height:100%; border-right:1px solid rgba(15,23,42,.55); }
 
     .shield-fill {
       background: linear-gradient(90deg, #93c5fd, #cbd5e1);
@@ -870,7 +874,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v42</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v43</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1702,7 +1706,7 @@
       const j = f.jabami;
       const forced = j.debt > 0 ? fighters.filter(e => e.alive && !e.isSummon && e !== f && areEnemies(f, e) && dist(f, e) <= JABAMI.debtInviteRadius + e.r) : [];
       const opponents = [...new Set([...j.contacts].map(fighterById).concat(forced))].filter(e => e?.alive && !e.isSummon && areEnemies(f, e));
-      if (!opponents.length) { j.clock = 1; return; }
+      if (!opponents.length) { j.clock = 0; return; }
       j.contacts.clear(); j.round += 1; j.participants = [f.id, ...opponents.map(e => e.id)];
       j.stake = Math.round(rand(JABAMI.stakeMin, JABAMI.stakeMax));
       j.game = "highcard"; j.phase = "reveal"; j.timer = JABAMI.revealDelay; j.autoWin = false;
@@ -2972,6 +2976,7 @@
     }
 
     const patchNotes = [
+      "v43: 타노의 획득 스톤 게이지를 스톤별 색상으로 분할. 리사의 인내·록·폭주 게이지 색을 구분. 캡틴의 던진 방패 자동 귀환 20초를 게이지와 숫자로 표시. 쟈바미는 상대가 없을 때 도박 준비 완료 게이지를 가득 채워 고정.",
       "v42 실험: 충돌로 바뀐 이동 방향은 유지하고 속력은 각 캐릭터·소환수의 기본 속도로 부드럽게 복귀한다. 돌진·시전·펀치 비행 중에는 복귀를 적용하지 않으며, 펀치 비행 종료 직후 속도를 강제로 덮던 처리를 제거했다.",
       "v41: 융합 완료 시 정의의 아군과 융합룡의 이동 속도를 복구하고 얼티밋 버스트 종료 후 속도 0이 남는 오류를 수정했다. 모든 캐릭터 상태창의 발동/조건 게이지를 노란색으로 통일하고 정의의 아군 카드 사용·드로우 9초, 타노 스톤 생성, 철가면 공격·부스터 주기를 시각화했다.",
       "v40: 정의의 아군의 눈꼬리를 바깥쪽으로 올려 날카로운 인상으로 수정했다. 얼티밋 버스트는 왕복 두 번째 타격을 포함한 매 적중마다 피해 텍스트를 표시한다.",
@@ -3673,7 +3678,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v42`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v43`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3699,7 +3704,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v42`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v43`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -4193,7 +4198,7 @@
       if(f.duelist){const d=f.duelist;if(!d.equipped)return {ratio:clamp(1-d.timer/6,0,1),className:"skill-fill",text:`듀얼 개시 ${d.timer.toFixed(1)}초`};const play=clamp(1-d.playCd/9,0,1),draw=clamp(1-d.drawCd/9,0,1);return {ratio:play,className:"skill-fill",text:d.fusion?`융합 진행 ${d.fusion.t.toFixed(1)}초`:d.emptyTimer>0?`소환수 전멸 · 덱 초기화 ${(9-d.emptyTimer).toFixed(1)}초`:`카드 사용 ${d.playCd.toFixed(1)}초 · 드로우 ${d.drawCd.toFixed(1)}초`,extraBarsHtml:`<div class="bar" title="드로우 쿨타임"><div class="bar-fill skill-fill" style="width:${draw*100}%"></div></div>`,extraTextHtml:'<div class="status-skill-label">위: 카드 사용 9초 · 아래: 드로우 9초</div>'};}
       if (f.lisa) {
         const l=f.lisa, lady=l.mode==="lady";
-        return {ratio:lady?l.patience/LISA.patience:l.rock/100,className:"",text:lady?"숙녀 · 인내 "+Math.floor(l.patience)+"/"+LISA.patience:(l.mode==="rage"?"폭주":"록")+" · 록 게이지 "+Math.ceil(l.rock)+"%",
+        return {ratio:lady?l.patience/LISA.patience:l.rock/100,className:lady?"patience-fill":l.mode==="rage"?"rage-fill":"rock-fill",text:lady?"숙녀 · 인내 "+Math.floor(l.patience)+"/"+LISA.patience:(l.mode==="rage"?"폭주":"록")+" · 록 게이지 "+Math.ceil(l.rock)+"%",
           extraTextHtml:'<div class="status-skill-label">'+(lady?"공격 없음":l.mode==="rage"?"이속 ×1.6 · 0.55초마다 음파":"폭주까지 "+Math.max(0,l.rock*LISA.duration/100-LISA.rageDuration).toFixed(1)+"초 · 1.25초마다 음파")+'</div>'};
       }
       if (f.iron) return { ratio: f.iron.suit === "naked" ? clamp(1 - f.iron.rebuild / IRON.rebuild, 0, 1) : clamp(1-f.iron.attackCd/(f.iron.suit==="war"?IRON.missilePeriod:IRON.beamPeriod),0,1), className: "skill-fill", text: ironSuitNames[f.iron.suit] + (f.iron.suit === "naked" ? " · 재장착 " + Math.ceil(f.iron.rebuild) + "초" : " · 공격 " + Math.ceil(Math.max(0,f.iron.attackCd)) + "초 · 보호막 " + Math.ceil(f.shieldHp) + "/" + f.shieldMax),
@@ -4201,18 +4206,20 @@
         extraTextHtml: '<div class="status-skill-label">' + (f.iron.suit === "hulk" ? "충돌 펀치 8·넉백 · 리펄서/부스터 봉인" : f.iron.suit === "naked" ? "공격 불가" : (f.iron.suit === "war" ? "미사일 " : "리펄서 3×최대5 · ") + Math.ceil(f.iron.attackCd) + "초 · 부스터 " + Math.ceil(f.iron.dashCd) + "초") + '</div>' };
       if (f.captain) {
         const shield = captainShields.find(o => o.owner === f);
-        return { ratio: f.captain.rethrow > 0 ? 1 - f.captain.rethrow / CAPTAIN.rethrowDelay : f.captain.hasShield ? clamp(1 - f.captain.throwCd / CAPTAIN.throwPeriod, 0, 1) : shield ? shield.hits / 5 : 0, className: "skill-fill", text: f.captain.rethrow > 0 ? "방패 캐치 · 재투척 " + f.captain.rethrow.toFixed(1) + "초" : f.captain.hasShield ? "방패 보유 · 투척 " + Math.ceil(f.captain.throwCd) + "초" : shield?.stopped ? "방패 정지 · 회수 대기" : "방패 투척 중 · 반사 " + (shield?.hits || 0) + "/5",
-          extraTextHtml: '<div class="status-skill-label">' + (f.captain.hasShield ? "피해 35% 감소 · 충돌 방패공격 5" : "피해 감소 없음 · 충돌 강펀치 13") + '</div>' };
+        const returnRatio=shield?clamp(shield.age/CAPTAIN.returnAfter,0,1):0;
+        return { ratio: f.captain.rethrow > 0 ? 1 - f.captain.rethrow / CAPTAIN.rethrowDelay : f.captain.hasShield ? clamp(1 - f.captain.throwCd / CAPTAIN.throwPeriod, 0, 1) : returnRatio, className: "skill-fill", text: f.captain.rethrow > 0 ? "방패 캐치 · 재투척 " + f.captain.rethrow.toFixed(1) + "초" : f.captain.hasShield ? "방패 보유 · 투척 " + Math.ceil(f.captain.throwCd) + "초" : shield?.returning ? "방패 귀환 중" : shield?.stopped ? "방패 정지 · 회수 대기" : "방패 투척 중 · 반사 " + (shield?.hits || 0) + "/5",
+          extraTextHtml: '<div class="status-skill-label">' + (f.captain.hasShield ? "피해 35% 감소 · 충돌 방패공격 5" : "방패 자동 귀환 " + Math.max(0,CAPTAIN.returnAfter-(shield?.age||0)).toFixed(1) + "초 · 강펀치 13") + '</div>' };
       }
       if (f.jabami) {
         const j = f.jabami;
         const max = j.phase === "reveal" ? JABAMI.revealDelay : Math.max(1,j.gameDuration);
-        const text = j.phase === "collect" ? `다음 도박 ${Math.ceil(j.clock)}초 · 접촉자 ${j.contacts.size}명` : j.phase === "reveal" ? `${Math.ceil(j.timer)}초 뒤 종목 공개 · 판돈 ${j.stake}` : `${JABAMI_GAME_NAMES[j.game]} · ${j.timer.toFixed(1)}초`;
+        const ready=j.phase === "collect" && j.clock<=0;
+        const text = j.phase === "collect" ? ready?`도박 준비 완료 · 접촉자 ${j.contacts.size}명`:`다음 도박 ${Math.ceil(j.clock)}초 · 접촉자 ${j.contacts.size}명` : j.phase === "reveal" ? `${Math.ceil(j.timer)}초 뒤 종목 공개 · 판돈 ${j.stake}` : `${JABAMI_GAME_NAMES[j.game]} · ${j.timer.toFixed(1)}초`;
         return { ratio: j.phase === "collect" ? clamp(1-j.clock/JABAMI.period,0,1) : clamp(1-j.timer/max,0,1), className: "skill-fill", text,
           extraTextHtml: '<div class="status-skill-label">' + (j.debt > 0 ? `빚 ${Math.ceil(j.debt)} · 반경 ${JABAMI.debtInviteRadius} 강제 참가 · 남은 빚 기회 ${j.debtChances}` : `누적 접촉자 ${j.contacts.size}명 · 남은 빚 기회 ${j.debtChances} · 조커로 추가`) + '</div>' };
       }
       if (f.tano) return { ratio: f.tano.snapped?clamp(1-f.tano.lossClock/TANO.lossPeriod,0,1):clamp(1-f.tano.next/TANO.spawn,0,1), className: "skill-fill", text: "스톤 " + f.tano.stones.length + "/6 · " + (f.tano.snapped ? "소실 " + Math.ceil(f.tano.lossClock) + "초" : f.tano.spawned === 5 && f.tano.stones.length < 5 ? "남은 스톤 획득 대기" : Math.ceil(f.tano.next) + "초 후 등장"),
-        extraBarsHtml:`<div class="bar" title="스톤 수집"><div class="bar-fill skill-fill" style="width:${f.tano.stones.length/6*100}%"></div></div>`,
+        extraBarsHtml:`<div class="bar" title="획득한 스톤">${f.tano.stones.map((id,n)=>{const stone=stoneTypes.find(s=>s.id===id);return `<div class="stone-segment" title="${stone.name} 스톤" style="left:${n*100/6}%;width:${100/6}%;background:${stone.color}"></div>`;}).join("")}</div>`,
         extraTextHtml: '<div class="status-skill-label">' + stoneTypes.filter(s => f.tano.stones.includes(s.id)).map(s => s.name).join(" · ") + (f.tano.hidden > 0 ? " · 무적" : "") + '</div>' };
       const info = {
         flame_tori:  { type: "time", max: 3.2, label: "다음 공격" },
