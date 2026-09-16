@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v46</title>
+  <title>볼배틀 리뉴얼 v47</title>
   <style>
     :root {
       --bg: #020617;
@@ -1189,7 +1189,7 @@
     }
 
 
-    const LISA = { patience: 40, idleDelay: 5, idleGain: 2, duration: 14, rageDuration: 4, rageRange: 190, period: 1.25, ragePeriod: 0.55, power: 9, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
+    const LISA = { patience: 40, idleDelay: 5, idleGain: 2, duration: 14, rageDuration: 4, rageRange: 190, period: 1.25, ragePeriod: 0.55, power: 8, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
     function initLisa(f) {
       f.lisa = { mode: "lady", patience: 0, idle: 0, rock: 0, walls: 0, attack: 0, riff: 0, waves: [], speech: "", speechTime: 0 };
     }
@@ -2002,8 +2002,8 @@
     }
 
 
-    const IRON = { hulkDamage: 8, hulkCooldown: 0.6, hulkKnock: 650, hulkWindup: 0.12, hulkFollow: 0.12, hp: 40, shield: 90, reShield: 30, rebuild: 8, beamPeriod: 3, beamDamage: 3, beamTick: 0.11,
-      dashPeriod: 8, dashDamage: 12, missilePeriod: 5.5, missileDamage: 8, fragmentDamage: 4, fragmentShield: 4 };
+    const IRON = { hulkDamage: 8, hulkCooldown: 0.6, hulkKnock: 650, hulkWindup: 0.12, hulkFollow: 0.12, hp: 40, shield: 90, reShield: 30, rebuild: 7, beamPeriod: 3, beamDamage: 3, beamTick: 0.11,
+      dashPeriod: 8, dashDamage: 12, missilePeriod: 5.5, missileDamage: 8, fragmentDamage: 4, fragmentShield: 4, fragmentReturnDelay: 2, fragmentReturnSpeed: 260 };
     const ironSuitNames = { basic: "기본 슈트", war: "워머신", hulk: "헐크버스터", mark42: "마크42", naked: "토니 · 슈트 없음" };
     let ironObjects = [];
     function initIron(f) {
@@ -2195,6 +2195,12 @@
         o.age += dt;
         if (o.life <= 0) return false;
         if (o.age < 0.4) return true;
+        if (o.age >= IRON.fragmentReturnDelay) {
+          const dx = o.owner.x - o.x, dy = o.owner.y - o.y, d = Math.hypot(dx, dy) || 1;
+          const step = Math.min(d, IRON.fragmentReturnSpeed * dt);
+          o.x += dx / d * step;
+          o.y += dy / d * step;
+        }
         const enemy = fighters.find(e => e.alive && areEnemies(o.owner, e) && dist(o, e) <= e.r + o.r && !(e.tano?.hidden > 0));
         if (enemy) { explodeIron(o, 30, IRON.fragmentDamage, "슈트 파편"); return false; }
         if (o.owner.iron.suit !== "naked" && dist(o, o.owner) <= o.owner.r + o.r) {
@@ -2272,7 +2278,7 @@
     }
 
 
-    const TANO = { lossPeriod: 2, lossDamage: 10, spawn: 9, pickupBonus: 34, power: 8, spacePeriod: 8, spaceDuration: 3, mindPeriod: 10, mindDuration: 1.5, realityPeriod: 12, realityDuration: 2.5 };
+    const TANO = { lossPeriod: 2, lossDamage: 10, spawn: 9, pickupBonus: 34, power: 8, spacePeriod: 8, spaceDuration: 3, mindPeriod: 10, mindDuration: 1.5, realityPeriod: 12, realityDuration: 2.5, timePeriod: 90 };
     const stoneTypes = [
       { id: "power", name: "파워", color: "#a855f7" },
       { id: "space", name: "스페이스", color: "#3b82f6" },
@@ -2281,9 +2287,15 @@
       { id: "reality", name: "리얼리티", color: "#ef4444" },
       { id: "soul", name: "소울", color: "#fb923c" }
     ];
+    function makeTanoOrder() {
+      const power = stoneTypes.find(s => s.id === "power");
+      const others = stoneTypes.slice(0, 5).filter(s => s.id !== "power").sort(() => Math.random() - 0.5);
+      others.splice(Math.floor(Math.random() * 3), 0, power);
+      return others.concat(stoneTypes[5]);
+    }
     function initTano(f) {
-      f.tano = { stones: [], order: [...stoneTypes.slice(0, 5)].sort(() => Math.random() - 0.5).concat(stoneTypes[5]),
-        next: TANO.spawn, drops: [], spawned: 0, history: [], space: 0, mind: 0, reality: 0, hidden: 0, reform: 0, lossClock: 0, snapped: false };
+      f.tano = { stones: [], order: makeTanoOrder(),
+        next: TANO.spawn, drops: [], spawned: 0, history: [], space: 0, mind: 0, reality: 0, timeCd: 0, hidden: 0, reform: 0, lossClock: 0, snapped: false };
     }
     function tanoPowerContact(source, target) {
       if (!target?.alive || !source.tano?.stones.includes("power") || source.tanoPunchCd > 0 ||
@@ -2370,6 +2382,20 @@
     }
 
 
+    function triggerTanoTimeStone(f) {
+      const t = f.tano;
+      if (!t?.history.length) return false;
+      const past = t.history.find(h => h.time >= battleTime - 10) || t.history[0];
+      f.x = clamp(past.x, arena.x + f.r, arena.x2 - f.r);
+      f.y = clamp(past.y, arena.y + f.r, arena.y2 - f.r);
+      const healed = Math.max(0, past.hp - f.hp);
+      f.hp = Math.min(f.maxHp, Math.max(f.hp, past.hp));
+      f.healingDone = (f.healingDone || 0) + healed;
+      spawnBlast(f.x, f.y, 90, "#22c55e");
+      spawnFloatingText(f.x, f.y - 55, "10초 전으로 · +" + Math.round(healed), "#22c55e");
+      return true;
+    }
+
     function collectTanoStone(f, stone) {
       const t = f.tano;
       if (!stone || t.snapped || t.stones.includes(stone.id)) return;
@@ -2382,16 +2408,7 @@
       if (stone.id === "space") t.space = 0;
       if (stone.id === "mind") t.mind = 0;
       if (stone.id === "reality") t.reality = 0;
-      if (stone.id === "time" && t.history.length) {
-        const past = t.history.find(h => h.time >= battleTime - 10) || t.history[0];
-        f.x = clamp(past.x, arena.x + f.r, arena.x2 - f.r);
-        f.y = clamp(past.y, arena.y + f.r, arena.y2 - f.r);
-        const healed = Math.max(0, past.hp - f.hp);
-        f.hp = Math.min(f.maxHp, Math.max(f.hp, past.hp));
-        f.healingDone = (f.healingDone || 0) + healed;
-        spawnBlast(f.x, f.y, 90, "#22c55e");
-        spawnFloatingText(f.x, f.y - 55, "10초 전으로 · +" + Math.round(healed), "#22c55e");
-      }
+      if (stone.id === "time") { triggerTanoTimeStone(f); t.timeCd = TANO.timePeriod; }
       if (t.stones.length === 6 && !t.snapped) {
         t.snapped = true;
         t.lossClock = TANO.lossPeriod;
@@ -2408,6 +2425,15 @@
       if (!t) return;
       t.history.push({ time: battleTime, x: f.x, y: f.y, hp: f.hp });
       while (t.history.length > 1 && t.history[1].time < battleTime - 10) t.history.shift();
+      if (t.stones.includes("time") && !t.snapped) {
+        t.timeCd = Math.max(0, (t.timeCd || 0) - dt);
+        if (t.timeCd <= 0) {
+          triggerTanoTimeStone(f);
+          t.timeCd = TANO.timePeriod;
+        }
+      } else if (!t.stones.includes("time")) {
+        t.timeCd = 0;
+      }
       const wasHidden = t.hidden > 0;
       t.hidden = Math.max(0, t.hidden - dt);
       t.reform = Math.max(0, t.reform - dt);
@@ -2445,7 +2471,7 @@
         }
         if (t.stones.length === 0) {
           t.snapped = false;
-          t.order = [...stoneTypes.slice(0, 5)].sort(() => Math.random() - 0.5).concat(stoneTypes[5]);
+          t.order = makeTanoOrder();
           t.next = TANO.spawn;
           t.drops = [];
           t.spawned = 0;
@@ -3049,6 +3075,7 @@
     }
 
     const patchNotes = [
+      "v47: 리사 음파 피해 9→8. 철가면 자비스 재장착 8→7초, 마크42 파편은 생성 2초 뒤 철가면을 추적해 귀환. 타노는 파워스톤이 최초 3개 안에 반드시 등장하며, 타임스톤은 획득 즉시 효과 후 보유 중 90초마다 10초 전 상태 회귀를 재사용.",
       "v46: 로고 박사 변신 후 이름을 헐크크·스마트 헐크크로 정상 표시하고 불필요한 탈락 안내를 제거. 파워스톤·캡틴 강펀치·헐크버스터 강타·헐크크 스매시 등 접촉 공격이 같은 충돌에서 서로 독립적으로 발동하도록 수정하고, 접촉 공격 준비 때문에 상대가 멈추던 처리를 제거.",
       "v45: 로고 박사 추가. 박사는 공격 없이 0HP에서 헐크크로 변신해 300분노를 회복한다. 분노는 초당 10 소진되며 강력한 충돌 스매시 28·벽충돌 14와 6.5초 주기 점프 착지 22를 사용한다. 분노 소진 시 안경 쓴 스마트 헐크크로 변해 체력 90/180으로 시작하고 약한 스매시 11·벽충돌 4를 사용하며",
       "v44: 오벨리스크는 초당 체력 9가 소진되는 대신 갓 핸드 크러셔 피해 30·반경 165·재사용 5.5초와 지속 위압 오라를 얻었다. 정의의 아군 사용/드로우 상태 게이지를 하나로 합쳤다. 캡틴·타노 동시 충돌 시 강펀치와 파워스톤의 이중 예약을 막고, 마인드 스톤 정지 시간이 펀치 연출 중에도 정상 감소하도록 수정.",
@@ -3134,9 +3161,9 @@
       if (c.id === "logo_doctor") return { damage: "박사 무공격 / 헐크크 스매시 28·벽충돌 14·점프 착지 22 / 스마트 스매시 11·벽충돌 4", tick: "헐크크 분노 300 · 초당 -10 · 점프 6.5초", tip: "박사 HP 0에서 헐크크로 100% 변신. 분노 0에서 스마트 헐크크 체력 90/180으로 이어지며," };
       if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 13", tick: "방패 6초 / 재캐치 후 0.3초 재투척 / 적·벽 총 5회", tip: "20초 동안 회수하지 못하면 피해 없는 귀환 방패로 바뀐다. 비행 방패는 0.45초 캐치 잠금, 정지 방패 회수만 6초 쿨." };
       if (c.id === "jabami") return { damage: "무작위 판돈 12~28 · 패배 시 판돈만큼 추가 피해", tick: "10초 / 이전 도박 이후 접촉자 전원", tip: "총판돈은 개인 판돈×참가자 수이며 공동 승리자는 이를 균등 분배한다. 빚 상태에서는 반경 155 안의 적도 강제 참가하고 쟈바미의 승리 몫은 1.5배다." };
-      if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
-      if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 충돌강타8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 8초", tip: "체력 30·첫 보호막 70, 재장착 50(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사, 1회당 대상별 피해 10. 헐크버스터는 적과 충돌하면 강타8·넉백. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 파편 회복 4·8초 유지. 슈트는 무작위." };
-      if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 9초 / 핑거플립 시간정지 0.75초", tip: "파워: 충돌 시 0.12초 정지 후 피해 8·강한 넉백. 스톤 6개 완성 시 시간을 0.75초 멈추고 핑거플립. 이후 2초마다 스톤 1개 소실·자해 10." };
+      if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 8 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
+      if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 충돌강타8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 7초", tip: "체력 40·첫 보호막 90, 재장착 보호막 30(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사. 헐크버스터는 적과 충돌하면 강타8·넉백. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 마크42 파편은 피해/보호막 회복 4이며 생성 2초 뒤 철가면에게 자동 귀환한다. 슈트는 무작위." };
+      if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 9초 / 타임 재사용 90초 / 핑거플립 시간정지 0.75초", tip: "파워스톤은 최초 3개 안에 등장한다. 타임스톤은 획득 즉시 10초 전 상태를 회복하고, 보유 중 90초마다 다시 발동한다. 스톤 6개 완성 시 시간을 0.75초 멈추고 핑거플립. 이후 2초마다 스톤 1개 소실·자해 10." };
       const data = {
         flame_tori: {
           damage: "미사일 8 / 파이어볼 24 / 메테오 4",
@@ -4299,7 +4326,7 @@
       }
       if (f.tano) return { ratio: f.tano.snapped?clamp(1-f.tano.lossClock/TANO.lossPeriod,0,1):clamp(1-f.tano.next/TANO.spawn,0,1), className: "skill-fill", text: "스톤 " + f.tano.stones.length + "/6 · " + (f.tano.snapped ? "소실 " + Math.ceil(f.tano.lossClock) + "초" : f.tano.spawned === 5 && f.tano.stones.length < 5 ? "남은 스톤 획득 대기" : Math.ceil(f.tano.next) + "초 후 등장"),
         extraBarsHtml:`<div class="bar" title="획득한 스톤">${f.tano.stones.map((id,n)=>{const stone=stoneTypes.find(s=>s.id===id);return `<div class="stone-segment" title="${stone.name} 스톤" style="left:${n*100/6}%;width:${100/6}%;background:${stone.color}"></div>`;}).join("")}</div>`,
-        extraTextHtml: '<div class="status-skill-label">' + stoneTypes.filter(s => f.tano.stones.includes(s.id)).map(s => s.name).join(" · ") + (f.tano.hidden > 0 ? " · 무적" : "") + '</div>' };
+        extraTextHtml: '<div class="status-skill-label">' + stoneTypes.filter(s => f.tano.stones.includes(s.id)).map(s => s.name).join(" · ") + (f.tano.stones.includes("time") && !f.tano.snapped ? ` · 타임 ${Math.ceil(f.tano.timeCd || 0)}초` : "") + (f.tano.hidden > 0 ? " · 무적" : "") + '</div>' };
       const info = {
         flame_tori:  { type: "time", max: 3.2, label: "다음 공격" },
         healer_mina: { type: "time", max: 12.5, label: "회복정원" },
