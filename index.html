@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v45</title>
+  <title>볼배틀 리뉴얼 v46</title>
   <style>
     :root {
       --bg: #020617;
@@ -1074,7 +1074,7 @@
       { id: "justice_ally", name: "정의의 아군", mark: "D", role: "마법사", color: "#f8fafc", hp: 170, attack: 9, speed: 2.7, range: 135,
         skillName: "운명의 드로우", condition: "6초 후 개시 · 사용/드로우 9초 · 공격 7.5초", desc: "첫 패 백룡 3장을 사용한 뒤 융합을 드로우한다. 백룡은 버스트 스트림, 융합체는 주기적으로 얼티밋 버스트를 사용한다. 마지막 소환수의 치명상을 릴리스해 오벨리스크를 부른다." },
       { id: "logo_doctor", name: "로고 박사", mark: "博", role: "전사", color: "#94a3b8", hp: 120, attack: 0, speed: 2.55, range: 0,
-        skillName: "잠든 분노 · 헐크크", condition: "박사 0HP → 헐크크 · 분노 소진 → 스마크 헐크크", desc: "박사는 공격하지 않는다. 헐크크는 분노 게이지가 줄어드는 동안 강력한 스매시와 벽충돌 피해, 주기적인 점프를 사용한다. 소진 후 안경 쓴 스마크 헐크크로 싸운다." },
+        skillName: "잠든 분노 · 헐크크", condition: "박사 0HP → 헐크크 · 분노 소진 → 스마트 헐크크", desc: "박사는 공격하지 않는다. 헐크크는 분노 게이지가 줄어드는 동안 강력한 스매시와 벽충돌 피해, 주기적인 점프를 사용한다. 소진 후 안경 쓴 스마트 헐크크로 싸운다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -1374,19 +1374,20 @@
       const l=f.logo;
       if (!l || l.mode===mode) return false;
       l.mode=mode; l.jump=null; l.airHeight=0; l.smashCd=0;
+      f.name = mode==="hulk" ? "헐크크" : "스마트 헐크크";
       f.punchHold=0; f.punchImpact=null; f.punchFlight=0; f.punchSource=null;
       if (mode==="hulk") {
         f.maxHp=LOGO.hulkHp;f.hp=LOGO.hulkHp;f.r=26;f.attack=LOGO.smash;f.baseAttack=f.attack;f.baseSpeed=f.speed=2.75;f.color="#22c55e";f.mark="怒";l.jumpCd=2.6;
         spawnFloatingText(f.x,f.y-f.r-42,"헐크크! 분노 폭발!","#f87171");
       } else {
         f.maxHp=LOGO.smartHp;f.hp=LOGO.smartHp*.5;f.r=19;f.attack=LOGO.smartSmash;f.baseAttack=f.attack;f.baseSpeed=f.speed=2.55;f.color="#86efac";f.mark="智";
-        spawnFloatingText(f.x,f.y-f.r-40,"스마크 헐크크 · 체력 50% 회복","#86efac");
+        spawnFloatingText(f.x,f.y-f.r-40,"스마트 헐크크 · 체력 50% 회복","#86efac");
       }
       const v=randomVelocity(f.baseSpeed);f.vx=v.vx;f.vy=v.vy;
       f.x=clamp(f.x,arena.x+f.r,arena.x2-f.r);f.y=clamp(f.y,arena.y+f.r,arena.y2-f.r);
       spawnBlast(f.x,f.y,mode==="hulk"?110:75,mode==="hulk"?"#22c55e":"#86efac");spawnParticles(f.x,f.y,mode==="hulk"?"#4ade80":"#bbf7d0",30);
       playSound("explosion",mode==="hulk"?1.5:.8);screenShake=Math.max(screenShake,mode==="hulk"?.8:.35);triggerHitStop(mode==="hulk"?.3:.12);
-      log(`<strong>로고 박사</strong> ${mode==="hulk"?"헐크크로 변신 · 분노 300/300":"스마크 헐크크로 변신 · 체력 90/180"}`,"변신");
+      log(`<strong>로고 박사</strong> ${mode==="hulk"?"헐크크로 변신 · 분노 300/300":"스마트 헐크크로 변신 · 체력 90/180"}`,"변신");
       return true;
     }
     function advanceLogoFormOnLethal(f) {
@@ -1428,10 +1429,10 @@
       target.vx=dx/d*speed;target.vy=dy/d*speed;target.punchSource=f;target.punchWallPower=wallPower;target.punchWallHits=0;target.punchFlight=Math.max(target.punchFlight||0,duration);
     }
     function logoContact(f,target) {
-      const l=f.logo;if(!l || l.mode==="doctor" || l.jump || l.smashCd>0 || f.punchHold>0 || f.punchFlight>0 || f.tanoStop>0 || !target?.alive || !areEnemies(f,target))return;
+      const l=f.logo;if(!l || l.mode==="doctor" || l.jump || l.smashCd>0 || f.tanoStop>0 || !target?.alive || !areEnemies(f,target))return;
       const huge=l.mode==="hulk",power=huge?LOGO.smash:LOGO.smartSmash;
       l.smashCd=huge?1.05:1.2;
-      const dealt=damage(target,power,f,huge?"헐크크 스매시":"스마크 헐크크 스매시");
+      const dealt=damage(target,power,f,huge?"헐크크 스매시":"스마트 헐크크 스매시");
       if(dealt>0&&target.alive)logoKnock(f,target,huge?760:380,huge?LOGO.wall:LOGO.smartWall,huge?.42:.22);
       triggerHitStop(huge?.18:.08);spawnHitFlash(target.x,target.y,huge?"#bbf7d0":"#dcfce7",huge?86:45);spawnBlast(target.x,target.y,huge?75:40,"#4ade80");
       spawnFloatingText(target.x,target.y-target.r-34,"헐크 스매시!",huge?"#4ade80":"#bbf7d0");playSound("explosion",huge?1.3:.55);screenShake=Math.max(screenShake,huge?.45:.16);
@@ -1471,10 +1472,6 @@
       if (f.captain.throwCd <= 0) { throwCaptainShield(f); f.captain.throwCd = CAPTAIN.throwPeriod; }
     }
     function updateCaptainPunch(f, dt) {
-      if ((f.captainPunchStun || 0) > 0) {
-        f.captainPunchStun = Math.max(0, f.captainPunchStun - dt);
-        return true;
-      }
       const punch = f.captain?.punch;
       if (!punch) return false;
       punch.timer = Math.max(0, punch.timer - dt);
@@ -1483,7 +1480,6 @@
         punch.phase = "follow";
         punch.timer = CAPTAIN.punchFollow;
         if (target?.alive && areEnemies(f, target)) {
-          target.captainPunchStun = 0;
           const dealt = damage(target, CAPTAIN.punchCounter, f, "캡틴 강펀치");
           if (dealt > 0 && target.alive) captainKnock(f, target, CAPTAIN.knock * 1.25);
           triggerHitStop(0.14);
@@ -1499,7 +1495,7 @@
       return true;
     }
     function captainContact(f, target) {
-      if (!f.captain || f.captain.counterCd > 0 || f.punchHold > 0 || f.punchFlight > 0 || f.punchImpact || f.tanoStop > 0 || !target?.alive || !areEnemies(f, target)) return;
+      if (!f.captain || f.captain.counterCd > 0 || f.tanoStop > 0 || !target?.alive || !areEnemies(f, target)) return;
       f.captain.counterCd = CAPTAIN.counterCooldown;
       const held = f.captain.hasShield;
       if (!held) {
@@ -1507,7 +1503,6 @@
         const d = Math.hypot(dx, dy) || 1;
         dx /= d; dy /= d;
         f.captain.punch = { target, dx, dy, phase: "windup", timer: CAPTAIN.punchWindup };
-        target.captainPunchStun = CAPTAIN.punchWindup;
         return;
       }
       damage(target, CAPTAIN.shieldCounter, f, "캡틴 방패 밀어내기");
@@ -2146,13 +2141,8 @@
       const d = Math.hypot(dx, dy) || 1;
       dx /= d; dy /= d;
       f.iron.punch = { target, dx, dy, phase: "windup", timer: IRON.hulkWindup };
-      target.ironPunchStun = IRON.hulkWindup;
     }
     function updateIronPunch(f, dt) {
-      if ((f.ironPunchStun || 0) > 0) {
-        f.ironPunchStun = Math.max(0, f.ironPunchStun - dt);
-        return true;
-      }
       const punch = f.iron?.punch;
       if (!punch) return false;
       if (f.iron.suit !== "hulk") { f.iron.punch = null; return false; }
@@ -2161,7 +2151,6 @@
         const target = punch.target;
         punch.phase = "follow"; punch.timer = IRON.hulkFollow;
         if (target?.alive && areEnemies(f, target)) {
-          target.ironPunchStun = 0;
           const dealt = damage(target, IRON.hulkDamage, f, "헐크버스터 강타");
           if (dealt > 0 && target.alive) ironKnock(f, target, IRON.hulkKnock);
           triggerHitStop(0.16);
@@ -2297,19 +2286,25 @@
         next: TANO.spawn, drops: [], spawned: 0, history: [], space: 0, mind: 0, reality: 0, hidden: 0, reform: 0, lossClock: 0, snapped: false };
     }
     function tanoPowerContact(source, target) {
-      if (!source.alive || !target.alive || !source.tano?.stones.includes("power") || source.tanoPunchCd > 0 ||
-          source.tano?.hidden > 0 || target.tano?.hidden > 0 || target.punchImpact || !areEnemies(source, target)) return;
+      if (!target?.alive || !source.tano?.stones.includes("power") || source.tanoPunchCd > 0 ||
+          source.tano?.hidden > 0 || target.tano?.hidden > 0 || !areEnemies(source, target)) return;
       let dx = target.x - source.x, dy = target.y - source.y;
       const length = Math.hypot(dx, dy);
       if (length < 0.001) { dx = 1; dy = 0; } else { dx /= length; dy /= length; }
       source.tanoPunchCd = 0.8;
-      // 한 번의 충돌에서 강펀치와 파워스톤 타격이 동시에 예약되지 않게 한다.
-      if (target.captain?.punch) target.captain.punch = null;
-      source.punchHold = 0.12;
-      target.punchHold = 0.12;
-      target.punchImpact = { source, dx, dy };
+      const dealt = damage(target, TANO.power, source, "파워스톤 강펀치");
+      if (dealt > 0 && target.alive && !(target.baseId === "dummy_unit" && target.hp === target.maxHp)) {
+        target.vx = dx * 700; target.vy = dy * 700; target.punchFlight = Math.max(target.punchFlight || 0, 0.3);
+        target.punchSource = source;
+        target.punchWallPower = TANO.power;
+        target.punchWallHits = 0;
+      }
       spawnHitFlash(target.x, target.y, "#e9d5ff", 42);
       spawnFloatingText(target.x, target.y - 38, "강펀치!", "#e9d5ff");
+      spawnBlast(target.x, target.y, 60, "#a855f7");
+      spawnParticles(target.x, target.y, "#e9d5ff", 18);
+      screenShake = Math.max(screenShake, 0.25);
+      playSound("explosion", 0.6);
     }
     function updatePowerPunch(f, dt) {
       f.tanoPunchCd = Math.max(0, (f.tanoPunchCd || 0) - dt);
@@ -3054,7 +3049,8 @@
     }
 
     const patchNotes = [
-      "v45: 로고 박사 추가. 박사는 공격 없이 0HP에서 헐크크로 변신해 300분노를 회복한다. 분노는 초당 10 소진되며 강력한 충돌 스매시 28·벽충돌 14와 6.5초 주기 점프 착지 22를 사용한다. 분노 소진 시 안경 쓴 스마크 헐크크로 변해 체력 90/180으로 시작하고 약한 스매시 11·벽충돌 4를 사용하며 다음 0HP에는 탈락한다.",
+      "v46: 로고 박사 변신 후 이름을 헐크크·스마트 헐크크로 정상 표시하고 불필요한 탈락 안내를 제거. 파워스톤·캡틴 강펀치·헐크버스터 강타·헐크크 스매시 등 접촉 공격이 같은 충돌에서 서로 독립적으로 발동하도록 수정하고, 접촉 공격 준비 때문에 상대가 멈추던 처리를 제거.",
+      "v45: 로고 박사 추가. 박사는 공격 없이 0HP에서 헐크크로 변신해 300분노를 회복한다. 분노는 초당 10 소진되며 강력한 충돌 스매시 28·벽충돌 14와 6.5초 주기 점프 착지 22를 사용한다. 분노 소진 시 안경 쓴 스마트 헐크크로 변해 체력 90/180으로 시작하고 약한 스매시 11·벽충돌 4를 사용하며",
       "v44: 오벨리스크는 초당 체력 9가 소진되는 대신 갓 핸드 크러셔 피해 30·반경 165·재사용 5.5초와 지속 위압 오라를 얻었다. 정의의 아군 사용/드로우 상태 게이지를 하나로 합쳤다. 캡틴·타노 동시 충돌 시 강펀치와 파워스톤의 이중 예약을 막고, 마인드 스톤 정지 시간이 펀치 연출 중에도 정상 감소하도록 수정.",
       "v43: 타노의 획득 스톤 게이지를 스톤별 색상으로 분할. 리사의 인내·록·폭주 게이지 색을 구분. 캡틴의 던진 방패 자동 귀환 20초를 게이지와 숫자로 표시. 쟈바미는 상대가 없을 때 도박 준비 완료 게이지를 가득 채워 고정.",
       "v42 실험: 충돌로 바뀐 이동 방향은 유지하고 속력은 각 캐릭터·소환수의 기본 속도로 부드럽게 복귀한다. 돌진·시전·펀치 비행 중에는 복귀를 적용하지 않으며, 펀치 비행 종료 직후 속도를 강제로 덮던 처리를 제거했다.",
@@ -3135,7 +3131,7 @@
 
     function characterDamageInfo(c) {
       if (c.id === "justice_ally") return { damage: "버스트 스트림 2×7 / 얼티밋 버스트 4×최대6 / 갓 핸드 크러셔 30", tick: "개시6초 · 카드 사용/드로우9초 · 공격7.5초 · 오벨리스크 초당 체력-9", tip: "융합 중 소재는 무적. 융합체는 주기적으로 얼티밋 버스트를 사용한다. 마지막 소환수의 치명상을 릴리스해 오벨리스크를 소환하며, 예고 원형 범위의 적에게 피해와 둔화를 준다." };
-      if (c.id === "logo_doctor") return { damage: "박사 무공격 / 헐크크 스매시 28·벽충돌 14·점프 착지 22 / 스마크 스매시 11·벽충돌 4", tick: "헐크크 분노 300 · 초당 -10 · 점프 6.5초", tip: "박사 HP 0에서 헐크크로 100% 변신. 분노 0에서 스마크 헐크크 체력 90/180으로 이어지며, 이때 0HP는 탈락." };
+      if (c.id === "logo_doctor") return { damage: "박사 무공격 / 헐크크 스매시 28·벽충돌 14·점프 착지 22 / 스마트 스매시 11·벽충돌 4", tick: "헐크크 분노 300 · 초당 -10 · 점프 6.5초", tip: "박사 HP 0에서 헐크크로 100% 변신. 분노 0에서 스마트 헐크크 체력 90/180으로 이어지며," };
       if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 13", tick: "방패 6초 / 재캐치 후 0.3초 재투척 / 적·벽 총 5회", tip: "20초 동안 회수하지 못하면 피해 없는 귀환 방패로 바뀐다. 비행 방패는 0.45초 캐치 잠금, 정지 방패 회수만 6초 쿨." };
       if (c.id === "jabami") return { damage: "무작위 판돈 12~28 · 패배 시 판돈만큼 추가 피해", tick: "10초 / 이전 도박 이후 접촉자 전원", tip: "총판돈은 개인 판돈×참가자 수이며 공동 승리자는 이를 균등 분배한다. 빚 상태에서는 반경 155 안의 적도 강제 참가하고 쟈바미의 승리 몫은 1.5배다." };
       if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
@@ -4277,7 +4273,7 @@
     }
 
     function skillProgressInfo(f) {
-      if(f.logo){const l=f.logo;if(l.mode==="doctor")return {ratio:0,className:"skill-fill",text:"로고 박사 · 공격 없음",extraTextHtml:'<div class="status-skill-label">체력 0 → 헐크크 변신</div>'};if(l.mode==="hulk")return {ratio:clamp(1-l.jumpCd/LOGO.jumpPeriod,0,1),className:"skill-fill",text:l.jump?"헐크크 · 상대에게 점프 중":`헐크크 · 다음 점프 ${l.jumpCd.toFixed(1)}초`,extraTextHtml:`<div class="status-skill-label" style="color:#fca5a5">분노 초당 -${LOGO.rageDrain} · 스매시 ${LOGO.smash} · 벽충돌 ${LOGO.wall}</div>`};return {ratio:clamp(1-l.smashCd/1.2,0,1),className:"skill-fill",text:"스마크 헐크크 · 약한 스매시",extraTextHtml:'<div class="status-skill-label">체력 0 → 탈락 · 점프 없음</div>'};}
+      if(f.logo){const l=f.logo;if(l.mode==="doctor")return {ratio:0,className:"skill-fill",text:"로고 박사 · 공격 없음",extraTextHtml:'<div class="status-skill-label">체력 0 → 헐크크 변신</div>'};if(l.mode==="hulk")return {ratio:clamp(1-l.jumpCd/LOGO.jumpPeriod,0,1),className:"skill-fill",text:l.jump?"헐크크 · 상대에게 점프 중":`헐크크 · 다음 점프 ${l.jumpCd.toFixed(1)}초`,extraTextHtml:`<div class="status-skill-label" style="color:#fca5a5">분노 초당 -${LOGO.rageDrain} · 스매시 ${LOGO.smash} · 벽충돌 ${LOGO.wall}</div>`};return {ratio:clamp(1-l.smashCd/1.2,0,1),className:"skill-fill",text:"스마트 헐크크 · 약한 스매시",extraTextHtml:'<div class="status-skill-label">점프 없음</div>'};}
       if(f.duelist){const d=f.duelist;if(!d.equipped)return {ratio:clamp(1-d.timer/6,0,1),className:"skill-fill",text:`듀얼 개시 ${d.timer.toFixed(1)}초`};const play=clamp(1-d.playCd/9,0,1);return {ratio:play,className:"skill-fill",text:d.fusion?`융합 진행 ${d.fusion.t.toFixed(1)}초`:d.emptyTimer>0?`소환수 전멸 · 덱 초기화 ${(9-d.emptyTimer).toFixed(1)}초`:`다음 카드 사용·드로우 ${d.playCd.toFixed(1)}초`};}
       if (f.lisa) {
         const l=f.lisa, lady=l.mode==="lady";
