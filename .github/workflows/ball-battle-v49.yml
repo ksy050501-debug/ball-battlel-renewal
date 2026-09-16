@@ -1,0 +1,40 @@
+name: Ball Battle v49 feature update
+
+on:
+  push:
+    paths:
+      - '.github/workflows/ball-battle-v49.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v49 feature update
+        run: python .github/ball-battle-v49.py
+      - name: Check inline JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s = Path('index.html').read_text(encoding='utf-8')
+          blocks = re.findall(r'<script[^>]*>(.*?)</script>', s, re.S)
+          if not blocks:
+              raise SystemExit('no script block found')
+          Path('/tmp/ball-battle-v49.js').write_text('\n'.join(blocks), encoding='utf-8')
+          PY
+          node --check /tmp/ball-battle-v49.js
+      - name: Commit v49
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'index.html was not changed'
+            exit 1
+          fi
+          git config user.name 'chatgpt-feature-update'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Add Oshi and simplify simulation controls'
+          git push
