@@ -14,7 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Apply v49 feature update
-        run: python .github/ball-battle-v49.py
+        run: |
+          sed -i 's/id="oshi"/id: "oshi"/' .github/ball-battle-v49.py
+          python .github/ball-battle-v49.py
       - name: Check inline JavaScript syntax
         run: |
           python - <<'PY'
