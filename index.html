@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v44</title>
+  <title>볼배틀 리뉴얼 v45</title>
   <style>
     :root {
       --bg: #020617;
@@ -818,6 +818,7 @@
     .hp-fill {
       background: linear-gradient(90deg, #ef4444, #f97316, #22c55e);
     }
+    .logo-rage-fill { background: linear-gradient(90deg, #991b1b, #ef4444, #fb7185); box-shadow: 0 0 8px rgba(239,68,68,.55); }
 
     .hp-delay-bar .bar-fill {
       position: absolute;
@@ -874,7 +875,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v44</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v45</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1072,6 +1073,8 @@
         skillName: "광기의 하이카드", condition: "10초마다 · 접촉자 전원 · 빚 상태는 근처 적 강제 참가", desc: "모두 같은 무작위 판돈을 내고 하이카드를 진행한다. 저체력·빚 상태에서는 높은 카드가 소폭 잘 나오며 쟈바미의 덱에만 색조커와 흑조커가 들어 있다." },
       { id: "justice_ally", name: "정의의 아군", mark: "D", role: "마법사", color: "#f8fafc", hp: 170, attack: 9, speed: 2.7, range: 135,
         skillName: "운명의 드로우", condition: "6초 후 개시 · 사용/드로우 9초 · 공격 7.5초", desc: "첫 패 백룡 3장을 사용한 뒤 융합을 드로우한다. 백룡은 버스트 스트림, 융합체는 주기적으로 얼티밋 버스트를 사용한다. 마지막 소환수의 치명상을 릴리스해 오벨리스크를 부른다." },
+      { id: "logo_doctor", name: "로고 박사", mark: "博", role: "전사", color: "#94a3b8", hp: 120, attack: 0, speed: 2.55, range: 0,
+        skillName: "잠든 분노 · 헐크크", condition: "박사 0HP → 헐크크 · 분노 소진 → 스마크 헐크크", desc: "박사는 공격하지 않는다. 헐크크는 분노 게이지가 줄어드는 동안 강력한 스매시와 벽충돌 피해, 주기적인 점프를 사용한다. 소진 후 안경 쓴 스마크 헐크크로 싸운다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -1360,6 +1363,78 @@
 
     function captainPortrait() {
       return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="캡틴 성조 방패"><circle cx="24" cy="24" r="22" fill="#dc2626" stroke="#f8fafc" stroke-width="2"/><circle cx="24" cy="24" r="16" fill="#f8fafc"/><circle cx="24" cy="24" r="10" fill="#2563eb"/><path d="M24 16.5l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z" fill="#fff"/></svg>';
+    }
+
+    const LOGO = { doctorHp: 120, hulkHp: 300, rageDrain: 10, smash: 28, wall: 14, smartHp: 180, smartSmash: 11, smartWall: 4, jumpPeriod: 6.5, jumpDamage: 22, jumpRadius: 82 };
+    function logoPortrait() {
+      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="로고 박사"><circle cx="24" cy="24" r="22" fill="#dbeafe"/><path d="M6 48l5-12 9-4 8 0 9 4 5 12" fill="#f8fafc" stroke="#64748b" stroke-width="2"/><path d="M12 13q12-15 24 0l-2 10H14z" fill="#3f2c25"/><ellipse cx="24" cy="25" rx="12" ry="14" fill="#e8b899"/><path d="M14 24h9m2 0h9m-11 0h2" stroke="#334155" stroke-width="2"/><path d="M16 21h7v6h-7zm9 0h7v6h-7z" fill="none" stroke="#334155" stroke-width="1.5"/><path d="M18 31q6 4 12 0" fill="none" stroke="#6b3f2c" stroke-width="1.5"/><path d="M20 34l4 9 4-9" fill="#22c55e"/></svg>';
+    }
+    function initLogo(f) { f.logo = { mode: "doctor", jumpCd: LOGO.jumpPeriod, jump: null, smashCd: 0, airHeight: 0 }; }
+    function changeLogoForm(f, mode) {
+      const l=f.logo;
+      if (!l || l.mode===mode) return false;
+      l.mode=mode; l.jump=null; l.airHeight=0; l.smashCd=0;
+      f.punchHold=0; f.punchImpact=null; f.punchFlight=0; f.punchSource=null;
+      if (mode==="hulk") {
+        f.maxHp=LOGO.hulkHp;f.hp=LOGO.hulkHp;f.r=26;f.attack=LOGO.smash;f.baseAttack=f.attack;f.baseSpeed=f.speed=2.75;f.color="#22c55e";f.mark="怒";l.jumpCd=2.6;
+        spawnFloatingText(f.x,f.y-f.r-42,"헐크크! 분노 폭발!","#f87171");
+      } else {
+        f.maxHp=LOGO.smartHp;f.hp=LOGO.smartHp*.5;f.r=19;f.attack=LOGO.smartSmash;f.baseAttack=f.attack;f.baseSpeed=f.speed=2.55;f.color="#86efac";f.mark="智";
+        spawnFloatingText(f.x,f.y-f.r-40,"스마크 헐크크 · 체력 50% 회복","#86efac");
+      }
+      const v=randomVelocity(f.baseSpeed);f.vx=v.vx;f.vy=v.vy;
+      f.x=clamp(f.x,arena.x+f.r,arena.x2-f.r);f.y=clamp(f.y,arena.y+f.r,arena.y2-f.r);
+      spawnBlast(f.x,f.y,mode==="hulk"?110:75,mode==="hulk"?"#22c55e":"#86efac");spawnParticles(f.x,f.y,mode==="hulk"?"#4ade80":"#bbf7d0",30);
+      playSound("explosion",mode==="hulk"?1.5:.8);screenShake=Math.max(screenShake,mode==="hulk"?.8:.35);triggerHitStop(mode==="hulk"?.3:.12);
+      log(`<strong>로고 박사</strong> ${mode==="hulk"?"헐크크로 변신 · 분노 300/300":"스마크 헐크크로 변신 · 체력 90/180"}`,"변신");
+      return true;
+    }
+    function advanceLogoFormOnLethal(f) {
+      if (!f?.logo || f.hp>0 || f.logo.mode==="smart") return false;
+      return changeLogoForm(f,f.logo.mode==="doctor"?"hulk":"smart");
+    }
+    function tickLogo(f,dt) {
+      const l=f.logo;if(!l)return;
+      l.smashCd=Math.max(0,l.smashCd-dt);
+      if(l.mode!=="hulk")return;
+      f.hp=Math.max(0,f.hp-LOGO.rageDrain*dt);
+      if(advanceLogoFormOnLethal(f))return;
+      l.jumpCd=Math.max(0,l.jumpCd-dt);
+      if(l.jump || l.jumpCd>0)return;
+      const target=nearestEnemy(f).enemy;
+      if(!target)return;
+      l.jump={phase:"prepare",timer:.45,startX:f.x,startY:f.y,targetX:clamp(target.x,arena.x+f.r,arena.x2-f.r),targetY:clamp(target.y,arena.y+f.r,arena.y2-f.r)};
+      l.jumpCd=LOGO.jumpPeriod;
+      spawnFloatingText(f.x,f.y-f.r-32,"헐크크 점프!","#4ade80");playSound("charge",1.1);
+    }
+    function moveLogoJump(f,dt) {
+      const l=f.logo,j=l?.jump;if(!j)return false;
+      j.timer-=dt;
+      if(j.phase==="prepare") {
+        if(j.timer<=0){j.phase="flight";j.timer=.65;j.startX=f.x;j.startY=f.y;}
+        return true;
+      }
+      const p=clamp(1-j.timer/.65,0,1);
+      f.x=j.startX+(j.targetX-j.startX)*p;f.y=j.startY+(j.targetY-j.startY)*p;l.airHeight=Math.sin(p*Math.PI)*35;
+      if(j.timer>0)return true;
+      l.jump=null;l.airHeight=0;
+      const owner=f;
+      enemiesOf(f).forEach(e=>{if(Math.hypot(e.x-f.x,e.y-f.y)<=LOGO.jumpRadius+e.r){const dealt=damage(e,LOGO.jumpDamage,owner,"헐크크 점프 착지");if(dealt>0&&e.alive)logoKnock(f,e,500,8,.25);}});
+      spawnBlast(f.x,f.y,LOGO.jumpRadius,"#4ade80");spawnParticles(f.x,f.y,"#bbf7d0",28);playSound("explosion",1.3);screenShake=Math.max(screenShake,.55);
+      return true;
+    }
+    function logoKnock(f,target,speed,wallPower,duration) {
+      const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1;
+      target.vx=dx/d*speed;target.vy=dy/d*speed;target.punchSource=f;target.punchWallPower=wallPower;target.punchWallHits=0;target.punchFlight=Math.max(target.punchFlight||0,duration);
+    }
+    function logoContact(f,target) {
+      const l=f.logo;if(!l || l.mode==="doctor" || l.jump || l.smashCd>0 || f.punchHold>0 || f.punchFlight>0 || f.tanoStop>0 || !target?.alive || !areEnemies(f,target))return;
+      const huge=l.mode==="hulk",power=huge?LOGO.smash:LOGO.smartSmash;
+      l.smashCd=huge?1.05:1.2;
+      const dealt=damage(target,power,f,huge?"헐크크 스매시":"스마크 헐크크 스매시");
+      if(dealt>0&&target.alive)logoKnock(f,target,huge?760:380,huge?LOGO.wall:LOGO.smartWall,huge?.42:.22);
+      triggerHitStop(huge?.18:.08);spawnHitFlash(target.x,target.y,huge?"#bbf7d0":"#dcfce7",huge?86:45);spawnBlast(target.x,target.y,huge?75:40,"#4ade80");
+      spawnFloatingText(target.x,target.y-target.r-34,"헐크 스매시!",huge?"#4ade80":"#bbf7d0");playSound("explosion",huge?1.3:.55);screenShake=Math.max(screenShake,huge?.45:.16);
     }
 
     const CAPTAIN = { throwPeriod: 6, rethrowDelay: 0.30, catchLock: 0.45, returnAfter: 20, shieldDamage: 10, heldReduction: 0.65, shieldCounter: 5, punchCounter: 13, counterCooldown: 0.75, shieldSpeed: 360, knock: 480, punchWindup: 0.10, punchFollow: 0.10 };
@@ -2273,13 +2348,14 @@
           bounceWalls(f);
           for (let i = 0; i < contacts && f.alive && f.punchSource; i++) {
             f.punchWallHits += 1;
-            damage(f, TANO.power, f.punchSource, "강펀치 벽충돌");
+            damage(f, f.punchWallPower || TANO.power, f.punchSource, "강펀치 벽충돌");
             spawnFloatingText(f.x, f.y - 42, "벽충돌 " + f.punchWallHits + "회", "#e9d5ff");
             spawnHitFlash(f.x, f.y, "#a855f7", 40);
           }
         }
         if (f.punchFlight <= 0) {
           f.punchSource = null;
+          f.punchWallPower = 0;
           // 비행이 끝나도 충격 속도를 즉시 덮지 않고 자체 속도로 감속한다.
         }
         return true;
@@ -2978,6 +3054,7 @@
     }
 
     const patchNotes = [
+      "v45: 로고 박사 추가. 박사는 공격 없이 0HP에서 헐크크로 변신해 300분노를 회복한다. 분노는 초당 10 소진되며 강력한 충돌 스매시 28·벽충돌 14와 6.5초 주기 점프 착지 22를 사용한다. 분노 소진 시 안경 쓴 스마크 헐크크로 변해 체력 90/180으로 시작하고 약한 스매시 11·벽충돌 4를 사용하며 다음 0HP에는 탈락한다.",
       "v44: 오벨리스크는 초당 체력 9가 소진되는 대신 갓 핸드 크러셔 피해 30·반경 165·재사용 5.5초와 지속 위압 오라를 얻었다. 정의의 아군 사용/드로우 상태 게이지를 하나로 합쳤다. 캡틴·타노 동시 충돌 시 강펀치와 파워스톤의 이중 예약을 막고, 마인드 스톤 정지 시간이 펀치 연출 중에도 정상 감소하도록 수정.",
       "v43: 타노의 획득 스톤 게이지를 스톤별 색상으로 분할. 리사의 인내·록·폭주 게이지 색을 구분. 캡틴의 던진 방패 자동 귀환 20초를 게이지와 숫자로 표시. 쟈바미는 상대가 없을 때 도박 준비 완료 게이지를 가득 채워 고정.",
       "v42 실험: 충돌로 바뀐 이동 방향은 유지하고 속력은 각 캐릭터·소환수의 기본 속도로 부드럽게 복귀한다. 돌진·시전·펀치 비행 중에는 복귀를 적용하지 않으며, 펀치 비행 종료 직후 속도를 강제로 덮던 처리를 제거했다.",
@@ -3058,6 +3135,7 @@
 
     function characterDamageInfo(c) {
       if (c.id === "justice_ally") return { damage: "버스트 스트림 2×7 / 얼티밋 버스트 4×최대6 / 갓 핸드 크러셔 30", tick: "개시6초 · 카드 사용/드로우9초 · 공격7.5초 · 오벨리스크 초당 체력-9", tip: "융합 중 소재는 무적. 융합체는 주기적으로 얼티밋 버스트를 사용한다. 마지막 소환수의 치명상을 릴리스해 오벨리스크를 소환하며, 예고 원형 범위의 적에게 피해와 둔화를 준다." };
+      if (c.id === "logo_doctor") return { damage: "박사 무공격 / 헐크크 스매시 28·벽충돌 14·점프 착지 22 / 스마크 스매시 11·벽충돌 4", tick: "헐크크 분노 300 · 초당 -10 · 점프 6.5초", tip: "박사 HP 0에서 헐크크로 100% 변신. 분노 0에서 스마크 헐크크 체력 90/180으로 이어지며, 이때 0HP는 탈락." };
       if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 13", tick: "방패 6초 / 재캐치 후 0.3초 재투척 / 적·벽 총 5회", tip: "20초 동안 회수하지 못하면 피해 없는 귀환 방패로 바뀐다. 비행 방패는 0.45초 캐치 잠금, 정지 방패 회수만 6초 쿨." };
       if (c.id === "jabami") return { damage: "무작위 판돈 12~28 · 패배 시 판돈만큼 추가 피해", tick: "10초 / 이전 도박 이후 접촉자 전원", tip: "총판돈은 개인 판돈×참가자 수이며 공동 승리자는 이를 균등 분배한다. 빚 상태에서는 반경 155 안의 적도 강제 참가하고 쟈바미의 승리 몫은 1.5배다." };
       if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
@@ -3192,7 +3270,7 @@
         card.className = "char-card" + (isSelected ? " selected" : "") + (team ? ` team-${team.toLowerCase()}` : "");
         card.innerHTML = `
           <div class="selected-mark">${battleMode === "team" && team ? team : "✓"}</div>
-          <div class="portrait" style="background:${c.color};">${c.id === "lisa" ? lisaPortrait() : c.id === "tano" ? tanoPortrait() : c.id === "iron_mask" ? ironPortrait() : c.id === "captain" ? captainPortrait() : c.id === "jabami" ? jabamiPortrait() : c.id === "justice_ally" ? justiceAllyPortrait() : c.mark}</div>
+          <div class="portrait" style="background:${c.color};">${c.id === "lisa" ? lisaPortrait() : c.id === "tano" ? tanoPortrait() : c.id === "iron_mask" ? ironPortrait() : c.id === "captain" ? captainPortrait() : c.id === "jabami" ? jabamiPortrait() : c.id === "justice_ally" ? justiceAllyPortrait() : c.id === "logo_doctor" ? logoPortrait() : c.mark}</div>
           <div>
             <div class="char-top">
               <div>
@@ -3608,6 +3686,7 @@
       if (c.id === "captain") initCaptain(fighter);
       if (c.id === "jabami") initJabami(fighter);
       if (c.id === "justice_ally") initJusticeAlly(fighter);
+      if (c.id === "logo_doctor") initLogo(fighter);
       return fighter;
     }
 
@@ -3681,7 +3760,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v44`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v45`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -3707,7 +3786,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v44`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v45`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -4198,6 +4277,7 @@
     }
 
     function skillProgressInfo(f) {
+      if(f.logo){const l=f.logo;if(l.mode==="doctor")return {ratio:0,className:"skill-fill",text:"로고 박사 · 공격 없음",extraTextHtml:'<div class="status-skill-label">체력 0 → 헐크크 변신</div>'};if(l.mode==="hulk")return {ratio:clamp(1-l.jumpCd/LOGO.jumpPeriod,0,1),className:"skill-fill",text:l.jump?"헐크크 · 상대에게 점프 중":`헐크크 · 다음 점프 ${l.jumpCd.toFixed(1)}초`,extraTextHtml:`<div class="status-skill-label" style="color:#fca5a5">분노 초당 -${LOGO.rageDrain} · 스매시 ${LOGO.smash} · 벽충돌 ${LOGO.wall}</div>`};return {ratio:clamp(1-l.smashCd/1.2,0,1),className:"skill-fill",text:"스마크 헐크크 · 약한 스매시",extraTextHtml:'<div class="status-skill-label">체력 0 → 탈락 · 점프 없음</div>'};}
       if(f.duelist){const d=f.duelist;if(!d.equipped)return {ratio:clamp(1-d.timer/6,0,1),className:"skill-fill",text:`듀얼 개시 ${d.timer.toFixed(1)}초`};const play=clamp(1-d.playCd/9,0,1);return {ratio:play,className:"skill-fill",text:d.fusion?`융합 진행 ${d.fusion.t.toFixed(1)}초`:d.emptyTimer>0?`소환수 전멸 · 덱 초기화 ${(9-d.emptyTimer).toFixed(1)}초`:`다음 카드 사용·드로우 ${d.playCd.toFixed(1)}초`};}
       if (f.lisa) {
         const l=f.lisa, lady=l.mode==="lady";
@@ -4434,10 +4514,10 @@
           <div class="fighter-status${statusClass}">
             <div class="status-top">
               <span class="status-name" style="color:${f.color}">${escapeHtml(f.name)}</span>
-              <span class="status-num">${Math.ceil(Math.max(0, f.hp))}/${f.maxHp}${shieldText}</span>
+              <span class="status-num">${f.logo?.mode==="hulk"?"분노 ":""}${Math.ceil(Math.max(0, f.hp))}/${f.maxHp}${shieldText}</span>
             </div>
             <div class="bar hp-delay-bar">
-              <div class="bar-fill hp-fill" style="width:${hpView.actualRatio * 100}%"></div>
+              <div class="bar-fill ${f.logo?.mode==="hulk"?"logo-rage-fill":"hp-fill"}" style="width:${hpView.actualRatio * 100}%"></div>
               <div class="bar-fill hp-damage-fill" style="left:${hpView.actualRatio * 100}%; width:${hpView.pendingRatio * 100}%"></div>
             </div>
             ${shieldHtml}
@@ -5977,6 +6057,7 @@
       }
 
       if (target.hp <= 0) {
+        if (advanceLogoFormOnLethal(target)) return final;
         if (keepBaroAliveOnFatal(target)) return final;
         if (target.baseId === "dummy_unit") {
           if (source && source.alive && source !== target) source.kills = (source.kills || 0) + 1;
@@ -6057,6 +6138,7 @@
       if (!target.isSummon) spawnFloatingText(target.x, target.y - target.r - 8, `-${final}`, color);
 
       if (target.hp <= 0) {
+        if (advanceLogoFormOnLethal(target)) return final;
         if (keepBaroAliveOnFatal(target)) return final;
         if (target.baseId === "dummy_unit") {
           if (source && source.alive && source !== target) source.kills = (source.kills || 0) + 1;
@@ -7349,6 +7431,7 @@
       if (!f.alive) return;
       if (f.duelMonster) updateDuelMonster(f, dt);
       if (!f.alive) return;
+      if (f.logo) tickLogo(f, dt);
       if (f.duelMonster && ((f.duelMonster.cast || 0) > 0 || (f.duelMonster.channel || 0) > 0 || f.duelMonster.fusing)) return;
       if(f.duelMonster&&Math.hypot(f.vx,f.vy)<1)restoreJusticeMotion(f,f.duelMonster.savedVx,f.duelMonster.savedVy);
       const rouletteHost = activeJabamiGameFor(f);
@@ -7562,6 +7645,7 @@
         return;
       }
 
+      if (f.logo && moveLogoJump(f, dt)) return;
       recoverOwnMoveSpeed(f, dt);
       f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * dt;
       f.y += f.vy * slow * boost * gardenSlow * irisGlassSlow * dt;
@@ -7647,10 +7731,10 @@
     function handleCircleCollisions(dt) {
       for (let i = 0; i < fighters.length; i++) {
         const a = fighters[i];
-        if (!a.alive || (a.dodoVoid || 0) > 0 || a.punchHold > 0) continue;
+        if (!a.alive || (a.dodoVoid || 0) > 0 || a.punchHold > 0 || a.logo?.jump?.phase === "flight") continue;
         for (let j = i + 1; j < fighters.length; j++) {
           const b = fighters[j];
-          if (!b.alive || (b.dodoVoid || 0) > 0 || b.punchHold > 0) continue;
+          if (!b.alive || (b.dodoVoid || 0) > 0 || b.punchHold > 0 || b.logo?.jump?.phase === "flight") continue;
 
           const dx = b.x - a.x;
           const dy = b.y - a.y;
@@ -7724,6 +7808,8 @@
               captainContact(b, a);
               hulkContact(a, b);
               hulkContact(b, a);
+              logoContact(a, b);
+              logoContact(b, a);
               // 진 과전류 배리어는 직접 부딪힌 상대에게 방전 피해와 경직을 준다.
               if (a.baseId === "thunder_jin") zapJinBarrierContact(a, b);
               if (b.baseId === "thunder_jin") zapJinBarrierContact(b, a);
@@ -10142,6 +10228,31 @@
         ctx.fillStyle="#9fc4da";[-1,1].forEach(s=>{ctx.beginPath();ctx.moveTo(s*6,10);ctx.lineTo(s*14,20);ctx.lineTo(s*8,18);ctx.lineTo(s*3,12);ctx.closePath();ctx.fill();ctx.stroke();});
       }
       ctx.restore();if(kind==="obelisk"){const aura=.55+.45*Math.sin(performance.now()/230);ctx.save();ctx.strokeStyle=`rgba(96,165,250,${.25+.25*aura})`;ctx.shadowColor="#1d4ed8";ctx.shadowBlur=20;ctx.lineWidth=2+2*aura;ctx.beginPath();ctx.arc(f.x,f.y,f.r+20+4*aura,0,Math.PI*2);ctx.stroke();ctx.restore();}if(kind==="obelisk"&&f.duelMonster.crusherCast>0){const pulse=.55+.45*Math.sin(performance.now()/55);ctx.save();ctx.fillStyle=`rgba(37,99,235,${.08+.08*pulse})`;ctx.strokeStyle="#60a5fa";ctx.lineWidth=4;ctx.setLineDash([12,7]);ctx.beginPath();ctx.arc(f.x,f.y,165,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}if(f.duelMonster.invuln>0){drawRing(f.x,f.y,f.r+10,"#fde68a",4);drawRing(f.x,f.y,f.r+18,"rgba(96,165,250,.7)",2);}drawHealthBar(f);drawName(f);}
+    function drawLogoCharacter(f) {
+      const mode=f.logo.mode,doctor=mode==="doctor",smart=mode==="smart",air=f.logo.airHeight||0;
+      if(air>0){ctx.save();ctx.fillStyle="rgba(0,0,0,.35)";ctx.beginPath();ctx.ellipse(f.x,f.y+12,f.r+8,7,0,0,Math.PI*2);ctx.fill();ctx.restore();}
+      ctx.save();ctx.translate(f.x,f.y-air);ctx.scale(f.r/20,f.r/20);
+      if(doctor){
+        ctx.fillStyle="#f8fafc";ctx.strokeStyle="#64748b";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,3,18,0,Math.PI*2);ctx.fill();ctx.stroke();
+        ctx.fillStyle="#eab999";ctx.beginPath();ctx.ellipse(0,-3,11,12,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="#38251e";ctx.beginPath();ctx.moveTo(-13,-9);ctx.quadraticCurveTo(-9,-20,2,-19);ctx.quadraticCurveTo(15,-16,13,-6);ctx.lineTo(8,-12);ctx.lineTo(-10,-10);ctx.closePath();ctx.fill();
+        ctx.strokeStyle="#334155";ctx.lineWidth=1.7;ctx.strokeRect(-10,-6,8,6);ctx.strokeRect(2,-6,8,6);ctx.beginPath();ctx.moveTo(-2,-4);ctx.lineTo(2,-4);ctx.stroke();
+        ctx.fillStyle="#172554";ctx.fillRect(-7,-4,2,2);ctx.fillRect(5,-4,2,2);ctx.fillStyle="#22c55e";ctx.beginPath();ctx.moveTo(-4,10);ctx.lineTo(0,18);ctx.lineTo(4,10);ctx.fill();
+      } else {
+        const green=smart?"#86efac":"#4ade80",dark=smart?"#15803d":"#166534";
+        ctx.fillStyle=green;ctx.strokeStyle=dark;ctx.lineWidth=2.5;
+        ctx.beginPath();ctx.ellipse(0,2,18,17,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+        for(const s of [-1,1]){ctx.beginPath();ctx.arc(s*17,6,smart?7:10,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#bbf7d0";ctx.beginPath();ctx.arc(s*21,11,smart?4:7,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=green;}
+        ctx.fillStyle="#1f2937";ctx.beginPath();ctx.moveTo(-13,-8);ctx.lineTo(-14,-17);ctx.lineTo(-7,-14);ctx.lineTo(-3,-20);ctx.lineTo(3,-15);ctx.lineTo(9,-20);ctx.lineTo(15,-13);ctx.lineTo(11,-6);ctx.closePath();ctx.fill();
+        ctx.fillStyle="#eef2ff";ctx.beginPath();ctx.moveTo(-12,-6);ctx.lineTo(-2,-4);ctx.lineTo(-6,0);ctx.lineTo(-11,-1);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(12,-6);ctx.lineTo(2,-4);ctx.lineTo(6,0);ctx.lineTo(11,-1);ctx.closePath();ctx.fill();
+        ctx.fillStyle="#111827";ctx.fillRect(-8,-3,2,3);ctx.fillRect(6,-3,2,3);
+        if(smart){ctx.strokeStyle="#e2e8f0";ctx.lineWidth=2;ctx.strokeRect(-13,-7,11,9);ctx.strokeRect(2,-7,11,9);ctx.beginPath();ctx.moveTo(-2,-4);ctx.lineTo(2,-4);ctx.stroke();}
+        ctx.strokeStyle="#14532d";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-6,8);ctx.lineTo(6,8);ctx.stroke();
+        ctx.fillStyle="#7e22ce";ctx.fillRect(-12,14,24,5);
+      }
+      ctx.restore();drawHealthBar(f);drawName(f);
+      if(mode==="hulk")drawRing(f.x,f.y,f.r+7,"rgba(239,68,68,.62)",2);
+    }
     function drawFighter(f) {
       drawPowerFist(f);
       drawIronSuit(f);
@@ -10151,6 +10262,7 @@
       if (f.captain) { drawCaptainCharacter(f); return; }
       if (f.jabami) { drawJabamiCharacter(f); return; }
       if (f.duelist) { drawJusticeAllyCharacter(f); return; }
+      if (f.logo) { drawLogoCharacter(f); return; }
       if (f.tano) {
         if (f.tano.hidden > 0) return;
         if (f.tano.reform > 0) drawTanoDust(f);
@@ -10503,8 +10615,9 @@
       ctx.fillStyle = "rgba(0,0,0,.58)";
       roundRect(ctx, x, y, w, h, 4, true, false);
 
-      ctx.fillStyle = ratio > 0.5 ? "#22c55e" : ratio > 0.25 ? "#fbbf24" : "#ef4444";
+      ctx.fillStyle = f.logo?.mode === "hulk" ? "#ef4444" : ratio > 0.5 ? "#22c55e" : ratio > 0.25 ? "#fbbf24" : "#ef4444";
       roundRect(ctx, x, y, w * ratio, h, 4, true, false);
+      if (f.logo?.mode === "hulk") {ctx.font="800 9px system-ui";ctx.textAlign="center";ctx.fillStyle="#fca5a5";ctx.fillText("분노",f.x,y-3);}
 
       ctx.strokeStyle = "rgba(255,255,255,.56)";
       ctx.lineWidth = 1;
