@@ -1,0 +1,45 @@
+name: Ball Battle v47 balance patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/ball-battle-balance-v47.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply balance patch
+        run: python .github/ball-battle-balance-v47.py
+
+      - name: Check inline JavaScript syntax
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script[^>]*>(.*?)</script>', html, re.S)
+          if not scripts:
+              raise SystemExit('No inline script found')
+          Path('/tmp/ball-battle-v47.js').write_text('\n'.join(scripts), encoding='utf-8')
+          PY
+          node --check /tmp/ball-battle-v47.js
+
+      - name: Commit patched index
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'No index.html changes produced'
+            exit 1
+          fi
+          git config user.name 'chatgpt-balance-patch'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Balance Lisa, Iron Mask, and Tano'
+          git push
