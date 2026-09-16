@@ -1,0 +1,40 @@
+name: Ball Battle v48 balance patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/ball-battle-balance-v48.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply balance patch
+        run: python .github/ball-battle-balance-v48.py
+      - name: Check inline JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('index.html').read_text(encoding='utf-8')
+          blocks = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, re.S | re.I)
+          if not blocks:
+              raise SystemExit('No inline script found')
+          Path('/tmp/ball-battle-inline.js').write_text('\n'.join(blocks), encoding='utf-8')
+          PY
+          node --check /tmp/ball-battle-inline.js
+      - name: Commit patched index
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'index.html did not change'
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Balance Lisa and Justice Ally, recategorize roster (v48)'
+          git push
