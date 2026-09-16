@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v47</title>
+  <title>볼배틀 리뉴얼 v48</title>
   <style>
     :root {
       --bg: #020617;
@@ -1048,7 +1048,7 @@
       };
     }
 
-    const roleLabels = ["전체", "전사", "마법사", "수호자", "암살자", "지원가", "저격수"];
+    const roleLabels = ["전체", "영화", "애니"];
     let currentFilter = "전체";
     let battleMode = "solo";
     let teamA = [];
@@ -1061,19 +1061,19 @@
     // 리뉴얼 캐릭터와 훈련용 더미.
     // 기존 스킬 처리 분기는 엔진 호환성을 위해 보존되며 해당 ID가 없으면 활성화되지 않는다.
     const characters = [
-      { id: "lisa", name: "리사", mark: "♫", role: "전사", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
+      { id: "lisa", name: "리사", mark: "♫", role: "애니", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
         skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 또는 5초 무피격 → 인내 상승", desc: "숙녀는 공격하지 않는다. 오래 아무 일도 없으면 따분함으로 인내가 오른다. 록은 최근접 적 방향 음파, 마지막 4초는 폭주." },
-      { id: "iron_mask", name: "철가면", mark: "Fe", role: "전사", color: "#dc2626", hp: 40, attack: 10, speed: 2.7, range: 160,
+      { id: "iron_mask", name: "철가면", mark: "Fe", role: "영화", color: "#dc2626", hp: 40, attack: 10, speed: 2.7, range: 160,
         skillName: "자비스 슈트", condition: "보호막 90 · 파괴 후 8초 재장착(30)", desc: "리펄서와 부스터. 슈트가 깨지면 무능력 상태, 재장착은 워머신·헐크버스터·마크42 중 하나." },
-      { id: "tano", name: "타노", mark: "✦", role: "전사", color: "#9333ea", hp: 240, attack: 8, speed: 2.7, range: 80,
+      { id: "tano", name: "타노", mark: "✦", role: "영화", color: "#9333ea", hp: 240, attack: 8, speed: 2.7, range: 80,
         skillName: "인피니티 스톤", condition: "9초마다 다음 스톤 · 소울 마지막", desc: "떠다니는 스톤 가까이 접근하면 넓은 범위로 획득. 6개 완성 시 핑거플립, 이후 스톤 소실과 자해를 거쳐 재수집." },
-      { id: "captain", name: "캡틴", mark: "★", role: "수호자", color: "#2563eb", hp: 190, attack: 9, speed: 2.65, range: 190,
+      { id: "captain", name: "캡틴", mark: "★", role: "영화", color: "#2563eb", hp: 190, attack: 9, speed: 2.65, range: 190,
         skillName: "수호의 방패", condition: "6초마다 투척 · 비행 중 캐치 시 즉시 재투척", desc: "넓은 범위로 방패를 회수한다. 비행 중 잡으면 바로 다시 던지고, 5회 반사 후 멈춘 방패를 잡으면 6초 뒤 던진다." },
-      { id: "jabami", name: "쟈바미", mark: "♦", role: "마법사", color: "#991b1b", hp: 170, attack: 0, speed: 2.75, range: 120,
+      { id: "jabami", name: "쟈바미", mark: "♦", role: "애니", color: "#991b1b", hp: 170, attack: 0, speed: 2.75, range: 120,
         skillName: "광기의 하이카드", condition: "10초마다 · 접촉자 전원 · 빚 상태는 근처 적 강제 참가", desc: "모두 같은 무작위 판돈을 내고 하이카드를 진행한다. 저체력·빚 상태에서는 높은 카드가 소폭 잘 나오며 쟈바미의 덱에만 색조커와 흑조커가 들어 있다." },
-      { id: "justice_ally", name: "정의의 아군", mark: "D", role: "마법사", color: "#f8fafc", hp: 170, attack: 9, speed: 2.7, range: 135,
+      { id: "justice_ally", name: "정의의 아군", mark: "D", role: "애니", color: "#f8fafc", hp: 160, attack: 9, speed: 2.7, range: 135,
         skillName: "운명의 드로우", condition: "6초 후 개시 · 사용/드로우 9초 · 공격 7.5초", desc: "첫 패 백룡 3장을 사용한 뒤 융합을 드로우한다. 백룡은 버스트 스트림, 융합체는 주기적으로 얼티밋 버스트를 사용한다. 마지막 소환수의 치명상을 릴리스해 오벨리스크를 부른다." },
-      { id: "logo_doctor", name: "로고 박사", mark: "博", role: "전사", color: "#94a3b8", hp: 120, attack: 0, speed: 2.55, range: 0,
+      { id: "logo_doctor", name: "로고 박사", mark: "博", role: "영화", color: "#94a3b8", hp: 120, attack: 0, speed: 2.55, range: 0,
         skillName: "잠든 분노 · 헐크크", condition: "박사 0HP → 헐크크 · 분노 소진 → 스마트 헐크크", desc: "박사는 공격하지 않는다. 헐크크는 분노 게이지가 줄어드는 동안 강력한 스매시와 벽충돌 피해, 주기적인 점프를 사용한다. 소진 후 안경 쓴 스마트 헐크크로 싸운다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
@@ -1189,7 +1189,7 @@
     }
 
 
-    const LISA = { patience: 40, idleDelay: 5, idleGain: 2, duration: 14, rageDuration: 4, rageRange: 190, period: 1.25, ragePeriod: 0.55, power: 8, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
+    const LISA = { patience: 40, idleDelay: 5, idleGain: 2, duration: 14, rageDuration: 4, rageRange: 190, period: 1.25, ragePeriod: 0.55, power: 8, ragePower: 9, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
     function initLisa(f) {
       f.lisa = { mode: "lady", patience: 0, idle: 0, rock: 0, walls: 0, attack: 0, riff: 0, waves: [], speech: "", speechTime: 0 };
     }
@@ -1255,7 +1255,8 @@
       const target = nearestEnemy(f).enemy;
       if (!target) return;
       const angle = Math.atan2(target.y - f.y, target.x - f.x);
-      enemiesOf(f).filter(e => lisaConeTouches(f, e, angle)).forEach(e => damage(e, LISA.power, f, "파워코드 음파"));
+      const waveDamage = f.lisa.mode === "rage" ? LISA.ragePower : LISA.power;
+      enemiesOf(f).filter(e => lisaConeTouches(f, e, angle)).forEach(e => damage(e, waveDamage, f, "파워코드 음파"));
       if (!fastSimMode) f.lisa.waves.push({ x: f.x, y: f.y, angle, life: 0.4, rage: f.lisa.mode === "rage", range: f.lisa.mode === "rage" ? LISA.rageRange : LISA.range });
       lisaPowerChord(f);
     }
@@ -3075,6 +3076,7 @@
     }
 
     const patchNotes = [
+      "v48: 리사 일반 음파 피해 8 유지, 폭주 상태 음파만 9로 상향. 정의의 아군 본체 체력 170→160. 캐릭터 분류를 전사·마법사 등 전투 역할에서 영화·애니 출처 분류로 변경.",
       "v47: 리사 음파 피해 9→8. 철가면 자비스 재장착 8→7초, 마크42 파편은 생성 2초 뒤 철가면을 추적해 귀환. 타노는 파워스톤이 최초 3개 안에 반드시 등장하며, 타임스톤은 획득 즉시 효과 후 보유 중 90초마다 10초 전 상태 회귀를 재사용.",
       "v46: 로고 박사 변신 후 이름을 헐크크·스마트 헐크크로 정상 표시하고 불필요한 탈락 안내를 제거. 파워스톤·캡틴 강펀치·헐크버스터 강타·헐크크 스매시 등 접촉 공격이 같은 충돌에서 서로 독립적으로 발동하도록 수정하고, 접촉 공격 준비 때문에 상대가 멈추던 처리를 제거.",
       "v45: 로고 박사 추가. 박사는 공격 없이 0HP에서 헐크크로 변신해 300분노를 회복한다. 분노는 초당 10 소진되며 강력한 충돌 스매시 28·벽충돌 14와 6.5초 주기 점프 착지 22를 사용한다. 분노 소진 시 안경 쓴 스마트 헐크크로 변해 체력 90/180으로 시작하고 약한 스매시 11·벽충돌 4를 사용하며",
@@ -3161,7 +3163,7 @@
       if (c.id === "logo_doctor") return { damage: "박사 무공격 / 헐크크 스매시 28·벽충돌 14·점프 착지 22 / 스마트 스매시 11·벽충돌 4", tick: "헐크크 분노 300 · 초당 -10 · 점프 6.5초", tip: "박사 HP 0에서 헐크크로 100% 변신. 분노 0에서 스마트 헐크크 체력 90/180으로 이어지며," };
       if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 13", tick: "방패 6초 / 재캐치 후 0.3초 재투척 / 적·벽 총 5회", tip: "20초 동안 회수하지 못하면 피해 없는 귀환 방패로 바뀐다. 비행 방패는 0.45초 캐치 잠금, 정지 방패 회수만 6초 쿨." };
       if (c.id === "jabami") return { damage: "무작위 판돈 12~28 · 패배 시 판돈만큼 추가 피해", tick: "10초 / 이전 도박 이후 접촉자 전원", tip: "총판돈은 개인 판돈×참가자 수이며 공동 승리자는 이를 균등 분배한다. 빚 상태에서는 반경 155 안의 적도 강제 참가하고 쟈바미의 승리 몫은 1.5배다." };
-      if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 8 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
+      if (c.id==="lisa") return {damage:"최근접 적 방향 90도 음파 8 · 폭주 음파 9 · 록 사거리150 / 폭주190",tick:"인내: 받은 피해 40 또는 5초 무피격 뒤 초당2 / 록 14초",tip:"숙녀는 무공격. 피해를 받거나 5초 넘게 아무 피해도 없으면 인내가 오른다. 록 14초 중 마지막 4초는 이속 1.6배 폭주. 게이지 소진 시 숙녀 복귀."};
       if (c.id === "iron_mask") return { damage: "리펄서 10 · 부스터 12 · 미사일 8×3 · 헐크 충돌강타8 · 파편 4", tick: "리펄서 3초 / 부스터 8초 / 미사일 5.5초 / 재장착 7초", tip: "체력 40·첫 보호막 90, 재장착 보호막 30(체력 회복 없음). 몸에 연결된 굵은 빔. 조준각 고정·0.45초 예고 후 0.55초 발사. 헐크버스터는 적과 충돌하면 강타8·넉백. 빔 벽 반사 2회. 미사일 사거리 420·폭발 반경 55. 마크42 파편은 피해/보호막 회복 4이며 생성 2초 뒤 철가면에게 자동 귀환한다. 슈트는 무작위." };
       if (c.id === "tano") return { damage: "충돌 강펀치 8 + 넉백 중 벽 접촉마다 8 · 핑거플립 적 최대 HP 50% 고정 피해", tick: "스톤 9초 / 타임 재사용 90초 / 핑거플립 시간정지 0.75초", tip: "파워스톤은 최초 3개 안에 등장한다. 타임스톤은 획득 즉시 10초 전 상태를 회복하고, 보유 중 90초마다 다시 발동한다. 스톤 6개 완성 시 시간을 0.75초 멈추고 핑거플립. 이후 2초마다 스톤 1개 소실·자해 10." };
       const data = {
