@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v53</title>
+  <title>볼배틀 리뉴얼 v54</title>
   <style>
     :root {
       --bg: #020617;
@@ -875,7 +875,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v53</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v54</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1064,7 +1064,7 @@
       { id: "lisa", name: "리사", mark: "♫", role: "애니", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
         skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 또는 5초 무피격 → 인내 상승", desc: "숙녀는 공격하지 않는다. 오래 아무 일도 없으면 따분함으로 인내가 오른다. 록은 최근접 적 방향 음파, 마지막 4초는 폭주." },
       { id: "oshi", name: "최애", mark: "★", role: "애니", color: "#ec4899", hp: 170, attack: 0, speed: 2.7, range: 180,
-        skillName: "팬이 되어줘! · 투어 · 도쿄돔", condition: "벽 24구간에 관객 후보 생성 · 먼저 닿는 쪽에 따라 팬/안티팬 확정", desc: "보라색 관객 후보를 최애가 먼저 만나면 팬, 적이 먼저 만나면 안티팬이 된다. 팬 확정 즉시 회복과 투어를 얻고, 팬 벽은 적에게 피해를 준다. 안티팬 벽은 최애에게 피해와 도쿄돔을 준 뒤 다시 관객 후보로 돌아간다." },
+        skillName: "노래 · 인지도 · 투어 · 돔 공연", condition: "노래 적중·적 접촉으로 인지도 100 → 투어 · 3회 투어 뒤 다음 100은 돔 공연", desc: "2초마다 주변에 원형 노래를 부르며 노래는 점점 넓고 강해진다. 노래에 맞은 적은 3초간 느려지고 최애에게 주는 모든 피해가 감소한다. 투어를 거칠수록 다음 노래의 최소 단계가 상승하며, 네 번째 공연은 도쿄돔으로 바뀐다." },
       { id: "iron_mask", name: "철가면", mark: "Fe", role: "영화", color: "#dc2626", hp: 40, attack: 10, speed: 2.7, range: 160,
         skillName: "자비스 슈트", condition: "보호막 90 · 파괴 후 8초 재장착(30)", desc: "리펄서와 부스터. 슈트가 깨지면 무능력 상태, 재장착은 워머신·헐크버스터·마크42 중 하나." },
       { id: "tano", name: "타노", mark: "✦", role: "영화", color: "#9333ea", hp: 240, attack: 8, speed: 2.7, range: 80,
@@ -1670,10 +1670,10 @@
       if(d.hand.includes("fusion")&&!d.hand.includes("blueEyes")&&blues.length>=2&&blues.every(m=>(m.duelMonster.cast||0)<=0&&(m.duelMonster.channel||0)<=0)){consumeJusticeCard(f,"fusion");d.fusionDone=true;const chosen=blues.slice(0,3);spawnFloatingText(f.x,f.y-f.r-50,`융합 발동 · ${chosen.length}마리!`,"#a5f3fc");d.fusion={ids:chosen.map(m=>m.id),t:1.55,max:1.55,ownerVx:f.vx,ownerVy:f.vy};chosen.forEach(m=>{m.duelMonster.fusing=true;m.duelMonster.invuln=2;m.duelMonster.savedVx=m.vx;m.duelMonster.savedVy=m.vy;m.vx=0;m.vy=0;});d.justUsed=true;d.drawCd=9;playSound("magic",1.5);return;}
       if(d.hand.includes("blueEyes")){consumeJusticeCard(f,"blueEyes");spawnFloatingText(f.x,f.y-f.r-48,"나와라, 푸른 눈의 백룡!","#bfdbfe");summonJusticeMonster(f,"blueEyes");d.blueSummoned++;d.playCd=9;d.drawCd=9;d.justUsed=true;}
     }
-    function updateDuelMonster(f,dt){const m=f.duelMonster;if(!m)return;m.invuln=Math.max(0,m.invuln-dt);m.emerge=Math.max(0,(m.emerge||0)-dt);if(m.fusing){f.vx=0;f.vy=0;return;}if(m.kind==="obelisk"){f.hp=Math.max(0,f.hp-9*dt);if(f.hp<=0){f.alive=false;spawnBlast(f.x,f.y,85,"#1e3a8a");spawnParticles(f.x,f.y,"#60a5fa",24);log("오벨리스크의 거신병 · 신의 권능 소진","소환");return;}if(m.crusherCast>0){m.crusherCast-=dt;f.vx=0;f.vy=0;if(m.crusherCast<=0){const owner=fighterById(f.ownerId)||f;enemiesOf(f).forEach(e=>{if(Math.hypot(e.x-f.x,e.y-f.y)<=165+e.r){damage(e,30,owner,"갓 핸드 크러셔");applyFreeze(e,2);spawnBlast(e.x,e.y,58,"#2563eb");}});spawnBlast(f.x,f.y,175,"#1d4ed8");playSound("explosion",1.6);screenShake=Math.max(screenShake,1);m.crusherCd=5.5;}return;}m.crusherCd-=dt;if(m.crusherCd<=0){m.crusherCast=1.15;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;spawnFloatingText(f.x,f.y-f.r-32,"갓 핸드 크러셔!","#93c5fd");playSound("charge",1.2);return;}}else if(m.channel>0){m.channel-=dt;f.vx=0;f.vy=0;if(m.channel<=0){f.vx=m.savedVx||0;f.vy=m.savedVy||0;}return;}m.breathCd-=dt;if(m.kind!=="obelisk"&&m.breathCd<=0){const near=nearestEnemy(f),target=near.enemy;m.breathCd=7.5;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;if(m.kind==="blueEyes"){m.cast=1.15;m.castA=target?Math.atan2(target.y-f.y,target.x-f.x):Math.atan2(f.vy,f.vx);spawnFloatingText(f.x,f.y-f.r-26,"버스트 스트림!","#bae6fd");playSound("beam",.8);}else{startUltimateBurst(fighterById(f.ownerId)||f,f);return;}}if(m.cast>0){m.cast-=dt;f.vx=0;f.vy=0;if(m.cast<=0){fireDuelBreath(f,14);m.channel=1.05;}}if(f.contactCd<=0){const near=nearestEnemy(f);if(near.enemy&&near.d<=f.r+near.enemy.r+3){damage(near.enemy,f.attack,f,`${f.name} 충돌`);f.contactCd=.8;}}}
+    function updateDuelMonster(f,dt){const m=f.duelMonster;if(!m)return;m.invuln=Math.max(0,m.invuln-dt);m.emerge=Math.max(0,(m.emerge||0)-dt);if(m.fusing){f.vx=0;f.vy=0;return;}if(m.kind==="obelisk"){f.hp=Math.max(0,f.hp-9*dt);if(f.hp<=0){f.alive=false;spawnBlast(f.x,f.y,85,"#1e3a8a");spawnParticles(f.x,f.y,"#60a5fa",24);log("오벨리스크의 거신병 · 신의 권능 소진","소환");return;}if(m.crusherCast>0){m.crusherCast-=dt;f.vx=0;f.vy=0;if(m.crusherCast<=0){const owner=fighterById(f.ownerId)||f;enemiesOf(f).forEach(e=>{if(Math.hypot(e.x-f.x,e.y-f.y)<=165+e.r){damage(e,30,f,"갓 핸드 크러셔");applyFreeze(e,2);spawnBlast(e.x,e.y,58,"#2563eb");}});spawnBlast(f.x,f.y,175,"#1d4ed8");playSound("explosion",1.6);screenShake=Math.max(screenShake,1);m.crusherCd=5.5;}return;}m.crusherCd-=dt;if(m.crusherCd<=0){m.crusherCast=1.15;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;spawnFloatingText(f.x,f.y-f.r-32,"갓 핸드 크러셔!","#93c5fd");playSound("charge",1.2);return;}}else if(m.channel>0){m.channel-=dt;f.vx=0;f.vy=0;if(m.channel<=0){f.vx=m.savedVx||0;f.vy=m.savedVy||0;}return;}m.breathCd-=dt;if(m.kind!=="obelisk"&&m.breathCd<=0){const near=nearestEnemy(f),target=near.enemy;m.breathCd=7.5;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;if(m.kind==="blueEyes"){m.cast=1.15;m.castA=target?Math.atan2(target.y-f.y,target.x-f.x):Math.atan2(f.vy,f.vx);spawnFloatingText(f.x,f.y-f.r-26,"버스트 스트림!","#bae6fd");playSound("beam",.8);}else{startUltimateBurst(fighterById(f.ownerId)||f,f);return;}}if(m.cast>0){m.cast-=dt;f.vx=0;f.vy=0;if(m.cast<=0){fireDuelBreath(f,14);m.channel=1.05;}}if(f.contactCd<=0){const near=nearestEnemy(f);if(near.enemy&&near.d<=f.r+near.enemy.r+3){damage(near.enemy,f.attack,f,`${f.name} 충돌`);f.contactCd=.8;}}}
     function fireDuelBreath(dragon,power){const owner=fighterById(dragon.ownerId)||dragon,a=dragon.duelMonster.castA??Math.atan2(dragon.vy,dragon.vx),kind=dragon.duelMonster.kind,range=kind==="ultimate"?230:kind==="twin"?215:190,width=kind==="ultimate"?30:kind==="twin"?27:23,hits=kind==="twin"?6:7;duelBreaths.push({kind:"stream",dragonId:dragon.id,ownerId:owner.id,x:dragon.x,y:dragon.y,a,range,width,life:1.05,maxLife:1.05,tickPower:Math.max(1,Math.round(power/hits)),maxHits:hits,hitCounts:new Map(),tickCd:0,color:"#60a5fa"});screenShake=Math.max(screenShake,.34);}
     function startUltimateBurst(owner,dragon){const m=dragon.duelMonster,near=nearestEnemy(dragon),base=near.enemy?Math.atan2(near.enemy.y-dragon.y,near.enemy.x-dragon.x):Math.atan2(m.savedVy||dragon.vy,m.savedVx||dragon.vx);if(Math.hypot(m.savedVx||0,m.savedVy||0)<1){const v=randomVelocity(dragon.baseSpeed||2.35);m.savedVx=v.vx;m.savedVy=v.vy;}m.channel=3.6;m.breathCd=7.5;dragon.vx=0;dragon.vy=0;duelBreaths.push({kind:"sweep",dragonId:dragon.id,ownerId:owner.id,base,x:dragon.x,y:dragon.y,range:275,life:3.6,maxLife:3.6,hitCounts:new Map(),tickCd:0,color:"#38bdf8"});spawnFloatingText(dragon.x,dragon.y-dragon.r-38,"얼티밋 버스트!","#7dd3fc");log(`<strong>${escapeHtml(owner.name)}</strong> 얼티밋 버스트!`,"공격");playSound("beam",1.7);screenShake=Math.max(screenShake,.75);}
-    function updateDuelBreaths(dt){for(let i=duelBreaths.length-1;i>=0;i--){const b=duelBreaths[i];b.life-=dt;if(b.kind==="stream"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;b.tickCd-=dt;if(b.tickCd<=0){b.tickCd=.10;enemiesOf(dragon).forEach(e=>{const count=b.hitCounts.get(e.id)||0;if(count>=b.maxHits)return;const dx=e.x-b.x,dy=e.y-b.y,along=dx*Math.cos(b.a)+dy*Math.sin(b.a),side=Math.abs(-dx*Math.sin(b.a)+dy*Math.cos(b.a));if(along>=0&&along<=b.range+e.r&&side<=b.width/2+e.r){b.hitCounts.set(e.id,count+1);damage(e,b.tickPower,owner||dragon,"버스트 스트림 다단");spawnHitFlash(e.x,e.y,"#7dd3fc",20);}});}}else if(b.kind==="sweep"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;const p=1-b.life/b.maxLife,swipe=p<.5?p*2:(1-p)*2;b.a=b.base-Math.PI/2+swipe*Math.PI;b.tickCd-=dt;if(b.tickCd<=0){b.tickCd=.11;enemiesOf(dragon).forEach(e=>{const count=b.hitCounts.get(e.id)||0;if(count>=6)return;const dx=e.x-b.x,dy=e.y-b.y,d=Math.hypot(dx,dy),da=Math.abs(Math.atan2(Math.sin(Math.atan2(dy,dx)-b.a),Math.cos(Math.atan2(dy,dx)-b.a)));if(d<=b.range+e.r&&da<.25){b.hitCounts.set(e.id,count+1);const dealt=damage(e,4,owner||dragon,"얼티메이트 버스트 다단");if(dealt>0)spawnFloatingText(e.x,e.y-e.r-10-(count%3)*12,`얼티밋 -${dealt}`,"#7dd3fc");spawnHitFlash(e.x,e.y,"#38bdf8",26);}});}screenShake=Math.max(screenShake,.38);}else if(b.kind==="godRing"){const prev=b.r;b.r+=b.speed*dt;const owner=fighterById(b.ownerId);if(owner)enemiesOf(owner).forEach(e=>{if(b.hit.has(e.id))return;const d=Math.hypot(e.x-b.x,e.y-b.y);if(d+e.r>=prev&&d-e.r<=b.r){b.hit.add(e.id);damage(e,4,owner,"갓 핸드 임팩트");spawnBlast(e.x,e.y,42,"#60a5fa");}});}if(b.life<=0||(b.maxR!==undefined&&b.r>b.maxR))duelBreaths.splice(i,1);}}
+    function updateDuelBreaths(dt){for(let i=duelBreaths.length-1;i>=0;i--){const b=duelBreaths[i];b.life-=dt;if(b.kind==="stream"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;b.tickCd-=dt;if(b.tickCd<=0){b.tickCd=.10;enemiesOf(dragon).forEach(e=>{const count=b.hitCounts.get(e.id)||0;if(count>=b.maxHits)return;const dx=e.x-b.x,dy=e.y-b.y,along=dx*Math.cos(b.a)+dy*Math.sin(b.a),side=Math.abs(-dx*Math.sin(b.a)+dy*Math.cos(b.a));if(along>=0&&along<=b.range+e.r&&side<=b.width/2+e.r){b.hitCounts.set(e.id,count+1);damage(e,b.tickPower,dragon,"버스트 스트림 다단");spawnHitFlash(e.x,e.y,"#7dd3fc",20);}});}}else if(b.kind==="sweep"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;const p=1-b.life/b.maxLife,swipe=p<.5?p*2:(1-p)*2;b.a=b.base-Math.PI/2+swipe*Math.PI;b.tickCd-=dt;if(b.tickCd<=0){b.tickCd=.11;enemiesOf(dragon).forEach(e=>{const count=b.hitCounts.get(e.id)||0;if(count>=6)return;const dx=e.x-b.x,dy=e.y-b.y,d=Math.hypot(dx,dy),da=Math.abs(Math.atan2(Math.sin(Math.atan2(dy,dx)-b.a),Math.cos(Math.atan2(dy,dx)-b.a)));if(d<=b.range+e.r&&da<.25){b.hitCounts.set(e.id,count+1);const dealt=damage(e,4,dragon,"얼티메이트 버스트 다단");if(dealt>0)spawnFloatingText(e.x,e.y-e.r-10-(count%3)*12,`얼티밋 -${dealt}`,"#7dd3fc");spawnHitFlash(e.x,e.y,"#38bdf8",26);}});}screenShake=Math.max(screenShake,.38);}else if(b.kind==="godRing"){const prev=b.r;b.r+=b.speed*dt;const owner=fighterById(b.ownerId);if(owner)enemiesOf(owner).forEach(e=>{if(b.hit.has(e.id))return;const d=Math.hypot(e.x-b.x,e.y-b.y);if(d+e.r>=prev&&d-e.r<=b.r){b.hit.add(e.id);damage(e,4,owner,"갓 핸드 임팩트");spawnBlast(e.x,e.y,42,"#60a5fa");}});}if(b.life<=0||(b.maxR!==undefined&&b.r>b.maxR))duelBreaths.splice(i,1);}}
     function drawDuelCardBack(x, y, angle = 0, scale = 1) {
       ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
       ctx.fillStyle="#4a2115";ctx.strokeStyle="#d6a36b";ctx.lineWidth=1.4;roundRect(ctx,-7,-10,14,20,1.8,true,true);
@@ -2284,142 +2284,142 @@
 
 
     const OSHI = {
-      wallSegments: 6, wallHeal: 6, tourGain: 8, fanDamage: 5, antiDamage: 4, domeGain: 7, gaugeMax: 100,
-      wallEffectCooldown: 2,
-      concertDuration: 10, concertRadius: 135, concertDps: 2, concertStayTime: 5, concertStayDamage: 30,
-      aftershockUnitSeconds: 2, aftershockUnitDamage: 3, aftershockDuration: 5,
-      domeSelfDamage: 35, domeFreeze: 0.75, bleedDuration: 8, bleedDamage: 3
+      gaugeMax: 100,
+      songPeriod: 2,
+      songFameGain: 10,
+      contactFameGain: 4,
+      contactFameCooldown: 1,
+      songLevels: [
+        { radius: 90, damage: 3 },
+        { radius: 110, damage: 4 },
+        { radius: 130, damage: 5 },
+        { radius: 150, damage: 6 }
+      ],
+      debuffDuration: 3,
+      damageMultiplier: 0.8,
+      slowMultiplier: 0.8,
+      concertDuration: 10,
+      concertRadius: 135,
+      concertDps: 2,
+      concertStayTime: 5,
+      concertStayDamage: 30,
+      aftershockUnitSeconds: 2,
+      aftershockUnitDamage: 3,
+      aftershockDuration: 5,
+      domeSelfDamage: 35,
+      domeFreeze: 0.75,
+      bleedDuration: 8,
+      bleedDamage: 3,
+      encoreDuration: 8,
+      encoreRadius: 175,
+      encoreDps: 4,
+      encoreStayDamage: 40
     };
+
     function initOshi(f) {
       f.oshi = {
-        tour: 0, dome: 0,
-        wallStates: new Map(), wallLast: new Map(), wallClaimers: new Map(),
-        concert: 0, concertX: 0, concertY: 0, audience: new Map(),
-        bleed: 0, bleedTick: 1, domeSceneUntil: 0
+        fame: 0,
+        songTimer: OSHI.songPeriod,
+        songLevel: 0,
+        minSongLevel: 0,
+        toursCompleted: 0,
+        domeDone: false,
+        concert: 0,
+        concertX: 0,
+        concertY: 0,
+        audience: new Map(),
+        contactLast: new Map(),
+        isDome: false,
+        encore: false,
+        bleed: 0,
+        bleedTick: 1,
+        domeSceneUntil: 0
       };
     }
-    function oshiWallKey(wall, coordinate) {
-      const start = (wall === "left" || wall === "right") ? arena.y : arena.x;
-      const segSize = arena.size / OSHI.wallSegments;
-      const idx = clamp(Math.floor((coordinate - start) / segSize), 0, OSHI.wallSegments - 1);
-      return `${wall}:${idx}`;
-    }
-    function startOshiTour(f) {
-      const o = f.oshi;
-      if (!o || o.concert > 0) return;
-      o.tour = 0; o.dome = 0;
-      o.concert = OSHI.concertDuration;
-      o.concertX = f.x; o.concertY = f.y;
-      o.audience = new Map();
-      spawnBlast(f.x, f.y, OSHI.concertRadius, "#f472b6");
-      spawnParticles(f.x, f.y, "#f9a8d4", 30);
-      spawnFloatingText(f.x, f.y - f.r - 42, "투어 콘서트!", "#f9a8d4");
-      playSound("magic", 1.0);
-      log(`<strong>${escapeHtml(f.name)}</strong> 투어 콘서트 개막 · 반경 ${OSHI.concertRadius}`, "스킬");
-    }
-    function triggerOshiDome(f) {
-      const o = f.oshi;
-      if (!o) return;
-      o.tour = 0; o.dome = 0;
-      o.domeSceneUntil = performance.now() + 1400;
-      triggerHitStop(OSHI.domeFreeze);
-      screenShake = Math.max(screenShake, 0.55);
-      spawnBlast(f.x, f.y, 105, "#7f1d1d");
-      spawnFloatingText(f.x, f.y - f.r - 48, "돔 공연 축하해.", "#ef4444");
-      playSound("explosion", 0.9);
-      bodyDirectDamage(f, OSHI.domeSelfDamage, f, "도쿄돔 후유증", "#ef4444");
-      if (f.alive) { o.bleed = OSHI.bleedDuration; o.bleedTick = 1; }
-      log(`<strong>${escapeHtml(f.name)}</strong> 도쿄돔 · 자해 ${OSHI.domeSelfDamage} + ${OSHI.bleedDuration}초 출혈`, "스킬");
-    }
-    function oshiWallEffectReady(o, key, actorId) {
-      const effectKey = `${key}|${actorId}`;
-      const last = o.wallLast.get(effectKey);
-      return last == null || battleTime - last >= OSHI.wallEffectCooldown;
-    }
-    function markOshiWallEffect(o, key, actorId) {
-      o.wallLast.set(`${key}|${actorId}`, battleTime);
-    }
-    function applyOshiFanBenefit(f, o) {
-      const before = f.hp;
-      f.hp = Math.min(f.maxHp, f.hp + OSHI.wallHeal);
-      const healed = Math.max(0, f.hp - before);
-      if (healed > 0) {
-        f.healingDone = (f.healingDone || 0) + healed;
-        spawnFloatingText(f.x, f.y - f.r - 20, "+" + healed, "#f9a8d4");
-      }
-      o.tour = Math.min(OSHI.gaugeMax, o.tour + OSHI.tourGain);
-      spawnFloatingText(f.x, f.y - f.r - 36, `투어 +${OSHI.tourGain}`, "#f472b6");
-      if (o.tour >= OSHI.gaugeMax && o.concert <= 0) startOshiTour(f);
-    }
-    function oshiWallCollision(f, wall, coordinate) {
-      if (!f?.alive) return;
-      const owners = fighters.filter(owner => owner.alive && owner.oshi);
-      for (const owner of owners) {
-        const o = owner.oshi;
-        const key = oshiWallKey(wall, coordinate);
-        const state = o.wallStates.get(key);
-        if (owner === f) {
-          if (!state) {
-            o.wallStates.set(key, "candidate");
-            if (!fastSimMode) {
-              spawnParticles(f.x, f.y, "#a855f7", 7);
-              spawnFloatingText(f.x, f.y - f.r - 18, "팬이 되어줘!", "#c084fc");
-            }
-            continue;
-          }
-          if (state === "candidate") {
-            o.wallStates.set(key, "fan");
-            o.wallClaimers.delete(key);
-            markOshiWallEffect(o, key, owner.id);
-            applyOshiFanBenefit(owner, o);
-            if (!fastSimMode) {
-              spawnParticles(f.x, f.y, "#f472b6", 8);
-              spawnFloatingText(f.x, f.y - f.r - 18, "팬!", "#f9a8d4");
-            }
-            continue;
-          }
-          if (state === "fan") {
-            if (!oshiWallEffectReady(o, key, owner.id)) continue;
-            markOshiWallEffect(o, key, owner.id);
-            applyOshiFanBenefit(owner, o);
-          } else if (state === "anti") {
-            if (!oshiWallEffectReady(o, key, owner.id)) continue;
-            markOshiWallEffect(o, key, owner.id);
-            const claimantId = o.wallClaimers.get(key);
-            const source = fighters.find(e => e.id === claimantId) || owner;
-            damage(owner, OSHI.antiDamage, source, "안티팬");
-            o.dome = Math.min(OSHI.gaugeMax, o.dome + OSHI.domeGain);
-            spawnFloatingText(owner.x, owner.y - owner.r - 34, `도쿄돔 +${OSHI.domeGain}`, "#ef4444");
-            o.wallStates.set(key, "candidate");
-            o.wallClaimers.delete(key);
-            if (!fastSimMode) {
-              spawnParticles(owner.x, owner.y, "#a855f7", 7);
-              spawnFloatingText(owner.x, owner.y - owner.r - 18, "다시 관객 후보", "#c084fc");
-            }
-            if (o.dome >= OSHI.gaugeMax && owner.alive) triggerOshiDome(owner);
-          }
-        } else if (!f.isSummon && areEnemies(owner, f)) {
-          if (state === "candidate") {
-            o.wallStates.set(key, "anti");
-            o.wallClaimers.set(key, f.id);
-            if (!fastSimMode) {
-              spawnParticles(f.x, f.y, "#ef4444", 8);
-              spawnFloatingText(f.x, f.y - f.r - 18, "안티팬", "#f87171");
-            }
-          } else if (state === "fan") {
-            if (!oshiWallEffectReady(o, key, f.id)) continue;
-            markOshiWallEffect(o, key, f.id);
-            damage(f, OSHI.fanDamage, owner, "팬덤");
-            o.wallStates.set(key, "candidate");
-            o.wallClaimers.delete(key);
-            if (!fastSimMode) {
-              spawnParticles(f.x, f.y, "#a855f7", 7);
-              spawnFloatingText(f.x, f.y - f.r - 18, "팬덤! → 관객 후보", "#c084fc");
-            }
-          }
-        }
+
+    // v54부터 최애는 벽을 사용하지 않는다. 기존 벽 충돌 호출부와의 호환을 위한 no-op.
+    function oshiWallCollision() {}
+
+    function updateOshiSongDebuffs(f, dt) {
+      const debuffs = f?.oshiSongDebuffs;
+      if (!(debuffs instanceof Map) || debuffs.size === 0) return;
+      for (const [sourceId, time] of [...debuffs.entries()]) {
+        const next = time - dt;
+        if (next <= 0) debuffs.delete(sourceId);
+        else debuffs.set(sourceId, next);
       }
     }
+
+    function oshiSongSlowMultiplier(f) {
+      const debuffs = f?.oshiSongDebuffs;
+      if (!(debuffs instanceof Map) || debuffs.size === 0) return 1;
+      for (const time of debuffs.values()) if (time > 0) return OSHI.slowMultiplier;
+      return 1;
+    }
+
+    function applyOshiSongDebuff(target, source) {
+      if (!target?.alive || !source?.alive) return;
+      if (!(target.oshiSongDebuffs instanceof Map)) target.oshiSongDebuffs = new Map();
+      target.oshiSongDebuffs.set(source.id, OSHI.debuffDuration);
+      if (!fastSimMode) spawnFloatingText(target.x, target.y - target.r - 28, "노래 디버프", "#f9a8d4");
+    }
+
+    // 노래 디버프에 걸린 공격자가 해당 최애에게 주는 모든 피해를 20% 줄인다.
+    // 소수 피해가 생기지 않도록 정수 반올림하며, 감소 뒤에도 최소 피해는 1이다.
+    function oshiReducedIncomingDamage(target, amount, source) {
+      if (!(amount > 0) || !target?.oshi || !source || source === target) return amount;
+      const debuffs = source.oshiSongDebuffs;
+      const remaining = debuffs instanceof Map ? (debuffs.get(target.id) || 0) : 0;
+      if (remaining <= 0) return amount;
+      return Math.max(1, Math.round(amount * OSHI.damageMultiplier));
+    }
+
+    function gainOshiFame(f, amount, text = "") {
+      const o = f?.oshi;
+      if (!o || !f.alive || o.concert > 0 || amount <= 0) return;
+      const before = o.fame;
+      o.fame = Math.min(OSHI.gaugeMax, o.fame + amount);
+      const gained = Math.max(0, o.fame - before);
+      if (gained > 0 && !fastSimMode && text) spawnFloatingText(f.x, f.y - f.r - 38, text, "#f472b6");
+      if (o.fame >= OSHI.gaugeMax && o.concert <= 0) {
+        const dome = o.toursCompleted >= 3 && !o.domeDone;
+        startOshiTour(f, dome);
+      }
+    }
+
+    function recordOshiContact(f, enemy) {
+      const o = f?.oshi;
+      if (!o || !f.alive || !enemy?.alive || o.concert > 0 || !areEnemies(f, enemy)) return;
+      const last = o.contactLast.get(enemy.id);
+      if (last != null && battleTime - last < OSHI.contactFameCooldown) return;
+      o.contactLast.set(enemy.id, battleTime);
+      gainOshiFame(f, OSHI.contactFameGain, `인지도 +${OSHI.contactFameGain}`);
+    }
+
+    function performOshiSong(f) {
+      const o = f?.oshi;
+      if (!o || !f.alive || o.concert > 0) return;
+      const level = clamp(Math.max(o.minSongLevel, o.songLevel), 0, OSHI.songLevels.length - 1);
+      const spec = OSHI.songLevels[level];
+      let hits = 0;
+      enemiesOf(f).forEach(enemy => {
+        if (!enemy.alive) return;
+        if (Math.hypot(enemy.x - f.x, enemy.y - f.y) > spec.radius + enemy.r) return;
+        const dealt = damage(enemy, spec.damage, f, `노래 ${level + 1}단계`);
+        if (dealt <= 0) return;
+        hits += 1;
+        applyOshiSongDebuff(enemy, f);
+        if (!fastSimMode) spawnHitFlash(enemy.x, enemy.y, "#f9a8d4", 24 + level * 5);
+      });
+      if (!fastSimMode) {
+        spawnBlast(f.x, f.y, spec.radius, level >= 3 ? "#ec4899" : "#f9a8d4");
+        spawnParticles(f.x, f.y, level >= 3 ? "#f472b6" : "#fbcfe8", 10 + level * 4);
+        spawnFloatingText(f.x, f.y - f.r - 24, `노래 ${level + 1}단계`, "#f9a8d4");
+      }
+      o.songLevel = Math.min(OSHI.songLevels.length - 1, level + 1);
+      if (hits > 0) gainOshiFame(f, hits * OSHI.songFameGain, `인지도 +${hits * OSHI.songFameGain}`);
+    }
+
     function addOshiAftershock(enemy, source, totalDamage) {
       totalDamage = Math.max(0, Math.round(totalDamage));
       if (!enemy?.alive || totalDamage <= 0) return;
@@ -2427,6 +2427,7 @@
       enemy.oshiAftershocks.push({ source, remaining: totalDamage, ticksLeft: OSHI.aftershockDuration, timer: 1 });
       spawnFloatingText(enemy.x, enemy.y - enemy.r - 24, `후유증 ${totalDamage}`, "#f9a8d4");
     }
+
     function updateOshiAftershock(f, dt) {
       const effects = f.oshiAftershocks;
       if (!effects?.length || !f.alive) return;
@@ -2443,6 +2444,52 @@
         if (effect.remaining <= 0 || effect.ticksLeft <= 0 || !f.alive) effects.splice(i, 1);
       }
     }
+
+    function startOshiTour(f, dome = false) {
+      const o = f?.oshi;
+      if (!o || !f.alive || o.concert > 0) return;
+      o.fame = 0;
+      o.audience = new Map();
+      o.isDome = !!dome;
+      o.encore = false;
+
+      if (dome) {
+        o.domeDone = true;
+        o.domeSceneUntil = performance.now() + 1400;
+        triggerHitStop(OSHI.domeFreeze);
+        screenShake = Math.max(screenShake, 0.55);
+        spawnBlast(f.x, f.y, 105, "#7f1d1d");
+        spawnFloatingText(f.x, f.y - f.r - 48, "돔 공연 축하해.", "#ef4444");
+        playSound("explosion", 0.9);
+        bodyDirectDamage(f, OSHI.domeSelfDamage, f, "도쿄돔 칼 피해", "#ef4444");
+        if (!f.alive) return;
+        o.bleed = OSHI.bleedDuration;
+        o.bleedTick = 1;
+        log(`<strong>${escapeHtml(f.name)}</strong> 도쿄돔 개막 · 칼 피해 ${OSHI.domeSelfDamage} + ${OSHI.bleedDuration}초 출혈`, "스킬");
+      }
+
+      o.concert = OSHI.concertDuration;
+      o.concertX = f.x;
+      o.concertY = f.y;
+      spawnBlast(f.x, f.y, OSHI.concertRadius, dome ? "#ef4444" : "#f472b6");
+      spawnParticles(f.x, f.y, dome ? "#fecaca" : "#f9a8d4", 30);
+      spawnFloatingText(f.x, f.y - f.r - 42, dome ? "도쿄돔 투어!" : "투어 콘서트!", dome ? "#f87171" : "#f9a8d4");
+      playSound("magic", 1.0);
+      if (!dome) log(`<strong>${escapeHtml(f.name)}</strong> 투어 콘서트 개막 · 반경 ${OSHI.concertRadius}`, "스킬");
+    }
+
+    function startOshiEncore(f) {
+      const o = f?.oshi;
+      if (!o || !f.alive || !o.isDome || o.encore || o.concert <= 0) return;
+      o.encore = true;
+      o.concert += OSHI.encoreDuration;
+      spawnBlast(f.x, f.y, OSHI.encoreRadius, "#fb7185");
+      spawnParticles(f.x, f.y, "#fecdd3", 36);
+      spawnFloatingText(f.x, f.y - f.r - 52, "공연 연장!", "#fecaca");
+      playSound("magic", 1.35);
+      log(`<strong>${escapeHtml(f.name)}</strong> 출혈 생존 · 도쿄돔 공연 연장`, "스킬");
+    }
+
     function finishOshiTour(f) {
       const o = f.oshi;
       if (!o) return;
@@ -2453,72 +2500,87 @@
         const totalDamage = units * OSHI.aftershockUnitDamage;
         addOshiAftershock(enemy, f, totalDamage);
       }
+      const wasDome = o.isDome;
       o.audience.clear();
-      spawnFloatingText(f.x, f.y - f.r - 28, "투어 종료", "#fbcfe8");
+      o.toursCompleted += 1;
+      o.minSongLevel = Math.min(OSHI.songLevels.length - 1, o.toursCompleted);
+      o.songLevel = o.minSongLevel;
+      o.songTimer = OSHI.songPeriod;
+      o.isDome = false;
+      o.encore = false;
+      spawnFloatingText(f.x, f.y - f.r - 28, `${wasDome ? "도쿄돔" : "투어"} 종료 · 노래 ${o.minSongLevel + 1}단계부터`, "#fbcfe8");
     }
+
     function updateOshi(f, dt) {
       const o = f.oshi;
       if (!o || !f.alive) return;
+
       if (o.bleed > 0) {
+        const wasBleeding = o.bleed > 0;
         o.bleed = Math.max(0, o.bleed - dt);
         o.bleedTick -= dt;
         while (o.bleedTick <= 0 && f.alive) {
           o.bleedTick += 1;
           bodyDirectDamage(f, OSHI.bleedDamage, f, "도쿄돔 출혈", "#ef4444");
         }
+        if (wasBleeding && o.bleed <= 0 && f.alive && o.isDome && o.concert > 0) startOshiEncore(f);
       }
-      if (o.concert <= 0) return;
-      const before = o.concert;
-      o.concert = Math.max(0, o.concert - dt);
-      o.concertX = f.x; o.concertY = f.y;
-      enemiesOf(f).forEach(enemy => {
-        if (!enemy.alive) return;
-        let entry = o.audience.get(enemy.id);
-        if (!entry) { entry = { total: 0, streak: 0, tick: 0 }; o.audience.set(enemy.id, entry); }
-        const inside = Math.hypot(enemy.x - f.x, enemy.y - f.y) <= OSHI.concertRadius + enemy.r;
-        if (!inside) { entry.streak = 0; entry.tick = 0; return; }
-        entry.total += dt; entry.streak += dt; entry.tick += dt;
-        while (entry.tick >= 1 && enemy.alive) {
-          entry.tick -= 1;
-          damage(enemy, OSHI.concertDps, f, "투어 공연");
-        }
-        while (entry.streak >= OSHI.concertStayTime && enemy.alive) {
-          entry.streak -= OSHI.concertStayTime;
-          damage(enemy, OSHI.concertStayDamage, f, "5초 연속 관람");
-          spawnBlast(enemy.x, enemy.y, 45, "#f472b6");
-        }
-      });
-      if (before > 0 && o.concert <= 0) finishOshiTour(f);
+      if (!f.alive) return;
+
+      if (o.concert > 0) {
+        const before = o.concert;
+        o.concert = Math.max(0, o.concert - dt);
+        o.concertX = f.x;
+        o.concertY = f.y;
+        const radius = o.encore ? OSHI.encoreRadius : OSHI.concertRadius;
+        const dps = o.encore ? OSHI.encoreDps : OSHI.concertDps;
+        const stayDamage = o.encore ? OSHI.encoreStayDamage : OSHI.concertStayDamage;
+        enemiesOf(f).forEach(enemy => {
+          if (!enemy.alive) return;
+          let entry = o.audience.get(enemy.id);
+          if (!entry) { entry = { total: 0, streak: 0, tick: 0 }; o.audience.set(enemy.id, entry); }
+          const inside = Math.hypot(enemy.x - f.x, enemy.y - f.y) <= radius + enemy.r;
+          if (!inside) { entry.streak = 0; entry.tick = 0; return; }
+          entry.total += dt;
+          entry.streak += dt;
+          entry.tick += dt;
+          while (entry.tick >= 1 && enemy.alive) {
+            entry.tick -= 1;
+            damage(enemy, dps, f, o.encore ? "도쿄돔 연장 공연" : "투어 공연");
+          }
+          while (entry.streak >= OSHI.concertStayTime && enemy.alive) {
+            entry.streak -= OSHI.concertStayTime;
+            damage(enemy, stayDamage, f, o.encore ? "도쿄돔 5초 연속 관람" : "5초 연속 관람");
+            spawnBlast(enemy.x, enemy.y, 45, o.encore ? "#ef4444" : "#f472b6");
+          }
+        });
+        if (before > 0 && o.concert <= 0) finishOshiTour(f);
+        return;
+      }
+
+      o.songTimer -= dt;
+      while (o.songTimer <= 0 && f.alive && o.concert <= 0) {
+        o.songTimer += OSHI.songPeriod;
+        performOshiSong(f);
+      }
     }
+
     function drawOshiArenaEffects() {
-      fighters.filter(f => f.oshi).forEach(f => {
+      fighters.filter(f => f.oshi && f.alive).forEach(f => {
         const o = f.oshi;
-        if (o.wallStates.size) {
-          const seg = arena.size / OSHI.wallSegments;
-          ctx.save(); ctx.lineWidth = 8; ctx.lineCap = "round";
-          o.wallStates.forEach((state, key) => {
-            const [wall, raw] = key.split(":"); const i = Number(raw); const a = i * seg + 5, b = (i + 1) * seg - 5;
-            const color = state === "fan" ? "#f472b6" : state === "anti" ? "#ef4444" : "#a855f7";
-            ctx.strokeStyle = color; ctx.shadowColor = color; ctx.shadowBlur = state === "candidate" ? 10 : 15;
-            ctx.beginPath();
-            if (wall === "top") { ctx.moveTo(arena.x + a, arena.y + 4); ctx.lineTo(arena.x + b, arena.y + 4); }
-            else if (wall === "bottom") { ctx.moveTo(arena.x + a, arena.y2 - 4); ctx.lineTo(arena.x + b, arena.y2 - 4); }
-            else if (wall === "left") { ctx.moveTo(arena.x + 4, arena.y + a); ctx.lineTo(arena.x + 4, arena.y + b); }
-            else { ctx.moveTo(arena.x2 - 4, arena.y + a); ctx.lineTo(arena.x2 - 4, arena.y + b); }
-            ctx.stroke();
-          });
-          ctx.restore();
-        }
-        if (o.concert > 0 && f.alive) {
-          const pulse = 0.5 + 0.5 * Math.sin(battleTime * 8);
-          ctx.save();
-          ctx.beginPath(); ctx.rect(arena.x, arena.y, arena.size, arena.size); ctx.clip();
-          ctx.fillStyle = `rgba(244,114,182,${0.08 + pulse * 0.04})`; ctx.strokeStyle = `rgba(249,168,212,${0.62 + pulse * 0.28})`; ctx.lineWidth = 5;
-          ctx.beginPath(); ctx.arc(f.x, f.y, OSHI.concertRadius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          ctx.restore();
-        }
+        if (o.concert <= 0) return;
+        const pulse = 0.5 + 0.5 * Math.sin(battleTime * 8);
+        const radius = o.encore ? OSHI.encoreRadius : OSHI.concertRadius;
+        ctx.save();
+        ctx.beginPath(); ctx.rect(arena.x, arena.y, arena.size, arena.size); ctx.clip();
+        ctx.fillStyle = o.encore ? `rgba(239,68,68,${0.10 + pulse * 0.05})` : `rgba(244,114,182,${0.08 + pulse * 0.04})`;
+        ctx.strokeStyle = o.encore ? `rgba(248,113,113,${0.72 + pulse * 0.24})` : `rgba(249,168,212,${0.62 + pulse * 0.28})`;
+        ctx.lineWidth = o.encore ? 7 : 5;
+        ctx.beginPath(); ctx.arc(f.x, f.y, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.restore();
       });
     }
+
     function drawOshiDomeOverlay() {
       const now = performance.now();
       const host = fighters.find(f => f.oshi && f.oshi.domeSceneUntil > now);
@@ -2531,6 +2593,7 @@
       ctx.fillText("돔 공연 축하해.", arena.x + arena.size / 2, arena.y + arena.size / 2);
       ctx.restore();
     }
+
     function drawOshiCharacter(f) {
       ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.r / 20, f.r / 20);
       ctx.fillStyle = "#f5d0fe"; ctx.strokeStyle = "#ec4899"; ctx.lineWidth = 2.5;
@@ -3345,6 +3408,7 @@
     }
 
     const patchNotes = [
+      "v54: 최애 전면 리워크. 벽·팬·회복 시스템을 삭제하고 2초 주기의 성장형 원형 노래와 인지도 게이지를 도입했다. 노래 적중 1명당 인지도10, 적 접촉은 대상별 1초마다4를 얻고 100에서 투어가 열린다. 노래 적중자는 3초간 이속과 최애에게 주는 모든 피해가 20% 감소하며 피해는 정수·최소1로 처리된다. 투어 종료마다 다음 노래의 최소 단계가 상승하고, 3회 투어 후 다음 인지도100은 도쿄돔으로 전환된다. 돔은 칼 피해35와 8초 출혈 뒤 생존 시 공연이 연장되어 반경·피해가 강화된다.",
       "v53: 최애 미세 버프. 안티팬 벽에 최애가 닿을 때 받는 피해를 5→4로 낮췄다. 팬 회복·팬 피해·투어·후유증·도쿄돔 수치는 유지한다.",
       "v52: 최애 팬 벽 일회성 공격으로 조정. 분홍색 팬 벽에 적이 닿아 팬덤 피해를 받으면 해당 벽은 즉시 보라색 관객 후보로 돌아간다. 팬 확정 회복 6·투어 8과 기존 투어·후유증·도쿄돔 수치는 유지.",
       "v51: 최애 팬덤 상호작용 조정. 관객 후보 생성 자체에는 투어 보상이 없으며, 팬 확정 순간 회복 6·투어 8을 즉시 1회 획득한다. 팬 벽에 적이 닿으면 피해 5, 안티팬 벽에서 최애가 피해 5와 도쿄돔 게이지를 받은 뒤 해당 벽은 보라색 관객 후보로 돌아간다.",
@@ -3433,7 +3497,7 @@
     }
 
     function characterDamageInfo(c) {
-      if (c.id === "oshi") return { damage: "팬 벽 적 접촉 5 / 안티팬 벽 최애 접촉 4 / 투어 초당2 · 5초 연속 체류30 / 후유증: 체류 2초당 총3을 5초 DOT / 도쿄돔 자해35 + 출혈3×8", tick: "벽 한 면 6구간 · 팬 확정 즉시 HP+6·투어+8 / 팬 재접촉 HP+6·투어+8 / 안티팬 피격 후 관객 후보로 복귀", tip: "후보 생성 자체로는 투어 게이지를 얻지 않는다. 팬 확정 순간 회복과 투어를 즉시 얻는다. 팬 벽은 적에게 피해를 준 뒤 보라색 관객 후보로 돌아가며, 안티팬 벽도 최애에게 피해와 도쿄돔 게이지를 준 뒤 관객 후보로 돌아간다." };
+      if (c.id === "oshi") return { damage: "노래 1~4단계 피해 3/4/5/6 · 반경 90/110/130/150 / 투어 초당2 · 5초 연속 체류30 / 후유증: 체류 2초당 총3을 5초 DOT / 도쿄돔 칼35 + 출혈3×8 / 공연 연장 반경175·초당4·5초40", tick: "노래 2초 · 노래 적중 1명당 인지도+10 · 적 접촉 대상별 1초마다+4 · 인지도100에 투어", tip: "노래 적중자는 3초간 이동속도 20% 감소 및 최애에게 주는 모든 피해 20% 감소(감소 후 최소 피해 1). 최대 체력 비례 피해와 푸른 눈의 백룡 등 소환수 피해에도 적용된다. 투어 3회를 마친 뒤 다시 인지도100을 채우면 도쿄돔이 시작되며, 출혈 종료까지 생존하면 공연이 연장된다." };
       if (c.id === "justice_ally") return { damage: "버스트 스트림 2×7 / 얼티밋 버스트 4×최대6 / 갓 핸드 크러셔 30", tick: "개시6초 · 카드 사용/드로우9초 · 공격7.5초 · 오벨리스크 초당 체력-9", tip: "융합 중 소재는 무적. 융합체는 주기적으로 얼티밋 버스트를 사용한다. 마지막 소환수의 치명상을 릴리스해 오벨리스크를 소환하며, 예고 원형 범위의 적에게 피해와 둔화를 준다." };
       if (c.id === "logo_doctor") return { damage: "박사 무공격 / 헐크크 스매시 28·벽충돌 14·점프 착지 22 / 스마트 스매시 11·벽충돌 4", tick: "헐크크 분노 300 · 초당 -10 · 점프 6.5초", tip: "박사 HP 0에서 헐크크로 100% 변신. 분노 0에서 스마트 헐크크 체력 90/180으로 이어지며," };
       if (c.id === "captain") return { damage: "투척 방패 10 · 보유 중 충돌공격 5 · 투척 중 강펀치 13", tick: "방패 6초 / 재캐치 후 0.3초 재투척 / 적·벽 총 5회", tip: "20초 동안 회수하지 못하면 피해 없는 귀환 방패로 바뀐다. 비행 방패는 0.45초 캐치 잠금, 정지 방패 회수만 6초 쿨." };
@@ -4604,11 +4668,11 @@
       }
       if (f.oshi) {
         const o = f.oshi;
-        const counts = { candidate: 0, fan: 0, anti: 0 };
-        o.wallStates.forEach(state => { if (counts[state] != null) counts[state]++; });
-        return { ratio: clamp(o.tour / OSHI.gaugeMax, 0, 1), className: "skill-fill", text: o.concert > 0 ? `투어 공연 · ${o.concert.toFixed(1)}초` : `투어 ${Math.floor(o.tour)}/${OSHI.gaugeMax}`,
-          extraBarsHtml: `<div class="bar" title="도쿄돔 게이지"><div class="bar-fill rage-fill" style="width:${clamp(o.dome / OSHI.gaugeMax, 0, 1) * 100}%"></div></div>`,
-          extraTextHtml: `<div class="status-skill-label">도쿄돔 ${Math.floor(o.dome)}/${OSHI.gaugeMax}${o.bleed > 0 ? ` · 출혈 ${o.bleed.toFixed(1)}초` : ""} · 관객후보 ${counts.candidate} · 팬 ${counts.fan} · 안티팬 ${counts.anti}</div>` };
+        const songStage = Math.min(OSHI.songLevels.length, (o.songLevel || 0) + 1);
+        const showTours = Math.min(3, o.toursCompleted || 0);
+        const concertName = o.isDome ? (o.encore ? "도쿄돔 연장" : "도쿄돔 공연") : "투어 공연";
+        return { ratio: clamp(o.fame / OSHI.gaugeMax, 0, 1), className: "skill-fill", text: o.concert > 0 ? `${concertName} · ${o.concert.toFixed(1)}초` : `인지도 ${Math.floor(o.fame)}/${OSHI.gaugeMax}`,
+          extraTextHtml: `<div class="status-skill-label">노래 ${songStage}단계 · 투어 ${showTours}/3${o.domeDone ? " · 돔 공연 완료" : ""}${o.bleed > 0 ? ` · 출혈 ${o.bleed.toFixed(1)}초` : ""}${o.encore ? " · 공연 연장" : ""}</div>` };
       }
       if (f.tano) return { ratio: f.tano.snapped?clamp(1-f.tano.lossClock/TANO.lossPeriod,0,1):clamp(1-f.tano.next/TANO.spawn,0,1), className: "skill-fill", text: "스톤 " + f.tano.stones.length + "/6 · " + (f.tano.snapped ? "소실 " + Math.ceil(f.tano.lossClock) + "초" : f.tano.spawned === 5 && f.tano.stones.length < 5 ? "남은 스톤 획득 대기" : Math.ceil(f.tano.next) + "초 후 등장"),
         extraBarsHtml:`<div class="bar" title="획득한 스톤">${f.tano.stones.map((id,n)=>{const stone=stoneTypes.find(s=>s.id===id);return `<div class="stone-segment" title="${stone.name} 스톤" style="left:${n*100/6}%;width:${100/6}%;background:${stone.color}"></div>`;}).join("")}</div>`,
@@ -6158,6 +6222,7 @@
       if (!target || !target.alive || (target.dodoVoid || 0) > 0 || target.tano?.hidden > 0) return 0;
       if ((target.duelMonster?.invuln || 0) > 0 || target.duelMonster?.fusing) { spawnFloatingText(target.x,target.y-target.r-22,"무적","#fde68a"); return 0; }
       if (tryHeroLeonGuardBlock(target, reason)) return 0;
+      amount = oshiReducedIncomingDamage(target, amount, source);
       if (target.iron) {
         const armor = absorbIronDamage(target, amount, source, reason);
         amount = armor.remaining;
@@ -6393,6 +6458,7 @@
       // 모로 방패 반격도 유발하지 않는다.
       if (!target || !target.alive || (target.tano?.hidden > 0 && reason !== "스톤 소실")) return 0;
       if (tryHeroLeonGuardBlock(target, reason)) return 0;
+      amount = oshiReducedIncomingDamage(target, amount, source);
       if (target.iron) {
         const armor = absorbIronDamage(target, amount, source, reason);
         amount = armor.remaining;
@@ -7009,8 +7075,9 @@
       const slow = f.freeze > 0 ? 0.42 : 1;
       const gardenSlow = minaGardenSlowMultiplier(f);
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
+      const oshiSlow = oshiSongSlowMultiplier(f);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
-      return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow;
+      return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * oshiSlow;
     }
 
     function useSkill(f, label) {
@@ -7738,6 +7805,7 @@
 
     function updateFighter(f, dt) {
       if (!f.alive) return;
+      updateOshiSongDebuffs(f, dt);
       updateOshiAftershock(f, dt);
       if (!f.alive) return;
       if (f.duelMonster) updateDuelMonster(f, dt);
@@ -7949,6 +8017,7 @@
       const slow = f.freeze > 0 ? 0.42 : 1;
       const gardenSlow = minaGardenSlowMultiplier(f);
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
+      const oshiSlow = oshiSongSlowMultiplier(f);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
 
       if ((f.joltStop || 0) > 0) {
@@ -7959,8 +8028,8 @@
 
       if (f.logo && moveLogoJump(f, dt)) return;
       recoverOwnMoveSpeed(f, dt);
-      f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * dt;
-      f.y += f.vy * slow * boost * gardenSlow * irisGlassSlow * dt;
+      f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * oshiSlow * dt;
+      f.y += f.vy * slow * boost * gardenSlow * irisGlassSlow * oshiSlow * dt;
 
       bounceWalls(f);
       // 기본 작은 탄환 공격 제거: 피해는 스킬에서만 발생한다.
@@ -8115,6 +8184,8 @@
             if (areEnemies(a, b)) {
               recordJabamiContact(a, b);
               recordJabamiContact(b, a);
+              recordOshiContact(a, b);
+              recordOshiContact(b, a);
               passJabamiBomb(a, b);
               ironDashContact(a, b);
               ironDashContact(b, a);
