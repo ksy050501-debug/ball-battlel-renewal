@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v55</title>
+  <title>볼배틀 리뉴얼 v56</title>
   <style>
     :root {
       --bg: #020617;
@@ -875,7 +875,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v54</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v56</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1012,7 +1012,8 @@
   <script>
     const $ = (id) => document.getElementById(id);
     const canvas = $("arena");
-    const ctx = canvas.getContext("2d");
+    let ctx = canvas.getContext("2d");
+    const inGamePortraitCache = new Map();
     const W = canvas.width;
     const H = canvas.height;
 
@@ -1339,6 +1340,7 @@
       ctx.restore();
       if(rage)drawRing(f.x,f.y,f.r+5,"#fb7185",3);
       drawHealthBar(f);drawName(f);
+      if (f.portraitOnly) return;
       const ratio=rock?f.lisa.rock/100:f.lisa.patience/LISA.patience;
       ctx.fillStyle="#111827";ctx.fillRect(f.x-29,f.y-f.r-15,58,4);
       ctx.fillStyle=rage?"#fb7185":rock?"#f472b6":"#a78bfa";ctx.fillRect(f.x-29,f.y-f.r-15,58*ratio,4);
@@ -3408,6 +3410,7 @@
     }
 
     const patchNotes = [
+      "v56: 모든 도감 및 피해량 상세창 초상화를 인게임 그리기 함수 기반 이미지로 통일. 전투 시작 외형을 표시하고 체력바·이름·게이지는 숨긴다. 전투 수치와 동작은 유지.",
       "v55: 최애 공격 템포 상향. 노래 1~4단계 피해를 3/4/5/6→4/6/8/10으로 올리고, 노래 적중 1명당 인지도를 +10→+15로 높였다. 접촉 인지도·디버프·투어·도쿄돔 수치는 유지한다.",
       "v54: 최애 전면 리워크. 벽·팬·회복 시스템을 삭제하고 2초 주기의 성장형 원형 노래와 인지도 게이지를 도입했다. 노래 적중 1명당 인지도10, 적 접촉은 대상별 1초마다4를 얻고 100에서 투어가 열린다. 노래 적중자는 3초간 이속과 최애에게 주는 모든 피해가 20% 감소하며 피해는 정수·최소1로 처리된다. 투어 종료마다 다음 노래의 최소 단계가 상승하고, 3회 투어 후 다음 인지도100은 도쿄돔으로 전환된다. 돔은 칼 피해35와 8초 출혈 뒤 생존 시 공연이 연장되어 반경·피해가 강화된다.",
       "v53: 최애 미세 버프. 안티팬 벽에 최애가 닿을 때 받는 피해를 5→4로 낮췄다. 팬 회복·팬 피해·투어·후유증·도쿄돔 수치는 유지한다.",
@@ -3592,7 +3595,7 @@
       const info = characterDamageInfo(c);
 
       $("damageModalTitle").innerHTML = `
-        <div class="modal-portrait" style="background:${c.color};">${c.id === "lisa" ? lisaPortrait() : c.id === "tano" ? tanoPortrait() : c.id === "iron_mask" ? ironPortrait() : c.id === "justice_ally" ? justiceAllyPortrait() : escapeHtml(c.mark)}</div>
+        <div class="modal-portrait" style="background:#0f172a;">${inGamePortrait(c)}</div>
         <div>
           <h2 style="margin:0;">${escapeHtml(c.name)}</h2>
           <div style="color:#94a3b8;font-size:12px;margin-top:2px;">${escapeHtml(c.skillName)}</div>
@@ -3619,6 +3622,40 @@
       return "";
     }
 
+    // 도감도 실제 전투 렌더러를 사용한다. 미리보기는 전투 상태/RNG를 생성하거나 변경하지 않는다.
+    function inGamePortrait(c) {
+      if (!inGamePortraitCache.has(c.id)) {
+        const imageCanvas = document.createElement("canvas");
+        imageCanvas.width = imageCanvas.height = 160;
+        const portraitCtx = imageCanvas.getContext("2d");
+        const view = c.id === "lisa" ? 80 : 64;
+        portraitCtx.scale(160 / view, 160 / view);
+        portraitCtx.translate(view / 2, view / 2 - (c.id === "lisa" ? 10 : 0));
+        const preview = {
+          ...c, id: "portrait_" + c.id, baseId: c.id, portraitOnly: true,
+          x: 0, y: 0, r: 16, vx: 0, vy: 0, alive: true, isSummon: false,
+          hp: c.hp, maxHp: c.hp, shieldHp: 0, poisonTicks: [], burningTicks: []
+        };
+        if (c.id === "lisa") preview.lisa = { mode: "lady", patience: 0, rock: 0 };
+        if (c.id === "oshi") preview.oshi = {};
+        if (c.id === "iron_mask") preview.iron = { suit: "basic", dash: 0, assembly: 0, punch: null };
+        if (c.id === "tano") preview.tano = { stones: [], hidden: 0, reform: 0 };
+        if (c.id === "captain") preview.captain = { hasShield: true, punch: null };
+        if (c.id === "jabami") preview.jabami = { debt: 0 };
+        if (c.id === "justice_ally") preview.duelist = { equipped: false, hand: [] };
+        if (c.id === "logo_doctor") preview.logo = { mode: "doctor", airHeight: 0 };
+        const gameCtx = ctx;
+        try {
+          ctx = portraitCtx;
+          drawFighter(preview);
+          inGamePortraitCache.set(c.id, imageCanvas.toDataURL("image/png"));
+        } finally {
+          ctx = gameCtx;
+        }
+      }
+      return '<img src="' + inGamePortraitCache.get(c.id) + '" alt="' + escapeHtml(c.name) + ' 인게임 모습" width="160" height="160" style="display:block;width:100%;height:100%;object-fit:contain;border-radius:inherit;" />';
+    }
+
     function renderCharacterList() {
       const list = $("characterList");
       list.innerHTML = "";
@@ -3635,7 +3672,7 @@
         card.className = "char-card" + (isSelected ? " selected" : "") + (team ? ` team-${team.toLowerCase()}` : "");
         card.innerHTML = `
           <div class="selected-mark">${battleMode === "team" && team ? team : "✓"}</div>
-          <div class="portrait" style="background:${c.color};">${c.id === "lisa" ? lisaPortrait() : c.id === "tano" ? tanoPortrait() : c.id === "iron_mask" ? ironPortrait() : c.id === "captain" ? captainPortrait() : c.id === "jabami" ? jabamiPortrait() : c.id === "justice_ally" ? justiceAllyPortrait() : c.id === "logo_doctor" ? logoPortrait() : c.mark}</div>
+          <div class="portrait" style="background:#0f172a;">${inGamePortrait(c)}</div>
           <div>
             <div class="char-top">
               <div>
@@ -4126,7 +4163,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v45`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v56`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -4152,7 +4189,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v45`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v56`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -10967,6 +11004,7 @@
     }
 
     function drawHealthBar(f) {
+      if (f.portraitOnly) return;
       const w = f.role === "보스" ? 74 : 58;
       const h = 7;
       const x = f.x - w / 2;
@@ -11030,6 +11068,7 @@
     }
 
     function drawName(f) {
+      if (f.portraitOnly) return;
       ctx.font = "800 12px system-ui";
       ctx.textAlign = "center";
       ctx.textBaseline = "alphabetic";
