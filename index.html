@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v58</title>
+  <title>볼배틀 리뉴얼 v59</title>
   <style>
     :root {
       --bg: #020617;
@@ -875,7 +875,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v58</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v59</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1374,11 +1374,11 @@
     function logoPortrait() {
       return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="로고 박사"><circle cx="24" cy="24" r="22" fill="#dbeafe"/><path d="M6 48l5-12 9-4 8 0 9 4 5 12" fill="#f8fafc" stroke="#64748b" stroke-width="2"/><path d="M12 13q12-15 24 0l-2 10H14z" fill="#3f2c25"/><ellipse cx="24" cy="25" rx="12" ry="14" fill="#e8b899"/><path d="M14 24h9m2 0h9m-11 0h2" stroke="#334155" stroke-width="2"/><path d="M16 21h7v6h-7zm9 0h7v6h-7z" fill="none" stroke="#334155" stroke-width="1.5"/><path d="M18 31q6 4 12 0" fill="none" stroke="#6b3f2c" stroke-width="1.5"/><path d="M20 34l4 9 4-9" fill="#22c55e"/></svg>';
     }
-    function initLogo(f) { f.logo = { mode: "doctor", jumpCd: LOGO.jumpPeriod, jump: null, smashCd: 0, airHeight: 0 }; }
+    function initLogo(f) { f.logo = { mode: "doctor", jumpCd: LOGO.jumpPeriod, jump: null, smashCd: 0, airHeight: 0, fistTime: 0, fistAngle: 0, fistLanding: false }; }
     function changeLogoForm(f, mode) {
       const l=f.logo;
       if (!l || l.mode===mode) return false;
-      l.mode=mode; l.jump=null; l.airHeight=0; l.smashCd=0;
+      l.mode=mode; l.jump=null; l.airHeight=0; l.smashCd=0; l.fistTime=0; l.fistLanding=false;
       f.name = mode==="hulk" ? "헐크크" : "스마트 헐크크";
       f.punchHold=0; f.punchImpact=null; f.punchFlight=0; f.punchSource=null;
       if (mode==="hulk") {
@@ -1402,6 +1402,7 @@
     function tickLogo(f,dt) {
       const l=f.logo;if(!l)return;
       l.smashCd=Math.max(0,l.smashCd-dt);
+      l.fistTime=Math.max(0,(l.fistTime||0)-dt);
       if(l.mode!=="hulk")return;
       f.hp=Math.max(0,f.hp-LOGO.rageDrain*dt);
       if(advanceLogoFormOnLethal(f))return;
@@ -1423,7 +1424,7 @@
       const p=clamp(1-j.timer/.65,0,1);
       f.x=j.startX+(j.targetX-j.startX)*p;f.y=j.startY+(j.targetY-j.startY)*p;l.airHeight=Math.sin(p*Math.PI)*35;
       if(j.timer>0)return true;
-      l.jump=null;l.airHeight=0;
+      l.jump=null;l.airHeight=0;l.fistTime=.28;l.fistLanding=true;
       const owner=f;
       enemiesOf(f).forEach(e=>{if(Math.hypot(e.x-f.x,e.y-f.y)<=LOGO.jumpRadius+e.r){const dealt=damage(e,LOGO.jumpDamage,owner,"헐크크 점프 착지");if(dealt>0&&e.alive)logoKnock(f,e,500,8,.25);}});
       spawnBlast(f.x,f.y,LOGO.jumpRadius,"#4ade80");spawnParticles(f.x,f.y,"#bbf7d0",28);playSound("explosion",1.3);screenShake=Math.max(screenShake,.55);
@@ -1437,6 +1438,7 @@
       const l=f.logo;if(!l || l.mode==="doctor" || l.jump || l.smashCd>0 || f.tanoStop>0 || !target?.alive || !areEnemies(f,target))return;
       const huge=l.mode==="hulk",power=huge?LOGO.smash:LOGO.smartSmash;
       l.smashCd=huge?1.05:1.2;
+      if(huge){l.fistTime=.30;l.fistLanding=false;l.fistAngle=Math.atan2(target.y-f.y,target.x-f.x);}
       const dealt=damage(target,power,f,huge?"헐크크 스매시":"스마트 헐크크 스매시");
       if(dealt>0&&target.alive)logoKnock(f,target,huge?760:380,huge?LOGO.wall:LOGO.smartWall,huge?.42:.22);
       triggerHitStop(huge?.18:.08);spawnHitFlash(target.x,target.y,huge?"#bbf7d0":"#dcfce7",huge?86:45);spawnBlast(target.x,target.y,huge?75:40,"#4ade80");
@@ -3490,6 +3492,7 @@
     }
 
     const patchNotes = [
+      "v59: 헐크크 평상시 고정 주먹 제거. 점프 준비·비행·착지와 스매시 순간에만 근육질 팔/주먹 표시. 스매시는 대상 방향으로 뻗었다 복귀하며 피해·주기·피격 범위는 유지.",
       "v58: 최애 노래 피해 4/6/8/10→4/5/7/9로 소폭 하향. 나머지 수치 유지. 헐크크는 근육·치켜든 주먹·거친 표정, 스마트 헐크크는 짧은 머리·검은 안경·회색 집업 후드로 재디자인. 변신 및 충돌 반경 유지.",
       "v57: 최애 외형을 참고 이미지 기반으로 재디자인. 보라색 긴 머리·분홍 별눈·토끼 리본·분홍 프릴 의상·하트 브로치 적용. 도감과 인게임 공유, 피격 반경 및 전투 수치 유지.",
       "v56: 모든 도감 및 피해량 상세창 초상화를 인게임 그리기 함수 기반 이미지로 통일. 전투 시작 외형을 표시하고 체력바·이름·게이지는 숨긴다. 전투 수치와 동작은 유지.",
@@ -4245,7 +4248,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v58`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v59`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -4271,7 +4274,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v58`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v59`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -10737,6 +10740,49 @@
         ctx.fillStyle="#9fc4da";[-1,1].forEach(s=>{ctx.beginPath();ctx.moveTo(s*6,10);ctx.lineTo(s*14,20);ctx.lineTo(s*8,18);ctx.lineTo(s*3,12);ctx.closePath();ctx.fill();ctx.stroke();});
       }
       ctx.restore();if(kind==="obelisk"){const aura=.55+.45*Math.sin(performance.now()/230);ctx.save();ctx.strokeStyle=`rgba(96,165,250,${.25+.25*aura})`;ctx.shadowColor="#1d4ed8";ctx.shadowBlur=20;ctx.lineWidth=2+2*aura;ctx.beginPath();ctx.arc(f.x,f.y,f.r+20+4*aura,0,Math.PI*2);ctx.stroke();ctx.restore();}if(kind==="obelisk"&&f.duelMonster.crusherCast>0){const pulse=.55+.45*Math.sin(performance.now()/55);ctx.save();ctx.fillStyle=`rgba(37,99,235,${.08+.08*pulse})`;ctx.strokeStyle="#60a5fa";ctx.lineWidth=4;ctx.setLineDash([12,7]);ctx.beginPath();ctx.arc(f.x,f.y,165,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}if(f.duelMonster.invuln>0){drawRing(f.x,f.y,f.r+10,"#fde68a",4);drawRing(f.x,f.y,f.r+18,"rgba(96,165,250,.7)",2);}drawHealthBar(f);drawName(f);}
+    // 점프/스매시 전용 시각 효과. 공격 판정이나 피격 반경은 추가하지 않는다.
+    function drawLogoActionFists(f) {
+      const l=f.logo;
+      if(l.mode!=="hulk" || (!l.jump && !(l.fistTime>0))) return;
+      const arm=(angle,extension)=>{
+        ctx.save();ctx.rotate(angle);ctx.translate(12,2);
+        const muscle=ctx.createLinearGradient(0,-9,0,10);
+        muscle.addColorStop(0,"#a1b58b");muscle.addColorStop(.4,"#668764");muscle.addColorStop(1,"#304d38");
+        ctx.fillStyle=muscle;ctx.strokeStyle="#263f2c";ctx.lineWidth=1.3;
+        ctx.beginPath();ctx.moveTo(-3,-6);
+        ctx.bezierCurveTo(1,-14,11,-12,13,-7);
+        ctx.quadraticCurveTo(17,-9,extension,-6);ctx.lineTo(extension,7);
+        ctx.quadraticCurveTo(13,11,9,7);ctx.quadraticCurveTo(0,13,-3,6);
+        ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.strokeStyle="#3a5c40";ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(4,-6);ctx.quadraticCurveTo(10,-3,7,4);
+        ctx.moveTo(12,5);ctx.quadraticCurveTo(17,3,extension-2,5);ctx.stroke();
+        ctx.translate(extension,0);
+        ctx.fillStyle=muscle;ctx.strokeStyle="#2b422e";ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.moveTo(-3,-6);ctx.quadraticCurveTo(0,-10,5,-9);
+        ctx.lineTo(10,-8);ctx.quadraticCurveTo(14,-6,13,0);
+        ctx.lineTo(12,7);ctx.quadraticCurveTo(5,11,-2,6);ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.strokeStyle="#3a563a";ctx.lineWidth=.9;
+        for(let n=0;n<3;n++){ctx.beginPath();ctx.moveTo(3+n*3,-7);ctx.lineTo(3+n*3,-2);ctx.stroke();}
+        ctx.beginPath();ctx.moveTo(-1,4);ctx.quadraticCurveTo(4,-1,7,3);
+        ctx.quadraticCurveTo(8,6,4,7);ctx.stroke();
+        ctx.strokeStyle="rgba(212,232,179,.55)";ctx.lineWidth=.8;
+        ctx.beginPath();ctx.moveTo(1,-7);ctx.lineTo(9,-6);ctx.stroke();
+        ctx.restore();
+      };
+      if(l.jump){
+        const lift=l.jump.phase==="prepare"?clamp(1-l.jump.timer/.45,0,1):1;
+        arm(-2.5-lift*.15,10+lift*6);arm(-.64+lift*.15,10+lift*6);
+      }else if(l.fistLanding){
+        const pulse=Math.sin(clamp(l.fistTime/.28,0,1)*Math.PI/2);
+        arm(2.25,11+pulse*8);arm(.89,11+pulse*8);
+      }else{
+        const t=clamp(1-l.fistTime/.30,0,1);
+        const extension=10+17*(t<.25?t/.25:1-(t-.25)/.75);
+        arm(l.fistAngle||0,extension);
+      }
+    }
+
     function drawLogoCharacter(f) {
       const mode=f.logo.mode,doctor=mode==="doctor",smart=mode==="smart",air=f.logo.airHeight||0;
       if(air>0){ctx.save();ctx.fillStyle="rgba(0,0,0,.35)";ctx.beginPath();ctx.ellipse(f.x,f.y+12,f.r+8,7,0,0,Math.PI*2);ctx.fill();ctx.restore();}
@@ -10775,7 +10821,7 @@
           ctx.moveTo(12,13);ctx.lineTo(11,22);ctx.stroke();
           ctx.fillStyle="#d2d0cc";ctx.fillRect(-.8,21,1.6,3);
         }else{
-          // 상체의 큰 승모근과 가슴, 화면 왼쪽으로 치켜든 주먹.
+          // 평상시에는 상체의 승모근과 가슴만 표시한다.
           ctx.fillStyle=skin;ctx.strokeStyle="#263f31";ctx.lineWidth=1.3;
           ctx.beginPath();ctx.moveTo(-8,-1);ctx.quadraticCurveTo(-11,5,-20,6);
           ctx.bezierCurveTo(-31,9,-28,23,-18,26);ctx.quadraticCurveTo(0,31,18,26);
@@ -10788,15 +10834,7 @@
           ctx.strokeStyle="rgba(176,196,145,.40)";ctx.lineWidth=1;
           ctx.beginPath();ctx.moveTo(-17,10);ctx.quadraticCurveTo(-7,7,-2,12);
           ctx.moveTo(17,10);ctx.quadraticCurveTo(7,7,2,12);ctx.stroke();
-          ctx.fillStyle=skin;ctx.strokeStyle="#283e30";ctx.lineWidth=1.3;
-          ctx.beginPath();ctx.moveTo(-22,18);ctx.quadraticCurveTo(-31,11,-29,1);
-          ctx.lineTo(-24,-3);ctx.lineTo(-17,2);ctx.lineTo(-15,15);ctx.closePath();ctx.fill();ctx.stroke();
-          ctx.save();ctx.translate(-25,1);ctx.rotate(-.28);
-          ctx.beginPath();ctx.moveTo(-7,-6);ctx.quadraticCurveTo(-8,-10,-3,-10);
-          ctx.lineTo(6,-9);ctx.quadraticCurveTo(10,-5,7,4);ctx.lineTo(-4,5);ctx.closePath();ctx.fill();ctx.stroke();
-          ctx.strokeStyle="#38503b";ctx.lineWidth=.8;
-          for(let n=0;n<3;n++){ctx.beginPath();ctx.moveTo(-4+n*3,-8);ctx.lineTo(-4+n*3,-3);ctx.stroke();}
-          ctx.beginPath();ctx.moveTo(7,-2);ctx.quadraticCurveTo(1,-5,-1,0);ctx.stroke();ctx.restore();
+
         }
         // 무거운 턱과 짧은 곱슬머리.
         ctx.fillStyle=skin;ctx.strokeStyle="#35432e";ctx.lineWidth=1;
@@ -10846,6 +10884,7 @@
           ctx.moveTo(-4,8);ctx.lineTo(4,8);ctx.stroke();
         }
       }
+      drawLogoActionFists(f);
       ctx.restore();drawHealthBar(f);drawName(f);
       if(mode==="hulk")drawRing(f.x,f.y,f.r+7,"rgba(239,68,68,.62)",2);
     }
