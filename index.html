@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v64</title>
+  <title>볼배틀 리뉴얼 v65</title>
   <style>
     :root {
       --bg: #020617;
@@ -1452,8 +1452,8 @@
     let captainShields = [];
 
     const HINTA = { startDelay: 5, respawn: 5, ballRadius: 10, pickupBonus: 24,
-      quickDamage: 12, freakDamage: 24, quickSpeed: 380, freakSpeed: 570, maxContacts: 3,
-      dashWait: 4, dashSpeed: 480, dashDamage: 10, concussion: 2, slowMultiplier: .6 };
+      quickDamage: 18, freakDamage: 50, quickSpeed: 380, freakSpeed: 570, maxContacts: 3,
+      dashWait: 4, dashSpeed: 480, dashDamage: 12, concussion: 2, slowMultiplier: .6 };
     function initHinta(f) {
       f.hinta = { timer: HINTA.startDelay, started: false, ball: null, pose: 0, shotAngle: 0, lastShot: "", dash: null, wait: 0 };
     }
@@ -1487,8 +1487,8 @@
       const freak=Math.random()<.5,speed=freak?HINTA.freakSpeed:HINTA.quickSpeed;
       let angle;
       if(freak){
-        // 빠른 대신 시전 당시 방향에 20~40도 오차. 발사 후 유도하지 않는다.
-        angle=Math.atan2(target.y-b.y,target.x-b.x)+(Math.random()<.5?-1:1)*rand(Math.PI/9,Math.PI*2/9);
+        // 빠른 대신 시전 당시 방향에 10~25도 오차. 발사 후 유도하지 않는다.
+        angle=Math.atan2(target.y-b.y,target.x-b.x)+(Math.random()<.5?-1:1)*rand(Math.PI/18,Math.PI*5/36);
       }else{
         // 약한 속공은 짧게 이동을 예측해 명중을 돕되, 발사 후 각도는 고정한다.
         const lead=Math.min(.45,dist(b,target)/speed);
@@ -3749,6 +3749,7 @@
     }
 
     const patchNotes = [
+      "v65: 힌타 공격력 상향. 3터치·재등장5초·대쉬 대기4초는 유지하고 속공12→18, 괴짜 속공24→50, 괴짜 속공 오차20~40도→10~25도, 대쉬 피해10→12로 조정.",
       "v64: 힌타 벽 반사 시 접촉 잠금을 해제해 같은 적 재타격 명시 보장(총3회 유지). 대기 공을 4초간 못 잡으면 직선 대쉬480, 경로 적에게 돌진당 1회 피해10·측면 넉백·넉백 후 뇌진탕2초(이속40% 감소). 공 접촉 시 스파이크, 비행 공 재타격 금지 유지.",
       "v63: 힌타 추가(HP170·이속3.0). 시작5초 후 휘슬과 랜덤 배구공. 넓은 접촉 범위로 속공12/괴짜 속공24를 반반 발동. 벽·적 접촉 합계3회 후 소멸·5초 재등장, 비행 중 재타격 불가. 주황 뾰족머리·10번 유니폼·노랑/남색 배구공 드로잉과 도감/상태창 적용.",
       "v62: 최애 도쿄돔을 네 번째에서 세 번째 공연으로 앞당김. 일반 투어 2회 완료 후 다음 인지도100에서 발동. 전투당 돔 1회·자해·출혈·연장 조건 및 모든 피해/방어 수치 유지.",
@@ -5034,7 +5035,7 @@
         const h=f.hinta,b=h.ball;
         return {ratio:b?(b.flying?clamp((HINTA.maxContacts-b.contacts)/HINTA.maxContacts,0,1):1):clamp(1-h.timer/(h.started?HINTA.respawn:HINTA.startDelay),0,1),
           className:"skill-fill",text:b?(h.dash?"대쉬! · 배구공으로 돌진":b.flying?h.lastShot+" · 남은 접촉 "+Math.max(0,HINTA.maxContacts-b.contacts)+"회":"배구공 대기 · 대쉬까지 "+Math.max(0,HINTA.dashWait-h.wait).toFixed(1)+"초"):(h.started?"다음 배구공 ":"경기 시작 ")+h.timer.toFixed(1)+"초",
-          extraTextHtml:'<div class="status-skill-label">속공12 / 괴짜 속공24 · 돌진10＋뇌진탕2초</div>'};
+          extraTextHtml:'<div class="status-skill-label">속공18 / 괴짜 속공50 · 돌진12＋뇌진탕2초</div>'};
       }
       if(f.logo){const l=f.logo;if(l.mode==="doctor")return {ratio:0,className:"skill-fill",text:"로고 박사 · 공격 없음",extraTextHtml:'<div class="status-skill-label">체력 0 → 헐크크 변신</div>'};if(l.mode==="hulk")return {ratio:clamp(1-l.jumpCd/LOGO.jumpPeriod,0,1),className:"skill-fill",text:l.jump?"헐크크 · 상대에게 점프 중":`헐크크 · 다음 점프 ${l.jumpCd.toFixed(1)}초`,extraTextHtml:`<div class="status-skill-label" style="color:#fca5a5">분노 초당 -${LOGO.rageDrain} · 스매시 ${LOGO.smash} · 벽충돌 ${LOGO.wall}</div>`};return {ratio:clamp(1-l.smashCd/1.2,0,1),className:"skill-fill",text:"스마트 헐크크 · 약한 스매시",extraTextHtml:'<div class="status-skill-label">점프 없음</div>'};}
       if(f.duelist){const d=f.duelist;if(!d.equipped)return {ratio:clamp(1-d.timer/6,0,1),className:"skill-fill",text:`듀얼 개시 ${d.timer.toFixed(1)}초`};const play=clamp(1-d.playCd/9,0,1);return {ratio:play,className:"skill-fill",text:d.fusion?`융합 진행 ${d.fusion.t.toFixed(1)}초`:d.emptyTimer>0?`소환수 전멸 · 덱 초기화 ${(9-d.emptyTimer).toFixed(1)}초`:`다음 카드 사용·드로우 ${d.playCd.toFixed(1)}초`};}
