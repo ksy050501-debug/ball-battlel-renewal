@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - ".github/ball-battle-v68.py"
+      - ".github/workflows/ball-battle-v68.yml"
 
 permissions:
   contents: write
