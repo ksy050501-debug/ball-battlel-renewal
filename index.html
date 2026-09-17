@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v63</title>
+  <title>볼배틀 리뉴얼 v64</title>
   <style>
     :root {
       --bg: #020617;
@@ -875,7 +875,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v63</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v64</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1063,7 +1063,7 @@
     // 기존 스킬 처리 분기는 엔진 호환성을 위해 보존되며 해당 ID가 없으면 활성화되지 않는다.
     const characters = [
       { id: "hinta", name: "힌타", mark: "10", role: "애니", color: "#f97316", hp: 170, attack: 12, speed: 3.0, range: 0,
-        skillName: "속공 · 괴짜 속공", condition: "5초 뒤 경기 시작 · 배구공 접촉 시 무작위 스파이크", desc: "넓은 접촉 범위로 공을 잡아 속공 또는 괴짜 속공! 벽·적 접촉 합계 3회 후 공이 사라지고 5초 뒤 랜덤 재등장. 비행 중 재타격은 불가." },
+        skillName: "속공 · 괴짜 속공", condition: "5초 뒤 경기 시작 · 배구공 접촉 시 무작위 스파이크", desc: "공을 4초간 못 잡으면 직선 대쉬! 경로의 적을 밀어내고 뇌진탕 둔화. 넓은 접촉 범위로 공을 잡아 속공 또는 괴짜 속공! 벽·적 접촉 합계 3회 후 공이 사라지고 5초 뒤 랜덤 재등장. 비행 중 재타격은 불가." },
       { id: "lisa", name: "리사", mark: "♫", role: "애니", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
         skillName: "숙녀의 인내 · 파워코드", condition: "피해 40 또는 5초 무피격 → 인내 상승", desc: "숙녀는 공격하지 않는다. 오래 아무 일도 없으면 따분함으로 인내가 오른다. 록은 최근접 적 방향 음파, 마지막 4초는 폭주." },
       { id: "oshi", name: "최애", mark: "★", role: "애니", color: "#ec4899", hp: 170, attack: 0, speed: 2.7, range: 180,
@@ -1452,9 +1452,10 @@
     let captainShields = [];
 
     const HINTA = { startDelay: 5, respawn: 5, ballRadius: 10, pickupBonus: 24,
-      quickDamage: 12, freakDamage: 24, quickSpeed: 380, freakSpeed: 570, maxContacts: 3 };
+      quickDamage: 12, freakDamage: 24, quickSpeed: 380, freakSpeed: 570, maxContacts: 3,
+      dashWait: 4, dashSpeed: 480, dashDamage: 10, concussion: 2, slowMultiplier: .6 };
     function initHinta(f) {
-      f.hinta = { timer: HINTA.startDelay, started: false, ball: null, pose: 0, shotAngle: 0, lastShot: "" };
+      f.hinta = { timer: HINTA.startDelay, started: false, ball: null, pose: 0, shotAngle: 0, lastShot: "", dash: null, wait: 0 };
     }
     function hintaWhistle() {
       if (fastSimMode || !canPlaySound("hintaWhistle", .3)) return;
@@ -1464,6 +1465,7 @@
     }
     function spawnHintaBall(f) {
       const h=f.hinta, r=HINTA.ballRadius;
+      h.wait=0;h.dash=null;
       h.ball={x:rand(arena.x+r+8,arena.x2-r-8),y:rand(arena.y+r+8,arena.y2-r-8),
         r,vx:0,vy:0,spin:0,flying:false,contacts:0,age:0,touching:new Set()};
       if(!h.started){
@@ -1476,7 +1478,8 @@
     function retireHintaBall(f) {
       const b=f.hinta.ball;
       if(b && !fastSimMode)spawnParticles(b.x,b.y,"#fde047",8);
-      f.hinta.ball=null;f.hinta.timer=HINTA.respawn;
+      endHintaDash(f);
+      f.hinta.ball=null;f.hinta.timer=HINTA.respawn;f.hinta.wait=0;
     }
     function spikeHintaBall(f) {
       const h=f.hinta,b=h.ball,target=nearestEnemy(f).enemy;
@@ -1493,6 +1496,7 @@
         const ty=clamp(target.y+(target.vy||0)*lead,arena.y+target.r,arena.y2-target.r);
         angle=Math.atan2(ty-b.y,tx-b.x);
       }
+      endHintaDash(f);h.wait=0;
       b.flying=true;b.freak=freak;b.damage=freak?HINTA.freakDamage:HINTA.quickDamage;
       b.vx=Math.cos(angle)*speed;b.vy=Math.sin(angle)*speed;b.age=0;
       h.pose=.4;h.shotAngle=angle;h.lastShot=freak?"괴짜 속공!":"속공!";
@@ -1500,6 +1504,69 @@
       spawnBlast(b.x,b.y,freak?42:28,freak?"#fb923c":"#fde047");
       playSound("hit",freak?1.2:.7);
     }
+
+    function endHintaDash(f) {
+      const h=f.hinta,d=h?.dash;if(!d)return;
+      h.dash=null;h.wait=0;
+      if(!(f.punchFlight>0)&&!(f.punchHold>0)){
+        const speed=(f.baseSpeed||3)*44;f.vx=d.dx*speed;f.vy=d.dy*speed;
+      }
+    }
+    function startHintaDash(f) {
+      const h=f.hinta,b=h?.ball;if(!b||b.flying||h.dash)return;
+      const length=dist(f,b);if(length<.001)return;
+      h.dash={dx:(b.x-f.x)/length,dy:(b.y-f.y)/length,left:length,
+        ball:b,hit:new Set()};
+      h.wait=0;
+      spawnFloatingText(f.x,f.y-f.r-38,"대쉬!","#fb923c");
+      playSound("wind",.8);
+    }
+    function moveHintaDash(f,dt) {
+      const h=f.hinta,d=h?.dash;if(!d)return false;
+      if(!h.ball||h.ball!==d.ball||h.ball.flying){endHintaDash(f);return false;}
+      let remaining=dt;
+      while(remaining>1e-7 && h.dash && f.alive){
+        const step=Math.min(remaining,1/120);remaining-=step;
+        const slow=(f.freeze>0?.42:1)*oshiSongSlowMultiplier(f)*(f.hintaConcussion>0?HINTA.slowMultiplier:1);
+        const advance=Math.min(d.left,HINTA.dashSpeed*slow*step);
+        f.vx=d.dx*HINTA.dashSpeed;f.vy=d.dy*HINTA.dashSpeed;
+        f.x+=d.dx*advance;f.y+=d.dy*advance;d.left-=advance;
+        for(const e of enemiesOf(f)){
+          if(!e.alive||d.hit.has(e.id)||e.tano?.hidden>0||dist(f,e)>f.r+e.r)continue;
+          d.hit.add(e.id);
+          const dealt=damage(e,HINTA.dashDamage,f,"비켜!!!");
+          if(dealt>0 && e.alive){
+            // 돌진 진행선을 비우도록 옆으로 밀어내며, 공을 향한 직선 경로는 유지한다.
+            const cross=d.dx*(e.y-f.y)-d.dy*(e.x-f.x),side=cross<0?-1:1;
+            const nx=-d.dy*side,ny=d.dx*side;
+            e.vx=nx*480;e.vy=ny*480;e.punchFlight=Math.max(e.punchFlight||0,.25);
+            e.punchSource=null;e.punchWallPower=0;
+            e.hintaConcussion=Math.max(e.hintaConcussion||0,HINTA.concussion);
+            spawnFloatingText(e.x,e.y-e.r-32,"뇌진탕 · 둔화 2초","#fde68a");
+          }
+          spawnFloatingText(f.x,f.y-f.r-40,"비켜!!!","#fdba74");
+          spawnHitFlash(e.x,e.y,"#fb923c",36);playSound("hit",.9);
+        }
+        if(!f.alive){h.dash=null;return true;}
+        if(dist(f,h.ball)<=f.r+h.ball.r+HINTA.pickupBonus){
+          spikeHintaBall(f);if(h.dash)endHintaDash(f);return true;
+        }
+        if(d.left<=.01||f.x-f.r<arena.x||f.x+f.r>arena.x2||f.y-f.r<arena.y||f.y+f.r>arena.y2){
+          bounceWalls(f);endHintaDash(f);return true;
+        }
+      }
+      return true;
+    }
+    function drawHintaConcussion(f) {
+      if(!(f.hintaConcussion>0)||f.portraitOnly)return;
+      ctx.save();ctx.font="bold 10px system-ui";ctx.textAlign="center";ctx.fillStyle="#fde047";
+      for(let i=0;i<3;i++){
+        const a=battleTime*5+i*Math.PI*2/3;
+        ctx.fillText("★",f.x+Math.cos(a)*(f.r+5),f.y-f.r-10+Math.sin(a)*3);
+      }
+      ctx.restore();
+    }
+
     function updateHintaBalls(dt) {
       fighters.forEach(f=>{
         const h=f.hinta;if(!h)return;
@@ -1513,7 +1580,9 @@
         const b=h.ball;b.age+=dt;b.spin+=dt*(b.flying?14:1.5);
         if(!b.flying){
           const locked=f.tanoStop>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
+          if(!h.dash)h.wait+=dt;
           if(!locked && b.age>.15 && dist(f,b)<=f.r+b.r+HINTA.pickupBonus)spikeHintaBall(f);
+          else if(!locked && !h.dash && h.wait>=HINTA.dashWait)startHintaDash(f);
           return;
         }
         // 발사 중에는 주인이 닿아도 재캐치/재타격하지 않는다.
@@ -1527,7 +1596,7 @@
           else if(b.x+b.r>arena.x2){b.x=arena.x2-b.r;b.vx=-Math.abs(b.vx);walls++;}
           if(b.y-b.r<arena.y){b.y=arena.y+b.r;b.vy=Math.abs(b.vy);walls++;}
           else if(b.y+b.r>arena.y2){b.y=arena.y2-b.r;b.vy=-Math.abs(b.vy);walls++;}
-          if(walls){b.contacts+=walls;playSound("reflect",.55);}
+          if(walls){b.contacts+=walls;b.touching.clear();playSound("reflect",.55);} // 벽 반사 후 같은 상대도 재타격 가능.
           if(b.contacts>=HINTA.maxContacts){retireHintaBall(f);break;}
           for(const id of [...b.touching]){
             const e=fighterById(id);
@@ -1584,7 +1653,13 @@
       });
     }
     function drawHintaCharacter(f) {
-      const h=f.hinta,pose=h?.pose||0,lift=pose>0?Math.sin((1-pose/.4)*Math.PI)*9:0;
+      const h=f.hinta;
+      if(h?.dash && !f.portraitOnly){
+        ctx.save();ctx.strokeStyle="rgba(251,146,60,.65)";ctx.lineWidth=3;
+        for(let n=-1;n<=1;n++){ctx.beginPath();ctx.moveTo(f.x-h.dash.dx*32-h.dash.dy*n*7,f.y-h.dash.dy*32+h.dash.dx*n*7);ctx.lineTo(f.x-h.dash.dx*18-h.dash.dy*n*7,f.y-h.dash.dy*18+h.dash.dx*n*7);ctx.stroke();}
+        ctx.restore();
+      }
+      const pose=h?.pose||0,lift=pose>0?Math.sin((1-pose/.4)*Math.PI)*9:0;
       ctx.save();ctx.translate(f.x,f.y-lift);ctx.scale(f.r/20,f.r/20);
       // 남색/주황 10번 유니폼과 주황색 뾰족머리. 장식은 피격 범위에 포함되지 않는다.
       ctx.fillStyle="#172240";ctx.strokeStyle="#10182b";ctx.lineWidth=1.2;
@@ -3674,6 +3749,7 @@
     }
 
     const patchNotes = [
+      "v64: 힌타 벽 반사 시 접촉 잠금을 해제해 같은 적 재타격 명시 보장(총3회 유지). 대기 공을 4초간 못 잡으면 직선 대쉬480, 경로 적에게 돌진당 1회 피해10·측면 넉백·넉백 후 뇌진탕2초(이속40% 감소). 공 접촉 시 스파이크, 비행 공 재타격 금지 유지.",
       "v63: 힌타 추가(HP170·이속3.0). 시작5초 후 휘슬과 랜덤 배구공. 넓은 접촉 범위로 속공12/괴짜 속공24를 반반 발동. 벽·적 접촉 합계3회 후 소멸·5초 재등장, 비행 중 재타격 불가. 주황 뾰족머리·10번 유니폼·노랑/남색 배구공 드로잉과 도감/상태창 적용.",
       "v62: 최애 도쿄돔을 네 번째에서 세 번째 공연으로 앞당김. 일반 투어 2회 완료 후 다음 인지도100에서 발동. 전투당 돔 1회·자해·출혈·연장 조건 및 모든 피해/방어 수치 유지.",
       "v61: 헐크크 점프·착지 주먹 제거. 스매시 주먹은 캡틴/헐크버스터처럼 본체 중심의 월드 좌표에서 상대 방향으로 표시하도록 수정. 근육질 팔·손등·손가락 마디로 재디자인. 전투 수치 유지.",
@@ -3772,7 +3848,7 @@
     }
 
     function characterDamageInfo(c) {
-      if (c.id === "hinta") return {damage:"속공 12 / 괴짜 속공 24 · 각 50% 확률",tick:"첫 공 5초 · 공 소멸 후 5초 재등장 · 벽/적 합계 3회 접촉",tip:"속공은 짧은 이동 예측 조준·속도380. 괴짜 속공은 조준 오차 ±20~40도·속도570. 발사 후 유도 없음. 공 반경10, 습득 범위는 본체+공 반경에24 추가. 비행 공은 재타격할 수 없고, 세 번째 접촉이 적이면 피해 후 소멸한다. 모서리 두 벽은 2회로 센다."};
+      if (c.id === "hinta") return {damage:"속공 12 / 괴짜 속공 24 · 각 50% 확률 / 대쉬 충돌 10",tick:"첫 공 5초 · 공 소멸 후 5초 재등장 · 벽/적 합계 3회 접촉",tip:"대기 공을 4초간 못 잡으면 속도480으로 직선 돌진. 적별 돌진당 1회 피해10·측면 넉백, 넉백 후 2초간 이속40% 감소. 벽 반사 후 같은 적도 다시 피해를 받는다. 속공은 짧은 이동 예측 조준·속도380. 괴짜 속공은 조준 오차 ±20~40도·속도570. 발사 후 유도 없음. 공 반경10, 습득 범위는 본체+공 반경에24 추가. 비행 공은 재타격할 수 없고, 세 번째 접촉이 적이면 피해 후 소멸한다. 모서리 두 벽은 2회로 센다."};
       if (c.id === "oshi") return { damage: "노래 1~4단계 피해 4/5/7/9 · 반경 90/110/130/150 / 투어 초당2 · 누적 체류 3초마다15 / 후유증: 체류 2초당 총3을 5초 DOT / 도쿄돔 칼35 + 출혈3×8 / 공연 연장 반경175·초당4·누적 3초마다20", tick: "노래 2초 · 노래 적중 1명당 인지도+15 · 적 접촉 대상별 1초마다+4 · 인지도100에 투어", tip: "체류 추가 피해는 적별로 한 번의 투어 안에서 누적하며 이탈해도 유지된다. 누적 3초마다 발동하고 다음 투어에서는 초기화된다. 노래 적중자는 3초간 이동속도 20% 감소 및 최애에게 주는 모든 피해 20% 감소(감소 후 최소 피해 1). 최대 체력 비례 피해와 푸른 눈의 백룡 등 소환수 피해에도 적용된다. 투어 2회를 마친 뒤 다시 인지도100을 채우면 도쿄돔이 시작되며, 출혈 종료까지 생존하면 공연이 연장된다." };
       if (c.id === "justice_ally") return { damage: "버스트 스트림 2×7 / 얼티밋 버스트 4×최대6 / 갓 핸드 크러셔 30", tick: "개시6초 · 카드 사용/드로우9초 · 공격7.5초 · 오벨리스크 초당 체력-9", tip: "융합 중 소재는 무적. 융합체는 주기적으로 얼티밋 버스트를 사용한다. 마지막 소환수의 치명상을 릴리스해 오벨리스크를 소환하며, 예고 원형 범위의 적에게 피해와 둔화를 준다." };
       if (c.id === "logo_doctor") return { damage: "박사 무공격 / 헐크크 스매시 28·벽충돌 14·점프 착지 22 / 스마트 스매시 11·벽충돌 4", tick: "헐크크 분노 300 · 초당 -10 · 점프 6.5초", tip: "박사 HP 0에서 헐크크로 100% 변신. 분노 0에서 스마트 헐크크 체력 90/180으로 이어지며," };
@@ -4437,7 +4513,7 @@
       fighters = [];
       spawnTeamFighter("A");
       spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v63`, "시작");
+      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v64`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -4463,7 +4539,7 @@
       teamState = null;
       const positions = spawnPositions(chosen.length);
       fighters = chosen.map((c, i) => makeFighter(c, positions[i], i));
-      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v63`, "시작");
+      log(`전투 시작! 참가자 ${chosen.length}명 · 맵 크기 ${arena.size}×${arena.size} · 기본공격 없음 · v64`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -4957,8 +5033,8 @@
       if(f.hinta){
         const h=f.hinta,b=h.ball;
         return {ratio:b?(b.flying?clamp((HINTA.maxContacts-b.contacts)/HINTA.maxContacts,0,1):1):clamp(1-h.timer/(h.started?HINTA.respawn:HINTA.startDelay),0,1),
-          className:"skill-fill",text:b?(b.flying?h.lastShot+" · 남은 접촉 "+Math.max(0,HINTA.maxContacts-b.contacts)+"회":"배구공 접촉 대기"):(h.started?"다음 배구공 ":"경기 시작 ")+h.timer.toFixed(1)+"초",
-          extraTextHtml:'<div class="status-skill-label">속공12 / 괴짜 속공24 · 비행 중 재타격 불가</div>'};
+          className:"skill-fill",text:b?(h.dash?"대쉬! · 배구공으로 돌진":b.flying?h.lastShot+" · 남은 접촉 "+Math.max(0,HINTA.maxContacts-b.contacts)+"회":"배구공 대기 · 대쉬까지 "+Math.max(0,HINTA.dashWait-h.wait).toFixed(1)+"초"):(h.started?"다음 배구공 ":"경기 시작 ")+h.timer.toFixed(1)+"초",
+          extraTextHtml:'<div class="status-skill-label">속공12 / 괴짜 속공24 · 돌진10＋뇌진탕2초</div>'};
       }
       if(f.logo){const l=f.logo;if(l.mode==="doctor")return {ratio:0,className:"skill-fill",text:"로고 박사 · 공격 없음",extraTextHtml:'<div class="status-skill-label">체력 0 → 헐크크 변신</div>'};if(l.mode==="hulk")return {ratio:clamp(1-l.jumpCd/LOGO.jumpPeriod,0,1),className:"skill-fill",text:l.jump?"헐크크 · 상대에게 점프 중":`헐크크 · 다음 점프 ${l.jumpCd.toFixed(1)}초`,extraTextHtml:`<div class="status-skill-label" style="color:#fca5a5">분노 초당 -${LOGO.rageDrain} · 스매시 ${LOGO.smash} · 벽충돌 ${LOGO.wall}</div>`};return {ratio:clamp(1-l.smashCd/1.2,0,1),className:"skill-fill",text:"스마트 헐크크 · 약한 스매시",extraTextHtml:'<div class="status-skill-label">점프 없음</div>'};}
       if(f.duelist){const d=f.duelist;if(!d.equipped)return {ratio:clamp(1-d.timer/6,0,1),className:"skill-fill",text:`듀얼 개시 ${d.timer.toFixed(1)}초`};const play=clamp(1-d.playCd/9,0,1);return {ratio:play,className:"skill-fill",text:d.fusion?`융합 진행 ${d.fusion.t.toFixed(1)}초`:d.emptyTimer>0?`소환수 전멸 · 덱 초기화 ${(9-d.emptyTimer).toFixed(1)}초`:`다음 카드 사용·드로우 ${d.playCd.toFixed(1)}초`};}
@@ -6460,7 +6536,7 @@
     function clearDefeatedFighterArtifacts(target) {
       if (!target) return;
       if (target.lisa) target.lisa.waves.length = 0;
-      if (target.hinta) target.hinta.ball = null;
+      if (target.hinta) {target.hinta.ball = null;target.hinta.dash=null;}
       if (target.tano) target.tano.drops.length = 0;
       captainShields = captainShields.filter(o => o.owner !== target);
       ironObjects = ironObjects.filter(o => o.owner !== target && o.ownerId !== target.id);
@@ -7394,7 +7470,7 @@
       const slow = f.freeze > 0 ? 0.42 : 1;
       const gardenSlow = minaGardenSlowMultiplier(f);
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
-      const oshiSlow = oshiSongSlowMultiplier(f);
+      const oshiSlow = oshiSongSlowMultiplier(f) * (f.hintaConcussion > 0 ? HINTA.slowMultiplier : 1);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
       return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * oshiSlow;
     }
@@ -8124,6 +8200,9 @@
 
     function updateFighter(f, dt) {
       if (!f.alive) return;
+      // 넉백 비행이 끝난 뒤부터 2초간 둔화한다. 경직 중에도 정상 만료된다.
+      if(!(f.punchFlight>0))f.hintaConcussion=Math.max(0,(f.hintaConcussion||0)-dt);
+      if(f.hinta?.dash && (f.tanoStop>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f)))endHintaDash(f);
       updateOshiSongDebuffs(f, dt);
       updateOshiAftershock(f, dt);
       if (!f.alive) return;
@@ -8336,7 +8415,7 @@
       const slow = f.freeze > 0 ? 0.42 : 1;
       const gardenSlow = minaGardenSlowMultiplier(f);
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
-      const oshiSlow = oshiSongSlowMultiplier(f);
+      const oshiSlow = oshiSongSlowMultiplier(f) * (f.hintaConcussion > 0 ? HINTA.slowMultiplier : 1);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
 
       if ((f.joltStop || 0) > 0) {
@@ -8345,6 +8424,7 @@
         return;
       }
 
+      if (f.hinta && moveHintaDash(f, dt)) return;
       if (f.logo && moveLogoJump(f, dt)) return;
       recoverOwnMoveSpeed(f, dt);
       f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * oshiSlow * dt;
@@ -11077,6 +11157,7 @@
       if(mode==="hulk")drawRing(f.x,f.y,f.r+7,"rgba(239,68,68,.62)",2);
     }
     function drawFighter(f) {
+      drawHintaConcussion(f);
       drawPowerFist(f);
       drawIronSuit(f);
       if (f.duelMonster) { drawDuelMonster(f); return; }
