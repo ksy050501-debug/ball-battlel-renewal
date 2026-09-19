@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v71</title>
+  <title>볼배틀 리뉴얼 v72</title>
   <style>
     :root {
       --bg: #020617;
@@ -875,7 +875,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v71</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v72</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1766,13 +1766,13 @@
       ctx.rotate(angle);
       ctx.scale(scale, scale);
       ctx.lineCap = "round";
-      ctx.strokeStyle = "#29221e";
+      ctx.strokeStyle = "#b69b76";
       ctx.lineWidth = 3.2;
       ctx.beginPath();
       ctx.moveTo(-24, 0);
       ctx.lineTo(25, 0);
       ctx.stroke();
-      ctx.fillStyle = "#3f332c";
+      ctx.fillStyle = "#887155";
       [-17, -6, 7, 18].forEach((px, i) => {
         ctx.beginPath();
         ctx.ellipse(px, 0, i === 0 ? 5 : 4, i === 0 ? 5.5 : 4.5, 0, 0, Math.PI * 2);
@@ -1793,35 +1793,50 @@
     }
 
     function drawRiddleFiendfyre(f) {
-      const r = f.riddle;
-      if (!f.alive || r.horcruxActive || r.fiendActive <= 0) return;
-      const radius = riddleFiendRadius(f);
-      const elder = r.elderBuff > 0;
-      const pulse = .5 + .5 * Math.sin(battleTime * 9);
-      ctx.save();
-      ctx.beginPath(); ctx.rect(arena.x, arena.y, arena.size, arena.size); ctx.clip();
-      ctx.strokeStyle = elder ? `rgba(251,146,60,${.65 + pulse*.25})` : `rgba(239,68,68,${.60 + pulse*.25})`;
-      ctx.lineWidth = 4;
-      ctx.shadowColor = elder ? "#fb923c" : "#ef4444";
-      ctx.shadowBlur = 18;
-      ctx.beginPath(); ctx.arc(f.x, f.y, radius, 0, Math.PI * 2); ctx.stroke();
-      for (let i = 0; i < 6; i++) {
-        const a = battleTime * 1.9 + i * Math.PI * 2 / 6;
-        const hx = f.x + Math.cos(a) * radius;
-        const hy = f.y + Math.sin(a) * radius;
-        const tx = f.x + Math.cos(a - .28) * (radius - 22);
-        const ty = f.y + Math.sin(a - .28) * (radius - 22);
-        ctx.strokeStyle = i % 2 ? "#fb923c" : "#ef4444";
-        ctx.lineWidth = 7;
-        ctx.beginPath(); ctx.moveTo(tx, ty); ctx.quadraticCurveTo(f.x + Math.cos(a-.15)*(radius+10), f.y + Math.sin(a-.15)*(radius+10), hx, hy); ctx.stroke();
-        ctx.fillStyle = elder ? "#fdba74" : "#f87171";
-        ctx.save(); ctx.translate(hx, hy); ctx.rotate(a + Math.PI/2);
-        ctx.beginPath(); ctx.moveTo(0, -9); ctx.lineTo(-6, 5); ctx.lineTo(0, 2); ctx.lineTo(6, 5); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = "#fef3c7";
-        ctx.beginPath(); ctx.arc(-2.4, -2, 1.2, 0, Math.PI*2); ctx.arc(2.4, -2, 1.2, 0, Math.PI*2); ctx.fill();
-        ctx.restore();
+      const r=f.riddle;
+      if(!f.alive||r.horcruxActive||r.fiendActive<=0)return;
+      const radius=riddleFiendRadius(f),elder=r.elderBuff>0,t=battleTime;
+      ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();
+      ctx.translate(f.x,f.y);ctx.rotate(t*1.5);
+      ctx.lineCap="round";ctx.lineJoin="round";
+      // 하나로 이어지는 뱀의 몸: 꼬리에서 머리까지 점차 굵어진다.
+      for(const [width,color,glow] of [[22,"rgba(239,68,24,.28)",24],[15,"#f97316",15],[9,"#ffc342",9],[3,"#fff1a0",4]]){
+        ctx.strokeStyle=color;ctx.shadowColor=elder?"#fbbf24":"#ff6a00";ctx.shadowBlur=glow;
+        ctx.beginPath();
+        for(let n=0;n<=100;n++){
+          const a=.15+n/100*(Math.PI*2-.25),rr=radius+Math.sin(a*5-t*5)*1.8;
+          const x=Math.cos(a)*rr,y=Math.sin(a)*rr;
+          if(!n)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        }
+        ctx.lineWidth=width;ctx.stroke();
       }
-      ctx.restore();
+      // 바깥쪽으로 흐르는 불꽃. 난수 없이 시각적으로만 흔들린다.
+      ctx.shadowBlur=10;
+      for(let n=0;n<36;n++){
+        const a=n*Math.PI*2/36,pulse=.5+.5*Math.sin(t*11+n*2.1);
+        ctx.save();ctx.rotate(a);ctx.translate(radius,0);
+        ctx.fillStyle=n%2?"#ffb928":"#f66a13";
+        ctx.beginPath();ctx.moveTo(-5,-5);ctx.quadraticCurveTo(9,-11,10+pulse*14,-2);
+        ctx.quadraticCurveTo(4,0,-4,7);ctx.closePath();ctx.fill();
+        ctx.fillStyle="#ffe980";ctx.beginPath();ctx.moveTo(-2,-3);ctx.lineTo(7+pulse*5,-1);ctx.lineTo(-1,4);ctx.fill();ctx.restore();
+      }
+      // 한 마리의 큰 뱀 머리가 연결부의 가느다란 꼬리를 문다.
+      ctx.shadowBlur=12;ctx.strokeStyle="#ffe58b";ctx.lineWidth=4;
+      ctx.beginPath();ctx.moveTo(radius*Math.cos(.28),radius*Math.sin(.28));
+      ctx.quadraticCurveTo(radius+5,11,radius+1,2);ctx.stroke();
+      ctx.save();ctx.translate(radius,-5);
+      const fire=ctx.createLinearGradient(-14,-22,14,12);
+      fire.addColorStop(0,"#f77b16");fire.addColorStop(.5,"#ffe769");fire.addColorStop(1,"#fff8c4");
+      ctx.fillStyle=fire;ctx.strokeStyle="#ffac2a";ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(-5,-24);ctx.quadraticCurveTo(-21,-17,-15,-5);
+      ctx.lineTo(-9,8);ctx.quadraticCurveTo(0,15,9,8);ctx.lineTo(15,-5);
+      ctx.quadraticCurveTo(21,-17,5,-24);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle="#af3610";
+      for(const side of [-1,1]){ctx.beginPath();ctx.ellipse(side*7,-7,4,2,side*.4,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="#fffbd0";ctx.beginPath();ctx.ellipse(side*7,-7,1.2,2,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#af3610";}
+      ctx.strokeStyle="#bd5017";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-8,5);ctx.quadraticCurveTo(0,9,8,5);ctx.stroke();
+      ctx.fillStyle="#fffbd5";for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*6,4);ctx.lineTo(side*3,10);ctx.lineTo(side*3,5);ctx.fill();}
+      ctx.restore();ctx.restore();
     }
 
     function drawRiddleAvada(f) {
@@ -1853,11 +1868,11 @@
       fighters.filter(f => f.riddle).forEach(f => {
         const r = f.riddle;
         if (f.alive && !r.horcruxActive && r.wand) {
-          const bob = Math.sin(battleTime * 3 + f.id) * 3;
+          const bob = Math.sin(battleTime * 3 + r.wand.x * .01) * 3;
           ctx.save();
           ctx.shadowColor = "#a7f3d0";
           ctx.shadowBlur = 14;
-          drawElderWand(r.wand.x, r.wand.y + bob, .85, r.wand.angle);
+          drawElderWand(r.wand.x, r.wand.y + bob, 1.05, r.wand.angle);
           ctx.restore();
           drawRing(r.wand.x, r.wand.y + bob, 18, "rgba(167,243,208,.55)", 1.5);
         }
@@ -1867,62 +1882,72 @@
     }
 
     function drawRiddleCharacter(f) {
-      const r = f.riddle;
-      if (r?.horcruxActive) {
-        ctx.save();
-        ctx.translate(f.x, f.y);
-        ctx.globalAlpha = .82;
-        ctx.fillStyle = "#4b5563";
-        ctx.beginPath(); ctx.moveTo(-15, 20); ctx.lineTo(-20, -2); ctx.quadraticCurveTo(0, -18, 20, -2); ctx.lineTo(15, 20); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = "#9ca3af";
-        ctx.beginPath(); ctx.ellipse(0, -9, 13, 16, 0, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = "#6b7280"; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(-8,-15); ctx.lineTo(-2,-8); ctx.lineTo(-7,0); ctx.moveTo(7,-16); ctx.lineTo(3,-7); ctx.lineTo(8,-1); ctx.stroke();
-        ctx.fillStyle = "#374151";
-        ctx.beginPath(); ctx.ellipse(-5,-10,2.4,1.4,0,0,Math.PI*2); ctx.ellipse(5,-10,2.4,1.4,0,0,Math.PI*2); ctx.fill();
-        ctx.restore();
-        const seg = Math.max(0, r.horcruxSegments);
-        const w = 6, gap = 2, total = RIDDLE.horcruxSegments * w + (RIDDLE.horcruxSegments - 1) * gap;
-        ctx.save();
-        for (let i=0;i<RIDDLE.horcruxSegments;i++) {
-          ctx.fillStyle = i < seg ? "#d1d5db" : "#374151";
-          ctx.fillRect(f.x-total/2+i*(w+gap), f.y-f.r-30, w, 5);
-        }
-        ctx.fillStyle="#e5e7eb";ctx.font="800 9px system-ui";ctx.textAlign="center";
-        ctx.fillText(`${r.horcruxTimer.toFixed(1)}초`,f.x,f.y-f.r-34);
-        ctx.restore();
-        drawHealthBar(f); drawName(f); return;
+      const r=f.riddle||{};
+      ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
+      if(r.horcruxActive)ctx.globalAlpha=.65;else if(r.weakened)ctx.globalAlpha=.88;
+      // 좁은 로브 위로 크게 드러나는 창백한 민머리와 비인간적인 얼굴.
+      ctx.fillStyle="#080f13";ctx.strokeStyle="#38434a";ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(-21,24);ctx.lineTo(-17,12);ctx.lineTo(-7,6);
+      ctx.lineTo(7,6);ctx.lineTo(17,12);ctx.lineTo(21,24);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle="#29363a";ctx.beginPath();ctx.moveTo(-14,13);ctx.lineTo(-4,24);
+      ctx.moveTo(14,13);ctx.lineTo(4,24);ctx.stroke();
+      const skin=ctx.createRadialGradient(-5,-13,2,1,-4,25);
+      skin.addColorStop(0,"#e0e9d8");skin.addColorStop(.55,"#b4c7bc");skin.addColorStop(1,"#627d7b");
+      ctx.fillStyle=skin;ctx.strokeStyle="#68837d";ctx.lineWidth=.9;
+      for(const side of [-1,1]){
+        ctx.beginPath();ctx.ellipse(side*14,-5,2.7,5.2,side*.12,0,Math.PI*2);ctx.fill();ctx.stroke();
       }
-
-      ctx.save();
-      ctx.translate(f.x, f.y);
-      const s = f.r / 20;
-      ctx.scale(s, s);
-      if (r?.weakened) ctx.globalAlpha = .9;
-      ctx.fillStyle = r?.weakened ? "#111827" : "#05070a";
-      ctx.beginPath(); ctx.moveTo(-18, 20); ctx.lineTo(-15, 1); ctx.quadraticCurveTo(-11,-5,0,-4); ctx.quadraticCurveTo(11,-5,15,1); ctx.lineTo(18,20); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = r?.weakened ? "#b7bcc3" : "#d4d8dc";
-      ctx.strokeStyle = "#7b8188"; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.ellipse(0, -7, 13.5, 16.5, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = "#6b7280";
-      ctx.beginPath(); ctx.moveTo(-11,-17); ctx.quadraticCurveTo(0,-24,11,-17); ctx.quadraticCurveTo(4,-21,-4,-20); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = "#fee2e2";
-      ctx.beginPath(); ctx.ellipse(-5.2,-9,3.2,1.9,-.08,0,Math.PI*2); ctx.ellipse(5.2,-9,3.2,1.9,.08,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = "#7f1d1d";
-      ctx.beginPath(); ctx.ellipse(-5.1,-9,1.25,1.45,0,0,Math.PI*2); ctx.ellipse(5.1,-9,1.25,1.45,0,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle = "#737982"; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.moveTo(-2.1,-4); ctx.quadraticCurveTo(-3,-1,-3.3,1); ctx.moveTo(2.1,-4); ctx.quadraticCurveTo(3,-1,3.3,1); ctx.stroke();
-      ctx.fillStyle = "#5b6168";
-      ctx.beginPath(); ctx.ellipse(-2.5,0,1.2,1.8,-.18,0,Math.PI*2); ctx.ellipse(2.5,0,1.2,1.8,.18,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle = "#7f7474"; ctx.lineWidth = 1.1;
-      ctx.beginPath(); ctx.moveTo(-5.5,6); ctx.quadraticCurveTo(0,7,5.5,6); ctx.stroke();
-      ctx.save(); ctx.translate(11,7); ctx.rotate(-.8); drawElderWand(0,0,.55,0); ctx.restore();
-      if (r?.elderBuff > 0) {
-        ctx.strokeStyle="#86efac";ctx.lineWidth=1.8;ctx.globalAlpha=.8;
-        ctx.beginPath();ctx.arc(0,0,23+Math.sin(battleTime*7)*2,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-14,-13);ctx.bezierCurveTo(-14,-28,14,-28,14,-13);
+      ctx.quadraticCurveTo(17,-3,12,8);ctx.quadraticCurveTo(7,17,0,18);
+      ctx.quadraticCurveTo(-9,16,-13,6);ctx.quadraticCurveTo(-17,-3,-14,-13);
+      ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle="rgba(241,249,225,.55)";ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(0,-12,12,3.55,5.4);ctx.stroke();
+      // 양쪽 깊은 눈구덩이와 안쪽으로 좁아지는 눈.
+      for(const side of [-1,1]){
+        ctx.save();ctx.scale(side,1);
+        ctx.fillStyle="rgba(43,67,64,.45)";ctx.beginPath();ctx.moveTo(2,-8);
+        ctx.quadraticCurveTo(8,-16,13,-10);ctx.lineTo(11,-4);
+        ctx.quadraticCurveTo(6,-2,2,-8);ctx.fill();
+        ctx.fillStyle="#d6dfbd";ctx.beginPath();ctx.moveTo(3,-7);
+        ctx.quadraticCurveTo(7,-11,11,-8);ctx.quadraticCurveTo(8,-5,3,-7);ctx.fill();
+        ctx.fillStyle="#345650";ctx.beginPath();ctx.ellipse(7,-7.5,1.7,1.4,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="#0b191a";ctx.beginPath();ctx.arc(7,-7.5,.8,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="#f3f4d8";ctx.beginPath();ctx.arc(6.6,-8,.35,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle="#516e67";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(2,-9);
+        ctx.quadraticCurveTo(7,-14,12,-11);ctx.stroke();
+        ctx.strokeStyle="rgba(76,103,97,.55)";ctx.lineWidth=.7;
+        ctx.beginPath();ctx.moveTo(11,-2);ctx.quadraticCurveTo(7,1,9,6);
+        ctx.moveTo(5,-15);ctx.lineTo(2,-11);ctx.stroke();ctx.restore();
       }
+      // 코 돌출 없이 세로로 갈라진 두 콧구멍.
+      ctx.strokeStyle="#839d91";ctx.lineWidth=.8;
+      ctx.beginPath();ctx.moveTo(-1,-8);ctx.lineTo(-3,1);ctx.moveTo(1,-8);ctx.lineTo(3,1);ctx.stroke();
+      ctx.fillStyle="#304d47";
+      for(const side of [-1,1]){ctx.beginPath();ctx.ellipse(side*2.5,0,.9,2.7,-side*.25,0,Math.PI*2);ctx.fill();}
+      // 벌어진 입과 불규칙한 이빨. 얼굴의 작은 크기에서도 식별 가능한 명암.
+      ctx.fillStyle="#27332c";ctx.strokeStyle="#708878";ctx.lineWidth=1.1;
+      ctx.beginPath();ctx.moveTo(-8,7);ctx.quadraticCurveTo(-1,2,7,5);
+      ctx.lineTo(9,11);ctx.quadraticCurveTo(0,16,-8,12);ctx.closePath();ctx.fill();ctx.stroke();
+      for(let n=0;n<6;n++){
+        const x=-6.6+n*2.3,y=6-Math.sin(n*.6)*1.1;
+        ctx.fillStyle=n%2?"#cbd2af":"#e1dfbb";
+        ctx.beginPath();ctx.roundRect(x,y,1.9,3+(n%2)*.5,.5);ctx.fill();
+        ctx.fillStyle="#b7c19e";ctx.beginPath();ctx.roundRect(x+ .2,11-Math.sin(n*.7),1.7,2,.4);ctx.fill();
+      }
+      ctx.strokeStyle="#8da392";ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-5,16);ctx.quadraticCurveTo(0,18,5,15);ctx.stroke();
+      // 지팡이는 몸에 그리지 않는다. 획득 강화는 녹색 테두리로만 표시.
+      if(r.elderBuff>0){ctx.strokeStyle="#86efac";ctx.shadowColor="#22c55e";ctx.shadowBlur=12;ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.arc(0,0,23,0,Math.PI*2);ctx.stroke();}
       ctx.restore();
-      drawHealthBar(f); drawName(f);
+      drawHealthBar(f);drawName(f);
+      if(r.horcruxActive&&!f.portraitOnly){
+        const w=6,gap=2,total=RIDDLE.horcruxSegments*(w+gap)-gap;
+        ctx.save();for(let n=0;n<RIDDLE.horcruxSegments;n++){ctx.fillStyle=n<r.horcruxSegments?"#d1d5db":"#374151";
+          ctx.fillRect(f.x-total/2+n*(w+gap),f.y-f.r-34,w,5);}
+        ctx.fillStyle="#e5e7eb";ctx.font="bold 10px system-ui";ctx.textAlign="center";
+        ctx.fillText("호크룩스 "+r.horcruxTimer.toFixed(1)+"초",f.x,f.y-f.r-39);ctx.restore();
+      }
     }
 
     const HINTA = { startDelay: 5, respawn: 5, ballRadius: 10, pickupBonus: 24,
@@ -4222,8 +4247,8 @@
       });
     }
 
-        function drawRiddleCharacter(f) {      const r=f.riddle;      if(r?.horcruxActive){        ctx.save();ctx.translate(f.x,f.y);ctx.globalAlpha=.82;ctx.fillStyle="#111827";ctx.beginPath();ctx.moveTo(-17,20);ctx.lineTo(-20,-1);ctx.quadraticCurveTo(0,-20,20,-1);ctx.lineTo(17,20);ctx.closePath();ctx.fill();        ctx.fillStyle="#b6bbc1";ctx.beginPath();ctx.ellipse(0,-8,13,17,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#6b7280";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(-9,-15);ctx.lineTo(-2,-9);ctx.lineTo(-8,1);ctx.moveTo(8,-15);ctx.lineTo(3,-8);ctx.lineTo(8,1);ctx.stroke();        ctx.fillStyle="#7f1d1d";ctx.beginPath();ctx.ellipse(-5,-10,2.7,1.1,-.1,0,Math.PI*2);ctx.ellipse(5,-10,2.7,1.1,.1,0,Math.PI*2);ctx.fill();ctx.restore();        const seg=Math.max(0,r.horcruxSegments),w=6,gap=2,total=RIDDLE.horcruxSegments*w+(RIDDLE.horcruxSegments-1)*gap;ctx.save();for(let i=0;i<RIDDLE.horcruxSegments;i++){ctx.fillStyle=i<seg?"#d1d5db":"#374151";ctx.fillRect(f.x-total/2+i*(w+gap),f.y-f.r-30,w,5);}ctx.fillStyle="#e5e7eb";ctx.font="800 9px system-ui";ctx.textAlign="center";ctx.fillText(``,f.x,f.y-f.r-34);ctx.restore();drawHealthBar(f);drawName(f);return;      }      ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);if(r?.weakened)ctx.globalAlpha=.88;      const robe=ctx.createLinearGradient(0,-4,0,22);robe.addColorStop(0,"#111827");robe.addColorStop(1,"#020204");ctx.fillStyle=robe;ctx.strokeStyle="#242936";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-19,20);ctx.lineTo(-15,1);ctx.quadraticCurveTo(-10,-5,0,-4);ctx.quadraticCurveTo(10,-5,15,1);ctx.lineTo(19,20);ctx.closePath();ctx.fill();ctx.stroke();      ctx.fillStyle="#1f2937";ctx.beginPath();ctx.moveTo(-14,2);ctx.lineTo(-5,-3);ctx.lineTo(0,8);ctx.lineTo(5,-3);ctx.lineTo(14,2);ctx.lineTo(8,18);ctx.lineTo(-8,18);ctx.closePath();ctx.fill();      const skin=ctx.createRadialGradient(-4,-13,2,0,-7,19);skin.addColorStop(0,r?.weakened?"#d1d5db":"#edf0ef");skin.addColorStop(.65,r?.weakened?"#a8adb4":"#cdd3d2");skin.addColorStop(1,"#8c9495");ctx.fillStyle=skin;ctx.strokeStyle="#71797a";ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(-12,-14);ctx.quadraticCurveTo(-8,-23,0,-24);ctx.quadraticCurveTo(8,-23,12,-14);ctx.quadraticCurveTo(15,-4,9,5);ctx.quadraticCurveTo(5,11,0,12);ctx.quadraticCurveTo(-5,11,-9,5);ctx.quadraticCurveTo(-15,-4,-12,-14);ctx.closePath();ctx.fill();ctx.stroke();      ctx.strokeStyle="rgba(255,255,255,.52)";ctx.lineWidth=.8;ctx.beginPath();ctx.arc(0,-13,9.5,3.75,5.68);ctx.stroke();      ctx.fillStyle="#eef2f2";ctx.strokeStyle="#6b7273";ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(-10,-11);ctx.quadraticCurveTo(-5,-15,-1.5,-10);ctx.quadraticCurveTo(-6,-7,-10,-11);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(10,-11);ctx.quadraticCurveTo(5,-15,1.5,-10);ctx.quadraticCurveTo(6,-7,10,-11);ctx.fill();ctx.stroke();      ctx.fillStyle="#991b1b";ctx.beginPath();ctx.ellipse(-5.5,-10.7,1.5,1.1,-.15,0,Math.PI*2);ctx.ellipse(5.5,-10.7,1.5,1.1,.15,0,Math.PI*2);ctx.fill();ctx.fillStyle="#111827";ctx.beginPath();ctx.arc(-5.5,-10.7,.48,0,Math.PI*2);ctx.arc(5.5,-10.7,.48,0,Math.PI*2);ctx.fill();      ctx.strokeStyle="#737b7c";ctx.lineWidth=1.15;ctx.beginPath();ctx.moveTo(-2.2,-6);ctx.quadraticCurveTo(-3,-2,-3.8,.8);ctx.moveTo(2.2,-6);ctx.quadraticCurveTo(3,-2,3.8,.8);ctx.stroke();ctx.fillStyle="#4b5354";ctx.beginPath();ctx.ellipse(-2.7,.4,1.05,1.75,-.18,0,Math.PI*2);ctx.ellipse(2.7,.4,1.05,1.75,.18,0,Math.PI*2);ctx.fill();      ctx.strokeStyle="#777071";ctx.lineWidth=1.05;ctx.beginPath();ctx.moveTo(-7,5);ctx.quadraticCurveTo(0,7,7,5);ctx.stroke();ctx.beginPath();ctx.moveTo(-9,-4);ctx.quadraticCurveTo(-7,1,-7,4);ctx.moveTo(9,-4);ctx.quadraticCurveTo(7,1,7,4);ctx.stroke();      ctx.save();ctx.translate(12,8);ctx.rotate(-.82);drawElderWand(0,0,.62,0);ctx.restore();if(r?.elderBuff>0){ctx.strokeStyle="#86efac";ctx.shadowColor="#22c55e";ctx.shadowBlur=12;ctx.lineWidth=1.8;ctx.globalAlpha=.82;ctx.beginPath();ctx.arc(0,0,23+Math.sin(battleTime*7)*2,0,Math.PI*2);ctx.stroke();}ctx.restore();drawHealthBar(f);drawName(f);    }
-      const patchNotes = [      "v71: 편집기 치환 오류로 사라진 패치노트 배열 선언과 페이지 제목을 복구하여 전체 스크립트 초기화를 정상화.",      "v68: 리들 경 호크룩스 추가 너프. 약화 부활 최대HP90→70. 호크룩스 대기 중 적의 공격 피격 또는 접촉 1회마다 예정 부활HP가 10씩 감소하며, 기존 호크룩스 칸 감소 규칙도 함께 적용. 약화 부활 후에는 딱총나무 지팡이가 더 이상 생성·획득되지 않음.",
+      const patchNotes = [
+      "v72: 리들 경 얼굴을 참고 이미지 기반 창백한 민머리·깊은 눈매·뱀 코·이빨로 재디자인, 중복 그림 함수 제거 및 도감 연결. 지팡이 부유 좌표 NaN 오류 수정·몸 부착 그림 제거. 피엔드피레를 꼬리를 문 한 마리 불뱀 회전으로 변경. 더미 도감 최하단 고정. 전투 수치 유지.",      "v71: 편집기 치환 오류로 사라진 패치노트 배열 선언과 페이지 제목을 복구하여 전체 스크립트 초기화를 정상화.",      "v68: 리들 경 호크룩스 추가 너프. 약화 부활 최대HP90→70. 호크룩스 대기 중 적의 공격 피격 또는 접촉 1회마다 예정 부활HP가 10씩 감소하며, 기존 호크룩스 칸 감소 규칙도 함께 적용. 약화 부활 후에는 딱총나무 지팡이가 더 이상 생성·획득되지 않음.",
       "v67: 리들 경 1차 대규모 너프. 피엔드피레와 아바다 케다브라가 공유 쿨8초를 사용하며 피엔드피레→아바다 순서로 번갈아 시전. 첫 피엔드피레는 4초 뒤 발동. 피엔드피레 반경95→75, 딱총나무 강화 반경130→105, 틱 피해4→3, 강화 틱 피해5→4. 화상·아바다·딱총나무·호크룩스 수치는 유지.",
       "v66: 신규 캐릭터 리들 경 추가. 피엔드피레 원형 뱀 불꽃·화상, 아바다 케다브라 초록 다단 광선, 16초 주기 딱총나무 지팡이 강화와 거리 무관 확정타를 구현. 첫 사망은 7칸 호크룩스 상태로 전환되어 접촉/피격/피해량에 따라 칸이 감소하고 7초 생존 시 HP90 약화형으로 1회 부활. 참고 이미지 기반 창백한 민머리·뱀 코·검은 로브와 딱총나무 지팡이를 캔버스 드로잉으로 추가.",
       "v65: 힌타 공격력 상향. 3터치·재등장5초·대쉬 대기4초는 유지하고 속공12→18, 괴짜 속공24→50, 괴짜 속공 오차20~40도→10~25도, 대쉬 피해10→12로 조정.",
@@ -4466,6 +4491,7 @@
         if (c.id === "lisa") preview.lisa = { mode: "lady", patience: 0, rock: 0 };
         if (c.id === "oshi") preview.oshi = {};
         if (c.id === "hinta") preview.hinta = { pose: 0 };
+        if (c.id === "riddle_lord") preview.riddle = { horcruxActive: false, weakened: false, elderBuff: 0 };
         if (c.id === "iron_mask") preview.iron = { suit: "basic", dash: 0, assembly: 0, punch: null };
         if (c.id === "tano") preview.tano = { stones: [], hidden: 0, reform: 0 };
         if (c.id === "captain") preview.captain = { hasShield: true, punch: null };
@@ -4548,7 +4574,7 @@
     }
 
     function displayCharacters() {
-      return [...availableCharacters()].sort((a, b) => displayOrderOf(a) - displayOrderOf(b) || a.name.localeCompare(b.name));
+      return [...availableCharacters()].sort((a, b) => Number(a.id === "dummy_unit") - Number(b.id === "dummy_unit") || displayOrderOf(a) - displayOrderOf(b) || a.name.localeCompare(b.name));
     }
 
     function battleRosterCharacters() {
