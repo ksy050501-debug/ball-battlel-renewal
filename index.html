@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v85</title>
+  <title>볼배틀 리뉴얼 v86</title>
   <style>
     :root {
       --bg: #020617;
@@ -875,7 +875,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v85</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v86</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1066,6 +1066,8 @@
         skillName:"입체기동 · 회전베기", condition:"7초마다 벽 2곳에 와이어 · 근접 범위 자동 광역베기 · 와이어 최대 3연속", desc:"0.45초 준비 후 1초간 초당650으로 고속이동. 몸이 직접 닿지 않아도 몸 충돌 거리보다 8만큼 넓은 검 사거리 안에 적이 들어오면 회전베기가 발동하고, 한 명을 계기로 발동한 베기는 베기 원 안의 모든 적에게 광역 피해와 출혈을 준다. 와이어 기동 중에는 강습16 피해가 적용된다. 출혈은 1피해씩 5회이며, 출혈 중인 상대를 다시 베면 남은 출혈 피해를 즉시 터뜨린 뒤 새 출혈을 건다. 와이어 강습이 적중하면 즉시 다음 와이어를 준비하지만 한 사이클 최대 3번까지만 연속 강습하며, 3번째 적중 후에는 정상 7초 쿨타임으로 돌아간다." },
       { id: "riddle_lord", name: "리들 경", mark: "蛇", role: "영화", color: "#64748b", hp: 180, attack: 0, speed: 2.8, range: 260,
         skillName: "피엔드피레 · 아바다 케다브라 · 호크룩스", condition: "공유 쿨9초 · 피엔드피레↔아바다 번갈아 시전 · 딱총나무 지팡이16초 · 사망 시 호크룩스 1회", desc: "피엔드피레와 아바다 케다브라를 하나의 쿨타임으로 번갈아 사용한다. 딱총나무 지팡이를 획득하면 불꽃 범위와 화상이 강화되고 아바다 케다브라가 거리 무관 확정타가 된다. 첫 사망 시 7칸 호크룩스로 7초를 버티면 본래 능력으로 부활하며, 대기 중 피격·충돌마다 부활 HP가 10씩 감소한다. 부활 최대 체력은 70이며 지팡이도 계속 획득할 수 있다. 지팡이는 사라지지 않고 등장 25초 뒤 자동 습득한다." },
+      { id: "andrum", name: "앤드럼", mark: "🥁", role: "영화", color: "#d6a85f", hp: 150, attack: 0, speed: 2.7, range: 100,
+        skillName: "템포 · Caravan", condition: "연주 8초 유지마다 템포 상승 · 피격 시 1단계 하락 · 20초마다 Caravan", desc: "주변 적에게 드럼 음파를 반복해서 퍼뜨린다. 연주를 끊기지 않고 이어갈수록 기본→업템포→광란으로 빨라지고 강해지며, 피해를 받으면 템포가 한 단계 떨어진다. 20초마다 4초간 Caravan 솔로에 돌입해 빠른 광역 비트를 연속으로 울리고 마지막 심벌 크래시로 마무리한다." },
       { id: "hinta", name: "힌타", mark: "10", role: "애니", color: "#f97316", hp: 170, attack: 12, speed: 3.0, range: 0,
         skillName: "속공 · 괴짜 속공", condition: "5초 뒤 경기 시작 · 배구공 접촉 시 무작위 스파이크", desc: "공을 4초간 못 잡으면 직선 대쉬! 경로의 적을 밀어내고 뇌진탕 둔화. 넓은 접촉 범위로 공을 잡아 속공 또는 괴짜 속공! 벽·적 접촉 합계 3회 후 공이 사라지고 5초 뒤 랜덤 재등장. 비행 중 재타격은 불가." },
       { id: "lisa", name: "리사", mark: "♫", role: "애니", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
@@ -1675,6 +1677,159 @@
       ctx.strokeStyle="#987560";ctx.beginPath();ctx.moveTo(0,-3);ctx.lineTo(-1,0);ctx.moveTo(-3,3);ctx.lineTo(3,3);ctx.stroke();
       if(spin<=0){drawNewhelloBlade(-15,8,-2.15,20);drawNewhelloBlade(15,8,-.99,20);}
       ctx.restore();drawHealthBar(f);drawName(f);
+    }
+
+    const ANDRUM = {
+      tempoRise: 8,
+      intervals: [1.20, .90, .68],
+      damages: [5, 6, 7],
+      radii: [58, 66, 74],
+      caravanPeriod: 20,
+      caravanDuration: 4,
+      caravanInterval: .45,
+      caravanDamage: 3,
+      caravanRadius: 82,
+      crashDamage: 16,
+      crashRadius: 100
+    };
+
+    function initAndrum(f) {
+      f.andrum = {
+        stage: 0,
+        tempo: 0,
+        beat: .7,
+        pulse: 0,
+        pulseRadius: 0,
+        caravanCd: ANDRUM.caravanPeriod,
+        caravan: 0,
+        caravanBeat: 0,
+        lastDamageTaken: f.damageTaken || 0
+      };
+    }
+
+    function andrumStageName(stage) {
+      return ["기본 템포", "업템포", "광란 템포"][clamp(stage || 0, 0, 2)] || "기본 템포";
+    }
+
+    function andrumWave(f, power, radius, label, color = "#fbbf24") {
+      const victims = enemiesOf(f).filter(e => Math.hypot(e.x-f.x,e.y-f.y) <= radius + e.r);
+      victims.forEach(e => {
+        damage(e, power, f, label);
+        spawnHitFlash(e.x, e.y, color, 20);
+      });
+      spawnBlast(f.x, f.y, radius, color);
+      spawnParticles(f.x, f.y, color, 8);
+      if (!fastSimMode) playSound("magic", .45);
+      if (f.andrum) {
+        f.andrum.pulse = .20;
+        f.andrum.pulseRadius = radius;
+      }
+      return victims.length;
+    }
+
+    function updateAndrum(f, dt) {
+      const a = f?.andrum;
+      if (!a || !f.alive) return;
+      a.pulse = Math.max(0, a.pulse - dt);
+
+      const taken = f.damageTaken || 0;
+      if (taken > a.lastDamageTaken + .001) {
+        if (a.stage > 0) {
+          a.stage -= 1;
+          spawnFloatingText(f.x, f.y-f.r-36, "템포 흔들림", "#fca5a5");
+        }
+        a.tempo = 0;
+      }
+      a.lastDamageTaken = taken;
+
+      if (a.caravan > 0) {
+        const before = a.caravan;
+        a.caravan = Math.max(0, a.caravan - dt);
+        a.caravanBeat -= dt;
+        while (a.caravanBeat <= 0 && a.caravan > 0) {
+          andrumWave(f, ANDRUM.caravanDamage, ANDRUM.caravanRadius, "Caravan 연타", "#fde68a");
+          a.caravanBeat += ANDRUM.caravanInterval;
+        }
+        if (before > 0 && a.caravan <= 0) {
+          andrumWave(f, ANDRUM.crashDamage, ANDRUM.crashRadius, "Caravan 심벌 크래시", "#f59e0b");
+          spawnFloatingText(f.x, f.y-f.r-46, "CRASH!", "#fef3c7");
+          a.caravanCd = ANDRUM.caravanPeriod;
+          a.beat = ANDRUM.intervals[a.stage];
+        }
+        return;
+      }
+
+      a.caravanCd = Math.max(0, a.caravanCd - dt);
+      if (a.caravanCd <= 0) {
+        a.caravan = ANDRUM.caravanDuration;
+        a.caravanBeat = 0;
+        spawnFloatingText(f.x, f.y-f.r-46, "Caravan!", "#fde68a");
+        return;
+      }
+
+      a.tempo += dt;
+      if (a.stage < 2 && a.tempo >= ANDRUM.tempoRise) {
+        a.stage += 1;
+        a.tempo = 0;
+        spawnFloatingText(f.x, f.y-f.r-36, andrumStageName(a.stage), "#fde68a");
+      }
+
+      a.beat -= dt;
+      if (a.beat <= 0) {
+        andrumWave(f, ANDRUM.damages[a.stage], ANDRUM.radii[a.stage], "드럼 비트", a.stage === 2 ? "#fb923c" : "#fbbf24");
+        a.beat += ANDRUM.intervals[a.stage];
+      }
+    }
+
+    function drawAndrumCharacter(f) {
+      const a = f.andrum || {stage:0,pulse:0,caravan:0};
+      if (!f.portraitOnly && a.pulse > 0) {
+        const alpha = clamp(a.pulse / .20, 0, 1);
+        ctx.save();
+        ctx.globalAlpha = alpha * .75;
+        ctx.strokeStyle = a.caravan > 0 ? "#fde68a" : (a.stage >= 2 ? "#fb923c" : "#fbbf24");
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, Math.max(f.r+8, (a.pulseRadius||60) * (1.08-alpha*.08)), 0, Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.save();
+      ctx.translate(f.x, f.y);
+      ctx.scale(f.r/20, f.r/20);
+
+      // 단순 도형형 사람.
+      ctx.fillStyle = "#1f2937";
+      ctx.fillRect(-8, -2, 16, 19);
+      ctx.fillStyle = "#e7c3a4";
+      ctx.beginPath(); ctx.arc(0, -12, 8, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#5b4636";
+      ctx.beginPath(); ctx.arc(0, -15, 8, Math.PI, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = "#111827"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-4,-11); ctx.lineTo(-1,-11); ctx.moveTo(2,-11); ctx.lineTo(5,-11); ctx.stroke();
+
+      // 스틱 두 개.
+      const swing = Math.sin(battleTime * (a.caravan>0 ? 24 : 10 + a.stage*4)) * .35;
+      ctx.strokeStyle = "#d6b37a"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-5,2); ctx.lineTo(-14,-7+swing*10); ctx.moveTo(5,2); ctx.lineTo(14,-7-swing*10); ctx.stroke();
+
+      // 드럼 3개.
+      ctx.fillStyle = "#7c2d12"; ctx.strokeStyle = "#f3f4f6"; ctx.lineWidth = 1.2;
+      for (const [x,y,r] of [[-10,13,6],[10,13,6],[0,18,7]]) {
+        ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      }
+      // 심벌 2개.
+      ctx.strokeStyle = "#9ca3af"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-16,8); ctx.lineTo(-16,-1); ctx.moveTo(16,8); ctx.lineTo(16,-1); ctx.stroke();
+      ctx.fillStyle = "#fbbf24";
+      ctx.beginPath(); ctx.ellipse(-16,-2,7,2.1,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(16,-2,7,2.1,0,0,Math.PI*2); ctx.fill();
+
+      ctx.restore();
+      drawHealthBar(f);
+      drawName(f);
+      if (!f.portraitOnly && a.caravan > 0) drawRing(f.x,f.y,f.r+9,"rgba(253,230,138,.8)",3);
     }
 
     function initRiddle(f) {
@@ -4461,6 +4616,7 @@
     }
 
       const patchNotes = [
+      "v86: 영화 캐릭터 앤드럼 추가. HP150·이속2.7. 직접 접촉 공격 대신 드럼 비트로 반경58/66/74에 5/6/7 광역 피해를 주며 8초간 피격 없이 연주를 이어가면 기본→업템포→광란으로 상승, 피격 시 1단계 하락. 20초마다 4초 Caravan 솔로로 0.45초마다 반경82 피해3을 연타하고 마지막 반경100 심벌 크래시16. 외형은 사람·드럼3개·심벌2개만 사용한 단순 도형형으로 구현.",
       "v85: 뉴헬로 병장 연속 와이어 상한 추가. 와이어 강습 적중 시 즉시 재와이어하는 규칙은 유지하되 한 사이클 총 3연속까지만 허용하고, 3번째 강습 적중 뒤에는 정상 7초 쿨타임으로 복귀. 중간 강습이 빗나가거나 끊기면 연속 횟수 초기화. HP160·비접촉 +8·광역 +28·일반8/와이어16·출혈1×5 및 잔여 출혈 폭발·속도650은 유지.",
       "v84: 뉴헬로 병장 체력 170→160으로 10 하향. 비접촉 베기 +8, 광역 범위 +28, 일반8/와이어16, 출혈1×5·잔여 출혈 폭발, 와이어 속도650·적중 즉시 재와이어 등 나머지 전투 수치는 유지.",
       "v83: 뉴헬로 병장 비접촉 광역베기 조정. 검 발동 사거리를 몸 충돌보다 +18→+8로 축소. 광역 베기 범위 +28, 일반8/와이어16, 와이어 속도650, 적중 즉시 재와이어는 유지. 출혈은 2×3회에서 1×5회로 변경하고 지속시간을 5초로 맞춤. 출혈 중 재타격 시 남은 틱 피해 즉시 폭발 후 새 5틱 출혈 재적용 규칙 유지.",
@@ -4577,6 +4733,9 @@
     }
 
     function characterDamageInfo(c) {
+      if(c.id==="andrum")return {damage:"드럼 비트 5/6/7 · 반경58/66/74 · Caravan 연타3(0.45초마다) · 마지막 심벌 크래시16/반경100",
+        tick:"연주 유지8초마다 기본→업템포→광란 · 비트 간격1.20/0.90/0.68초 · 피격 시 템포 1단계 하락 · Caravan 20초마다 4초",
+        tip:"직접 접촉 공격 없이 자기 주변에 원형 음파를 반복한다. 피해를 받으면 현재 템포가 한 단계 떨어지고 상승 진행도도 초기화된다. Caravan 동안 일반 비트 대신 0.45초마다 광역3 피해를 주며 종료 순간 반경100 심벌 크래시16으로 마무리한다."};
       if(c.id==="newhello_sergeant")return {damage:"일반 광역 회전베기8 / 와이어 광역 강습16 + 출혈1×5회 · 재타격 시 남은 출혈 즉시 폭발 후 재적용 · HP 열세 보정 최대 ×1.6",
         tick:"검 발동 사거리: 몸 충돌보다 +8 · 광역 베기 범위: 몸 반경보다 +28 · 기동7초 · 준비0.45초 · 고속이동1초(초당650) · 와이어 강습 최대 3연속 · 일반 베기 재사용1.2초 · 출혈 약1초마다 5회",
         tip:"뉴헬로는 상대와 몸이 닿지 않아도 검 사거리(+8)에 들어오면 베기가 발동한다. 공격을 발동시킨 상대가 누구든, 그 순간 병장 중심의 더 큰 베기 원(+28) 안에 있는 모든 적이 같은 베기 피해와 출혈을 받는다. 와이어 강습 적중 시 즉시 재와이어하지만 한 사이클에서 총 3번까지만 연속 강습할 수 있고, 3번째 적중 뒤에는 7초 쿨타임이 적용된다. 중간 강습이 빗나가거나 끊기면 연속 횟수는 초기화된다. 출혈 폭발과 실제 몸 충돌 시 상대 접촉 반격은 기존대로 유지된다."};
@@ -4720,6 +4879,7 @@
         if (c.id === "lisa") preview.lisa = { mode: "lady", patience: 0, rock: 0 };
         if (c.id === "oshi") preview.oshi = {};
         if (c.id === "newhello_sergeant") initNewhello(preview);
+        if (c.id === "andrum") initAndrum(preview);
         if (c.id === "hinta") preview.hinta = { pose: 0 };
         if (c.id === "riddle_lord") preview.riddle = { horcruxActive: false, elderBuff: 0 };
         if (c.id === "iron_mask") preview.iron = { suit: "basic", dash: 0, assembly: 0, punch: null };
@@ -5174,6 +5334,7 @@
       if (c.id === "justice_ally") initJusticeAlly(fighter);
       if (c.id === "oshi") initOshi(fighter);
       if (c.id === "newhello_sergeant") initNewhello(fighter);
+      if (c.id === "andrum") initAndrum(fighter);
       if (c.id === "riddle_lord") initRiddle(fighter);
       if (c.id === "hinta") initHinta(fighter);
       if (c.id === "logo_doctor") initLogo(fighter);
@@ -5767,6 +5928,9 @@
     }
 
     function skillProgressInfo(f) {
+      if(f.andrum){const a=f.andrum;return {ratio:a.caravan>0?clamp(a.caravan/ANDRUM.caravanDuration,0,1):clamp(a.tempo/ANDRUM.tempoRise,0,1),className:a.caravan>0?"rage-fill":"skill-fill",
+        text:a.caravan>0?"Caravan 솔로 "+a.caravan.toFixed(1)+"초":andrumStageName(a.stage)+" · 다음 템포 "+Math.max(0,ANDRUM.tempoRise-a.tempo).toFixed(1)+"초",
+        extraTextHtml:`<div class="status-skill-label">비트 ${ANDRUM.damages[a.stage]} / 반경 ${ANDRUM.radii[a.stage]} · Caravan까지 ${a.caravanCd.toFixed(1)}초</div>`};}
       if(f.newhello){const n=f.newhello;return {ratio:clamp(1-n.cd/NEWHELLO.period,0,1),className:"skill-fill",
         text:n.windup>0?"와이어 고정 · 준비 "+n.windup.toFixed(1)+"초":n.dash>0?"입체기동 · 강화 회전베기":"입체기동까지 "+n.cd.toFixed(1)+"초",
         extraTextHtml:'<div class="status-skill-label">검 사거리 +8 · 광역범위 +28 · 일반8 / 와이어16 + 출혈1×5 · 와이어 최대 3연속</div>'};}
@@ -8974,6 +9138,8 @@
       f.tanoStop = Math.max(0, (f.tanoStop || 0) - dt);
       updateLisa(f, dt);
       updateOshi(f, dt);
+      if (f.andrum) updateAndrum(f, dt);
+      if (!f.alive) return;
       if (updatePowerPunch(f, dt)) return;
       if (updateCaptainPunch(f, dt)) return;
       if (updateIronPunch(f, dt)) return;
@@ -11927,6 +12093,7 @@
       if (f.lisa) { drawLisaCharacter(f); return; }
       if (f.oshi) { drawOshiCharacter(f); return; }
       if (f.newhello) { drawNewhelloCharacter(f); return; }
+      if (f.andrum) { drawAndrumCharacter(f); return; }
       if (f.riddle) { drawRiddleCharacter(f); return; }
       if (f.hinta) { drawHintaCharacter(f); return; }
       if (f.captain) { drawCaptainCharacter(f); return; }
