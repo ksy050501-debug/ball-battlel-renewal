@@ -285,7 +285,7 @@ between(
     }
 
 
-    const heroLeonStages = ['''
+'''
 )
 
 # Refactor status renderer so team mode has fixed A-left / B-right columns and current fighters first.
@@ -377,7 +377,7 @@ between(
       panel.innerHTML = main.map(f => fighterStatusCardHtml(f,false)).join("");
     }
 
-    function enemiesOf(f) {'''
+'''
 )
 
 rep(
