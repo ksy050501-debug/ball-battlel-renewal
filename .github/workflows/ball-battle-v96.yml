@@ -1,0 +1,55 @@
+name: Ball Battle v96 visual cleanup
+on:
+  push:
+    paths:
+      - ".github/ball-battle-v96.py"
+      - ".github/workflows/ball-battle-v96.yml"
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply v96 visual cleanup
+        run: python .github/ball-battle-v96.py
+      - name: Check inline JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s,re.I)
+          if not scripts: raise SystemExit('no inline script')
+          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+      - name: Verify v96 anchors
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          must=[
+            '<title>볼배틀 리뉴얼 v96</title>',
+            '<h1 id="mainTitle">볼배틀 리뉴얼 v96</h1>',
+            'const start=x+size/2;',
+            'function drawJusticeObeliskOverlay()',
+            'ctx.fillStyle="#1e3a8a";',
+            'drawJusticeObeliskOverlay();',
+            'triggerHitStop(3.4)'
+          ]
+          banned=['ctx.fillStyle="rgba(15,23,42,.94)";ctx.strokeStyle="#93c5fd"']
+          miss=[x for x in must if x not in s]
+          bad=[x for x in banned if x in s]
+          if miss or bad: raise SystemExit('missing='+repr(miss)+' banned='+repr(bad))
+          PY
+      - name: Commit v96
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "v96: align Jabami diamonds and center Obelisk quote"
+          git push
