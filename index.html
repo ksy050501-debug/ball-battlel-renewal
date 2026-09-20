@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v78</title>
+  <title>볼배틀 리뉴얼 v79</title>
   <style>
     :root {
       --bg: #020617;
@@ -875,7 +875,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v78</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v79</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1062,6 +1062,8 @@
     // 리뉴얼 캐릭터와 훈련용 더미.
     // 기존 스킬 처리 분기는 엔진 호환성을 위해 보존되며 해당 ID가 없으면 활성화되지 않는다.
     const characters = [
+      { id:"newhello_sergeant", name:"뉴헬로 병장", mark:"⚔", role:"애니", color:"#4d7860", hp:170, attack:8, speed:3, range:48,
+        skillName:"입체기동 · 회전베기", condition:"7초마다 벽 2곳에 와이어 · 접촉 시 쌍검 회전", desc:"0.45초 준비 후 1초간 고속이동. 접촉하면 원형 회전베기와 출혈을 가하며, 고속 기동 중에는 피해와 연출이 강화된다. 상대의 현재 HP가 자신보다 높을 때 차이 10당 피해 +3%, 최대 +60%. 검과 망토는 피격 범위를 늘리지 않는다." },
       { id: "riddle_lord", name: "리들 경", mark: "蛇", role: "영화", color: "#64748b", hp: 180, attack: 0, speed: 2.8, range: 260,
         skillName: "피엔드피레 · 아바다 케다브라 · 호크룩스", condition: "공유 쿨9초 · 피엔드피레↔아바다 번갈아 시전 · 딱총나무 지팡이16초 · 사망 시 호크룩스 1회", desc: "피엔드피레와 아바다 케다브라를 하나의 쿨타임으로 번갈아 사용한다. 딱총나무 지팡이를 획득하면 불꽃 범위와 화상이 강화되고 아바다 케다브라가 거리 무관 확정타가 된다. 첫 사망 시 7칸 호크룩스로 7초를 버티면 본래 능력으로 부활하며, 대기 중 피격·충돌마다 부활 HP가 10씩 감소한다. 부활 최대 체력은 70이며 지팡이도 계속 획득할 수 있다. 지팡이는 사라지지 않고 등장 25초 뒤 자동 습득한다." },
       { id: "hinta", name: "힌타", mark: "10", role: "애니", color: "#f97316", hp: 170, attack: 12, speed: 3.0, range: 0,
@@ -1463,6 +1465,142 @@
       horcruxSegments: 7, horcruxDuration: 7, horcruxContactCooldown: .75, horcruxRevivePenalty: 10,
       reviveHp: 70, baseSpeed: 2.8
     };
+
+
+    // 뉴헬로 병장: HP 차이 보정은 베기와 출혈 생성 시에만 적용한다.
+    const NEWHELLO = { period:7, windup:.45, dashDuration:1, dashSpeed:520,
+      contactCooldown:1.2, spinDuration:.45, radiusBonus:28, normalDamage:8,
+      dashDamage:16, bleedDamage:2, bleedTicks:3, gapForCap:200, maxBonus:.6 };
+    function initNewhello(f) {
+      f.newhello={cd:NEWHELLO.period, windup:0, dash:0, spin:0, spinFast:false,
+        contactCd:0, anchors:[], angle:0, hits:new Set(), trail:[]};
+    }
+    function newhelloMultiplier(f,e) {
+      return 1+Math.min(NEWHELLO.maxBonus,Math.max(0,e.hp-f.hp)/NEWHELLO.gapForCap*NEWHELLO.maxBonus);
+    }
+    function newhelloBlocked(f) {
+      return !f.alive || f.tanoStop>0 || f.punchHold>0 || f.punchFlight>0 ||
+        f.vampSuppressed>0 || f.joltStop>0 || isCasting(f);
+    }
+    function newhelloWallPoint(f,a) {
+      const dx=Math.cos(a),dy=Math.sin(a),ts=[];
+      if(dx>1e-6)ts.push((arena.x2-f.x)/dx);
+      if(dx< -1e-6)ts.push((arena.x-f.x)/dx);
+      if(dy>1e-6)ts.push((arena.y2-f.y)/dy);
+      if(dy< -1e-6)ts.push((arena.y-f.y)/dy);
+      const t=Math.min(...ts.filter(v=>v>=0));
+      return {x:clamp(f.x+dx*t,arena.x,arena.x2),y:clamp(f.y+dy*t,arena.y,arena.y2)};
+    }
+    function newhelloContact(f,e) {
+      const n=f.newhello;
+      if(!n || !e.alive || !areEnemies(f,e) || newhelloBlocked(f) || n.windup>0)return;
+      const fast=n.dash>0;
+      if(fast ? n.hits.has(e.id) : n.contactCd>0)return;
+      n.spin=NEWHELLO.spinDuration;n.spinFast=fast;n.contactCd=NEWHELLO.contactCooldown;
+      const victims=enemiesOf(f).filter(t=>Math.hypot(t.x-f.x,t.y-f.y)<=f.r+NEWHELLO.radiusBonus+t.r);
+      for(const t of victims){
+        if(fast && n.hits.has(t.id))continue;
+        if(fast)n.hits.add(t.id);
+        const mult=newhelloMultiplier(f,t);
+        const dealt=damage(t,(fast?NEWHELLO.dashDamage:NEWHELLO.normalDamage)*mult,f,fast?"입체기동 회전베기":"쌍검 회전베기");
+        if(dealt>0 && t.alive)applyBleed(t,f,NEWHELLO.bleedDamage*mult,3,1,NEWHELLO.bleedTicks);
+        spawnHitFlash(t.x,t.y,fast?"#67e8f9":"#e2e8f0",fast?38:23);
+      }
+      spawnBlast(f.x,f.y,f.r+NEWHELLO.radiusBonus,fast?"#22d3ee":"#cbd5e1");
+      if(fast){spawnParticles(f.x,f.y,"#a5f3fc",14);screenShake=Math.max(screenShake,.35);}
+      playSound("slash",fast?1:.65);
+    }
+    function tickNewhello(f,dt) {
+      const n=f.newhello;if(!n)return;
+      n.spin=Math.max(0,n.spin-dt);n.contactCd=Math.max(0,n.contactCd-dt);
+      n.cd=Math.max(0,n.cd-dt);
+      n.trail.forEach(p=>p.life-=dt);n.trail=n.trail.filter(p=>p.life>0);
+      if(newhelloBlocked(f) && (n.dash>0 || n.windup>0)){
+        n.dash=0;n.windup=0;n.anchors=[];n.cd=NEWHELLO.period;
+      }
+    }
+    function moveNewhello(f,dt,movementScale) {
+      const n=f.newhello;if(!n)return false;
+      if(!f.alive)return true;
+      if(n.cd<=0 && n.dash<=0 && n.windup<=0){
+        const e=nearestEnemy(f).enemy;if(!e)return false;
+        n.angle=Math.atan2(e.y-f.y,e.x-f.x);
+        n.anchors=[newhelloWallPoint(f,n.angle-.24),newhelloWallPoint(f,n.angle+.24)];
+        n.windup=NEWHELLO.windup;n.cd=NEWHELLO.period;n.hits.clear();
+        spawnFloatingText(f.x,f.y-f.r-36,"입체기동!","#a5f3fc");
+      }
+      if(n.windup>0){
+        f.vx=0;f.vy=0;n.windup=Math.max(0,n.windup-dt);
+        if(n.windup===0){n.dash=NEWHELLO.dashDuration;f.vx=Math.cos(n.angle)*NEWHELLO.dashSpeed;f.vy=Math.sin(n.angle)*NEWHELLO.dashSpeed;}
+        return true;
+      }
+      if(n.dash<=0)return false;
+      const travel=Math.min(dt,n.dash),steps=Math.max(1,Math.ceil(travel/(1/120)));
+      for(let k=0;k<steps;k++){
+        if(newhelloBlocked(f)){n.dash=0;break;}
+        f.vx=Math.cos(n.angle)*NEWHELLO.dashSpeed;f.vy=Math.sin(n.angle)*NEWHELLO.dashSpeed;
+        f.x+=Math.cos(n.angle)*NEWHELLO.dashSpeed*movementScale*travel/steps;
+        f.y+=Math.sin(n.angle)*NEWHELLO.dashSpeed*movementScale*travel/steps;
+        // 고속 이동 경로도 작은 간격으로 접촉 판정하여 적을 관통해 놓치지 않는다.
+        for(const e of enemiesOf(f)){
+          if(Math.hypot(e.x-f.x,e.y-f.y)<=f.r+e.r)newhelloContact(f,e);
+        }
+        if(f.x-f.r<=arena.x || f.x+f.r>=arena.x2 || f.y-f.r<=arena.y || f.y+f.r>=arena.y2){
+          bounceWalls(f);n.dash=0;break;
+        }
+      }
+      n.trail.push({x:f.x,y:f.y,life:.18});
+      n.dash=Math.max(0,n.dash-travel);
+      if(n.dash<=0){n.anchors=[];const speed=f.baseSpeed*44;const a=Math.atan2(f.vy,f.vx);f.vx=Math.cos(a)*speed;f.vy=Math.sin(a)*speed;}
+      return true;
+    }
+    function drawNewhelloBlade(x,y,a,length=25) {
+      ctx.save();ctx.translate(x,y);ctx.rotate(a);
+      ctx.fillStyle="#292720";ctx.fillRect(-5,-2,8,4);
+      ctx.strokeStyle="#bcc8cf";ctx.lineWidth=1.5;ctx.strokeRect(-6,-4,9,8);
+      ctx.fillStyle="#7e8c93";ctx.fillRect(2,-5,3,10);
+      const metal=ctx.createLinearGradient(4,-3,4,3);
+      metal.addColorStop(0,"#ffffff");metal.addColorStop(.4,"#d9e4e7");metal.addColorStop(1,"#697c87");
+      ctx.fillStyle=metal;ctx.beginPath();ctx.moveTo(5,-3);ctx.lineTo(length+5,-3);
+      ctx.lineTo(length+1,3);ctx.lineTo(5,3);ctx.closePath();ctx.fill();
+      ctx.strokeStyle="#596a73";ctx.lineWidth=.7;
+      for(let i=10;i<length+1;i+=5){ctx.beginPath();ctx.moveTo(i,-3);ctx.lineTo(i-2,3);ctx.stroke();}
+      ctx.restore();
+    }
+    function drawNewhelloCharacter(f) {
+      const n=f.newhello,spin=n.spin||0,fast=n.dash>0;
+      if(!f.portraitOnly){
+        ctx.save();ctx.lineWidth=1.3;ctx.strokeStyle="#b9cbd5";
+        n.anchors.forEach((p,i)=>{ctx.beginPath();ctx.moveTo(f.x+(i?1:-1)*f.r*.8,f.y+f.r*.6);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.fillStyle="#e2e8f0";ctx.fillRect(p.x-3,p.y-3,6,6);});
+        n.trail.forEach(p=>{ctx.globalAlpha=p.life/.18*.35;ctx.fillStyle="#67e8f9";ctx.beginPath();ctx.arc(p.x,p.y,f.r,0,Math.PI*2);ctx.fill();});ctx.restore();
+        if(spin>0){
+          ctx.save();ctx.translate(f.x,f.y);ctx.rotate((NEWHELLO.spinDuration-spin)*30);
+          ctx.strokeStyle=n.spinFast?"#67e8f9":"#e2e8f0";ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=n.spinFast?14:4;ctx.lineWidth=n.spinFast?4:2;
+          const reach=f.r+NEWHELLO.radiusBonus;
+          for(const a of [0,Math.PI]){ctx.beginPath();ctx.arc(0,0,reach,a,a+2.4);ctx.stroke();drawNewhelloBlade(Math.cos(a)*(reach-29),Math.sin(a)*(reach-29),a,24);}
+          ctx.restore();
+        }
+      }
+      ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
+      if(spin>0)ctx.rotate((NEWHELLO.spinDuration-spin)*24);
+      // 초록 망토, 갈색 재킷, 흰 셔츠와 입체기동 하네스.
+      ctx.fillStyle="#243e30";ctx.strokeStyle="#14271f";ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(-9,0);ctx.quadraticCurveTo(-26,3,-27,24);ctx.lineTo(-14,20);ctx.lineTo(-8,29);ctx.lineTo(5,24);ctx.lineTo(24,27);ctx.quadraticCurveTo(20,5,8,0);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle="#54735a";ctx.beginPath();ctx.moveTo(-16,9);ctx.lineTo(-20,21);ctx.moveTo(12,9);ctx.lineTo(17,22);ctx.stroke();
+      ctx.fillStyle="#99724e";ctx.fillRect(-11,5,22,17);ctx.fillStyle="#ece8dc";ctx.fillRect(-5,5,10,19);
+      ctx.strokeStyle="#443d35";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-9,6);ctx.lineTo(7,23);ctx.moveTo(9,6);ctx.lineTo(-7,23);ctx.moveTo(-12,19);ctx.lineTo(12,19);ctx.stroke();
+      ctx.fillStyle="#c1c6c7";ctx.strokeStyle="#45525a";ctx.lineWidth=1;
+      for(const side of [-1,1]){ctx.fillRect(side*16-4,12,8,12);ctx.strokeRect(side*16-4,12,8,12);ctx.fillStyle="#65767e";ctx.fillRect(side*16-2,14,4,8);ctx.fillStyle="#c1c6c7";}
+      ctx.fillStyle="#dedbd2";ctx.beginPath();ctx.moveTo(-4,3);ctx.lineTo(4,3);ctx.lineTo(5,10);ctx.lineTo(0,13);ctx.lineTo(-5,10);ctx.fill();
+      ctx.fillStyle="#e8c8af";ctx.strokeStyle="#a88c76";ctx.beginPath();ctx.moveTo(-11,-14);ctx.quadraticCurveTo(0,-23,11,-14);ctx.lineTo(10,-1);ctx.lineTo(5,5);ctx.lineTo(0,7);ctx.lineTo(-7,3);ctx.lineTo(-11,-3);ctx.closePath();ctx.fill();ctx.stroke();
+      // 6:4 가르마와 길게 내려오는 검은 앞머리, 좁고 날카로운 눈.
+      ctx.fillStyle="#171d1c";ctx.beginPath();ctx.moveTo(-12,-2);ctx.lineTo(-15,-13);ctx.quadraticCurveTo(-14,-27,1,-25);ctx.quadraticCurveTo(15,-26,15,-13);ctx.lineTo(11,-1);ctx.lineTo(9,-14);ctx.lineTo(6,-4);ctx.lineTo(5,-19);ctx.lineTo(0,-9);ctx.lineTo(-2,-17);ctx.lineTo(-8,-7);ctx.lineTo(-10,-13);ctx.closePath();ctx.fill();
+      ctx.strokeStyle="#4b5350";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(2,-23);ctx.quadraticCurveTo(-8,-23,-12,-13);ctx.moveTo(5,-22);ctx.lineTo(10,-17);ctx.stroke();
+      for(const side of [-1,1]){ctx.fillStyle="#f3f4ed";ctx.beginPath();ctx.moveTo(side*2,-6);ctx.lineTo(side*9,-7);ctx.lineTo(side*7,-3);ctx.lineTo(side*3,-3);ctx.fill();ctx.fillStyle="#60716c";ctx.fillRect(side*6-1,-6,2,3);ctx.strokeStyle="#202927";ctx.beginPath();ctx.moveTo(side*2,-7);ctx.lineTo(side*9,-8);ctx.stroke();}
+      ctx.strokeStyle="#987560";ctx.beginPath();ctx.moveTo(0,-3);ctx.lineTo(-1,0);ctx.moveTo(-3,3);ctx.lineTo(3,3);ctx.stroke();
+      if(spin<=0){drawNewhelloBlade(-15,8,-2.15,20);drawNewhelloBlade(15,8,-.99,20);}
+      ctx.restore();drawHealthBar(f);drawName(f);
+    }
 
     function initRiddle(f) {
       f.riddle = {
@@ -4238,6 +4376,7 @@
     }
 
       const patchNotes = [
+      "v79: 신규 애니 캐릭터 뉴헬로 병장 추가. HP170·이속3, HP 열세 차이10당 피해+3%(최대60%). 7초마다 0.45초 와이어 준비 후 1초 고속 기동. 접촉 원형베기8/고속16 및 출혈2×3, 고속 기동당 대상별 1회. 참고 이미지 기반 검은 머리·초록 망토·하네스·입체기동장치·분절 쌍검을 인게임/도감 공통 Canvas로 구현. 기존 캐릭터 수치 유지.",
       "v78: 리들 경 일반 아바다 케다브라 타격당 피해5→4, 5회 총피해25→20. 딱총나무 강화 피해6×5·공유 쿨9초·첫 주문4초·피엔드피레·부활·지팡이 조건은 유지.",
       "v77: 리들 경 주문 공유 쿨타임10→9초 조정. 첫 주문4초·부활 기준/최대HP70·부활 후 정상 능력·딱총나무 지팡이 자동 습득25초 및 나머지 수치는 유지.",
       "v76: 리들 경 주문 공유 쿨타임8→10초. 첫 주문4초·부활 기준/최대HP70·부활 후 정상 능력·딱총나무 지팡이 자동 습득25초 및 나머지 수치는 유지.",
@@ -4347,6 +4486,9 @@
     }
 
     function characterDamageInfo(c) {
+      if(c.id==="newhello_sergeant")return {damage:"일반 회전베기8 / 기동 회전베기16 + 출혈2×3회 · HP 열세 보정 최대 ×1.6",
+        tick:"기동7초 · 준비0.45초 · 고속이동1초(초당520) · 일반 베기 재사용1.2초 · 출혈 약1초마다",
+        tip:"현재 HP가 상대보다 낮을 때만 HP 차이10당 베기·출혈 피해 +3%(최대60%). 접촉으로 원형 베기 발동, 범위는 본체 반지름+28. 고속 기동 한 번당 같은 적에게 베기는 1회만 적중. 출혈은 같은 병장에게 재피격 시 갱신되며 별도 중첩되지 않는다. 와이어 발사 방향은 준비 시작 시 고정되며 자동 추적하지 않는다."};
       if (c.id === "riddle_lord") return {damage:"피엔드피레 0.4초마다3 + 화상2×3초 / 딱총나무 강화 0.4초마다4 + 화상3×3초 · 아바다 케다브라 4×5 / 강화 6×5",tick:"공유 쿨9초 · 첫 피엔드피레는 4초 뒤 · 이후 피엔드피레↔아바다 교대 · 피엔드피레4초 지속 · 아바다0.9초 다단 · 딱총나무16초 대기 후 등장·미획득 시25초 뒤 자동 습득·획득 시12초 강화",tip:"딱총나무 강화 중 피엔드피레 반경75→105, 아바다 케다브라는 거리와 조준을 무시하고 지정 대상에게 확정 적중한다. 첫 사망 때 호크룩스 7칸/7초 상태가 되며 이동·공격 불가. 적 접촉마다 1칸, 공격 피격마다 기본1칸＋피해10당 1칸 추가 감소. 피격 또는 접촉 1회마다 부활 HP도 70에서 10씩 감소한다. 생존하면 최대HP70·이속2.8로 남은 부활HP만큼 부활한다. 부활 후에도 원래 스킬과 지팡이를 그대로 사용한다. 지팡이는 획득 전까지 소멸하지 않고 등장 25초 뒤 자동 습득한다. 두 번째 부활은 없다."};
       if (c.id === "hinta") return {damage:"속공 12 / 괴짜 속공 24 · 각 50% 확률 / 대쉬 충돌 10",tick:"첫 공 5초 · 공 소멸 후 5초 재등장 · 벽/적 합계 3회 접촉",tip:"대기 공을 4초간 못 잡으면 속도480으로 직선 돌진. 적별 돌진당 1회 피해10·측면 넉백, 넉백 후 2초간 이속40% 감소. 벽 반사 후 같은 적도 다시 피해를 받는다. 속공은 짧은 이동 예측 조준·속도380. 괴짜 속공은 조준 오차 ±20~40도·속도570. 발사 후 유도 없음. 공 반경10, 습득 범위는 본체+공 반경에24 추가. 비행 공은 재타격할 수 없고, 세 번째 접촉이 적이면 피해 후 소멸한다. 모서리 두 벽은 2회로 센다."};
       if (c.id === "oshi") return { damage: "노래 1~4단계 피해 4/5/7/9 · 반경 90/110/130/150 / 투어 초당2 · 누적 체류 3초마다15 / 후유증: 체류 2초당 총3을 5초 DOT / 도쿄돔 칼35 + 출혈3×8 / 공연 연장 반경175·초당4·누적 3초마다20", tick: "노래 2초 · 노래 적중 1명당 인지도+15 · 적 접촉 대상별 1초마다+4 · 인지도100에 투어", tip: "체류 추가 피해는 적별로 한 번의 투어 안에서 누적하며 이탈해도 유지된다. 누적 3초마다 발동하고 다음 투어에서는 초기화된다. 노래 적중자는 3초간 이동속도 20% 감소 및 최애에게 주는 모든 피해 20% 감소(감소 후 최소 피해 1). 최대 체력 비례 피해와 푸른 눈의 백룡 등 소환수 피해에도 적용된다. 투어 2회를 마친 뒤 다시 인지도100을 채우면 도쿄돔이 시작되며, 출혈 종료까지 생존하면 공연이 연장된다." };
@@ -4486,6 +4628,7 @@
         };
         if (c.id === "lisa") preview.lisa = { mode: "lady", patience: 0, rock: 0 };
         if (c.id === "oshi") preview.oshi = {};
+        if (c.id === "newhello_sergeant") initNewhello(preview);
         if (c.id === "hinta") preview.hinta = { pose: 0 };
         if (c.id === "riddle_lord") preview.riddle = { horcruxActive: false, elderBuff: 0 };
         if (c.id === "iron_mask") preview.iron = { suit: "basic", dash: 0, assembly: 0, punch: null };
@@ -4939,6 +5082,7 @@
       if (c.id === "jabami") initJabami(fighter);
       if (c.id === "justice_ally") initJusticeAlly(fighter);
       if (c.id === "oshi") initOshi(fighter);
+      if (c.id === "newhello_sergeant") initNewhello(fighter);
       if (c.id === "riddle_lord") initRiddle(fighter);
       if (c.id === "hinta") initHinta(fighter);
       if (c.id === "logo_doctor") initLogo(fighter);
@@ -5532,6 +5676,9 @@
     }
 
     function skillProgressInfo(f) {
+      if(f.newhello){const n=f.newhello;return {ratio:clamp(1-n.cd/NEWHELLO.period,0,1),className:"skill-fill",
+        text:n.windup>0?"와이어 고정 · 준비 "+n.windup.toFixed(1)+"초":n.dash>0?"입체기동 · 강화 회전베기":"입체기동까지 "+n.cd.toFixed(1)+"초",
+        extraTextHtml:'<div class="status-skill-label">일반8 / 기동16 + 출혈 · HP 열세 시 최대 +60%</div>'};}
       if(f.riddle){
         const r=f.riddle;
         if(r.horcruxActive)return {ratio:clamp(r.horcruxSegments/RIDDLE.horcruxSegments,0,1),className:"rage-fill",text:`호크룩스 ${r.horcruxSegments}/${RIDDLE.horcruxSegments} · 부활 ${r.horcruxTimer.toFixed(1)}초 · 부활HP ${r.horcruxReviveHp}/${RIDDLE.reviveHp}`,extraTextHtml:'<div class="status-skill-label">접촉/피격마다 부활HP -10 · 부활 후 능력 유지</div>'};
@@ -8714,6 +8861,7 @@
 
     function updateFighter(f, dt) {
       if (!f.alive) return;
+      tickNewhello(f,dt);
       // 넉백 비행이 끝난 뒤부터 2초간 둔화한다. 경직 중에도 정상 만료된다.
       if(!(f.punchFlight>0))f.hintaConcussion=Math.max(0,(f.hintaConcussion||0)-dt);
       if(f.hinta?.dash && (f.tanoStop>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f)))endHintaDash(f);
@@ -8939,6 +9087,7 @@
         return;
       }
 
+      if (f.newhello && moveNewhello(f, dt, slow * boost * gardenSlow * irisGlassSlow * oshiSlow)) return;
       if (f.hinta && moveHintaDash(f, dt)) return;
       if (f.logo && moveLogoJump(f, dt)) return;
       recoverOwnMoveSpeed(f, dt);
@@ -9096,6 +9245,8 @@
             if (b.baseId === "wind_rio") ensureRioPermanentVelocity(b);
 
             if (areEnemies(a, b)) {
+              newhelloContact(a, b);
+              newhelloContact(b, a);
               recordJabamiContact(a, b);
               recordJabamiContact(b, a);
               recordOshiContact(a, b);
@@ -11682,6 +11833,7 @@
       if (f.iron) { drawIronCharacter(f); return; }
       if (f.lisa) { drawLisaCharacter(f); return; }
       if (f.oshi) { drawOshiCharacter(f); return; }
+      if (f.newhello) { drawNewhelloCharacter(f); return; }
       if (f.riddle) { drawRiddleCharacter(f); return; }
       if (f.hinta) { drawHintaCharacter(f); return; }
       if (f.captain) { drawCaptainCharacter(f); return; }
