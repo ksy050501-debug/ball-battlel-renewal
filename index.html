@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v93</title>
+  <title>볼배틀 리뉴얼 v94</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v93</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v94</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -3077,7 +3077,7 @@
     }
     function makeJusticeDeck(){return ["blueEyes","blueEyes","blueEyes","fusion"];}
     function initJusticeAlly(f) {
-      f.duelist = { timer: 6, equipped: false, hand: [], deck: makeJusticeDeck(), drawCd: 0, playCd: 0, speech: "", speechTime: 0, blueSummoned: 0, fusionDone: false, fusion: null, emptyTimer: 0, obeliskUsed:false, godCinematic:null };
+      f.duelist = { timer: 6, equipped: false, hand: [], deck: makeJusticeDeck(), drawCd: 0, playCd: 0, speech: "", speechTime: 0, blueSummoned: 0, fusionDone: false, fusion: null, emptyTimer: 0, obeliskUsed:false, godCinematic:null, summonDamageDealt:0, summonKills:0 };
     }
     function updateJusticeAlly(f, dt) {
       const d = f.duelist;
@@ -3108,6 +3108,23 @@
     function resetJusticeDeck(f){if(!f?.alive||!f.duelist)return;const d=f.duelist;d.hand=[];d.deck=makeJusticeDeck();d.blueSummoned=0;d.fusionDone=false;d.fusion=null;d.emptyTimer=0;d.obeliskUsed=false;d.godCinematic=null;d.justUsed=false;for(let i=0;i<3;i++)drawJusticeCard(f);d.drawCd=9;d.playCd=2.8;spawnFloatingText(f.x,f.y-f.r-48,"덱 초기화 · 백룡 3장 드로우","#bfdbfe");log(`<strong>${escapeHtml(f.name)}</strong> 소환수 전멸 9초 · 덱 초기화`,"듀얼");}
     function consumeJusticeCard(f,id){const i=f.duelist.hand.indexOf(id);if(i<0)return false;f.duelist.hand.splice(i,1);return true;}
     function justiceSummons(f,kind=null){return fighters.filter(e=>e.alive&&e.ownerId===f.id&&e.duelMonster&&(!kind||e.duelMonster.kind===kind));}
+    function archiveJusticeSummonStats(m){
+      if(!m?.isSummon||!m.duelMonster||m.justiceStatsArchived)return;
+      const owner=fighterById(m.ownerId);
+      if(owner?.duelist){
+        owner.duelist.summonDamageDealt=(owner.duelist.summonDamageDealt||0)+(m.damageDealt||0);
+        owner.duelist.summonKills=(owner.duelist.summonKills||0)+(m.kills||0);
+      }
+      m.justiceStatsArchived=true;
+    }
+    function justiceSummonBattleStats(owner){
+      if(!owner?.duelist)return {damage:0,kills:0};
+      let damage=owner.duelist.summonDamageDealt||0,kills=owner.duelist.summonKills||0;
+      fighters.filter(m=>m.isSummon&&m.ownerId===owner.id&&m.duelMonster&&!m.justiceStatsArchived).forEach(m=>{
+        damage+=m.damageDealt||0;kills+=m.kills||0;
+      });
+      return {damage,kills};
+    }
     function restoreJusticeMotion(f,vx=f.vx,vy=f.vy){
       if(!f?.alive)return;
       if(Math.hypot(vx||0,vy||0)<1){const v=randomVelocity(f.baseSpeed||2.35);vx=v.vx;vy=v.vy;}
@@ -3148,6 +3165,15 @@
       ctx.fillStyle="#f8fafc";ctx.strokeStyle="#64748b";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-19,8);ctx.lineTo(-12,23);ctx.lineTo(-5,14);ctx.lineTo(0,22);ctx.lineTo(5,14);ctx.lineTo(12,23);ctx.lineTo(19,8);ctx.lineTo(11,12);ctx.lineTo(7,21);ctx.lineTo(-7,21);ctx.lineTo(-11,12);ctx.closePath();ctx.fill();ctx.stroke();
       if(d?.equipped){ctx.save();ctx.translate(-18,13);ctx.rotate(.18);ctx.fillStyle="#dbeafe";ctx.strokeStyle="#1e3a8a";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(3,-7);ctx.lineTo(-12,-9);ctx.lineTo(-18,-4);ctx.lineTo(-42,-8);ctx.lineTo(-49,-2);ctx.lineTo(-29,4);ctx.lineTo(-45,11);ctx.lineTo(-20,10);ctx.lineTo(-8,5);ctx.lineTo(3,5);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#3b82f6";for(let i=0;i<4;i++){ctx.fillRect(-42+i*8,-3+i*.8,7,5);}ctx.fillStyle="#ef4444";ctx.fillRect(-14,-5,8,9);ctx.fillStyle="#38bdf8";ctx.beginPath();ctx.arc(-2,0,4,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
       ctx.restore();drawHealthBar(f);drawName(f);
+      if(!f.portraitOnly&&d?.speechTime>0&&d.speech){
+        const lines=d.speech.includes("오벨리스크")?["몬스터가 아니다, 신이다!","나와라 오벨리스크의 거신병!"]:[d.speech];
+        ctx.save();ctx.font="900 11px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";
+        const widths=lines.map(s=>ctx.measureText(s).width),w=Math.min(330,Math.max(...widths,80)+20),h=lines.length*15+12;
+        const x=clamp(f.x-w/2,arena.x+5,arena.x2-w-5),y=Math.max(arena.y+5,f.y-f.r-72-h);
+        ctx.fillStyle="rgba(15,23,42,.94)";ctx.strokeStyle="#93c5fd";ctx.lineWidth=1.5;roundRect(ctx,x,y,w,h,10,true,true);
+        ctx.fillStyle="#dbeafe";lines.forEach((s,i)=>ctx.fillText(s,x+w/2,y+11+i*15));
+        ctx.restore();
+      }
     }
     function initJabami(f) {
       f.jabami = { clock: JABAMI.period, contacts: new Set(), phase: "collect", timer: 0, gameDuration: 0, participants: [], round: 0, debt: 0, debtUntilRound: 0, debtChances: 1, debtEntryUsed: false, game: "", stake: 0, cards: new Map(), bombHolder: "", bombPassCd: 0, bombSound: 0, rouletteAngle: 0, savedMotion: new Map(), resultText: "", speech: "", speechTime: 0, autoWin: false };
@@ -3277,20 +3303,39 @@
       spawnFloatingText(f.x, f.y-f.r-48, `빚 ${total} 떠넘김!`, "#fde68a");
       return total;
     }
-    function rewardJabamiWin(f, baseAmount, debtRecipients = []) {
-      const debtMode = f.jabami.debt > 0;
-      if (debtMode && debtRecipients.some(p => p?.alive && p !== f)) {
-        transferJabamiDebt(f, debtRecipients);
-      } else if (debtMode) {
-        const cleared = Math.ceil(f.jabami.debt);
-        f.jabami.debt = 0; f.jabami.debtUntilRound = 0;
+    function rewardJabamiWin(f, baseAmount, debtRecipients = [], mode = "normal") {
+      const j=f.jabami;
+      const debtMode = j.debt > 0;
+      const liveRecipients=debtRecipients.filter(p=>p?.alive&&p!==f);
+      let transferred=false;
+      if (debtMode && liveRecipients.length) {
+        transferJabamiDebt(f, liveRecipients);
+        transferred=true;
+      } else if (debtMode && mode==="autoWin") {
+        const cleared = Math.ceil(j.debt);
+        j.debt = 0; j.debtUntilRound = 0;
         const recovery = Math.min(cleared, Math.ceil(f.maxHp * .2));
         if (recovery > 0) f.hp = Math.min(f.maxHp, f.hp + recovery);
         spawnFloatingText(f.x, f.y-f.r-48, `부전승 · 빚 ${cleared} 청산`, "#fde68a");
         log(`<strong>${escapeHtml(f.name)}</strong> 상대 전원 탈락 · 빚 ${cleared} 청산`, "도박");
       }
+
+      const debtBeforePrize=j.debt;
       gainJabamiWinnings(f, Math.round(baseAmount * (debtMode ? 1.5 : 1)));
-      if (debtMode) spawnFloatingText(f.x, f.y-f.r-48, "빚쟁이 대역전!", "#fde68a");
+
+      if(debtMode && mode==="tie" && !transferred){
+        const paid=Math.max(0,Math.ceil(debtBeforePrize-j.debt));
+        if(j.debt>0){
+          j.debtUntilRound=Math.max(j.debtUntilRound||0,j.round+1);
+          spawnFloatingText(f.x,f.y-f.r-48,`공동승리 · 빚 ${Math.ceil(j.debt)} 이월`,"#fda4af");
+          log(`<strong>${escapeHtml(f.name)}</strong> 공동승리 · 상금으로 빚 ${paid} 상환 · 잔여 빚 ${Math.ceil(j.debt)} 다음 도박까지 이월`,"도박");
+        }else{
+          spawnFloatingText(f.x,f.y-f.r-48,"공동승리 · 빚 청산!","#fde68a");
+          log(`<strong>${escapeHtml(f.name)}</strong> 공동승리 상금으로 빚 전액 청산`,"도박");
+        }
+      }else if(debtMode && (transferred || mode==="autoWin")){
+        spawnFloatingText(f.x, f.y-f.r-48, "빚쟁이 대역전!", "#fde68a");
+      }
       return debtMode;
     }
     function showHighCardWinner(p) {
@@ -3342,7 +3387,7 @@
       const j = f.jabami, ps = jabamiParticipants(f), stake = j.stake;
       if (j.autoWin && f.alive) {
         const prize = stake * Math.max(2, j.participants.length);
-        rewardJabamiWin(f, prize, []);
+        rewardJabamiWin(f, prize, [], "autoWin");
         spawnFloatingText(f.x, f.y - f.r - 34, `부전승 · 총판돈 +${prize}`, "#fde68a");
         showHighCardWinner(f);
         log(`<strong>${escapeHtml(f.name)}</strong> 도박 상대 전원 탈락 · 하이카드 승리`, "도박");
@@ -3360,7 +3405,11 @@
         }
         ps.forEach(p => {
           if (winners.includes(p)) {
-            if (p === f) rewardJabamiWin(f, prizeShare, ps.filter(x=>!winners.includes(x))); else p.hp = Math.min(p.maxHp, p.hp + prizeShare);
+            if (p === f) {
+              const debtRecipients=ps.filter(x=>!winners.includes(x));
+              const allSurvivorsTied=winners.length>1&&debtRecipients.length===0;
+              rewardJabamiWin(f,prizeShare,debtRecipients,allSurvivorsTied?"tie":"normal");
+            } else p.hp = Math.min(p.maxHp, p.hp + prizeShare);
             spawnFloatingText(p.x,p.y-p.r-34,`총판돈 몫 +${prizeShare}`,"#fde68a");
             showHighCardWinner(p);
           } else {
@@ -3429,6 +3478,21 @@
       spawnFloatingText(target.x, target.y - target.r - 8, `빚 +${value}`, color);
       return true;
     }
+    function drawJabamiDebtChanceBadge(f){
+      if(f.portraitOnly||!f.jabami)return;
+      const j=f.jabami,chances=Math.max(0,j.debtChances||0);
+      const text=j.debt>0?`◆ 빚중 · 다음 기회 ×${chances}`:`◆ 빚 기회 ×${chances}`;
+      ctx.save();
+      ctx.font="900 10px system-ui";
+      ctx.textAlign="center";ctx.textBaseline="middle";
+      const w=Math.max(66,ctx.measureText(text).width+14),h=17;
+      const x=f.x-w/2,y=f.y+f.r+24;
+      ctx.fillStyle=j.debt>0?"rgba(127,29,29,.90)":chances>0?"rgba(88,28,135,.88)":"rgba(51,65,85,.82)";
+      ctx.strokeStyle=j.debt>0?"#fca5a5":chances>0?"#f0abfc":"#94a3b8";
+      ctx.lineWidth=1.2;roundRect(ctx,x,y,w,h,8,true,true);
+      ctx.fillStyle="#fff";ctx.fillText(text,f.x,y+h/2+.2);
+      ctx.restore();
+    }
     function drawJabamiCharacter(f) {
       ctx.save(); ctx.translate(f.x, f.y);
       ctx.fillStyle = "#09090b"; ctx.beginPath(); ctx.ellipse(0,2,f.r+6,f.r+13,0,0,Math.PI*2); ctx.fill();
@@ -3439,7 +3503,7 @@
       ctx.fillStyle = "#111827"; ctx.font = "bold 12px system-ui"; ctx.textAlign = "center"; ctx.fillText("♦", 0, 11);
       if (f.jabami.debt > 0) { ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,f.r+8,0,Math.PI*2); ctx.stroke(); }
       ctx.restore();
-      drawHealthBar(f); drawName(f);
+      drawHealthBar(f); drawName(f); drawJabamiDebtChanceBadge(f);
     }
     function activeJabamiGameFor(f) { return fighters.find(j => j.alive && (j.jabami?.phase === "play" || j.jabami?.phase === "result") && j.jabami.participants.includes(f.id)); }
     function jabamiHighCardWallBounce(f) {
@@ -5000,6 +5064,7 @@
     }
 
       const patchNotes = [
+      "v94: 쟈바미 공동승리·빚 기회 UI 및 정의의 아군 분석 개선. 빚쟁이 쟈바미가 하이카드 공동승리하고 실제 패자가 없을 때 더 이상 '상대 전원 탈락'으로 오인해 빚을 전액 청산하지 않음. 공동승리 몫(빚 상태 1.5배)은 우선 빚 상환에 쓰고, 남은 빚은 다음 도박까지 이월하며 전액 갚았을 때만 해제. 실제 패자가 있으면 기존처럼 패자에게 빚 이전, 진짜 상대 전멸 부전승은 기존 전액 청산 유지. 쟈바미 캐릭터 아래에 '빚 기회 ×N' 배지를 상시 표시하고 빚 상태에서는 '빚중 · 다음 기회 ×N'으로 표시. 정의의 아군은 전투분석에 소환수 누적 피해/처치 항목을 별도로 표시하며 이미 사라진 백룡·융합체·오벨리스크 기록도 누적 보존. 오벨리스크 릴리스 소환 시 화면 진동을 강화(1.8)하고 소환 대사를 5.8초간 말풍선으로 유지.",
       "v93: 팀전 HUD/상태창 개편. 팀전에서 경기장 상단에 A/B 전용 스코어보드를 추가해 탈락 스코어(A 점수=B 탈락 인원, B 점수=A 탈락 인원), 각 팀 남은 인원/전체 인원·탈락 수·현재 출전 캐릭터·대기 인원을 실시간 표시. 상태창은 팀전에서 좌측 A팀/우측 B팀으로 고정 분리하고 현재 출전 캐릭터를 각 열 최상단에 유지, 사망 캐릭터는 해당 팀 열 아래쪽에 출전 순서대로 누적되도록 변경. 개인전 상태창 동작은 유지.",
       "v92: 앤드럼 그루브 제동 강화. 자연 증가를 초당12.5→10으로 낮추고, 피격 시 그루브 감소량을 실제 피해×3→×5로 상향. 예: 피해7은 -35, 피해10은 -50. 솔로 게이지는 기존대로 적중 킥 1회당+5, 최대100 및 다음 마디 WHIPLASH 진입 규칙 유지. 공격/반경/리듬/사운드 및 그루브 구간0~100/101~200/201~300은 변경 없음.",
       "v91: 앤드럼 그루브/솔로 게이지 재설계. 그루브를 단계별 시간 진행도에서 0~300 단일 수치로 변경: 0~100 기본, 101~200 몰입, 201~300 광란. 평상시 초당12.5 증가해 무피격 시 기존처럼 약8초마다 다음 구간에 진입. 실제 피해를 받으면 피해량×3만큼 그루브가 감소해 임계값 아래로 내려갈 경우 단계도 즉시 하락(예: 피해7→-21). 별도 WHIPLASH 게이지0~100을 추가하고 일반 킥이 적에게 실제 피해를 준 공격 1회당+5, 100에서 준비 상태가 되어 다음 마디 1박에 솔로 시작 후0으로 소모. 기존 16초 자동 솔로 쿨타임 제거. 상태창에 그루브 게이지와 WHIPLASH 게이지를 각각 표시. 공격/반경·리듬·필인·사운드는 v90 유지.",
@@ -7935,8 +8000,8 @@
       if(living.length!==1||living[0]!==target)return false;
       d.obeliskUsed=true;d.fusion=null;d.godSpawn={x:target.x,y:target.y};
       target.hp=0;target.alive=false;spawnParticles(target.x,target.y,"#93c5fd",28);
-      triggerHitStop(1.15);screenShake=Math.max(screenShake,.85);playSound("explosion",1.5);
-      d.speech="몬스터가 아니다, 신이다! 나와라 오벨리스크의 거신병!";d.speechTime=3.4;
+      triggerHitStop(1.25);screenShake=Math.max(screenShake,1.8);playSound("explosion",1.5);
+      d.speech="몬스터가 아니다, 신이다! 나와라 오벨리스크의 거신병!";d.speechTime=5.8;
       spawnFloatingText(owner.x,owner.y-owner.r-60,d.speech,"#93c5fd");
       log(`<strong>${escapeHtml(owner.name)}</strong> ${d.speech}`,"대사");
       const god=summonJusticeMonster(owner,"obelisk",1);god.duelMonster.invuln=1.6;delete d.godSpawn;
@@ -10735,12 +10800,17 @@
       const rows = fighters
         .filter(f => !f.isSummon)
         .sort((a, b) => (b.damageDealt || 0) - (a.damageDealt || 0));
-      const maxDamage = Math.max(1, ...rows.map(f => f.damageDealt || 0));
-      const maxKills = Math.max(1, ...rows.map(f => f.kills || 0));
+      const summonStats=new Map(rows.map(f=>[f.id,f.baseId==="justice_ally"?justiceSummonBattleStats(f):{damage:0,kills:0}]));
+      const maxDamage = Math.max(1, ...rows.flatMap(f => [f.damageDealt || 0, summonStats.get(f.id)?.damage || 0]));
+      const maxKills = Math.max(1, ...rows.flatMap(f => [f.kills || 0, summonStats.get(f.id)?.kills || 0]));
       body.innerHTML = rows.map(f => {
         const dealt = Math.round(f.damageDealt || 0);
         const taken = Math.round(f.damageTaken || 0);
         const kills = f.kills || 0;
+        const summon=summonStats.get(f.id)||{damage:0,kills:0};
+        const summonHtml=f.baseId==="justice_ally"?`
+              <div class="analysis-stat"><span>소환수 피해</span><div class="analysis-bar"><span style="width:${clamp(summon.damage / maxDamage * 100, 0, 100)}%"></span></div><span>${Math.round(summon.damage)}</span></div>
+              <div class="analysis-stat"><span>소환수 처치</span><div class="analysis-bar"><span style="width:${clamp(summon.kills / maxKills * 100, 0, 100)}%"></span></div><span>${summon.kills}</span></div>`:"";
         return `
           <div class="analysis-row">
             <div class="analysis-face" style="background:${f.color}">${escapeHtml(f.mark)}</div>
@@ -10748,6 +10818,7 @@
               <div class="analysis-name">${escapeHtml(f.name)}</div>
               <div class="analysis-stat"><span>피해</span><div class="analysis-bar"><span style="width:${clamp(dealt / maxDamage * 100, 0, 100)}%"></span></div><span>${dealt}</span></div>
               <div class="analysis-stat"><span>처치</span><div class="analysis-bar"><span style="width:${clamp(kills / maxKills * 100, 0, 100)}%"></span></div><span>${kills}</span></div>
+              ${summonHtml}
               <div class="analysis-stat"><span>피격</span><div class="analysis-bar"><span style="width:${clamp(taken / Math.max(1, f.maxHp) * 100, 0, 100)}%"></span></div><span>${taken}</span></div>
             </div>
           </div>`;
@@ -10821,6 +10892,7 @@
         updatePylons(sub);
         updateParticles(sub);
 
+        fighters.filter(f=>f.isSummon&&!f.alive&&f.duelMonster).forEach(archiveJusticeSummonStats);
         fighters = fighters.filter(f => f.alive || !f.isSummon);
         checkEnd();
         if (cinematicFreeze > 0) break;
