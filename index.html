@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v87</title>
+  <title>볼배틀 리뉴얼 v88</title>
   <style>
     :root {
       --bg: #020617;
@@ -875,7 +875,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v87</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v88</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1067,7 +1067,7 @@
       { id: "riddle_lord", name: "리들 경", mark: "蛇", role: "영화", color: "#64748b", hp: 180, attack: 0, speed: 2.8, range: 260,
         skillName: "피엔드피레 · 아바다 케다브라 · 호크룩스", condition: "공유 쿨9초 · 피엔드피레↔아바다 번갈아 시전 · 딱총나무 지팡이16초 · 사망 시 호크룩스 1회", desc: "피엔드피레와 아바다 케다브라를 하나의 쿨타임으로 번갈아 사용한다. 딱총나무 지팡이를 획득하면 불꽃 범위와 화상이 강화되고 아바다 케다브라가 거리 무관 확정타가 된다. 첫 사망 시 7칸 호크룩스로 7초를 버티면 본래 능력으로 부활하며, 대기 중 피격·충돌마다 부활 HP가 10씩 감소한다. 부활 최대 체력은 70이며 지팡이도 계속 획득할 수 있다. 지팡이는 사라지지 않고 등장 25초 뒤 자동 습득한다." },
       { id: "andrum", name: "앤드럼", mark: "🥁", role: "영화", color: "#d6a85f", hp: 150, attack: 0, speed: 2.7, range: 210,
-        skillName: "템포 · Caravan", condition: "연주 8초 유지마다 템포 상승 · 피격 시 상승 진행도 절반 · 16초마다 Caravan", desc: "주변 적에게 드럼 음파를 반복해서 퍼뜨린다. 연주를 이어갈수록 기본→업템포→광란으로 빨라지고 범위가 넓어진다. 피해를 받아도 단계는 내려가지 않고 다음 템포까지의 진행도만 절반으로 줄어든다. 16초마다 4초간 Caravan 솔로에 돌입해 넓은 광역 비트를 연속으로 울리고 마지막 대형 심벌 크래시로 마무리한다. 실제 드럼 패턴은 하이햇 8비트, 2·4박 스네어, 1·3박 킥으로 연주한다." },
+        skillName: "그루브 · WHIPLASH", condition: "140BPM 고정 · 4마디마다 탐 필인 · 킥 타격에 음파 공격 · 16초마다 WHIPLASH", desc: "140BPM을 끝까지 유지하며 하이햇 8비트, 2·4박 스네어, 1·3박 킥의 기본 그루브를 연주한다. 공격 판정은 킥과 정확히 동시에 발생한다. 4마디마다 하이·미드·플로어 탐을 섞은 1마디 필인을 넣고 다음 1박을 크래시로 연다. 연주를 유지하면 그루브 단계가 올라 피해와 범위가 강해지며, 피격 시 단계는 유지하고 다음 단계 진행도만 절반으로 줄어든다. 16초마다 4초간 WHIPLASH 드럼 솔로에 들어가 16비트 탐·스네어·킥을 몰아치고 마지막 대형 크래시로 마무리한다." },
       { id: "hinta", name: "힌타", mark: "10", role: "애니", color: "#f97316", hp: 170, attack: 12, speed: 3.0, range: 0,
         skillName: "속공 · 괴짜 속공", condition: "5초 뒤 경기 시작 · 배구공 접촉 시 무작위 스파이크", desc: "공을 4초간 못 잡으면 직선 대쉬! 경로의 적을 밀어내고 뇌진탕 둔화. 넓은 접촉 범위로 공을 잡아 속공 또는 괴짜 속공! 벽·적 접촉 합계 3회 후 공이 사라지고 5초 뒤 랜덤 재등장. 비행 중 재타격은 불가." },
       { id: "lisa", name: "리사", mark: "♫", role: "애니", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
@@ -1680,17 +1680,15 @@
     }
 
     const ANDRUM = {
-      tempoRise: 8,
-      intervals: [1.20, .90, .68],
+      grooveRise: 8,
+      bpm: 140,
       damages: [5, 6, 7],
       radii: [110, 135, 160],
-      bpms: [110, 145, 180],
-      caravanBpm: 220,
-      caravanPeriod: 16,
-      caravanDuration: 4,
-      caravanInterval: .45,
-      caravanDamage: 3,
-      caravanRadius: 170,
+      fillBars: 4,
+      whiplashPeriod: 16,
+      whiplashDuration: 4,
+      whiplashDamage: 3,
+      whiplashRadius: 170,
       crashDamage: 16,
       crashRadius: 210
     };
@@ -1698,21 +1696,20 @@
     function initAndrum(f) {
       f.andrum = {
         stage: 0,
-        tempo: 0,
-        beat: .7,
+        groove: 0,
         pulse: 0,
         pulseRadius: 0,
-        caravanCd: ANDRUM.caravanPeriod,
-        caravan: 0,
-        caravanBeat: 0,
+        whiplashCd: ANDRUM.whiplashPeriod,
+        whiplash: 0,
         drumStep: 0,
         drumClock: 0,
+        fillCrashPending: false,
         lastDamageTaken: f.damageTaken || 0
       };
     }
 
     function andrumStageName(stage) {
-      return ["기본 템포", "업템포", "광란 템포"][clamp(stage || 0, 0, 2)] || "기본 템포";
+      return ["기본 그루브", "몰입 그루브", "광란 그루브"][clamp(stage || 0, 0, 2)] || "기본 그루브";
     }
 
     function andrumWave(f, power, radius, label, color = "#fbbf24") {
@@ -1730,19 +1727,76 @@
       return victims.length;
     }
 
+    function andrumKickAttack(f, whiplash=false) {
+      const a=f.andrum;
+      if(!a || !f.alive)return;
+      if(whiplash){
+        andrumWave(f,ANDRUM.whiplashDamage,ANDRUM.whiplashRadius,"WHIPLASH 킥","#fde68a");
+      }else{
+        andrumWave(f,ANDRUM.damages[a.stage],ANDRUM.radii[a.stage],"킥 음파",a.stage===2?"#fb923c":"#fbbf24");
+      }
+    }
+
     function updateAndrumDrums(f, dt) {
       const a=f?.andrum;
       if(!a)return;
-      const bpm=a.caravan>0?ANDRUM.caravanBpm:ANDRUM.bpms[a.stage];
-      const eighth=30/bpm;
+      const sixteenth=15/ANDRUM.bpm;
+      const eighth=sixteenth*2;
       a.drumClock-=dt;
       let safety=0;
-      while(a.drumClock<=0 && safety++<6){
-        const step=a.drumStep%8;
-        playAndrumHiHat(step===0 || step===4);
-        if(step===0 || step===4)playAndrumKick(a.caravan>0?1.15:1);
-        if(step===2 || step===6)playAndrumSnare(a.caravan>0?1.15:1);
-        a.drumStep=(step+1)%8;
+
+      while(a.drumClock<=0 && safety++<10){
+        if(a.whiplash>0){
+          // WHIPLASH는 BPM을 올리지 않고 같은 140BPM 안에서 16비트로 세분화한 솔로다.
+          const s=a.drumStep%16;
+          if(s===0){playAndrumCrash(1.05);playAndrumKick(1.2);andrumKickAttack(f,true);}
+          else if(s===1)playAndrumTom(0,1.05);
+          else if(s===2)playAndrumTom(0,.95);
+          else if(s===3)playAndrumSnare(.85);
+          else if(s===4){playAndrumKick(1.15);andrumKickAttack(f,true);playAndrumTom(1,.9);}
+          else if(s===5)playAndrumTom(1,1.0);
+          else if(s===6)playAndrumTom(0,.9);
+          else if(s===7)playAndrumSnare(.95);
+          else if(s===8){playAndrumKick(1.2);andrumKickAttack(f,true);playAndrumTom(1,.9);}
+          else if(s===9)playAndrumTom(2,.95);
+          else if(s===10)playAndrumTom(0,.9);
+          else if(s===11)playAndrumTom(1,1.0);
+          else if(s===12){playAndrumKick(1.2);andrumKickAttack(f,true);playAndrumTom(2,1.05);}
+          else if(s===13)playAndrumTom(2,1.0);
+          else if(s===14)playAndrumSnare(1.1);
+          else {playAndrumTom(2,1.15);playAndrumCrash(.82);}
+          a.drumStep=(s+1)%16;
+          a.drumClock+=sixteenth;
+          continue;
+        }
+
+        // 평상시는 고정 140BPM. 4마디째를 탐 필인으로 쓰고, 다음 마디 1박을 크래시로 연다.
+        const cycle=a.drumStep%(ANDRUM.fillBars*8);
+        const bar=Math.floor(cycle/8), step=cycle%8;
+        const fill=bar===ANDRUM.fillBars-1;
+
+        if(step===0 && a.fillCrashPending){
+          playAndrumCrash(.92);
+          a.fillCrashPending=false;
+        }
+
+        if(!fill){
+          playAndrumHiHat(step===0 || step===4);
+          if(step===0 || step===4){playAndrumKick(1);andrumKickAttack(f,false);}
+          if(step===2 || step===6)playAndrumSnare(1);
+        }else{
+          // 1마디 필인: 앞 절반은 그루브를 지키고, 뒤로 갈수록 하이→미드→플로어 탐으로 내려간다.
+          if(step===0){playAndrumHiHat(true);playAndrumKick(1.05);andrumKickAttack(f,false);}
+          else if(step===1)playAndrumHiHat(false);
+          else if(step===2)playAndrumSnare(1.05);
+          else if(step===3)playAndrumTom(0,1.0);
+          else if(step===4){playAndrumKick(1.08);andrumKickAttack(f,false);playAndrumTom(0,.9);}
+          else if(step===5)playAndrumTom(1,1.05);
+          else if(step===6){playAndrumSnare(.9);playAndrumTom(1,.9);}
+          else {playAndrumTom(2,1.15);a.fillCrashPending=true;}
+        }
+
+        a.drumStep=(cycle+1)%(ANDRUM.fillBars*8);
         a.drumClock+=eighth;
       }
     }
@@ -1751,62 +1805,53 @@
       const a = f?.andrum;
       if (!a || !f.alive) return;
       a.pulse = Math.max(0, a.pulse - dt);
-      updateAndrumDrums(f,dt);
 
       const taken = f.damageTaken || 0;
       if (taken > a.lastDamageTaken + .001) {
-        a.tempo *= .5;
-        spawnFloatingText(f.x, f.y-f.r-36, "템포 진행 -50%", "#fca5a5");
+        a.groove *= .5;
+        spawnFloatingText(f.x, f.y-f.r-36, "그루브 진행 -50%", "#fca5a5");
       }
       a.lastDamageTaken = taken;
 
-      if (a.caravan > 0) {
-        const before = a.caravan;
-        a.caravan = Math.max(0, a.caravan - dt);
-        a.caravanBeat -= dt;
-        while (a.caravanBeat <= 0 && a.caravan > 0) {
-          andrumWave(f, ANDRUM.caravanDamage, ANDRUM.caravanRadius, "Caravan 연타", "#fde68a");
-          a.caravanBeat += ANDRUM.caravanInterval;
-        }
-        if (before > 0 && a.caravan <= 0) {
-          andrumWave(f, ANDRUM.crashDamage, ANDRUM.crashRadius, "Caravan 심벌 크래시", "#f59e0b");
-          playAndrumCrash();
-          spawnFloatingText(f.x, f.y-f.r-46, "CRASH!", "#fef3c7");
-          a.caravanCd = ANDRUM.caravanPeriod;
-          a.beat = ANDRUM.intervals[a.stage];
+      if(a.whiplash>0){
+        const before=a.whiplash;
+        updateAndrumDrums(f,dt);
+        a.whiplash=Math.max(0,a.whiplash-dt);
+        if(before>0 && a.whiplash<=0){
+          andrumWave(f,ANDRUM.crashDamage,ANDRUM.crashRadius,"WHIPLASH 피날레 크래시","#f59e0b");
+          playAndrumCrash(1.25);
+          spawnFloatingText(f.x,f.y-f.r-46,"WHIPLASH · CRASH!","#fef3c7");
+          a.whiplashCd=ANDRUM.whiplashPeriod;
+          a.drumStep=0;a.drumClock=0;a.fillCrashPending=false;
         }
         return;
       }
 
-      a.caravanCd = Math.max(0, a.caravanCd - dt);
-      if (a.caravanCd <= 0) {
-        a.caravan = ANDRUM.caravanDuration;
-        a.caravanBeat = 0;
-        spawnFloatingText(f.x, f.y-f.r-46, "Caravan!", "#fde68a");
+      a.whiplashCd=Math.max(0,a.whiplashCd-dt);
+      if(a.whiplashCd<=0){
+        a.whiplash=ANDRUM.whiplashDuration;
+        a.drumStep=0;a.drumClock=0;a.fillCrashPending=false;
+        spawnFloatingText(f.x,f.y-f.r-46,"WHIPLASH!","#fde68a");
         return;
       }
 
-      a.tempo += dt;
-      if (a.stage < 2 && a.tempo >= ANDRUM.tempoRise) {
-        a.stage += 1;
-        a.tempo = 0;
-        spawnFloatingText(f.x, f.y-f.r-36, andrumStageName(a.stage), "#fde68a");
+      a.groove+=dt;
+      if(a.stage<2 && a.groove>=ANDRUM.grooveRise){
+        a.stage+=1;
+        a.groove=0;
+        spawnFloatingText(f.x,f.y-f.r-36,andrumStageName(a.stage),"#fde68a");
       }
 
-      a.beat -= dt;
-      if (a.beat <= 0) {
-        andrumWave(f, ANDRUM.damages[a.stage], ANDRUM.radii[a.stage], "드럼 비트", a.stage === 2 ? "#fb923c" : "#fbbf24");
-        a.beat += ANDRUM.intervals[a.stage];
-      }
+      updateAndrumDrums(f,dt);
     }
 
     function drawAndrumCharacter(f) {
-      const a = f.andrum || {stage:0,pulse:0,caravan:0};
+      const a = f.andrum || {stage:0,pulse:0,whiplash:0};
       if (!f.portraitOnly && a.pulse > 0) {
         const alpha = clamp(a.pulse / .20, 0, 1);
         ctx.save();
         ctx.globalAlpha = alpha * .75;
-        ctx.strokeStyle = a.caravan > 0 ? "#fde68a" : (a.stage >= 2 ? "#fb923c" : "#fbbf24");
+        ctx.strokeStyle = a.whiplash > 0 ? "#fde68a" : (a.stage >= 2 ? "#fb923c" : "#fbbf24");
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.arc(f.x, f.y, Math.max(f.r+8, (a.pulseRadius||60) * (1.08-alpha*.08)), 0, Math.PI*2);
@@ -1829,7 +1874,7 @@
       ctx.beginPath(); ctx.moveTo(-4,-11); ctx.lineTo(-1,-11); ctx.moveTo(2,-11); ctx.lineTo(5,-11); ctx.stroke();
 
       // 스틱 두 개.
-      const swing = Math.sin(battleTime * (a.caravan>0 ? 24 : 10 + a.stage*4)) * .35;
+      const swing = Math.sin(battleTime * (a.whiplash>0 ? 24 : 12)) * .35;
       ctx.strokeStyle = "#d6b37a"; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(-5,2); ctx.lineTo(-14,-7+swing*10); ctx.moveTo(5,2); ctx.lineTo(14,-7-swing*10); ctx.stroke();
 
@@ -1848,7 +1893,7 @@
       ctx.restore();
       drawHealthBar(f);
       drawName(f);
-      if (!f.portraitOnly && a.caravan > 0) drawRing(f.x,f.y,f.r+9,"rgba(253,230,138,.8)",3);
+      if (!f.portraitOnly && a.whiplash > 0) drawRing(f.x,f.y,f.r+9,"rgba(253,230,138,.8)",3);
     }
 
     function initRiddle(f) {
@@ -4201,12 +4246,31 @@
       noise(accent?.065:.045,accent?.040:.026,0,7200,"highpass");
       noise(.025,accent?.018:.012,0,10500,"bandpass");
     }
-    function playAndrumCrash() {
+    function playAndrumTom(kind = 1, strength = 1) {
       if (!soundEnabled || fastSimMode) return;
       ensureAudio();
-      noise(.75,.13,0,5200,"highpass");
-      noise(.55,.07,.01,8500,"bandpass");
-      tone(310,.32,"triangle",.035,0,210);
+      const s=Math.max(.5,Math.min(1.5,strength));
+      const tones=[
+        [235,145,.18,.105,1350],
+        [180,105,.22,.115,1050],
+        [128,68,.28,.13,760]
+      ];
+      const [start,end,dur,vol,click]=tones[clamp(kind|0,0,2)];
+      tone(start,dur,"sine",vol*s,0,end);
+      tone(start*1.52,dur*.65,"triangle",vol*.025*s,0,end*1.35);
+      noise(.035,.032*s,0,click,"bandpass");
+    }
+    function playAndrumCrash(strength = 1) {
+      if (!soundEnabled || fastSimMode) return;
+      ensureAudio();
+      const s=Math.max(.55,Math.min(1.5,strength));
+      // 긴 금속성 꼬리: 서로 다른 대역의 노이즈를 겹쳐 얇은 '쉬익' 대신 실제 크래시처럼 퍼지게 한다.
+      noise(1.15,.085*s,0,3300,"bandpass");
+      noise(.95,.070*s,.004,5200,"bandpass");
+      noise(.82,.052*s,.009,7600,"bandpass");
+      noise(.68,.038*s,.014,9800,"highpass");
+      tone(420,.22,"triangle",.018*s,0,310);
+      tone(690,.16,"triangle",.012*s,.008,510);
     }
 
     function playSound(name, strength = 1) {
@@ -4666,6 +4730,7 @@
     }
 
       const patchNotes = [
+      "v88: 앤드럼 리듬 시스템 개편. 전투 중 BPM 상승을 제거하고 140BPM으로 고정. 기본 그루브는 하이햇 8비트·2/4박 스네어·1/3박 킥이며 공격 판정을 독립 타이머가 아닌 실제 킥 순간에 동기화. 4마디마다 하이/미드/플로어 3종 탐을 사용한 1마디 필인 후 다음 1박 크래시. Caravan 명칭을 WHIPLASH로 변경하고 4초간 같은 140BPM의 16비트 드럼 솔로로 재구성, 솔로 킥마다 기존 피해3/반경170 적용·피날레16/반경210 유지. 크래시 심벌은 다중 금속성 대역과 긴 감쇠로 재합성. 그루브 단계 피해5/6/7·반경110/135/160 및 피격 시 진행도50% 감소는 유지.",
       "v87: 앤드럼 대규모 상향 및 드럼 사운드 교체. 기본/업템포/광란 음파 반경58/66/74→110/135/160, 피해5/6/7은 유지. 피격 시 단계 하락·진행도 초기화 대신 단계 유지 및 다음 템포 진행도 50% 감소. Caravan 주기20→16초, 연타 반경82→170, 마지막 크래시 반경100→210(피해3연타·크래시16 유지). 기존 뾱뾱 magic 효과음을 제거하고 WebAudio 킥·스네어·하이햇 합성으로 교체. 하이햇 8비트, 2·4박 스네어, 1·3박 킥 패턴을 기본110/업145/광란180BPM, Caravan220BPM으로 연주.",
       "v86: 영화 캐릭터 앤드럼 추가. HP150·이속2.7. 직접 접촉 공격 대신 드럼 비트로 반경58/66/74에 5/6/7 광역 피해를 주며 8초간 피격 없이 연주를 이어가면 기본→업템포→광란으로 상승, 피격 시 1단계 하락. 20초마다 4초 Caravan 솔로로 0.45초마다 반경82 피해3을 연타하고 마지막 반경100 심벌 크래시16. 외형은 사람·드럼3개·심벌2개만 사용한 단순 도형형으로 구현.",
       "v85: 뉴헬로 병장 연속 와이어 상한 추가. 와이어 강습 적중 시 즉시 재와이어하는 규칙은 유지하되 한 사이클 총 3연속까지만 허용하고, 3번째 강습 적중 뒤에는 정상 7초 쿨타임으로 복귀. 중간 강습이 빗나가거나 끊기면 연속 횟수 초기화. HP160·비접촉 +8·광역 +28·일반8/와이어16·출혈1×5 및 잔여 출혈 폭발·속도650은 유지.",
@@ -4784,9 +4849,9 @@
     }
 
     function characterDamageInfo(c) {
-      if(c.id==="andrum")return {damage:"드럼 비트 5/6/7 · 반경110/135/160 · Caravan 연타3(0.45초마다, 반경170) · 마지막 심벌 크래시16/반경210",
-        tick:"연주 유지8초마다 기본→업템포→광란 · 비트 간격1.20/0.90/0.68초 · 피격 시 단계 유지·상승 진행도 50% 감소 · Caravan 16초마다 4초 · 드럼 110/145/180BPM(솔로220)",
-        tip:"직접 접촉 공격 없이 넓은 원형 음파를 반복한다. 피해를 받아도 템포 단계는 내려가지 않고 다음 단계 진행도만 절반으로 줄어든다. 실제 드럼 사운드는 하이햇 8비트, 2·4박 스네어, 1·3박 킥 패턴이며 템포 단계가 오를수록 BPM도 빨라진다. Caravan 종료 순간 반경210 심벌 크래시16으로 마무리한다."};
+      if(c.id==="andrum")return {damage:"킥 음파 5/6/7 · 반경110/135/160 · WHIPLASH 킥3/반경170 · 피날레 크래시16/반경210",
+        tick:"140BPM 고정 · 하이햇8비트 / 스네어2·4 / 킥1·3 · 4마디마다 1마디 탐 필인 · 연주 유지8초마다 그루브 강화 · 피격 시 단계 유지·진행도50% 감소 · WHIPLASH 16초마다 4초",
+        tip:"공격 판정은 킥 사운드가 나는 순간과 정확히 동시에 발생한다. 평상시는 140BPM을 유지하며 4번째 마디에 하이→미드→플로어 탐 필인을 넣고 다음 1박을 크래시로 연다. WHIPLASH도 BPM 자체는 140으로 고정하고 16비트 세분화 솔로를 연주하며, 솔로 중 킥마다 광역3 피해가 발생한다. 마지막에는 새 크래시 사운드와 반경210 피해16으로 마무리한다."};
       if(c.id==="newhello_sergeant")return {damage:"일반 광역 회전베기8 / 와이어 광역 강습16 + 출혈1×5회 · 재타격 시 남은 출혈 즉시 폭발 후 재적용 · HP 열세 보정 최대 ×1.6",
         tick:"검 발동 사거리: 몸 충돌보다 +8 · 광역 베기 범위: 몸 반경보다 +28 · 기동7초 · 준비0.45초 · 고속이동1초(초당650) · 와이어 강습 최대 3연속 · 일반 베기 재사용1.2초 · 출혈 약1초마다 5회",
         tip:"뉴헬로는 상대와 몸이 닿지 않아도 검 사거리(+8)에 들어오면 베기가 발동한다. 공격을 발동시킨 상대가 누구든, 그 순간 병장 중심의 더 큰 베기 원(+28) 안에 있는 모든 적이 같은 베기 피해와 출혈을 받는다. 와이어 강습 적중 시 즉시 재와이어하지만 한 사이클에서 총 3번까지만 연속 강습할 수 있고, 3번째 적중 뒤에는 7초 쿨타임이 적용된다. 중간 강습이 빗나가거나 끊기면 연속 횟수는 초기화된다. 출혈 폭발과 실제 몸 충돌 시 상대 접촉 반격은 기존대로 유지된다."};
@@ -5979,9 +6044,9 @@
     }
 
     function skillProgressInfo(f) {
-      if(f.andrum){const a=f.andrum;return {ratio:a.caravan>0?clamp(a.caravan/ANDRUM.caravanDuration,0,1):clamp(a.tempo/ANDRUM.tempoRise,0,1),className:a.caravan>0?"rage-fill":"skill-fill",
-        text:a.caravan>0?"Caravan 솔로 "+a.caravan.toFixed(1)+"초":andrumStageName(a.stage)+" · 다음 템포 "+Math.max(0,ANDRUM.tempoRise-a.tempo).toFixed(1)+"초",
-        extraTextHtml:`<div class="status-skill-label">비트 ${ANDRUM.damages[a.stage]} / 반경 ${ANDRUM.radii[a.stage]} · ${a.caravan>0?ANDRUM.caravanBpm:ANDRUM.bpms[a.stage]}BPM · Caravan까지 ${a.caravanCd.toFixed(1)}초</div>`};}
+      if(f.andrum){const a=f.andrum;return {ratio:a.whiplash>0?clamp(a.whiplash/ANDRUM.whiplashDuration,0,1):clamp(a.groove/ANDRUM.grooveRise,0,1),className:a.whiplash>0?"rage-fill":"skill-fill",
+        text:a.whiplash>0?"WHIPLASH 솔로 "+a.whiplash.toFixed(1)+"초":andrumStageName(a.stage)+" · 다음 그루브 "+Math.max(0,ANDRUM.grooveRise-a.groove).toFixed(1)+"초",
+        extraTextHtml:`<div class="status-skill-label">킥 공격 ${ANDRUM.damages[a.stage]} / 반경 ${ANDRUM.radii[a.stage]} · 고정 ${ANDRUM.bpm}BPM · WHIPLASH까지 ${a.whiplashCd.toFixed(1)}초</div>`};}
       if(f.newhello){const n=f.newhello;return {ratio:clamp(1-n.cd/NEWHELLO.period,0,1),className:"skill-fill",
         text:n.windup>0?"와이어 고정 · 준비 "+n.windup.toFixed(1)+"초":n.dash>0?"입체기동 · 강화 회전베기":"입체기동까지 "+n.cd.toFixed(1)+"초",
         extraTextHtml:'<div class="status-skill-label">검 사거리 +8 · 광역범위 +28 · 일반8 / 와이어16 + 출혈1×5 · 와이어 최대 3연속</div>'};}
