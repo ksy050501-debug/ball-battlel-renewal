@@ -1,0 +1,36 @@
+name: Ball Battle v81 Newhello bleed chase buff
+on:
+  push:
+    paths:
+      - ".github/ball-battle-v81.py"
+      - ".github/workflows/ball-battle-v81.yml"
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply v81 Newhello buff
+        run: python .github/ball-battle-v81.py
+      - name: Check inline JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s,re.I)
+          if not scripts: raise SystemExit('no inline script')
+          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+      - name: Commit v81
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "v81: buff Newhello wire speed and bleed detonation"
+          git push
