@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v95</title>
+  <title>볼배틀 리뉴얼 v96</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v95</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v96</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -3165,16 +3165,31 @@
       ctx.fillStyle="#f8fafc";ctx.strokeStyle="#64748b";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-19,8);ctx.lineTo(-12,23);ctx.lineTo(-5,14);ctx.lineTo(0,22);ctx.lineTo(5,14);ctx.lineTo(12,23);ctx.lineTo(19,8);ctx.lineTo(11,12);ctx.lineTo(7,21);ctx.lineTo(-7,21);ctx.lineTo(-11,12);ctx.closePath();ctx.fill();ctx.stroke();
       if(d?.equipped){ctx.save();ctx.translate(-18,13);ctx.rotate(.18);ctx.fillStyle="#dbeafe";ctx.strokeStyle="#1e3a8a";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(3,-7);ctx.lineTo(-12,-9);ctx.lineTo(-18,-4);ctx.lineTo(-42,-8);ctx.lineTo(-49,-2);ctx.lineTo(-29,4);ctx.lineTo(-45,11);ctx.lineTo(-20,10);ctx.lineTo(-8,5);ctx.lineTo(3,5);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#3b82f6";for(let i=0;i<4;i++){ctx.fillRect(-42+i*8,-3+i*.8,7,5);}ctx.fillStyle="#ef4444";ctx.fillRect(-14,-5,8,9);ctx.fillStyle="#38bdf8";ctx.beginPath();ctx.arc(-2,0,4,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
       ctx.restore();drawHealthBar(f);drawName(f);
-      if(!f.portraitOnly&&d?.obeliskSpeechUntil>performance.now()&&d.speech){
-        const lines=["몬스터가 아니다, 신이다!","나와라 오벨리스크의 거신병!"];
-        ctx.save();ctx.font="900 11px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";
-        const widths=lines.map(s=>ctx.measureText(s).width),w=Math.min(330,Math.max(...widths,80)+20),h=lines.length*15+12;
-        const x=clamp(f.x-w/2,arena.x+5,arena.x2-w-5),y=Math.max(arena.y+5,f.y-f.r-72-h);
-        ctx.fillStyle="rgba(15,23,42,.94)";ctx.strokeStyle="#93c5fd";ctx.lineWidth=1.5;roundRect(ctx,x,y,w,h,10,true,true);
-        ctx.fillStyle="#dbeafe";lines.forEach((s,i)=>ctx.fillText(s,x+w/2,y+11+i*15));
-        ctx.restore();
-      }
     }
+
+    function drawJusticeObeliskOverlay() {
+      const now=performance.now();
+      const host=fighters.find(f=>f.duelist?.obeliskSpeechUntil>now);
+      if(!host)return;
+      const remain=clamp((host.duelist.obeliskSpeechUntil-now)/3400,0,1);
+      const cx=arena.x+arena.size/2,cy=arena.y+arena.size/2;
+      ctx.save();
+      ctx.fillStyle=`rgba(2,6,23,${0.32+remain*.22})`;
+      ctx.fillRect(arena.x,arena.y,arena.size,arena.size);
+      ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.font="900 38px Georgia, serif";
+      ctx.lineWidth=3;
+      ctx.strokeStyle="rgba(147,197,253,.34)";
+      ctx.shadowColor="#60a5fa";ctx.shadowBlur=22;
+      ctx.fillStyle="#1e3a8a";
+      ctx.strokeText("몬스터가 아니다, 신이다!",cx,cy-27);
+      ctx.fillText("몬스터가 아니다, 신이다!",cx,cy-27);
+      ctx.font="900 34px Georgia, serif";
+      ctx.strokeText("나와라 오벨리스크의 거신병!",cx,cy+26);
+      ctx.fillText("나와라 오벨리스크의 거신병!",cx,cy+26);
+      ctx.restore();
+    }
+
     function initJabami(f) {
       f.jabami = { clock: JABAMI.period, contacts: new Set(), phase: "collect", timer: 0, gameDuration: 0, participants: [], round: 0, debt: 0, debtUntilRound: 0, debtChances: 1, debtEntryUsed: false, game: "", stake: 0, cards: new Map(), bombHolder: "", bombPassCd: 0, bombSound: 0, rouletteAngle: 0, savedMotion: new Map(), resultText: "", speech: "", speechTime: 0, autoWin: false };
     }
@@ -5049,6 +5064,7 @@
     }
 
       const patchNotes = [
+      "v96: 쟈바미/오벨리스크 시각 요소 재정리. 쟈바미의 남은 빚 기회 빨간 다이아몬드는 체력바 중앙이 아니라 체력바 왼쪽 끝에서부터 오른쪽으로 쌓이도록 정렬. 정의의 아군 오벨리스크 대사는 캐릭터 위 말풍선을 제거하고 '돔 공연 축하해.' 연출처럼 경기장 전체를 살짝 어둡게 한 뒤 중앙에 큰 글씨 2줄로 표시. 텍스트는 어두운 푸른색(#1e3a8a)과 옅은 푸른 글로우를 사용하며, 기존 3.4초 시간정지와 정확히 같은 시간 동안만 노출. v95의 소환수 피해/처치 본체 합산 및 v94의 쟈바미 공동승리 빚 처리 규칙은 유지.",
       "v95: v94 UI/연출 수정. 쟈바미의 큰 '빚 기회' 텍스트 배지를 완전히 제거하고 체력바 바로 아래에 남은 빚쟁이 진입 횟수만큼 작은 빨간 다이아몬드를 표시. 빚쟁이 진입 시 기회를 1회 소비하므로 다이아몬드도 즉시 하나 사라지고, 조커로 기회를 추가 획득하면 그 수만큼 다이아몬드가 늘어남. 정의의 아군 전투분석에서 '소환수 피해/처치' 별도 줄을 제거하고 백룡·융합체·오벨리스크의 누적 피해와 처치를 정의의 아군 본체의 피해/처치 값에 합산. 오벨리스크 소환 연출은 대사만 5.8초 남기던 방식을 폐기하고 실제 시간정지를 1.25→3.4초로 연장, 전용 대사 말풍선도 같은 3.4초 실시간 동안만 표시되어 정지 종료와 함께 사라지도록 변경. v94의 쟈바미 공동승리 빚 처리 규칙은 유지.",
       "v94: 쟈바미 공동승리·빚 기회 UI 및 정의의 아군 분석 개선. 빚쟁이 쟈바미가 하이카드 공동승리하고 실제 패자가 없을 때 더 이상 '상대 전원 탈락'으로 오인해 빚을 전액 청산하지 않음. 공동승리 몫(빚 상태 1.5배)은 우선 빚 상환에 쓰고, 남은 빚은 다음 도박까지 이월하며 전액 갚았을 때만 해제. 실제 패자가 있으면 기존처럼 패자에게 빚 이전, 진짜 상대 전멸 부전승은 기존 전액 청산 유지. 쟈바미 캐릭터 아래에 '빚 기회 ×N' 배지를 상시 표시하고 빚 상태에서는 '빚중 · 다음 기회 ×N'으로 표시. 정의의 아군은 전투분석에 소환수 누적 피해/처치 항목을 별도로 표시하며 이미 사라진 백룡·융합체·오벨리스크 기록도 누적 보존. 오벨리스크 릴리스 소환 시 화면 진동을 강화(1.8)하고 소환 대사를 5.8초간 말풍선으로 유지.",
       "v93: 팀전 HUD/상태창 개편. 팀전에서 경기장 상단에 A/B 전용 스코어보드를 추가해 탈락 스코어(A 점수=B 탈락 인원, B 점수=A 탈락 인원), 각 팀 남은 인원/전체 인원·탈락 수·현재 출전 캐릭터·대기 인원을 실시간 표시. 상태창은 팀전에서 좌측 A팀/우측 B팀으로 고정 분리하고 현재 출전 캐릭터를 각 열 최상단에 유지, 사망 캐릭터는 해당 팀 열 아래쪽에 출전 순서대로 누적되도록 변경. 개인전 상태창 동작은 유지.",
@@ -12435,6 +12451,7 @@
         if (f.alive) drawFighter(f);
       });
       drawDeathEffects();
+      drawJusticeObeliskOverlay();
       drawOshiDomeOverlay();
 
       if (!running && fighters.length === 0) {
@@ -12985,8 +13002,8 @@
       if (f.jabami) {
         const chances=Math.max(0,Math.floor(f.jabami.debtChances||0));
         if(chances>0){
-          const size=5,gap=5,total=chances*size+Math.max(0,chances-1)*gap;
-          const start=f.x-total/2+size/2;
+          const size=5,gap=5;
+          const start=x+size/2;
           const dy=y+h+8;
           ctx.save();
           for(let i=0;i<chances;i++){
