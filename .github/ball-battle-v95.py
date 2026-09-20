@@ -24,7 +24,7 @@ rep('<h1 id="mainTitle">볼배틀 리뉴얼 v94</h1>','<h1 id="mainTitle">볼배
 between(
 '''    function drawJabamiDebtChanceBadge(f){''',
 '''    function drawJabamiCharacter(f) {''',
-'''    function drawJabamiCharacter(f) {'''
+''''''
 )
 rep(
 '''      drawHealthBar(f); drawName(f); drawJabamiDebtChanceBadge(f);''',
@@ -113,7 +113,7 @@ between(
       modal.classList.add("show");
     }
 
-    function checkEnd() {'''
+'''
 )
 
 # 오벨리스크: 대사만 오래 남기지 않고, 실제 정지 시간을 3.4초로 늘리고 말풍선도 그 시간에만 노출.
