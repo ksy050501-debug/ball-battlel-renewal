@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v97</title>
+  <title>볼배틀 리뉴얼 v98</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v97</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v98</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1221,7 +1221,7 @@
       { id: "andrum", name: "앤드럼", mark: "🥁", role: "영화", color: "#d6a85f", hp: 150, attack: 0, speed: 2.7, range: 210,
         skillName: "그루브 · WHIPLASH", condition: "그루브 0~300 · 피격 피해×5만큼 감소 · 적중 킥마다 솔로게이지+5 · 100에서 다음 마디 WHIPLASH", desc: "140BPM 고정. 그루브는 0~300 수치로 누적되며 0~100 기본, 101~200 몰입, 201~300 광란 단계다. 평소 초당10씩 쌓이지만 피해를 받으면 실제 받은 피해의 5배만큼 즉시 깎여 단계가 다시 내려갈 수 있다. 적에게 실제 피해를 준 일반 킥마다 별도 WHIPLASH 게이지가 5씩 오르고 100이 되면 다음 마디 첫 박에서 2마디 솔로를 시작한다. 단계별 편곡·필인·킥 동기화 공격장은 유지된다." },
       { id: "bald_cape", name: "대머리망토", mark: "○", role: "애니", color: "#facc15", hp: 170, attack: 0, speed: 2.7, range: 0,
-        skillName: "보통펀치 · 연속 보통펀치 · 진심펀치", condition: "5.2초마다 보통45% / 연속35% / 진심20%", desc: "보통펀치는 활성화 뒤 벽에 튕길 때마다 가속하고 5회째 가장 가까운 적에게 돌진한다. 명중하면 적을 날려 보내며 벽 충돌 추가 피해를 준다. 연속 보통펀치는 짧고 넓은 원뿔 다단히트, 진심펀치는 무작위 방향의 좁은 붉은 부채꼴을 맵 끝까지 예고한 뒤 강력한 충격파를 발사한다." },
+        skillName: "보통펀치 · 연속 보통펀치 · 진심펀치", condition: "공격 종료 후 14초 · 보통45% / 연속35% / 진심20%", desc: "한 번 공격하면 오래 쉬지만 한 방이 매우 강하다. 보통펀치는 벽 반사마다 기본 이동속도 자체가 빨라지고, 가속 상태 충돌에도 피해를 준다. 5회째에는 최근접 적에게 돌진해 강펀치로 날린다. 연속 보통펀치는 제자리에서 길게 원뿔 연타를 퍼붓는다. 진심펀치는 현재 위치에서 가장 넓게 열린 방향을 잡아 긴 차징 뒤 맵 끝까지 강력한 충격파를 발사한다." },
       { id: "hinta", name: "힌타", mark: "10", role: "애니", color: "#f97316", hp: 170, attack: 12, speed: 3.0, range: 0,
         skillName: "속공 · 괴짜 속공", condition: "5초 뒤 경기 시작 · 배구공 접촉 시 무작위 스파이크", desc: "공을 4초간 못 잡으면 직선 대쉬! 경로의 적을 밀어내고 뇌진탕 둔화. 넓은 접촉 범위로 공을 잡아 속공 또는 괴짜 속공! 벽·적 접촉 합계 3회 후 공이 사라지고 5초 뒤 랜덤 재등장. 비행 중 재타격은 불가." },
       { id: "lisa", name: "리사", mark: "♫", role: "애니", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
@@ -2644,15 +2644,20 @@
     }
 
     const BALD_CAPE = {
-      period:5.2, normalChance:.45, comboChance:.35,
-      normalBounces:5, bounceAccel:1.20, dashSpeed:650, dashDuration:.82,
-      normalDamage:12, wallDamage:8, wallKnockSpeed:720, wallKnockDuration:.34,
-      comboRange:108, comboHalfAngle:Math.PI*43/180, comboHits:6, comboDamage:2, comboInterval:.12,
-      seriousWindup:1.3, seriousDamage:30, seriousHalfAngle:Math.PI*11/180
+      period:14, initialDelay:5.5, normalChance:.45, comboChance:.35,
+      normalBounces:5, bounceAccel:1.20, dashSpeed:820, dashDuration:.95,
+      normalDamage:28, wallDamage:16, wallKnockSpeed:860, wallKnockDuration:.46,
+      speedCollisionBase:5, speedCollisionPerBounce:3, speedCollisionCd:.55,
+      comboRange:115, comboHalfAngle:Math.PI*48/180, comboHits:8, comboDamage:7, comboInterval:.20, comboWindup:.25,
+      seriousWindup:2.6, seriousDamage:85, seriousHalfAngle:Math.PI*11/180
     };
 
     function initBaldCape(f){
-      f.baldCape={cd:2.8,mode:"",normalActive:false,bounces:0,dash:0,combo:null,serious:null,punchAnim:null};
+      f.baldCape={
+        cd:BALD_CAPE.initialDelay,mode:"",normalActive:false,bounces:0,dash:0,
+        combo:null,serious:null,punchAnim:null,speedContactCd:0,
+        baseSpeedOriginal:f.baseSpeed||f.speed||2.7
+      };
     }
     function baldCapeBlocked(f){
       return !f?.alive||f.tanoStop>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
@@ -2667,113 +2672,182 @@
         return baldCapeAngleDiff(Math.atan2(dy,dx),angle)<=halfAngle+extra;
       });
     }
-    function baldCapeRestoreCruise(f){
-      const speed=(f.baseSpeed||2.7)*44;
-      let a=Math.atan2(f.vy,f.vx);if(!Number.isFinite(a))a=rand(0,Math.PI*2);
-      f.vx=Math.cos(a)*speed;f.vy=Math.sin(a)*speed;
+    function baldCapeWideAngle(f){
+      const corners=[
+        {x:arena.x+8,y:arena.y+8},{x:arena.x2-8,y:arena.y+8},
+        {x:arena.x+8,y:arena.y2-8},{x:arena.x2-8,y:arena.y2-8}
+      ];
+      let best=-1,choices=[];
+      corners.forEach(p=>{
+        const d=Math.hypot(p.x-f.x,p.y-f.y);
+        if(d>best+.5){best=d;choices=[p];}
+        else if(Math.abs(d-best)<=.5)choices.push(p);
+      });
+      const p=choices[Math.floor(Math.random()*choices.length)]||corners[0];
+      return Math.atan2(p.y-f.y,p.x-f.x);
+    }
+    function baldCapeRestoreBaseSpeed(f){
+      const b=f?.baldCape;if(!b)return;
+      const base=b.baseSpeedOriginal||2.7;
+      f.baseSpeed=base;f.speed=base;
+      const desired=base*44,current=Math.hypot(f.vx,f.vy);
+      let a=current>.5?Math.atan2(f.vy,f.vx):rand(-Math.PI,Math.PI);
+      f.vx=Math.cos(a)*desired;f.vy=Math.sin(a)*desired;
+    }
+    function finishBaldCapeSkill(f,restoreVelocity){
+      const b=f?.baldCape;if(!b)return;
+      b.mode="";b.normalActive=false;b.bounces=0;b.dash=0;b.combo=null;b.serious=null;
+      b.cd=BALD_CAPE.period;
+      baldCapeRestoreBaseSpeed(f);
+      if(restoreVelocity&&Number.isFinite(restoreVelocity.vx)&&Number.isFinite(restoreVelocity.vy)){
+        const len=Math.hypot(restoreVelocity.vx,restoreVelocity.vy);
+        if(len>.5){
+          const desired=(b.baseSpeedOriginal||2.7)*44;
+          f.vx=restoreVelocity.vx/len*desired;f.vy=restoreVelocity.vy/len*desired;
+        }
+      }
     }
     function startBaldCapeSkill(f){
       const b=f.baldCape;if(!b||baldCapeBlocked(f))return false;
-      const roll=Math.random();b.cd=BALD_CAPE.period;
+      const roll=Math.random();b.cd=0;
       if(roll<BALD_CAPE.normalChance){
         b.mode="normal";b.normalActive=true;b.bounces=0;b.dash=0;
-        const speed=Math.max((f.baseSpeed||2.7)*44,Math.hypot(f.vx,f.vy));
+        f.baseSpeed=b.baseSpeedOriginal;f.speed=b.baseSpeedOriginal;
+        const speed=b.baseSpeedOriginal*44;
         let a=Math.atan2(f.vy,f.vx);if(!Number.isFinite(a))a=rand(0,Math.PI*2);
         f.vx=Math.cos(a)*speed;f.vy=Math.sin(a)*speed;
         spawnFloatingText(f.x,f.y-f.r-38,"보통펀치 준비","#fde68a");
-        log("<strong>대머리망토</strong> 보통펀치 준비 · 벽 반사마다 가속","스킬");
+        log("<strong>대머리망토</strong> 보통펀치 준비 · 벽 반사마다 기본 이속 상승","스킬");
         return true;
       }
       if(roll<BALD_CAPE.normalChance+BALD_CAPE.comboChance){
         const target=nearestEnemy(f).enemy;
         const angle=target?Math.atan2(target.y-f.y,target.x-f.x):rand(-Math.PI,Math.PI);
-        b.mode="combo";b.combo={angle:angle,hitsLeft:BALD_CAPE.comboHits,tick:0,life:BALD_CAPE.comboInterval*BALD_CAPE.comboHits+.08};
+        b.mode="combo";
+        b.combo={angle:angle,hitsLeft:BALD_CAPE.comboHits,tick:BALD_CAPE.comboWindup,savedVx:f.vx,savedVy:f.vy};
+        f.vx=0;f.vy=0;
         spawnFloatingText(f.x,f.y-f.r-38,"연속 보통펀치!","#fef08a");
-        log("<strong>대머리망토</strong> 연속 보통펀치","스킬");
+        log("<strong>대머리망토</strong> 연속 보통펀치 · 제자리 연타","스킬");
         return true;
       }
-      const angle=rand(-Math.PI,Math.PI);
-      b.mode="serious";b.serious={angle:angle,timer:BALD_CAPE.seriousWindup,firedFlash:0,savedVx:f.vx,savedVy:f.vy};
+      const angle=baldCapeWideAngle(f);
+      b.mode="serious";
+      b.serious={angle:angle,timer:BALD_CAPE.seriousWindup,firedFlash:0,savedVx:f.vx,savedVy:f.vy};
       f.vx=0;f.vy=0;
-      spawnFloatingText(f.x,f.y-f.r-38,"진심펀치 예고","#fca5a5");
-      playSound("warning",1);
-      log("<strong>대머리망토</strong> 진심펀치 · 무작위 방향 충격파 예고","스킬");
+      spawnFloatingText(f.x,f.y-f.r-38,"진심펀치 차징","#fca5a5");
+      playSound("warning",1.1);
+      log("<strong>대머리망토</strong> 진심펀치 · 가장 넓은 방향으로 차징","스킬");
       return true;
     }
     function baldCapeWallBounce(f){
       const b=f?.baldCape;if(!b||!b.normalActive||b.dash>0)return;
       b.bounces=Math.min(BALD_CAPE.normalBounces,b.bounces+1);
-      const current=Math.max((f.baseSpeed||2.7)*44,Math.hypot(f.vx,f.vy));
-      const next=current*BALD_CAPE.bounceAccel,a=Math.atan2(f.vy,f.vx);
-      f.vx=Math.cos(a)*next;f.vy=Math.sin(a)*next;
-      spawnFloatingText(f.x,f.y-f.r-34,"가속 "+b.bounces+"/"+BALD_CAPE.normalBounces,"#fde047");
-      spawnParticles(f.x,f.y,"#fef08a",5+b.bounces);
+      const boosted=(b.baseSpeedOriginal||2.7)*Math.pow(BALD_CAPE.bounceAccel,b.bounces);
+      f.baseSpeed=boosted;f.speed=boosted;
+      let a=Math.atan2(f.vy,f.vx);if(!Number.isFinite(a))a=rand(0,Math.PI*2);
+      f.vx=Math.cos(a)*boosted*44;f.vy=Math.sin(a)*boosted*44;
+      spawnFloatingText(f.x,f.y-f.r-34,"가속 "+b.bounces+"/"+BALD_CAPE.normalBounces+" · 이속 "+boosted.toFixed(1),"#fde047");
+      spawnParticles(f.x,f.y,"#fef08a",6+b.bounces*2);
       if(b.bounces>=BALD_CAPE.normalBounces){
         const target=nearestEnemy(f).enemy;
-        if(!target){b.normalActive=false;b.mode="";baldCapeRestoreCruise(f);return;}
+        if(!target){finishBaldCapeSkill(f);return;}
         const a2=Math.atan2(target.y-f.y,target.x-f.x);
         b.dash=BALD_CAPE.dashDuration;
         f.vx=Math.cos(a2)*BALD_CAPE.dashSpeed;f.vy=Math.sin(a2)*BALD_CAPE.dashSpeed;
         spawnFloatingText(f.x,f.y-f.r-44,"보통펀치!","#facc15");
-        playSound("wind",1);
+        playSound("wind",1.15);
       }
+    }
+    function baldCapeSpeedContact(f,target){
+      const b=f?.baldCape;
+      if(!b||!b.normalActive||b.dash>0||b.bounces<=0||!target?.alive||!areEnemies(f,target))return false;
+      const desired=(f.baseSpeed||b.baseSpeedOriginal||2.7)*44;
+      let a=Math.atan2(f.vy,f.vx);
+      if(!Number.isFinite(a)){
+        const dx=f.x-target.x,dy=f.y-target.y;a=Math.atan2(dy,dx);
+      }
+      f.vx=Math.cos(a)*desired;f.vy=Math.sin(a)*desired;
+      if(b.speedContactCd>0)return false;
+      b.speedContactCd=BALD_CAPE.speedCollisionCd;
+      const power=BALD_CAPE.speedCollisionBase+BALD_CAPE.speedCollisionPerBounce*b.bounces;
+      damage(target,power,f,"가속 충돌");
+      spawnHitFlash(target.x,target.y,"#fef08a",30+b.bounces*5);
+      spawnFloatingText(target.x,target.y-target.r-28,"가속충돌 -"+power,"#fde047");
+      playSound("hit",.55);
+      return true;
     }
     function baldCapeContact(f,target){
       const b=f?.baldCape;if(!b||!b.normalActive||b.dash<=0||!target?.alive||!areEnemies(f,target))return false;
       const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1;
       const dealt=damage(target,BALD_CAPE.normalDamage,f,"보통펀치");
-      b.punchAnim={angle:Math.atan2(dy,dx),time:.18,serious:false};
-      b.normalActive=false;b.dash=0;b.bounces=0;b.mode="";
+      b.punchAnim={angle:Math.atan2(dy,dx),time:.22,serious:false};
       if(dealt>0&&target.alive){
         target.vx=dx/d*BALD_CAPE.wallKnockSpeed;target.vy=dy/d*BALD_CAPE.wallKnockSpeed;
         target.punchFlight=Math.max(target.punchFlight||0,BALD_CAPE.wallKnockDuration);
         target.punchSource=f;target.punchWallPower=BALD_CAPE.wallDamage;target.punchWallHits=0;
       }
-      triggerHitStop(.14);screenShake=Math.max(screenShake,.32);
-      spawnHitFlash(target.x,target.y,"#fef08a",70);spawnBlast(target.x,target.y,62,"#facc15");
-      spawnFloatingText(target.x,target.y-target.r-34,"보통펀치!","#fde047");playSound("explosion",.75);
-      baldCapeRestoreCruise(f);return true;
+      triggerHitStop(.18);screenShake=Math.max(screenShake,.42);
+      spawnHitFlash(target.x,target.y,"#fef08a",88);spawnBlast(target.x,target.y,76,"#facc15");
+      spawnFloatingText(target.x,target.y-target.r-34,"보통펀치! -"+BALD_CAPE.normalDamage,"#fde047");playSound("explosion",1);
+      finishBaldCapeSkill(f);
+      return true;
     }
     function fireBaldCapeComboTick(f){
       const b=f.baldCape,cmb=b?.combo;if(!cmb||cmb.hitsLeft<=0)return;
       baldCapeConeTargets(f,cmb.angle,BALD_CAPE.comboRange,BALD_CAPE.comboHalfAngle).forEach(e=>{
-        damage(e,BALD_CAPE.comboDamage,f,"연속 보통펀치");spawnHitFlash(e.x,e.y,"#fef9c3",22);
+        damage(e,BALD_CAPE.comboDamage,f,"연속 보통펀치");spawnHitFlash(e.x,e.y,"#fef9c3",28);
       });
-      cmb.hitsLeft--;b.punchAnim={angle:cmb.angle+rand(-.08,.08),time:.09,serious:false};playSound("hit",.35);
-      if(cmb.hitsLeft<=0){b.combo=null;b.mode="";}
+      cmb.hitsLeft--;b.punchAnim={angle:cmb.angle+rand(-.10,.10),time:.13,serious:false};playSound("hit",.52);
+      if(cmb.hitsLeft<=0){
+        const saved={vx:cmb.savedVx,vy:cmb.savedVy};
+        finishBaldCapeSkill(f,saved);
+      }
     }
     function fireBaldCapeSerious(f){
       const b=f.baldCape,s=b?.serious;if(!s)return;
-      const victims=baldCapeConeTargets(f,s.angle,arena.size*1.65,BALD_CAPE.seriousHalfAngle);
-      victims.forEach(e=>{damage(e,BALD_CAPE.seriousDamage,f,"진심펀치");spawnHitFlash(e.x,e.y,"#ef4444",100);});
-      b.punchAnim={angle:s.angle,time:.22,serious:true};s.firedFlash=.28;
-      triggerHitStop(.22);screenShake=Math.max(screenShake,.65);spawnParticles(f.x,f.y,"#fca5a5",30);playSound("explosion",1.4);
-      spawnFloatingText(f.x,f.y-f.r-46,"진심펀치!","#ef4444");
+      const victims=baldCapeConeTargets(f,s.angle,arena.size*1.7,BALD_CAPE.seriousHalfAngle);
+      victims.forEach(e=>{damage(e,BALD_CAPE.seriousDamage,f,"진심펀치");spawnHitFlash(e.x,e.y,"#ef4444",145);});
+      b.punchAnim={angle:s.angle,time:.30,serious:true};s.firedFlash=.34;
+      triggerHitStop(.32);screenShake=Math.max(screenShake,.92);spawnParticles(f.x,f.y,"#fca5a5",46);playSound("explosion",1.8);
+      spawnFloatingText(f.x,f.y-f.r-48,"진심펀치! -"+BALD_CAPE.seriousDamage,"#ef4444");
       log("<strong>대머리망토</strong> 진심펀치 · "+victims.length+"명 적중","스킬");
-      f.vx=s.savedVx;f.vy=s.savedVy;if(Math.hypot(f.vx,f.vy)<1)baldCapeRestoreCruise(f);
     }
     function updateBaldCape(f,dt){
       const b=f?.baldCape;if(!b)return;
-      b.cd=Math.max(0,b.cd-dt);
+      b.speedContactCd=Math.max(0,(b.speedContactCd||0)-dt);
       if(b.punchAnim){b.punchAnim.time=Math.max(0,b.punchAnim.time-dt);if(b.punchAnim.time<=0)b.punchAnim=null;}
+
+      const active=b.normalActive||!!b.combo||!!b.serious;
+      if(!active)b.cd=Math.max(0,b.cd-dt);
+
       if(b.normalActive&&b.dash>0){
         b.dash=Math.max(0,b.dash-dt);
-        if(b.dash<=0){b.normalActive=false;b.bounces=0;b.mode="";baldCapeRestoreCruise(f);}
+        if(b.dash<=0)finishBaldCapeSkill(f);
       }
+
       if(b.combo){
-        b.combo.life=Math.max(0,b.combo.life-dt);b.combo.tick-=dt;
-        while(b.combo&&b.combo.tick<=0&&b.combo.hitsLeft>0){fireBaldCapeComboTick(f);if(b.combo)b.combo.tick+=BALD_CAPE.comboInterval;}
-        if(b.combo&&b.combo.life<=0){b.combo=null;b.mode="";}
+        f.vx=0;f.vy=0;
+        b.combo.tick-=dt;
+        while(b.combo&&b.combo.tick<=0&&b.combo.hitsLeft>0){
+          fireBaldCapeComboTick(f);
+          if(b.combo)b.combo.tick+=BALD_CAPE.comboInterval;
+        }
       }
+
       if(b.serious){
         if(b.serious.timer>0){
           f.vx=0;f.vy=0;b.serious.timer=Math.max(0,b.serious.timer-dt);
           if(b.serious.timer<=0)fireBaldCapeSerious(f);
         }else{
+          f.vx=0;f.vy=0;
           b.serious.firedFlash=Math.max(0,b.serious.firedFlash-dt);
-          if(b.serious.firedFlash<=0){b.serious=null;b.mode="";}
+          if(b.serious.firedFlash<=0){
+            const saved={vx:b.serious.savedVx,vy:b.serious.savedVy};
+            finishBaldCapeSkill(f,saved);
+          }
         }
       }
+
       if(b.cd<=0&&!b.normalActive&&!b.combo&&!b.serious&&!baldCapeBlocked(f))startBaldCapeSkill(f);
     }
     function drawBaldCapeCone(f,angle,range,halfAngle,fill,stroke,alpha){
@@ -2786,12 +2860,17 @@
     function drawBaldCapeCharacter(f){
       const b=f.baldCape;
       if(!f.portraitOnly&&b?.serious){
-        drawBaldCapeCone(f,b.serious.angle,arena.size*1.65,BALD_CAPE.seriousHalfAngle,"rgba(127,29,29,.62)","#ef4444",b.serious.timer>0?.22:.34);
-        if(b.serious.timer>0){ctx.save();ctx.fillStyle="#fecaca";ctx.font="900 11px system-ui";ctx.textAlign="center";ctx.fillText("진심펀치 "+b.serious.timer.toFixed(1),f.x,f.y-f.r-42);ctx.restore();}
+        const alpha=b.serious.timer>0?.28:.45;
+        drawBaldCapeCone(f,b.serious.angle,arena.size*1.7,BALD_CAPE.seriousHalfAngle,"rgba(127,29,29,.66)","#ef4444",alpha);
+        if(b.serious.timer>0){
+          ctx.save();ctx.fillStyle="#fecaca";ctx.font="900 12px system-ui";ctx.textAlign="center";
+          ctx.fillText("진심펀치 차징 "+b.serious.timer.toFixed(1),f.x,f.y-f.r-44);ctx.restore();
+        }
       }
-      if(!f.portraitOnly&&b?.combo)drawBaldCapeCone(f,b.combo.angle,BALD_CAPE.comboRange,BALD_CAPE.comboHalfAngle,"rgba(250,204,21,.18)","#fde047",.75);
+      if(!f.portraitOnly&&b?.combo)drawBaldCapeCone(f,b.combo.angle,BALD_CAPE.comboRange,BALD_CAPE.comboHalfAngle,"rgba(250,204,21,.20)","#fde047",.82);
       if(!f.portraitOnly&&b?.normalActive){
-        const glow=1+(b.bounces||0)*.13;drawRing(f.x,f.y,(f.r+9)*glow,b.dash>0?"rgba(254,240,138,.95)":"rgba(250,204,21,.62)",b.dash>0?4:2);
+        const glow=1+(b.bounces||0)*.15;
+        drawRing(f.x,f.y,(f.r+9)*glow,b.dash>0?"rgba(254,240,138,.98)":"rgba(250,204,21,.72)",b.dash>0?5:3);
       }
       ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
       ctx.fillStyle="#f8fafc";ctx.beginPath();ctx.moveTo(-8,-2);ctx.lineTo(-24,5);ctx.lineTo(-18,28);ctx.lineTo(-7,20);ctx.closePath();ctx.fill();
@@ -2801,9 +2880,9 @@
       ctx.fillStyle="#111827";ctx.beginPath();ctx.arc(-3,-10,1,0,Math.PI*2);ctx.arc(3,-10,1,0,Math.PI*2);ctx.fill();
       ctx.strokeStyle="#92400e";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-2,-5);ctx.lineTo(2,-5);ctx.stroke();ctx.restore();
       if(b?.punchAnim){
-        const q=b.punchAnim,reach=q.serious?42:34;ctx.save();ctx.translate(f.x,f.y);ctx.rotate(q.angle);
-        ctx.strokeStyle=q.serious?"#dc2626":"#eab308";ctx.lineWidth=q.serious?11:8;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(f.r*.35,0);ctx.lineTo(reach,0);ctx.stroke();
-        ctx.fillStyle=q.serious?"#ef4444":"#dc2626";ctx.beginPath();ctx.arc(reach+6,0,q.serious?9:7,0,Math.PI*2);ctx.fill();ctx.restore();
+        const q=b.punchAnim,reach=q.serious?50:38;ctx.save();ctx.translate(f.x,f.y);ctx.rotate(q.angle);
+        ctx.strokeStyle=q.serious?"#dc2626":"#eab308";ctx.lineWidth=q.serious?14:9;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(f.r*.35,0);ctx.lineTo(reach,0);ctx.stroke();
+        ctx.fillStyle=q.serious?"#ef4444":"#dc2626";ctx.beginPath();ctx.arc(reach+7,0,q.serious?11:8,0,Math.PI*2);ctx.fill();ctx.restore();
       }
       drawHealthBar(f);drawName(f);
     }
@@ -5231,6 +5310,7 @@
     }
 
       const patchNotes = [
+      "v98: 대머리망토 원펀맨형 고위력/장쿨 개편. 모든 스킬 공통 쿨타임을 5.2→14초로 크게 늘리고 쿨타임은 스킬 선택 시가 아니라 해당 공격이 완전히 끝난 뒤부터 시작. 보통펀치는 벽 반사마다 속도×1.20을 일시 버프가 아닌 본인의 기본 이동속도로 갱신해 캐릭터 충돌 후에도 가속을 유지하며, 돌진 전 가속 상태에서 적과 부딪히면 반사 단계에 따라 8/11/14/17 피해. 5회째 최근접 돌진 속도650→820, 직격12→28, 상대 벽충돌 추가8→16. 연속 보통펀치는 사용 중 완전히 정지하고 6타·0.12초·피해2에서 8타·0.20초·피해7로 변경(최대56), 범위도 거리108→115·약86→96도로 확대. 진심펀치는 무작위 방향 대신 현재 위치에서 가장 먼 코너를 향해 항상 더 넓게 열린 방향으로 사용하고 차징1.3→2.6초, 피해30→85로 상향. 공격이 끝나면 대머리망토 기본 이속2.7로 복귀.",
       "v97: 애니 캐릭터 '대머리망토' 추가. 체력170·이속2.7·5.2초마다 보통펀치45%/연속 보통펀치35%/진심펀치20% 중 하나를 사용. 보통펀치는 활성화 후 벽 반사마다 현재 속도×1.20으로 누적 가속하고 5번째 반사 직후 최근접 적에게 고속 돌진, 직격12 후 강펀치 넉백을 주며 날아간 상대가 벽에 닿을 때마다 추가8 피해. 연속 보통펀치는 거리108·약86도 원뿔을 0.12초 간격으로 2×6 다단히트. 진심펀치는 무작위 방향으로 맵 끝까지 이어지는 약22도 붉은 부채꼴을 1.3초 예고한 뒤 피해30 충격파를 발사. 캐릭터 그림은 노란 슈트·흰 망토·붉은 장갑/부츠·대머리 형태로 간단하게 구현.",
       "v96: 쟈바미/오벨리스크 시각 요소 재정리. 쟈바미의 남은 빚 기회 빨간 다이아몬드는 체력바 중앙이 아니라 체력바 왼쪽 끝에서부터 오른쪽으로 쌓이도록 정렬. 정의의 아군 오벨리스크 대사는 캐릭터 위 말풍선을 제거하고 '돔 공연 축하해.' 연출처럼 경기장 전체를 살짝 어둡게 한 뒤 중앙에 큰 글씨 2줄로 표시. 텍스트는 어두운 푸른색(#1e3a8a)과 옅은 푸른 글로우를 사용하며, 기존 3.4초 시간정지와 정확히 같은 시간 동안만 노출. v95의 소환수 피해/처치 본체 합산 및 v94의 쟈바미 공동승리 빚 처리 규칙은 유지.",
       "v95: v94 UI/연출 수정. 쟈바미의 큰 '빚 기회' 텍스트 배지를 완전히 제거하고 체력바 바로 아래에 남은 빚쟁이 진입 횟수만큼 작은 빨간 다이아몬드를 표시. 빚쟁이 진입 시 기회를 1회 소비하므로 다이아몬드도 즉시 하나 사라지고, 조커로 기회를 추가 획득하면 그 수만큼 다이아몬드가 늘어남. 정의의 아군 전투분석에서 '소환수 피해/처치' 별도 줄을 제거하고 백룡·융합체·오벨리스크의 누적 피해와 처치를 정의의 아군 본체의 피해/처치 값에 합산. 오벨리스크 소환 연출은 대사만 5.8초 남기던 방식을 폐기하고 실제 시간정지를 1.25→3.4초로 연장, 전용 대사 말풍선도 같은 3.4초 실시간 동안만 표시되어 정지 종료와 함께 사라지도록 변경. v94의 쟈바미 공동승리 빚 처리 규칙은 유지.",
@@ -5366,7 +5446,7 @@
         tick:"검 발동 사거리: 몸 충돌보다 +8 · 광역 베기 범위: 몸 반경보다 +28 · 기동7초 · 준비0.45초 · 고속이동1초(초당650) · 와이어 강습 최대 3연속 · 일반 베기 재사용1.2초 · 출혈 약1초마다 5회",
         tip:"뉴헬로는 상대와 몸이 닿지 않아도 검 사거리(+8)에 들어오면 베기가 발동한다. 공격을 발동시킨 상대가 누구든, 그 순간 병장 중심의 더 큰 베기 원(+28) 안에 있는 모든 적이 같은 베기 피해와 출혈을 받는다. 와이어 강습 적중 시 즉시 재와이어하지만 한 사이클에서 총 3번까지만 연속 강습할 수 있고, 3번째 적중 뒤에는 7초 쿨타임이 적용된다. 중간 강습이 빗나가거나 끊기면 연속 횟수는 초기화된다. 출혈 폭발과 실제 몸 충돌 시 상대 접촉 반격은 기존대로 유지된다."};
       if (c.id === "riddle_lord") return {damage:"피엔드피레 0.4초마다3 + 화상2×3초 / 딱총나무 강화 0.4초마다4 + 화상3×3초 · 아바다 케다브라 4×5 / 강화 6×5",tick:"공유 쿨9초 · 첫 피엔드피레는 4초 뒤 · 이후 피엔드피레↔아바다 교대 · 피엔드피레4초 지속 · 아바다0.9초 다단 · 딱총나무16초 대기 후 등장·미획득 시25초 뒤 자동 습득·획득 시12초 강화",tip:"딱총나무 강화 중 피엔드피레 반경75→105, 아바다 케다브라는 거리와 조준을 무시하고 지정 대상에게 확정 적중한다. 첫 사망 때 호크룩스 7칸/7초 상태가 되며 이동·공격 불가. 적 접촉마다 1칸, 공격 피격마다 기본1칸＋피해10당 1칸 추가 감소. 피격 또는 접촉 1회마다 부활 HP도 70에서 10씩 감소한다. 생존하면 최대HP70·이속2.8로 남은 부활HP만큼 부활한다. 부활 후에도 원래 스킬과 지팡이를 그대로 사용한다. 지팡이는 획득 전까지 소멸하지 않고 등장 25초 뒤 자동 습득한다. 두 번째 부활은 없다."};
-      if (c.id === "bald_cape") return {damage:"보통펀치12 + 맞은 상대 벽충돌8 / 연속 보통펀치2×6 / 진심펀치30",tick:"5.2초마다 무작위: 보통45% · 연속35% · 진심20% / 진심 선딜1.3초",tip:"보통펀치는 활성화 뒤 벽에 튕길 때마다 현재 속도가 20%씩 증가한다. 5번째 반사 직후 가장 가까운 적에게 고속 돌진하며, 명중한 적은 강하게 날아가 벽에 닿을 때마다 추가 피해8을 받는다. 연속 보통펀치는 거리108·약86도 원뿔을 0.12초 간격 6타로 공격한다. 진심펀치는 무작위 방향으로 맵 끝까지 이어지는 약22도 붉은 부채꼴을 1.3초간 표시한 뒤 범위 안 적에게 피해30을 준다."};
+      if (c.id === "bald_cape") return {damage:"보통펀치28 + 맞은 상대 벽충돌16 / 가속충돌 8~17 / 연속 보통펀치7×8=56 / 진심펀치85",tick:"각 공격이 완전히 끝난 뒤 14초 · 보통45% / 연속35% / 진심20% · 진심 차징2.6초",tip:"보통펀치는 벽 반사마다 기본 이동속도 자체가 20%씩 누적 상승해 상대와 부딪혀도 가속이 유지된다. 돌진 전 가속 상태 충돌은 반사 횟수에 따라 8/11/14/17 피해를 준다. 5번째 반사 후 최근접 적에게 속도820 돌진, 직격28 후 날려 보내며 벽 충돌마다16 추가 피해. 연속 보통펀치는 완전히 멈춘 채 거리115·약96도 원뿔을 0.20초 간격 8타로 공격한다. 진심펀치는 현재 위치에서 가장 먼 코너 방향, 즉 가장 넓게 열린 쪽을 향해 약22도 붉은 부채꼴을 2.6초간 차징한 뒤 피해85를 준다."};
       if (c.id === "hinta") return {damage:"속공 12 / 괴짜 속공 24 · 각 50% 확률 / 대쉬 충돌 10",tick:"첫 공 5초 · 공 소멸 후 5초 재등장 · 벽/적 합계 3회 접촉",tip:"대기 공을 4초간 못 잡으면 속도480으로 직선 돌진. 적별 돌진당 1회 피해10·측면 넉백, 넉백 후 2초간 이속40% 감소. 벽 반사 후 같은 적도 다시 피해를 받는다. 속공은 짧은 이동 예측 조준·속도380. 괴짜 속공은 조준 오차 ±20~40도·속도570. 발사 후 유도 없음. 공 반경10, 습득 범위는 본체+공 반경에24 추가. 비행 공은 재타격할 수 없고, 세 번째 접촉이 적이면 피해 후 소멸한다. 모서리 두 벽은 2회로 센다."};
       if (c.id === "oshi") return { damage: "노래 1~4단계 피해 4/5/7/9 · 반경 90/110/130/150 / 투어 초당2 · 누적 체류 3초마다15 / 후유증: 체류 2초당 총3을 5초 DOT / 도쿄돔 칼35 + 출혈3×8 / 공연 연장 반경175·초당4·누적 3초마다20", tick: "노래 2초 · 노래 적중 1명당 인지도+15 · 적 접촉 대상별 1초마다+4 · 인지도100에 투어", tip: "체류 추가 피해는 적별로 한 번의 투어 안에서 누적하며 이탈해도 유지된다. 누적 3초마다 발동하고 다음 투어에서는 초기화된다. 노래 적중자는 3초간 이동속도 20% 감소 및 최애에게 주는 모든 피해 20% 감소(감소 후 최소 피해 1). 최대 체력 비례 피해와 푸른 눈의 백룡 등 소환수 피해에도 적용된다. 투어 2회를 마친 뒤 다시 인지도100을 채우면 도쿄돔이 시작되며, 출혈 종료까지 생존하면 공연이 연장된다." };
       if (c.id === "justice_ally") return { damage: "버스트 스트림 2×7 / 얼티밋 버스트 4×최대6 / 갓 핸드 크러셔 30", tick: "개시6초 · 카드 사용/드로우9초 · 공격7.5초 · 오벨리스크 초당 체력-9", tip: "융합 중 소재는 무적. 융합체는 주기적으로 얼티밋 버스트를 사용한다. 마지막 소환수의 치명상을 릴리스해 오벨리스크를 소환하며, 예고 원형 범위의 적에게 피해와 둔화를 준다." };
@@ -6589,9 +6669,11 @@
 
     function skillProgressInfo(f) {
       if(f.baldCape){const b=f.baldCape;
-        const active=b.serious?"진심펀치 예고":b.combo?"연속 보통펀치":b.normalActive?(b.dash>0?"보통펀치 돌진":"보통펀치 가속 "+b.bounces+"/"+BALD_CAPE.normalBounces):"다음 펀치";
-        return {ratio:clamp(1-b.cd/BALD_CAPE.period,0,1),className:b.serious?"rage-fill":"skill-fill",text:active+" · "+b.cd.toFixed(1)+"초",
-          extraTextHtml:'<div class="status-skill-label">보통45% · 연속35% · 진심20% / 보통펀치 벽 반사마다 ×1.20 가속</div>'};}
+        const using=!!(b.serious||b.combo||b.normalActive);
+        const active=b.serious?"진심펀치 차징":b.combo?"연속 보통펀치":b.normalActive?(b.dash>0?"보통펀치 돌진":"보통펀치 가속 "+b.bounces+"/"+BALD_CAPE.normalBounces):"다음 펀치";
+        const text=using?active+" · 공격 종료 후 쿨타임":"다음 펀치 "+b.cd.toFixed(1)+"초";
+        return {ratio:using?1:clamp(1-b.cd/BALD_CAPE.period,0,1),className:b.serious?"rage-fill":"skill-fill",text:text,
+          extraTextHtml:'<div class="status-skill-label">쿨타임14초는 공격이 완전히 끝난 뒤 시작 · 보통45% / 연속35% / 진심20%</div><div class="status-skill-label">보통펀치 가속은 기본 이속으로 유지 · 가속 충돌도 피해</div>'};}
       if(f.andrum){const a=f.andrum,remain=a.whiplash?(ANDRUM.whiplashSteps-a.whiplashStep)*(15/ANDRUM.bpm):0;return {
         ratio:clamp(a.groove/ANDRUM.grooveMax,0,1),className:"skill-fill",
         text:a.whiplash?"WHIPLASH 솔로 · "+remain.toFixed(1)+"초":andrumStageName(a.stage)+" · 그루브 "+Math.round(a.groove)+"/"+ANDRUM.grooveMax,
@@ -9712,7 +9794,7 @@
           || (f.iron?.dash || 0) > 0 || (f.duelMonster?.channel || 0) > 0
           || (f.duelMonster?.cast || 0) > 0 || f.duelMonster?.fusing
           || (f.toriMeteorWalk || 0) > 0 || (f.rioStormRush || 0) > 0
-          || f.baldCape?.normalActive || f.baldCape?.serious?.timer > 0
+          || f.baldCape?.serious?.timer > 0 || f.baldCape?.combo
           || f.baseId === "wind_rio") return;
       const ownSpeed = Math.max(1, (f.baseSpeed || f.speed || 2.35) * 44);
       const current = Math.hypot(f.vx, f.vy);
@@ -10154,8 +10236,8 @@
             const ny = dy / d;
             const overlap = minD - d;
 
-            const aCasting = isCasting(a);
-            const bCasting = isCasting(b);
+            const aCasting = isCasting(a) || !!a.baldCape?.combo || !!a.baldCape?.serious?.timer;
+            const bCasting = isCasting(b) || !!b.baldCape?.combo || !!b.baldCape?.serious?.timer;
 
             if (aCasting && !bCasting) {
               b.x += nx * overlap;
@@ -10222,6 +10304,8 @@
               captainContact(b, a);
               baldCapeContact(a, b);
               baldCapeContact(b, a);
+              baldCapeSpeedContact(a, b);
+              baldCapeSpeedContact(b, a);
               hulkContact(a, b);
               hulkContact(b, a);
               logoContact(a, b);
