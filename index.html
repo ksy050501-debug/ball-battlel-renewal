@@ -9794,7 +9794,7 @@
           || (f.iron?.dash || 0) > 0 || (f.duelMonster?.channel || 0) > 0
           || (f.duelMonster?.cast || 0) > 0 || f.duelMonster?.fusing
           || (f.toriMeteorWalk || 0) > 0 || (f.rioStormRush || 0) > 0
-          || f.baldCape?.serious?.timer > 0 || f.baldCape?.combo
+          || f.baldCape?.dash > 0 || f.baldCape?.serious?.timer > 0 || f.baldCape?.combo
           || f.baseId === "wind_rio") return;
       const ownSpeed = Math.max(1, (f.baseSpeed || f.speed || 2.35) * 44);
       const current = Math.hypot(f.vx, f.vy);
