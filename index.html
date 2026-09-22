@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v105</title>
+  <title>볼배틀 리뉴얼 v106</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v105</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v106</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -2855,6 +2855,16 @@
     }
     function drawBaldCapeCharacter(f){
       const b=f.baldCape;
+      if(f.portraitOnly){
+        ctx.save();ctx.translate(f.x,f.y+8);ctx.scale(f.r/20*1.42,f.r/20*1.42);
+        ctx.fillStyle="#f8fafc";ctx.strokeStyle="#cbd5e1";ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(-4,-1);ctx.quadraticCurveTo(-18,1,-25,15);ctx.lineTo(-14,22);ctx.lineTo(-5,14);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(4,-1);ctx.quadraticCurveTo(18,1,25,15);ctx.lineTo(14,22);ctx.lineTo(5,14);ctx.closePath();ctx.fill();ctx.stroke();
+        const suit=ctx.createLinearGradient(-13,0,13,20);suit.addColorStop(0,"#fef08a");suit.addColorStop(.48,"#facc15");suit.addColorStop(1,"#ca8a04");ctx.fillStyle=suit;ctx.strokeStyle="#854d0e";ctx.beginPath();ctx.moveTo(-13,16);ctx.quadraticCurveTo(-12,3,-7,-1);ctx.lineTo(7,-1);ctx.quadraticCurveTo(12,3,13,16);ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.fillStyle="#dc2626";ctx.beginPath();ctx.ellipse(-13,9,5,7,-.25,0,Math.PI*2);ctx.ellipse(13,9,5,7,.25,0,Math.PI*2);ctx.fill();
+        const skin=ctx.createRadialGradient(-4,-13,1,0,-8,13);skin.addColorStop(0,"#ffe7c7");skin.addColorStop(.72,"#efbd91");skin.addColorStop(1,"#b96f4d");ctx.fillStyle=skin;ctx.strokeStyle="#713f2b";ctx.lineWidth=1.15;ctx.beginPath();ctx.ellipse(0,-10,10.5,12.5,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+        ctx.strokeStyle="rgba(255,255,255,.72)";ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(-1.5,-14,7.3,3.7,5.25);ctx.stroke();
+        ctx.fillStyle="#0f172a";ctx.beginPath();ctx.ellipse(-3.8,-10.7,1.35,.82,-.08,0,Math.PI*2);ctx.ellipse(3.8,-10.7,1.35,.82,.08,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#78350f";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-6,-12.6);ctx.lineTo(-2.2,-13);ctx.moveTo(6,-12.6);ctx.lineTo(2.2,-13);ctx.moveTo(-2.4,-5.2);ctx.quadraticCurveTo(0,-4.4,2.4,-5.2);ctx.stroke();ctx.restore();
+        drawHealthBar(f);drawName(f);return;
+      }
       if(!f.portraitOnly&&b?.serious){
         const s=b.serious,charge=clamp(1-s.timer/BALD_CAPE.seriousWindup,0,1),alpha=s.timer > 0 ? .26 : .56;
         drawBaldCapeCone(f,s.angle,arena.size*1.8,BALD_CAPE.seriousHalfAngle,"rgba(127,29,29,.70)","#ef4444",alpha);
@@ -5497,6 +5507,7 @@
     }
 
       const patchNotes = [
+      "v106: 대머리망토 초상화를 흉상으로 재작화하고, 전 캐릭터에 고유 시각 모티프·오라·궤적을 추가했으며 공통 타격 이펙트를 강화했습니다. 판정과 전투 수치는 변경하지 않았습니다.",
       "v105: v104에서 누락된 대머리망토 전면 드로잉과 펀치 연출, 앤드럼의 동심 음압파·박자·WHIPLASH 이펙트를 실제 렌더링 함수에 적용했습니다. 전투 수치는 유지됩니다.",      "v104: 대머리망토의 캐릭터 드로잉과 펀치 연출을 전면 개선하고, 앤드럼의 음압파·박자·피날레 공격 이펙트를 강화했습니다. 전투 수치는 유지됩니다.",
       "v103: 패밀리맨 캐릭터와 차량/니트로 전용 코드를 삭제. 영화 신캐 '오디세웠으' 추가. 체력180. 전투 시작 10초는 노숙자 모드(이속3.15)로 정체를 숨기며, 가까운 적이 접근하면 약3.4초마다 짧은 회피 이동. 10초 뒤 영웅 모드(이속2.7)로 영구 전환해 활을 주무기로 사용. 영웅은 1.55초마다 최근접 적을 예측 조준해 일반 화살(피해12, 차징0.42초)을 발사하고, 네 번째 화살마다 차징0.82초의 '열두 도끼' 관통 화살(피해28, 고속·다수 관통)을 사용. 노숙자/영웅 외형과 활·화살·도끼구멍 궤적 시각 효과 추가.",
       "v102: 영화 캐릭터 '패밀리맨' 추가. 체력190·이속2.65. 첫 차량은 6초 뒤, 이후 주행 종료 후 11초마다 검은 차에 탑승해 최근접 적을 추적한다. 일반 차량은 속도520·2.35초·충돌18·강넉백 및 날아간 상대의 벽충돌 추가8, 첫 벽에서 드리프트해 재추적하며 구간마다 같은 적을 1회씩 타격 가능. 받은 피해×1.6만큼 패밀리 게이지가 차고 100이면 다음 주행이 니트로로 강화되어 속도700·2.75초·충돌27·드리프트2회. 간단한 검은 민소매 본체와 차량/후미등/니트로 시각 효과 추가.",
@@ -11481,16 +11492,13 @@
     }
 
     function spawnHitFlash(x, y, color, radius = 34) {
-      particles.push({
-        x, y,
-        vx: 0, vy: 0,
-        r: 6,
-        targetR: radius,
-        color,
-        life: 0.22,
-        maxLife: 0.22,
-        hitFlash: true
-      });
+      particles.push({x,y,vx:0,vy:0,r:6,targetR:radius,color,life:.28,maxLife:.28,hitFlash:true});
+      if(!fastSimMode){
+        for(let i=0;i<5;i++){
+          const a=i*Math.PI*2/5+battleTime*3.7,s=42+radius*.7+(i%2)*18;
+          particles.push({x:x+Math.cos(a)*4,y:y+Math.sin(a)*4,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:2.4+(i%2),color,life:.22+(i%3)*.045,maxLife:.31});
+        }
+      }
     }
 
     function spawnFloatingText(x, y, text, color = "#ffffff") {
@@ -13096,7 +13104,46 @@
       drawHealthBar(f);drawName(f);
       if(mode==="hulk")drawRing(f.x,f.y,f.r+7,"rgba(239,68,68,.62)",2);
     }
+    function drawCharacterFxBack(f){
+      if(f.portraitOnly||fastSimMode||!f.alive||(f.tano&&f.tano.hidden>0)||f.duelMonster||f.andrum||f.baldCape)return;
+      const t=battleTime,r=f.r||18;
+      let color="#93c5fd",accent="#e0f2fe",motif="spark",power=.34;
+      if(f.newhello){color="#67e8f9";accent="#e0f2fe";motif="wire";power=f.newhello.dash>0||f.newhello.spin>0?1:.42;}
+      else if(f.lisa){color="#f472b6";accent="#c084fc";motif="music";power=f.lisa.rock>0 ? .95 : .4;}
+      else if(f.riddle){color=f.riddle.elderBuff>0?"#4ade80":"#a3e635";accent="#dcfce7";motif="rune";power=f.riddle.fiendActive>0||f.riddle.avadaCast>0||f.riddle.avadaLife>0?1:.38;}
+      else if(f.hinta){color="#fb923c";accent="#fef3c7";motif="volley";power=f.hinta.dash?1:.36;}
+      else if(f.captain){color="#60a5fa";accent="#f8fafc";motif="shield";power=(f.captain.shieldThrown||(f.captain.punchAnim?.time||0)>0) ? .9 : .4;}
+      else if(f.jabami){color="#ef4444";accent="#f8fafc";motif="cards";power=(f.jabami.round||f.jabami.gambling) ? .95 : .4;}
+      else if(f.duelist){color="#38bdf8";accent="#dbeafe";motif="duel";power=(f.duelist.cast>0||f.duelist.drawFx>0) ? .95 : .42;}
+      else if(f.logo){color=f.logo.mode==="hulk"?"#ef4444":"#4ade80";accent="#dcfce7";motif="rage";power=f.logo.mode==="hulk" ? .95 : .48;}
+      else if(f.tano){color=f.tano.stones?.length?"#c084fc":"#818cf8";accent="#f5d0fe";motif="cosmic";power=.48+Math.min(.48,(f.tano.stones?.length||0)*.08);}
+      else if(f.iron){color="#38bdf8";accent="#fef3c7";motif="reactor";power=(f.iron.repulsor>0||f.iron.boost>0) ? .95 : .43;}
+      else if(f.oshi){color="#f9a8d4";accent="#fef3c7";motif="idol";power=(f.oshi.singing||f.oshi.songPulse>0) ? .9 : .4;}
+      else if(f.odysseus){color="#fbbf24";accent="#fef3c7";motif="arrow";power=(f.odysseus.cast>0||f.odysseus.shotCd<.4) ? .9 : .38;}
+      else if(f.baseId==="training_dummy"){color="#94a3b8";accent="#e2e8f0";motif="scan";power=.28;}
+      ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();ctx.translate(f.x,f.y);ctx.globalCompositeOperation="lighter";
+      const pulse=1+Math.sin(t*5+f.id?.length)*.06,rr=(r+8+power*7)*pulse;
+      ctx.globalAlpha=.18+power*.23;ctx.strokeStyle=color;ctx.shadowColor=color;ctx.shadowBlur=8+power*12;ctx.lineWidth=1.2+power*1.5;ctx.setLineDash([5+power*4,7]);ctx.lineDashOffset=-t*(12+power*22);ctx.beginPath();ctx.arc(0,0,rr,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+      for(let i=0;i<6;i++){const a=t*(motif==="cosmic"?1.5:2.2)+i*Math.PI/3,rad=rr+4+Math.sin(t*4+i)*3;ctx.globalAlpha=.24+power*.32;ctx.fillStyle=i%2?color:accent;ctx.beginPath();ctx.arc(Math.cos(a)*rad,Math.sin(a)*rad,1.2+power*1.4,0,Math.PI*2);ctx.fill();}
+      ctx.shadowBlur=6;ctx.lineWidth=1.4;ctx.globalAlpha=.28+power*.38;ctx.strokeStyle=color;ctx.fillStyle=accent;
+      if(motif==="wire"){for(let i=-2;i<=2;i++){const y=i*5+Math.sin(t*12+i)*2;ctx.beginPath();ctx.moveTo(-r-30-power*12,y);ctx.lineTo(-r-7,y-i*1.5);ctx.stroke();}}
+      else if(motif==="music"){for(let i=0;i<12;i++){const a=i*Math.PI/6,bar=5+(Math.sin(t*10+i*1.7)+1)*4*power;ctx.save();ctx.rotate(a);ctx.fillRect(rr+2,-1.2,bar,2.4);ctx.restore();}}
+      else if(motif==="rune"){ctx.font="900 9px Georgia";ctx.textAlign="center";for(let i=0;i<5;i++){const a=-t*.8+i*Math.PI*2/5;ctx.fillText(["△","◇","✦","○","ᛉ"][i],Math.cos(a)*(rr+8),Math.sin(a)*(rr+8)+3);}}
+      else if(motif==="volley"){for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(-r-24,i*7);ctx.lineTo(-r-8,i*4);ctx.lineTo(-r-15,i*4-3);ctx.moveTo(-r-8,i*4);ctx.lineTo(-r-15,i*4+3);ctx.stroke();}}
+      else if(motif==="shield"){for(let i=0;i<3;i++){ctx.rotate(Math.PI*2/3);ctx.beginPath();ctx.moveTo(rr+3,0);ctx.lineTo(rr+11,-5);ctx.lineTo(rr+9,5);ctx.closePath();ctx.stroke();}}
+      else if(motif==="cards"){ctx.font="900 11px Georgia";ctx.textAlign="center";for(let i=0;i<4;i++){const a=t*.65+i*Math.PI/2;ctx.fillStyle=i%2?"#ef4444":"#f8fafc";ctx.fillText(["♠","♥","♣","♦"][i],Math.cos(a)*(rr+9),Math.sin(a)*(rr+9)+4);}}
+      else if(motif==="duel"){for(let i=0;i<4;i++){const a=-t+i*Math.PI/2,x=Math.cos(a)*(rr+8),y=Math.sin(a)*(rr+8);ctx.save();ctx.translate(x,y);ctx.rotate(a+.4);ctx.strokeRect(-3.5,-5,7,10);ctx.restore();}}
+      else if(motif==="rage"){for(let i=0;i<8;i++){const a=i*Math.PI/4,inner=r+3,outer=rr+8+Math.sin(t*8+i)*4*power;ctx.beginPath();ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);ctx.lineTo(Math.cos(a+.08)*outer,Math.sin(a+.08)*outer);ctx.stroke();}}
+      else if(motif==="cosmic"){for(let i=0;i<3;i++){ctx.globalAlpha=.16+power*.22;ctx.beginPath();ctx.ellipse(0,0,rr+6+i*7,(rr+6+i*7)*.34,t*.25+i,0,Math.PI*2);ctx.stroke();}}
+      else if(motif==="reactor"){for(let i=0;i<3;i++){ctx.globalAlpha=.2+power*.25;ctx.beginPath();ctx.arc(0,0,r+5+i*5,t+i, t+i+Math.PI*.9);ctx.stroke();}ctx.fillStyle=accent;ctx.beginPath();ctx.arc(0,0,3+power*2,0,Math.PI*2);ctx.fill();}
+      else if(motif==="idol"){ctx.font="900 12px system-ui";ctx.textAlign="center";for(let i=0;i<4;i++){const a=-t+i*Math.PI/2;ctx.fillText(i%2?"♪":"✦",Math.cos(a)*(rr+7),Math.sin(a)*(rr+7)+4);}}
+      else if(motif==="arrow"){for(let i=0;i<4;i++){const a=i*Math.PI/2+t*.35;ctx.save();ctx.rotate(a);ctx.beginPath();ctx.moveTo(rr,0);ctx.lineTo(rr+9,-4);ctx.moveTo(rr,0);ctx.lineTo(rr+9,4);ctx.stroke();ctx.restore();}}
+      else if(motif==="scan"){ctx.setLineDash([2,4]);ctx.beginPath();ctx.moveTo(-rr,0);ctx.lineTo(rr,0);ctx.moveTo(0,-rr);ctx.lineTo(0,rr);ctx.stroke();ctx.setLineDash([]);}
+      ctx.restore();
+    }
+
     function drawFighter(f) {
+      drawCharacterFxBack(f);
       drawHintaConcussion(f);
       drawPowerFist(f);
       drawIronSuit(f);
