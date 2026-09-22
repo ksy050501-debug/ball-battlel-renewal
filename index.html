@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v102</title>
+  <title>볼배틀 리뉴얼 v103</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v102</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v103</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1222,8 +1222,8 @@
         skillName: "그루브 · WHIPLASH", condition: "그루브 0~300 · 피격 피해×5만큼 감소 · 적중 킥마다 솔로게이지+5 · 100에서 다음 마디 WHIPLASH", desc: "140BPM 고정. 그루브는 0~300 수치로 누적되며 0~100 기본, 101~200 몰입, 201~300 광란 단계다. 평소 초당10씩 쌓이지만 피해를 받으면 실제 받은 피해의 5배만큼 즉시 깎여 단계가 다시 내려갈 수 있다. 적에게 실제 피해를 준 일반 킥마다 별도 WHIPLASH 게이지가 5씩 오르고 100이 되면 다음 마디 첫 박에서 2마디 솔로를 시작한다. 단계별 편곡·필인·킥 동기화 공격장은 유지된다." },
       { id: "bald_cape", name: "대머리망토", mark: "○", role: "애니", color: "#facc15", hp: 180, attack: 0, speed: 2.7, range: 0,
         skillName: "보통펀치 · 연속 보통펀치 · 진심펀치", condition: "경기 시작부터 15초 · 공격 종료 후 다시 15초", desc: "한 번 공격하면 오래 쉬지만 명중 가능성과 위력이 높다. 보통펀치는 벽 반사마다 기본 이동속도가 빨라지고 5회째 최근접 적을 추적 돌진한다. 연속 보통펀치는 제자리에서 상대 방향을 계속 따라가며 넓은 원뿔 연타를 퍼붓는다. 진심펀치는 상대와 먼 맵 구석으로 순간 이동한 뒤 반대편 모서리를 향해 긴 차징 후 충격파를 발사하며, 차징 중에는 어떤 넉백에도 밀려나지 않는다." },
-      { id: "family_driver", name: "패밀리맨", mark: "F", role: "영화", color: "#111827", hp: 190, attack: 0, speed: 2.65, range: 0,
-        skillName: "패밀리 라이드 · 니트로", condition: "첫 차량 6초 · 이후 11초마다 · 받은 피해로 패밀리 게이지 충전", desc: "검은 차를 불러 직접 탑승해 최근접 적을 추적한다. 차량 충돌은 강한 넉백을 주고, 첫 벽에 닿으면 드리프트해 다시 상대를 노린다. 받은 피해의 1.6배만큼 패밀리 게이지가 차며 100이 되면 다음 차량이 니트로로 강화되어 더 빠르고 강해지고 벽 드리프트도 한 번 더 가능하다." },
+      { id: "odysseus", name: "오디세웠으", mark: "🏹", role: "영화", color: "#b45309", hp: 180, attack: 0, speed: 2.85, range: 0,
+        skillName: "노숙자 변장 · 왕의 활 · 열두 도끼", condition: "전투 시작 10초는 노숙자 · 이후 영웅으로 영구 전환", desc: "처음에는 정체를 숨긴 노숙자로 등장해 빠르게 움직이고 가까운 적을 주기적으로 회피한다. 10초가 지나면 정체를 밝히고 영웅 모드로 전환하여 활을 주무기로 사용한다. 영웅 모드에서는 최근접 적을 예측 조준해 화살을 쏘며, 네 번째 화살마다 더 긴 차징 뒤 강력한 '열두 도끼' 관통 화살을 발사한다." },
       { id: "hinta", name: "힌타", mark: "10", role: "애니", color: "#f97316", hp: 170, attack: 12, speed: 3.0, range: 0,
         skillName: "속공 · 괴짜 속공", condition: "5초 뒤 경기 시작 · 배구공 접촉 시 무작위 스파이크", desc: "공을 4초간 못 잡으면 직선 대쉬! 경로의 적을 밀어내고 뇌진탕 둔화. 넓은 접촉 범위로 공을 잡아 속공 또는 괴짜 속공! 벽·적 접촉 합계 3회 후 공이 사라지고 5초 뒤 랜덤 재등장. 비행 중 재타격은 불가." },
       { id: "lisa", name: "리사", mark: "♫", role: "애니", color: "#f472b6", hp: 180, attack: 9, speed: 2.7, range: 150,
@@ -2922,166 +2922,192 @@
       drawHealthBar(f);drawName(f);
     }
 
-    const FAMILY_DRIVER = {
-      period:11, initialDelay:6, rideTime:2.35, speed:520, damage:18,
-      nitroTime:2.75, nitroSpeed:700, nitroDamage:27,
-      turnRate:10.5, hitReach:13, knockSpeed:690, wallDamage:8,
-      normalDrifts:1, nitroDrifts:2, gaugeMax:100, gaugePerDamage:1.6
+    const ODYSSEUS = {
+      homelessTime:10, homelessSpeed:3.15, heroSpeed:2.7,
+      dodgePeriod:3.4, dodgeDuration:.28, dodgeSpeed:470, dodgeTriggerRange:105,
+      shotInterval:1.55, drawTime:.42, arrowSpeed:650, arrowDamage:12, arrowRadius:5, arrowLife:1.55,
+      axeEvery:4, axeDrawTime:.82, axeSpeed:780, axeDamage:28, axeRadius:8, axeLife:1.45
     };
 
-    function initFamilyDriver(f){
-      f.familyDriver={
-        cd:FAMILY_DRIVER.initialDelay,gauge:0,ride:null,
-        lastDamageTaken:f.damageTaken||0,flash:0
+    function initOdysseus(f){
+      f.odysseus={
+        mode:"homeless",modeTimer:ODYSSEUS.homelessTime,dodgeCd:1.4,dodge:0,
+        shotCd:ODYSSEUS.shotInterval,draw:0,drawAngle:0,shotCount:0,
+        nextAxe:false,arrows:[],flash:0,baseSpeedOriginal:f.baseSpeed||f.speed||2.85
       };
+      f.baseSpeed=ODYSSEUS.homelessSpeed;f.speed=ODYSSEUS.homelessSpeed;
+      const v=Math.hypot(f.vx,f.vy)||1;
+      const own=ODYSSEUS.homelessSpeed*44;
+      f.vx=f.vx/v*own;f.vy=f.vy/v*own;
     }
-    function familyDriverBlocked(f){
-      return !f?.alive||f.tanoStop>0||f.punchHold>0||f.punchFlight>0||
-        f.vampSuppressed>0||f.joltStop>0||isCasting(f);
+    function revealOdysseus(f){
+      const o=f?.odysseus;if(!o||o.mode==="hero")return;
+      o.mode="hero";o.modeTimer=0;o.dodge=0;o.shotCd=.65;o.draw=0;o.nextAxe=false;
+      f.baseSpeed=ODYSSEUS.heroSpeed;f.speed=ODYSSEUS.heroSpeed;
+      const v=Math.hypot(f.vx,f.vy)||1,own=ODYSSEUS.heroSpeed*44;
+      f.vx=f.vx/v*own;f.vy=f.vy/v*own;
+      spawnBlast(f.x,f.y,72,"#fbbf24");
+      spawnFloatingText(f.x,f.y-f.r-42,"정체 공개 · 왕의 활","#fde68a");
+      log("<strong>오디세웠으</strong> 정체 공개 · 영웅 모드","스킬");
+      playSound("warning",.9);
     }
-    function startFamilyRide(f){
-      const s=f.familyDriver;if(!s||s.ride||familyDriverBlocked(f))return false;
-      const nitro=s.gauge>=FAMILY_DRIVER.gaugeMax;
-      if(nitro)s.gauge=0;
-      const target=nearestEnemy(f).enemy;
-      let angle=target?Math.atan2(target.y-f.y,target.x-f.x):Math.atan2(f.vy,f.vx);
-      if(!Number.isFinite(angle))angle=rand(-Math.PI,Math.PI);
-      s.ride={
-        nitro,
-        time:nitro?FAMILY_DRIVER.nitroTime:FAMILY_DRIVER.rideTime,
-        drifts:0,
-        hitIds:new Set(),
-        angle
-      };
-      s.cd=0;s.flash=.35;
-      const speed=nitro?FAMILY_DRIVER.nitroSpeed:FAMILY_DRIVER.speed;
-      f.vx=Math.cos(angle)*speed;f.vy=Math.sin(angle)*speed;
-      spawnFloatingText(f.x,f.y-f.r-40,nitro?"패밀리 니트로!":"패밀리 라이드!","#fbbf24");
-      spawnBlast(f.x,f.y,nitro?72:52,nitro?"#fb923c":"#94a3b8");
-      playSound("wind",nitro?1.35:1);
-      log("<strong>패밀리맨</strong> "+(nitro?"니트로 차량 출발":"차량 출발"),"스킬");
+    function startOdysseusDodge(f){
+      const o=f.odysseus,target=nearestEnemy(f).enemy;
+      if(!o||o.mode!=="homeless"||o.dodge>0||!target)return false;
+      const dx=f.x-target.x,dy=f.y-target.y,d=Math.hypot(dx,dy)||1;
+      const side=Math.random()<.5?-1:1;
+      let ax=dx/d+(-dy/d)*.72*side, ay=dy/d+(dx/d)*.72*side;
+      const len=Math.hypot(ax,ay)||1;ax/=len;ay/=len;
+      o.dodge=ODYSSEUS.dodgeDuration;o.dodgeCd=ODYSSEUS.dodgePeriod;
+      f.vx=ax*ODYSSEUS.dodgeSpeed;f.vy=ay*ODYSSEUS.dodgeSpeed;
+      spawnFloatingText(f.x,f.y-f.r-32,"변장 회피","#d6d3d1");
       return true;
     }
-    function finishFamilyRide(f){
-      const s=f?.familyDriver;if(!s||!s.ride)return;
-      const angle=Math.atan2(f.vy,f.vx);
-      s.ride=null;s.cd=FAMILY_DRIVER.period;
-      const speed=(f.baseSpeed||2.65)*44;
-      const a=Number.isFinite(angle)?angle:rand(-Math.PI,Math.PI);
-      f.vx=Math.cos(a)*speed;f.vy=Math.sin(a)*speed;
-    }
-    function updateFamilyDriver(f,dt){
-      const s=f?.familyDriver;if(!s)return;
-      const taken=f.damageTaken||0;
-      const delta=Math.max(0,taken-(s.lastDamageTaken||0));
-      s.lastDamageTaken=taken;
-      if(delta>0&&!s.ride?.nitro){
-        s.gauge=clamp(s.gauge+delta*FAMILY_DRIVER.gaugePerDamage,0,FAMILY_DRIVER.gaugeMax);
-      }
-      s.flash=Math.max(0,(s.flash||0)-dt);
-      if(s.ride){
-        s.ride.time=Math.max(0,s.ride.time-dt);
-        if(s.ride.time<=0)finishFamilyRide(f);
-        return;
-      }
-      s.cd=Math.max(0,s.cd-dt);
-      if(s.cd<=0&&!familyDriverBlocked(f))startFamilyRide(f);
-    }
-    function familyDriverTurnToward(f,target,dt){
-      const s=f.familyDriver,ride=s?.ride;if(!ride||!target)return;
-      const wanted=Math.atan2(target.y-f.y,target.x-f.x);
-      const current=Math.atan2(f.vy,f.vx);
-      const delta=Math.atan2(Math.sin(wanted-current),Math.cos(wanted-current));
-      const step=clamp(delta,-FAMILY_DRIVER.turnRate*dt,FAMILY_DRIVER.turnRate*dt);
-      ride.angle=current+step;
-      const speed=ride.nitro?FAMILY_DRIVER.nitroSpeed:FAMILY_DRIVER.speed;
-      f.vx=Math.cos(ride.angle)*speed;f.vy=Math.sin(ride.angle)*speed;
-    }
-    function moveFamilyDriver(f,dt){
-      const s=f?.familyDriver,ride=s?.ride;if(!ride)return false;
-      const target=nearestEnemy(f).enemy;
-      if(target)familyDriverTurnToward(f,target,dt);
+    function moveOdysseusDodge(f,dt){
+      const o=f?.odysseus;if(!o||o.mode!=="homeless"||o.dodge<=0)return false;
+      o.dodge=Math.max(0,o.dodge-dt);
       f.x+=f.vx*dt;f.y+=f.vy*dt;
-
-      const wallHit=(f.x-f.r<arena.x)||(f.x+f.r>arena.x2)||(f.y-f.r<arena.y)||(f.y+f.r>arena.y2);
-      if(wallHit){
-        bounceWalls(f);
-        ride.drifts+=1;
-        ride.hitIds.clear();
-        const maxDrifts=ride.nitro?FAMILY_DRIVER.nitroDrifts:FAMILY_DRIVER.normalDrifts;
-        if(ride.drifts>maxDrifts){
-          finishFamilyRide(f);
-          return true;
-        }
-        const next=nearestEnemy(f).enemy;
-        if(next){
-          ride.angle=Math.atan2(next.y-f.y,next.x-f.x);
-          const speed=ride.nitro?FAMILY_DRIVER.nitroSpeed:FAMILY_DRIVER.speed;
-          f.vx=Math.cos(ride.angle)*speed;f.vy=Math.sin(ride.angle)*speed;
-        }
-        spawnFloatingText(f.x,f.y-f.r-34,"드리프트 "+ride.drifts+"/"+maxDrifts,"#e5e7eb");
-        spawnParticles(f.x,f.y,ride.nitro?"#fb923c":"#cbd5e1",10);
-        playSound("reflect",.8);
+      bounceWalls(f);
+      if(o.dodge<=0){
+        const a=Math.atan2(f.vy,f.vx),speed=ODYSSEUS.homelessSpeed*44;
+        f.vx=Math.cos(a)*speed;f.vy=Math.sin(a)*speed;
       }
       return true;
     }
-    function familyDriverContact(f,target){
-      const s=f?.familyDriver,ride=s?.ride;
-      if(!ride||!target?.alive||!areEnemies(f,target)||ride.hitIds.has(target.id))return false;
-      ride.hitIds.add(target.id);
-      const power=ride.nitro?FAMILY_DRIVER.nitroDamage:FAMILY_DRIVER.damage;
-      const dealt=damage(target,power,f,ride.nitro?"니트로 충돌":"차량 충돌");
-      if(dealt>0&&target.alive){
-        const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1;
-        target.vx=dx/d*FAMILY_DRIVER.knockSpeed;
-        target.vy=dy/d*FAMILY_DRIVER.knockSpeed;
-        target.punchFlight=Math.max(target.punchFlight||0,.30);
-        target.punchSource=f;
-        target.punchWallPower=FAMILY_DRIVER.wallDamage;
-        target.punchWallHits=0;
-      }
-      triggerHitStop(ride.nitro?.14:.09);
-      screenShake=Math.max(screenShake,ride.nitro?.45:.28);
-      spawnHitFlash(target.x,target.y,ride.nitro?"#fb923c":"#f8fafc",ride.nitro?82:58);
-      spawnFloatingText(target.x,target.y-target.r-30,(ride.nitro?"니트로! -":"차량충돌 -")+power,ride.nitro?"#fb923c":"#e5e7eb");
-      playSound("hit",ride.nitro?1.05:.8);
-      return true;
+    function odysseusAimAngle(f,target,speed){
+      if(!target)return rand(-Math.PI,Math.PI);
+      const d=Math.hypot(target.x-f.x,target.y-f.y);
+      const lead=Math.min(.42,d/Math.max(1,speed));
+      const tx=clamp(target.x+(target.vx||0)*lead,arena.x+target.r,arena.x2-target.r);
+      const ty=clamp(target.y+(target.vy||0)*lead,arena.y+target.r,arena.y2-target.r);
+      return Math.atan2(ty-f.y,tx-f.x);
     }
-    function drawFamilyDriverCharacter(f){
-      const s=f.familyDriver,ride=s?.ride;
-      if(ride){
-        const angle=Math.atan2(f.vy,f.vx);
-        ctx.save();ctx.translate(f.x,f.y);ctx.rotate(angle);
-        if(ride.nitro&&!f.portraitOnly){
-          ctx.fillStyle="rgba(251,146,60,.72)";
-          ctx.beginPath();ctx.moveTo(-26,-8);ctx.lineTo(-48,-3);ctx.lineTo(-26,1);ctx.closePath();ctx.fill();
-          ctx.beginPath();ctx.moveTo(-26,4);ctx.lineTo(-43,9);ctx.lineTo(-26,10);ctx.closePath();ctx.fill();
+    function beginOdysseusShot(f){
+      const o=f?.odysseus;if(!o||o.mode!=="hero"||o.draw>0)return;
+      const target=nearestEnemy(f).enemy;
+      const axe=(o.shotCount+1)%ODYSSEUS.axeEvery===0;
+      o.nextAxe=axe;
+      o.draw=axe?ODYSSEUS.axeDrawTime:ODYSSEUS.drawTime;
+      o.drawAngle=odysseusAimAngle(f,target,axe?ODYSSEUS.axeSpeed:ODYSSEUS.arrowSpeed);
+      f.vx=0;f.vy=0;
+      spawnFloatingText(f.x,f.y-f.r-36,axe?"열두 도끼 조준":"활 시위 당기기",axe?"#fbbf24":"#fef3c7");
+    }
+    function fireOdysseusArrow(f){
+      const o=f?.odysseus;if(!o||o.mode!=="hero")return;
+      const axe=!!o.nextAxe,target=nearestEnemy(f).enemy;
+      const speed=axe?ODYSSEUS.axeSpeed:ODYSSEUS.arrowSpeed;
+      const angle=odysseusAimAngle(f,target,speed);
+      const r=axe?ODYSSEUS.axeRadius:ODYSSEUS.arrowRadius;
+      o.shotCount+=1;o.nextAxe=false;
+      o.arrows.push({
+        x:f.x+Math.cos(angle)*(f.r+9),y:f.y+Math.sin(angle)*(f.r+9),
+        vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r,
+        damage:axe?ODYSSEUS.axeDamage:ODYSSEUS.arrowDamage,
+        life:axe?ODYSSEUS.axeLife:ODYSSEUS.arrowLife,maxLife:axe?ODYSSEUS.axeLife:ODYSSEUS.arrowLife,
+        axe,hitIds:new Set()
+      });
+      o.shotCd=ODYSSEUS.shotInterval;
+      o.flash=.18;
+      const a=Math.atan2(f.vy,f.vx),own=ODYSSEUS.heroSpeed*44;
+      const restore=Number.isFinite(a)?a:rand(-Math.PI,Math.PI);
+      f.vx=Math.cos(restore)*own;f.vy=Math.sin(restore)*own;
+      playSound("wind",axe?1.15:.75);
+      if(axe){
+        spawnFloatingText(f.x,f.y-f.r-44,"열두 도끼!","#fbbf24");
+        log("<strong>오디세웠으</strong> 열두 도끼 관통 화살","스킬");
+      }
+    }
+    function updateOdysseusArrows(f,dt){
+      const o=f?.odysseus;if(!o)return;
+      for(let i=o.arrows.length-1;i>=0;i--){
+        const a=o.arrows[i];
+        a.life-=dt;
+        let remaining=dt,remove=a.life<=0;
+        while(!remove&&remaining>1e-7){
+          const step=Math.min(remaining,1/120);remaining-=step;
+          a.x+=a.vx*step;a.y+=a.vy*step;
+          if(a.x-a.r<arena.x||a.x+a.r>arena.x2||a.y-a.r<arena.y||a.y+a.r>arena.y2){remove=true;break;}
+          const victims=enemiesOf(f).filter(e=>e.alive&&!a.hitIds.has(e.id)&&Math.hypot(e.x-a.x,e.y-a.y)<=e.r+a.r);
+          for(const e of victims){
+            a.hitIds.add(e.id);
+            damage(e,a.damage,f,a.axe?"열두 도끼":"왕의 활");
+            spawnHitFlash(e.x,e.y,a.axe?"#f59e0b":"#fde68a",a.axe?64:34);
+            if(a.axe){
+              triggerHitStop(.10);screenShake=Math.max(screenShake,.24);
+            }else{
+              remove=true;break;
+            }
+          }
         }
-        ctx.fillStyle="#111827";ctx.strokeStyle="#94a3b8";ctx.lineWidth=2;
-        ctx.beginPath();ctx.roundRect(-27,-14,54,28,7);ctx.fill();ctx.stroke();
-        ctx.fillStyle="#334155";ctx.beginPath();ctx.roundRect(-9,-11,22,22,5);ctx.fill();
-        ctx.fillStyle="#f8fafc";ctx.fillRect(20,-10,5,6);ctx.fillRect(20,4,5,6);
-        ctx.fillStyle="#ef4444";ctx.fillRect(-26,-10,4,6);ctx.fillRect(-26,4,4,6);
-        ctx.fillStyle="#020617";
-        ctx.beginPath();ctx.arc(-13,-15,5,0,Math.PI*2);ctx.arc(14,-15,5,0,Math.PI*2);ctx.arc(-13,15,5,0,Math.PI*2);ctx.arc(14,15,5,0,Math.PI*2);ctx.fill();
-        ctx.restore();
-        if(!f.portraitOnly){
-          drawRing(f.x,f.y,f.r+10,ride.nitro?"rgba(251,146,60,.9)":"rgba(148,163,184,.7)",ride.nitro?4:2);
-          drawHealthBar(f);drawName(f);
+        if(remove)o.arrows.splice(i,1);
+      }
+    }
+    function updateOdysseus(f,dt){
+      const o=f?.odysseus;if(!o)return;
+      o.flash=Math.max(0,(o.flash||0)-dt);
+      updateOdysseusArrows(f,dt);
+      if(o.mode==="homeless"){
+        o.modeTimer=Math.max(0,o.modeTimer-dt);
+        o.dodgeCd=Math.max(0,o.dodgeCd-dt);
+        if(o.modeTimer<=0){revealOdysseus(f);return;}
+        if(o.dodge<=0&&o.dodgeCd<=0){
+          const n=nearestEnemy(f);
+          if(n.enemy&&n.distance<=ODYSSEUS.dodgeTriggerRange)startOdysseusDodge(f);
         }
         return;
       }
+      if(o.draw>0){
+        f.vx=0;f.vy=0;
+        o.draw=Math.max(0,o.draw-dt);
+        if(o.draw<=0)fireOdysseusArrow(f);
+        return;
+      }
+      o.shotCd=Math.max(0,o.shotCd-dt);
+      if(o.shotCd<=0&&f.tanoStop<=0&&f.punchHold<=0&&f.punchFlight<=0&&f.vampSuppressed<=0&&f.joltStop<=0&&!isCasting(f)){
+        beginOdysseusShot(f);
+      }
+    }
+    function drawOdysseusArrows(f){
+      const o=f?.odysseus;if(!o||f.portraitOnly)return;
+      for(const a of o.arrows){
+        const ang=Math.atan2(a.vy,a.vx);
+        ctx.save();ctx.translate(a.x,a.y);ctx.rotate(ang);
+        if(a.axe){
+          ctx.strokeStyle="rgba(251,191,36,.45)";ctx.lineWidth=2;
+          for(let k=-5;k<=6;k++){ctx.beginPath();ctx.arc(-k*13,0,7,0,Math.PI*2);ctx.stroke();}
+        }
+        ctx.strokeStyle=a.axe?"#f59e0b":"#fef3c7";ctx.lineWidth=a.axe?4:2;
+        ctx.beginPath();ctx.moveTo(-13,0);ctx.lineTo(8,0);ctx.stroke();
+        ctx.fillStyle=a.axe?"#fbbf24":"#e7e5e4";
+        ctx.beginPath();ctx.moveTo(10,0);ctx.lineTo(3,-4);ctx.lineTo(3,4);ctx.closePath();ctx.fill();
+        ctx.restore();
+      }
+    }
+    function drawOdysseusCharacter(f){
+      const o=f.odysseus;
+      drawOdysseusArrows(f);
       ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
-      ctx.fillStyle="#111827";ctx.strokeStyle="#020617";ctx.lineWidth=1.2;
-      ctx.beginPath();ctx.moveTo(-10,5);ctx.lineTo(-15,25);ctx.lineTo(-7,29);ctx.lineTo(0,18);ctx.lineTo(7,29);ctx.lineTo(15,25);ctx.lineTo(10,5);ctx.closePath();ctx.fill();ctx.stroke();
-      ctx.fillStyle="#c98f65";ctx.beginPath();ctx.arc(0,-8,10,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle="#1f2937";ctx.beginPath();ctx.arc(0,-12,10,Math.PI,Math.PI*2);ctx.fill();
-      ctx.strokeStyle="#111827";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-4,-5);ctx.lineTo(4,-5);ctx.stroke();
-      ctx.fillStyle="#f8fafc";ctx.font="900 8px system-ui";ctx.textAlign="center";ctx.fillText("F",0,15);
+      if(o?.mode==="homeless"){
+        ctx.fillStyle="#78716c";ctx.strokeStyle="#44403c";ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.moveTo(-12,3);ctx.lineTo(-17,27);ctx.lineTo(0,31);ctx.lineTo(17,27);ctx.lineTo(12,3);ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.fillStyle="#a8a29e";ctx.beginPath();ctx.moveTo(-13,-3);ctx.lineTo(0,-19);ctx.lineTo(13,-3);ctx.lineTo(10,9);ctx.lineTo(-10,9);ctx.closePath();ctx.fill();
+        ctx.fillStyle="#c08a61";ctx.beginPath();ctx.arc(0,-6,9,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle="#57534e";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(12,3);ctx.lineTo(19,30);ctx.stroke();
+      }else{
+        ctx.fillStyle="#92400e";ctx.strokeStyle="#451a03";ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.moveTo(-10,4);ctx.lineTo(-13,28);ctx.lineTo(0,31);ctx.lineTo(13,28);ctx.lineTo(10,4);ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.fillStyle="#d6b07a";ctx.beginPath();ctx.arc(0,-7,9,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle="#fbbf24";ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(13,4,10,-Math.PI/2,Math.PI/2);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(13,-6);ctx.lineTo(13,14);ctx.stroke();
+        ctx.fillStyle="#fef3c7";ctx.font="900 7px Georgia,serif";ctx.textAlign="center";ctx.fillText("Ο",0,16);
+      }
       ctx.restore();
-      if(!f.portraitOnly&&s){
-        const ratio=clamp(s.gauge/FAMILY_DRIVER.gaugeMax,0,1);
-        drawRing(f.x,f.y,f.r+8,ratio>=1?"rgba(251,146,60,.95)":"rgba(148,163,184,"+(0.2+ratio*.5)+")",ratio>=1?4:2);
+      if(!f.portraitOnly&&o?.mode==="homeless"){
+        drawRing(f.x,f.y,f.r+7,"rgba(168,162,158,.45)",2);
+      }
+      if(!f.portraitOnly&&o?.mode==="hero"&&o?.nextAxe){
+        drawRing(f.x,f.y,f.r+10,"rgba(251,191,36,.7)",3);
       }
       drawHealthBar(f);drawName(f);
     }
@@ -5509,6 +5535,7 @@
     }
 
       const patchNotes = [
+      "v103: 패밀리맨 캐릭터와 차량/니트로 전용 코드를 삭제. 영화 신캐 '오디세웠으' 추가. 체력180. 전투 시작 10초는 노숙자 모드(이속3.15)로 정체를 숨기며, 가까운 적이 접근하면 약3.4초마다 짧은 회피 이동. 10초 뒤 영웅 모드(이속2.7)로 영구 전환해 활을 주무기로 사용. 영웅은 1.55초마다 최근접 적을 예측 조준해 일반 화살(피해12, 차징0.42초)을 발사하고, 네 번째 화살마다 차징0.82초의 '열두 도끼' 관통 화살(피해28, 고속·다수 관통)을 사용. 노숙자/영웅 외형과 활·화살·도끼구멍 궤적 시각 효과 추가.",
       "v102: 영화 캐릭터 '패밀리맨' 추가. 체력190·이속2.65. 첫 차량은 6초 뒤, 이후 주행 종료 후 11초마다 검은 차에 탑승해 최근접 적을 추적한다. 일반 차량은 속도520·2.35초·충돌18·강넉백 및 날아간 상대의 벽충돌 추가8, 첫 벽에서 드리프트해 재추적하며 구간마다 같은 적을 1회씩 타격 가능. 받은 피해×1.6만큼 패밀리 게이지가 차고 100이면 다음 주행이 니트로로 강화되어 속도700·2.75초·충돌27·드리프트2회. 간단한 검은 민소매 본체와 차량/후미등/니트로 시각 효과 추가.",
       "v101: 대머리망토 체력 170→180 소폭 상향. 15초 장쿨 구조와 보통/연속/진심펀치 수치 및 명중 보정은 v100 그대로 유지하며, 두 번째 공격 기회까지 버티는 생존력만 보강.",
       "v100: 대머리망토 연속 보통펀치 다단히트 피해를 타당 7→8로 상향. 8타 풀히트 총 피해는 56→64. 나머지 범위·타격 간격·추적 조준·쿨타임은 v99 그대로 유지.",
@@ -5650,7 +5677,7 @@
         tip:"뉴헬로는 상대와 몸이 닿지 않아도 검 사거리(+8)에 들어오면 베기가 발동한다. 공격을 발동시킨 상대가 누구든, 그 순간 병장 중심의 더 큰 베기 원(+28) 안에 있는 모든 적이 같은 베기 피해와 출혈을 받는다. 와이어 강습 적중 시 즉시 재와이어하지만 한 사이클에서 총 3번까지만 연속 강습할 수 있고, 3번째 적중 뒤에는 7초 쿨타임이 적용된다. 중간 강습이 빗나가거나 끊기면 연속 횟수는 초기화된다. 출혈 폭발과 실제 몸 충돌 시 상대 접촉 반격은 기존대로 유지된다."};
       if (c.id === "riddle_lord") return {damage:"피엔드피레 0.4초마다3 + 화상2×3초 / 딱총나무 강화 0.4초마다4 + 화상3×3초 · 아바다 케다브라 4×5 / 강화 6×5",tick:"공유 쿨9초 · 첫 피엔드피레는 4초 뒤 · 이후 피엔드피레↔아바다 교대 · 피엔드피레4초 지속 · 아바다0.9초 다단 · 딱총나무16초 대기 후 등장·미획득 시25초 뒤 자동 습득·획득 시12초 강화",tip:"딱총나무 강화 중 피엔드피레 반경75→105, 아바다 케다브라는 거리와 조준을 무시하고 지정 대상에게 확정 적중한다. 첫 사망 때 호크룩스 7칸/7초 상태가 되며 이동·공격 불가. 적 접촉마다 1칸, 공격 피격마다 기본1칸＋피해10당 1칸 추가 감소. 피격 또는 접촉 1회마다 부활 HP도 70에서 10씩 감소한다. 생존하면 최대HP70·이속2.8로 남은 부활HP만큼 부활한다. 부활 후에도 원래 스킬과 지팡이를 그대로 사용한다. 지팡이는 획득 전까지 소멸하지 않고 등장 25초 뒤 자동 습득한다. 두 번째 부활은 없다."};
       if (c.id === "bald_cape") return {damage:"보통펀치28 + 맞은 상대 벽충돌16 / 가속충돌 8~17 / 연속 보통펀치8×8=64 / 진심펀치85",tick:"경기 시작부터 15초 · 이후 각 공격이 완전히 끝난 뒤 15초 · 보통45% / 연속35% / 진심20%",tip:"보통펀치는 벽 반사마다 기본 이동속도가 20%씩 상승하고, 5번째 반사 후 속도860으로 최근접 적을 계속 추적하며 돌진한다. 돌진 판정 반경도 넓어졌다. 연속 보통펀치는 완전히 멈춘 채 거리150·약130도 원뿔을 0.20초 간격 8타로 공격하며 매 타격마다 최근접 적 방향으로 다시 조준한다. 진심펀치는 최근접 적에게서 가장 먼 맵 구석으로 순간 이동한 뒤 반대편 모서리를 향해 약36도 붉은 부채꼴을 2.6초 차징하고 피해85를 준다. 차징 중에는 위치가 고정되어 넉백·강펀치·충돌로 밀려나지 않는다."};
-      if (c.id === "family_driver") return {damage:"차량 충돌18 + 날아간 상대 벽충돌8 / 니트로 충돌27 + 벽충돌8",tick:"첫 차량6초 · 이후 차량 종료 후11초 · 받은 피해×1.6만큼 패밀리 충전",tip:"차량 탑승 중 최근접 적을 계속 추적한다. 같은 주행 구간에서는 같은 적을 한 번만 치며, 벽에 닿아 드리프트하면 적중 제한이 초기화되어 다시 들이받을 수 있다. 일반 차량은 드리프트1회, 패밀리100에서 발동하는 니트로 차량은 더 빠르고 오래 달리며 드리프트2회가 가능하다."};
+      if (c.id === "odysseus") return {damage:"왕의 활12 / 네 번째 '열두 도끼' 관통 화살28",tick:"노숙자10초 → 영웅 영구 전환 · 영웅 활1.55초마다 · 일반 차징0.42초 / 열두 도끼0.82초",tip:"노숙자 모드는 기본 이속3.15이며 가까운 적이 접근하면 약3.4초마다 짧게 비껴 회피한다. 10초 뒤 정체를 공개하면 이속2.7의 영웅 모드가 되고 활만으로 공격한다. 화살은 최근접 적의 이동을 짧게 예측해 조준한다. 일반 화살은 첫 적중에서 사라지고, 네 번째 화살인 열두 도끼는 더 강하고 빠르며 경로의 적을 모두 관통한다."};
       if (c.id === "hinta") return {damage:"속공 12 / 괴짜 속공 24 · 각 50% 확률 / 대쉬 충돌 10",tick:"첫 공 5초 · 공 소멸 후 5초 재등장 · 벽/적 합계 3회 접촉",tip:"대기 공을 4초간 못 잡으면 속도480으로 직선 돌진. 적별 돌진당 1회 피해10·측면 넉백, 넉백 후 2초간 이속40% 감소. 벽 반사 후 같은 적도 다시 피해를 받는다. 속공은 짧은 이동 예측 조준·속도380. 괴짜 속공은 조준 오차 ±20~40도·속도570. 발사 후 유도 없음. 공 반경10, 습득 범위는 본체+공 반경에24 추가. 비행 공은 재타격할 수 없고, 세 번째 접촉이 적이면 피해 후 소멸한다. 모서리 두 벽은 2회로 센다."};
       if (c.id === "oshi") return { damage: "노래 1~4단계 피해 4/5/7/9 · 반경 90/110/130/150 / 투어 초당2 · 누적 체류 3초마다15 / 후유증: 체류 2초당 총3을 5초 DOT / 도쿄돔 칼35 + 출혈3×8 / 공연 연장 반경175·초당4·누적 3초마다20", tick: "노래 2초 · 노래 적중 1명당 인지도+15 · 적 접촉 대상별 1초마다+4 · 인지도100에 투어", tip: "체류 추가 피해는 적별로 한 번의 투어 안에서 누적하며 이탈해도 유지된다. 누적 3초마다 발동하고 다음 투어에서는 초기화된다. 노래 적중자는 3초간 이동속도 20% 감소 및 최애에게 주는 모든 피해 20% 감소(감소 후 최소 피해 1). 최대 체력 비례 피해와 푸른 눈의 백룡 등 소환수 피해에도 적용된다. 투어 2회를 마친 뒤 다시 인지도100을 채우면 도쿄돔이 시작되며, 출혈 종료까지 생존하면 공연이 연장된다." };
       if (c.id === "justice_ally") return { damage: "버스트 스트림 2×7 / 얼티밋 버스트 4×최대6 / 갓 핸드 크러셔 30", tick: "개시6초 · 카드 사용/드로우9초 · 공격7.5초 · 오벨리스크 초당 체력-9", tip: "융합 중 소재는 무적. 융합체는 주기적으로 얼티밋 버스트를 사용한다. 마지막 소환수의 치명상을 릴리스해 오벨리스크를 소환하며, 예고 원형 범위의 적에게 피해와 둔화를 준다." };
@@ -5792,7 +5819,7 @@
         if (c.id === "newhello_sergeant") initNewhello(preview);
         if (c.id === "andrum") initAndrum(preview);
         if (c.id === "bald_cape") initBaldCape(preview);
-        if (c.id === "family_driver") initFamilyDriver(preview);
+        if (c.id === "odysseus") initOdysseus(preview);
         if (c.id === "hinta") preview.hinta = { pose: 0 };
         if (c.id === "riddle_lord") preview.riddle = { horcruxActive: false, elderBuff: 0 };
         if (c.id === "iron_mask") preview.iron = { suit: "basic", dash: 0, assembly: 0, punch: null };
@@ -6249,7 +6276,7 @@
       if (c.id === "newhello_sergeant") initNewhello(fighter);
       if (c.id === "andrum") initAndrum(fighter);
       if (c.id === "bald_cape") initBaldCape(fighter);
-      if (c.id === "family_driver") initFamilyDriver(fighter);
+      if (c.id === "odysseus") initOdysseus(fighter);
       if (c.id === "riddle_lord") initRiddle(fighter);
       if (c.id === "hinta") initHinta(fighter);
       if (c.id === "logo_doctor") initLogo(fighter);
@@ -6874,11 +6901,15 @@
     }
 
     function skillProgressInfo(f) {
-      if(f.familyDriver){const s=f.familyDriver,r=s.ride;
-        const nitroReady=s.gauge>=FAMILY_DRIVER.gaugeMax;
-        const text=r?(r.nitro?"니트로 질주":"패밀리 라이드")+" · "+r.time.toFixed(1)+"초":(nitroReady?"니트로 준비 · 차량 "+s.cd.toFixed(1)+"초":"차량 "+s.cd.toFixed(1)+"초");
-        return {ratio:r?1:clamp(s.gauge/FAMILY_DRIVER.gaugeMax,0,1),className:r?.nitro?"rage-fill":"skill-fill",text:text,
-          extraTextHtml:'<div class="status-skill-label">패밀리 '+Math.round(s.gauge)+'/'+FAMILY_DRIVER.gaugeMax+' · 받은 피해×1.6 충전</div><div class="status-skill-label">일반: 충돌18·드리프트1회 / 니트로: 충돌27·드리프트2회</div>'};}
+      if(f.odysseus){const o=f.odysseus;
+        if(o.mode==="homeless"){
+          return {ratio:clamp(1-o.modeTimer/ODYSSEUS.homelessTime,0,1),className:"skill-fill",
+            text:"노숙자 모드 · 정체 공개까지 "+o.modeTimer.toFixed(1)+"초",
+            extraTextHtml:'<div class="status-skill-label">근접 적을 '+ODYSSEUS.dodgePeriod.toFixed(1)+'초마다 회피 · 영웅 전환 후 활 사용</div>'};}
+        const next=(o.shotCount+1)%ODYSSEUS.axeEvery===0?"다음 화살: 열두 도끼":"왕의 활 "+((o.shotCount%ODYSSEUS.axeEvery)+1)+"/"+ODYSSEUS.axeEvery;
+        const text=o.draw>0?(o.nextAxe?"열두 도끼 조준 ":"활 조준 ")+o.draw.toFixed(1)+"초":next+" · "+o.shotCd.toFixed(1)+"초";
+        return {ratio:o.draw>0?1:clamp(1-o.shotCd/ODYSSEUS.shotInterval,0,1),className:o.nextAxe?"rage-fill":"skill-fill",text,
+          extraTextHtml:'<div class="status-skill-label">일반 화살12 · 4번째 열두 도끼28 관통 · 예측 조준</div>'};}
       if(f.baldCape){const b=f.baldCape;
         const using=!!(b.serious||b.combo||b.normalActive);
         const active=b.serious?"진심펀치 차징":b.combo?"연속 보통펀치 추적 연타":b.normalActive?(b.dash>0?"보통펀치 추적 돌진":"보통펀치 가속 "+b.bounces+"/"+BALD_CAPE.normalBounces):"다음 펀치";
@@ -10006,7 +10037,7 @@
           || (f.duelMonster?.cast || 0) > 0 || f.duelMonster?.fusing
           || (f.toriMeteorWalk || 0) > 0 || (f.rioStormRush || 0) > 0
           || f.baldCape?.dash > 0 || f.baldCape?.serious?.timer > 0 || f.baldCape?.combo
-          || f.familyDriver?.ride || f.baseId === "wind_rio") return;
+          || f.odysseus?.dodge>0 || f.odysseus?.draw>0 || f.baseId === "wind_rio") return;
       const ownSpeed = Math.max(1, (f.baseSpeed || f.speed || 2.35) * 44);
       const current = Math.hypot(f.vx, f.vy);
       if (current < 0.5) {
@@ -10137,7 +10168,7 @@
       if (updateIronPunch(f, dt)) return;
 
       updateBaldCape(f, dt);
-      if (f.familyDriver) updateFamilyDriver(f, dt);
+      if (f.odysseus) updateOdysseus(f, dt);
       if (!f.alive) return;
       updateIron(f, dt);
       updateTano(f, dt);
@@ -10339,7 +10370,7 @@
         return;
       }
 
-      if (f.familyDriver?.ride && moveFamilyDriver(f, dt)) return;
+      if (f.odysseus?.dodge>0 && moveOdysseusDodge(f, dt)) return;
       if (f.newhello && moveNewhello(f, dt, slow * boost * gardenSlow * irisGlassSlow * oshiSlow)) return;
       if (f.hinta && moveHintaDash(f, dt)) return;
       if (f.logo && moveLogoJump(f, dt)) return;
@@ -10444,8 +10475,7 @@
           const dy = b.y - a.y;
           const d = Math.hypot(dx, dy) || 1;
           const baldDashReach = (a.baldCape?.dash > 0 || b.baldCape?.dash > 0) ? 12 : 0;
-          const familyCarReach = (a.familyDriver?.ride || b.familyDriver?.ride) ? FAMILY_DRIVER.hitReach : 0;
-          const minD = a.r + b.r + baldDashReach + familyCarReach;
+          const minD = a.r + b.r + baldDashReach;
 
           if (d < minD) {
             const nx = dx / d;
@@ -10522,8 +10552,6 @@
               baldCapeContact(b, a);
               baldCapeSpeedContact(a, b);
               baldCapeSpeedContact(b, a);
-              familyDriverContact(a, b);
-              familyDriverContact(b, a);
               hulkContact(a, b);
               hulkContact(b, a);
               logoContact(a, b);
@@ -13116,7 +13144,7 @@
       if (f.newhello) { drawNewhelloCharacter(f); return; }
       if (f.andrum) { drawAndrumCharacter(f); return; }
       if (f.baldCape) { drawBaldCapeCharacter(f); return; }
-      if (f.familyDriver) { drawFamilyDriverCharacter(f); return; }
+      if (f.odysseus) { drawOdysseusCharacter(f); return; }
       if (f.riddle) { drawRiddleCharacter(f); return; }
       if (f.hinta) { drawHintaCharacter(f); return; }
       if (f.captain) { drawCaptainCharacter(f); return; }
