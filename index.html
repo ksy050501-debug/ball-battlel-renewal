@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v111</title>
+  <title>볼배틀 리뉴얼 v112</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v111</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v112</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1220,8 +1220,8 @@
         skillName: "피엔드피레 · 아바다 케다브라 · 호크룩스", condition: "공유 쿨9초 · 피엔드피레↔아바다 번갈아 시전 · 딱총나무 지팡이16초 · 사망 시 호크룩스 1회", desc: "피엔드피레와 아바다 케다브라를 하나의 쿨타임으로 번갈아 사용한다. 딱총나무 지팡이를 획득하면 불꽃 범위와 화상이 강화되고 아바다 케다브라가 거리 무관 확정타가 된다. 첫 사망 시 7칸 호크룩스로 7초를 버티면 본래 능력으로 부활하며, 대기 중 피격·충돌마다 부활 HP가 10씩 감소한다. 부활 최대 체력은 70이며 지팡이도 계속 획득할 수 있다. 지팡이는 사라지지 않고 등장 25초 뒤 자동 습득한다." },
       { id: "andrum", name: "앤드럼", mark: "🥁", role: "영화", color: "#d6a85f", hp: 150, attack: 0, speed: 2.7, range: 210,
         skillName: "그루브 · WHIPLASH", condition: "그루브 0~300 · 피격 피해×5만큼 감소 · 적중 킥마다 솔로게이지+5 · 100에서 다음 마디 WHIPLASH", desc: "140BPM 고정. 그루브는 0~300 수치로 누적되며 0~100 기본, 101~200 몰입, 201~300 광란 단계다. 평소 초당10씩 쌓이지만 피해를 받으면 실제 받은 피해의 5배만큼 즉시 깎여 단계가 다시 내려갈 수 있다. 적에게 실제 피해를 준 일반 킥마다 별도 WHIPLASH 게이지가 5씩 오르고 100이 되면 다음 마디 첫 박에서 2마디 솔로를 시작한다. 단계별 편곡·필인·킥 동기화 공격장은 유지된다." },
-      { id: "elsa", name: "엘사", mark: "❄", role: "영화", color: "#7dd3fc", hp: 170, attack: 0, speed: 2.75, range: 0,
-        skillName: "얼음창 · 얼음 파도 · 렛 잇 고", condition: "얼음창2초 · 얼음파도7초 · 냉기3중첩 빙결 · HP50%에서 렛 잇 고 1회", desc: "얼음창과 넓은 얼음 파도로 냉기를 쌓아 3중첩에서 적을 1초간 얼린다. 얼어붙은 적을 다시 공격하면 얼음을 깨뜨려 추가 피해와 넉백을 준다. 이동한 자리에는 3초간 얼음길이 남아 적을 둔화시키고 자신은 빨라진다. 처음 체력이 절반 이하가 되면 5초간 눈보라가 발생해 적 전체에 주기적으로 냉기를 쌓고 얼음창 주기도 빨라진다." },
+      { id: "elsa", name: "엘사", mark: "❄", role: "영화", color: "#7dd3fc", hp: 170, attack: 0, speed: 2.9, range: 0,
+        skillName: "통제 불능의 냉기 · 빙결 · 파쇄", condition: "체력이 낮을수록 냉기 영역 확대·이속 감소 · 영역 2초마다 냉기+1 · 직접 접촉 냉기+1", desc: "엘사 주위에는 항상 냉기 영역이 생긴다. 체력이 줄수록 반경55→170으로 커지지만 기본 이속은2.9→1.9로 느려진다. 영역 안의 적은 1초마다 피해2와 15% 둔화를 받고, 연속 2초 체류할 때마다 냉기가 1중첩된다. 엘사와 직접 접촉해도 냉기1을 얻는다. 냉기5중첩에서 1.2초 완전 빙결하며, 빙결 중에는 냉기 영역 피해가 1.5배가 된다. 얼어붙은 적에게 엘사가 직접 부딪히면 파쇄 피해18과 강한 넉백으로 즉시 빙결을 끝낸다." },
       { id: "bald_cape", name: "대머리망토", mark: "○", role: "애니", color: "#facc15", hp: 180, attack: 0, speed: 2.7, range: 0,
         skillName: "보통펀치 · 연속 보통펀치 · 진심펀치", condition: "경기 시작부터 15초 · 공격 종료 후 다시 15초", desc: "한 번 공격하면 오래 쉬지만 명중 가능성과 위력이 높다. 보통펀치는 벽 반사마다 기본 이동속도가 빨라지고 5회째 최근접 적을 추적 돌진한다. 연속 보통펀치는 제자리에서 상대 방향을 계속 따라가며 넓은 원뿔 연타를 퍼붓는다. 진심펀치는 상대와 먼 맵 구석으로 순간 이동한 뒤 반대편 모서리를 향해 긴 차징 후 충격파를 발사하며, 차징 중에는 어떤 넉백에도 밀려나지 않는다." },
       { id: "hinta", name: "힌타", mark: "10", role: "애니", color: "#f97316", hp: 170, attack: 12, speed: 3.0, range: 0,
@@ -2884,212 +2884,167 @@
     }
 
     const ELSA = {
-      spearPeriod:2.0, stormSpearPeriod:1.45, spearDamage:8, spearSpeed:9.0, spearRadius:5, spearLife:1.9,
-      wavePeriod:7.0, waveDamage:6, waveRange:150, waveHalfAngle:Math.PI*58/180, waveKnock:150,
-      coldMax:3, freezeTime:1.0, freezeImmune:2.0, shatterDamage:20, shatterKnock:420,
-      trailLife:3.0, stormTrailLife:5.0, trailRadius:27, trailDrop:.18, enemyTrailSlow:.75, selfIceBoost:1.20,
-      stormThreshold:.50, stormDuration:5.0, stormColdPeriod:2.0
+      minRadius:55, maxRadius:170,
+      maxSpeed:2.9, minSpeed:1.9,
+      auraDamage:2, auraTick:1.0, auraSlow:.85,
+      coldStay:2.0, contactColdCd:1.0, coldMax:5,
+      freezeTime:1.2, freezeImmune:2.5, frozenAuraMult:1.5,
+      shatterDamage:18, shatterKnock:420
     };
 
+    function elsaHpRatio(f){
+      return clamp((f?.hp||0)/Math.max(1,f?.maxHp||1),0,1);
+    }
+    function elsaAuraRadius(f){
+      const lost=1-elsaHpRatio(f);
+      return ELSA.minRadius+(ELSA.maxRadius-ELSA.minRadius)*lost;
+    }
+    function elsaBaseMoveSpeed(f){
+      return ELSA.minSpeed+(ELSA.maxSpeed-ELSA.minSpeed)*elsaHpRatio(f);
+    }
     function initElsa(f){
-      f.elsa={
-        spearCd:ELSA.spearPeriod,waveCd:ELSA.wavePeriod,
-        trailCd:0,icePatches:[],storm:0,stormTick:ELSA.stormColdPeriod,
-        letItGoUsed:false,castFx:0,waveFx:null
-      };
+      f.elsa={targets:new Map(),auraPulse:0,radius:ELSA.minRadius,moveSpeed:ELSA.maxSpeed};
+      f.baseSpeed=ELSA.maxSpeed;f.speed=ELSA.maxSpeed;
     }
-    function elsaBlocked(f){
-      return !f?.alive||f.tanoStop>0||f.punchHold>0||f.punchFlight>0||
-        f.vampSuppressed>0||f.joltStop>0||(f.elsaFreeze||0)>0||isCasting(f);
-    }
-    function elsaAimAngle(f,target){
-      if(!target)return rand(-Math.PI,Math.PI);
-      const speed=ELSA.spearSpeed*60;
-      const d=Math.hypot(target.x-f.x,target.y-f.y);
-      const lead=Math.min(.42,d/Math.max(1,speed));
-      const tx=clamp(target.x+(target.vx||0)*lead,arena.x+target.r,arena.x2-target.r);
-      const ty=clamp(target.y+(target.vy||0)*lead,arena.y+target.r,arena.y2-target.r);
-      return Math.atan2(ty-f.y,tx-f.x);
+    function elsaTargetState(source,target){
+      const e=source?.elsa;if(!e||!target)return null;
+      let state=e.targets.get(target.id);
+      if(!state){
+        state={stay:0,damageCd:ELSA.auraTick,contactCd:0};
+        e.targets.set(target.id,state);
+      }
+      return state;
     }
     function applyElsaCold(source,target,amount=1){
       if(!source?.alive||!target?.alive||!areEnemies(source,target)||hasHarmfulImmunity(target))return false;
       if((target.elsaFreeze||0)>0||(target.elsaFreezeImmune||0)>0)return false;
       target.elsaCold=Math.min(ELSA.coldMax,(target.elsaCold||0)+amount);
-      spawnFloatingText(target.x,target.y-target.r-34,"냉기 "+target.elsaCold+"/"+ELSA.coldMax,"#bae6fd");
-      spawnParticles(target.x,target.y,"#bae6fd",5+target.elsaCold*2);
+      if(!fastSimMode){
+        spawnFloatingText(target.x,target.y-target.r-34,"냉기 "+target.elsaCold+"/"+ELSA.coldMax,"#bae6fd");
+        spawnParticles(target.x,target.y,"#bae6fd",4+target.elsaCold);
+      }
       if(target.elsaCold>=ELSA.coldMax){
         target.elsaCold=0;
         target.elsaFreeze=ELSA.freezeTime;
+        target.elsaFreezeSourceId=source.id;
         target.vx=0;target.vy=0;
-        spawnBlast(target.x,target.y,48,"#7dd3fc");
-        spawnFloatingText(target.x,target.y-target.r-45,"빙결!","#e0f2fe");
-        playSound("warning",.65);
+        if(!fastSimMode){
+          spawnBlast(target.x,target.y,52,"#7dd3fc");
+          spawnFloatingText(target.x,target.y-target.r-45,"빙결!","#e0f2fe");
+          playSound("warning",.65);
+        }
       }
       return true;
     }
-    function elsaHit(source,target,power,reason){
-      const frozen=(target.elsaFreeze||0)>0;
-      const dealt=damage(target,power,source,reason);
-      if(frozen&&dealt>0&&target.alive){
-        target.elsaFreeze=0;target.elsaCold=0;
-        target.elsaFreezeImmune=Math.max(target.elsaFreezeImmune||0,ELSA.freezeImmune);
-        damage(target,ELSA.shatterDamage,source,"얼음 파쇄");
-        if(target.alive){
-          const dx=target.x-source.x,dy=target.y-source.y,d=Math.hypot(dx,dy)||1;
-          target.vx=dx/d*ELSA.shatterKnock;target.vy=dy/d*ELSA.shatterKnock;
-        }
+    function elsaShatter(source,target){
+      if(!source?.elsa||!target?.alive||(target.elsaFreeze||0)<=0)return false;
+      target.elsaFreeze=0;target.elsaCold=0;target.elsaFreezeSourceId="";
+      target.elsaFreezeImmune=Math.max(target.elsaFreezeImmune||0,ELSA.freezeImmune);
+      const dealt=damage(target,ELSA.shatterDamage,source,"빙결 파쇄");
+      if(target.alive){
+        const dx=target.x-source.x,dy=target.y-source.y,d=Math.hypot(dx,dy)||1;
+        target.vx=dx/d*ELSA.shatterKnock;target.vy=dy/d*ELSA.shatterKnock;
+      }
+      if(!fastSimMode){
         triggerHitStop(.13);screenShake=Math.max(screenShake,.30);
         spawnHitFlash(target.x,target.y,"#e0f2fe",72);
-        spawnBlast(target.x,target.y,64,"#7dd3fc");
-        spawnParticles(target.x,target.y,"#e0f2fe",18);
-        spawnFloatingText(target.x,target.y-target.r-45,"얼음 파쇄! -"+ELSA.shatterDamage,"#f0f9ff");
+        spawnBlast(target.x,target.y,66,"#7dd3fc");
+        spawnParticles(target.x,target.y,"#f0f9ff",20);
+        spawnFloatingText(target.x,target.y-target.r-45,"빙결 파쇄! -"+Math.round(dealt),"#f0f9ff");
       }
-      return dealt;
+      return true;
     }
-    function fireElsaSpear(f){
-      const e=f.elsa,target=nearestEnemy(f).enemy;if(!e||!target)return;
-      const a=elsaAimAngle(f,target);
-      shootAngle(f,a,ELSA.spearDamage,ELSA.spearSpeed,ELSA.spearRadius,"얼음창","#7dd3fc",
-        {life:ELSA.spearLife,trail:18,glow:32,shape:"iceSpear"});
-      e.spearCd=e.storm>0?ELSA.stormSpearPeriod:ELSA.spearPeriod;
-      e.castFx=.22;
-      spawnFloatingText(f.x,f.y-f.r-34,"얼음창","#bae6fd");
-      playSound("wind",.62);
-    }
-    function elsaConeTargets(f,angle){
-      return enemiesOf(f).filter(t=>{
-        if(!t.alive||t.tano?.hidden>0||(t.dodoVoid||0)>0)return false;
-        const dx=t.x-f.x,dy=t.y-f.y,d=Math.hypot(dx,dy);
-        if(d>ELSA.waveRange+t.r)return false;
-        const extra=Math.asin(Math.min(1,t.r/Math.max(t.r,d)));
-        const ta=Math.atan2(dy,dx);
-        const diff=Math.abs(Math.atan2(Math.sin(ta-angle),Math.cos(ta-angle)));
-        return diff<=ELSA.waveHalfAngle+extra;
-      });
-    }
-    function fireElsaWave(f){
-      const e=f.elsa,target=nearestEnemy(f).enemy;if(!e||!target)return;
-      const angle=Math.atan2(target.y-f.y,target.x-f.x);
-      const victims=elsaConeTargets(f,angle);
-      for(const t of victims){
-        const dealt=elsaHit(f,t,ELSA.waveDamage,"얼음 파도");
-        if(dealt>0&&t.alive){
-          applyElsaCold(f,t,1);
-          t.vx+=Math.cos(angle)*ELSA.waveKnock;t.vy+=Math.sin(angle)*ELSA.waveKnock;
-        }
-      }
-      e.waveCd=ELSA.wavePeriod;
-      e.waveFx={angle,time:.42};
-      e.castFx=.28;
-      spawnFloatingText(f.x,f.y-f.r-40,"얼음 파도","#e0f2fe");
-      spawnParticles(f.x,f.y,"#bae6fd",14);
-      playSound("wind",.86);
-    }
-    function startElsaStorm(f){
-      const e=f.elsa;if(!e||e.letItGoUsed)return;
-      e.letItGoUsed=true;e.storm=ELSA.stormDuration;e.stormTick=ELSA.stormColdPeriod;
-      e.spearCd=Math.min(e.spearCd,ELSA.stormSpearPeriod);
-      spawnBlast(f.x,f.y,95,"#e0f2fe");
-      spawnFloatingText(f.x,f.y-f.r-52,"렛 잇 고!","#f0f9ff");
-      screenShake=Math.max(screenShake,.22);
-      playSound("warning",1);
-      log("<strong>엘사</strong> 렛 잇 고 · 5초 눈보라","스킬");
+    function elsaContact(source,target){
+      if(!source?.alive||!source.elsa||!target?.alive||!areEnemies(source,target))return;
+      if((target.elsaFreeze||0)>0){elsaShatter(source,target);return;}
+      const state=elsaTargetState(source,target);
+      if(!state||state.contactCd>0)return;
+      state.contactCd=ELSA.contactColdCd;
+      applyElsaCold(source,target,1);
     }
     function updateElsa(f,dt){
-      const e=f?.elsa;if(!e)return;
-      e.castFx=Math.max(0,(e.castFx||0)-dt);
-      if(e.waveFx){e.waveFx.time=Math.max(0,e.waveFx.time-dt);if(e.waveFx.time<=0)e.waveFx=null;}
-      e.icePatches.forEach(p=>p.life-=dt);
-      e.icePatches=e.icePatches.filter(p=>p.life>0);
+      const e=f?.elsa;if(!e||!f.alive)return;
+      const radius=elsaAuraRadius(f),moveSpeed=elsaBaseMoveSpeed(f);
+      e.radius=radius;e.moveSpeed=moveSpeed;e.auraPulse=(e.auraPulse+dt)%1;
 
-      e.trailCd-=dt;
-      if(e.trailCd<=0){
-        e.trailCd=ELSA.trailDrop;
-        const life=e.storm>0?ELSA.stormTrailLife:ELSA.trailLife;
-        e.icePatches.push({x:f.x,y:f.y,life,maxLife:life});
-        if(e.icePatches.length>42)e.icePatches.shift();
+      // 냉기장이 커질수록 엘사 본인의 기본 이동속도는 즉시 떨어진다.
+      f.baseSpeed=moveSpeed;f.speed=moveSpeed;
+      const ownTarget=moveSpeed*44,current=Math.hypot(f.vx,f.vy);
+      if(current>ownTarget*1.02&&f.punchFlight<=0&&f.punchHold<=0){
+        f.vx=f.vx/current*ownTarget;f.vy=f.vy/current*ownTarget;
       }
 
-      if(!e.letItGoUsed&&f.hp<=f.maxHp*ELSA.stormThreshold)startElsaStorm(f);
-      if(e.storm>0){
-        e.storm=Math.max(0,e.storm-dt);
-        e.stormTick-=dt;
-        if(e.stormTick<=0){
-          e.stormTick+=ELSA.stormColdPeriod;
-          enemiesOf(f).forEach(t=>applyElsaCold(f,t,1));
-          spawnFloatingText(f.x,f.y-f.r-48,"눈보라 · 냉기","#bae6fd");
+      const enemies=enemiesOf(f).filter(t=>t.alive&&(t.dodoVoid||0)<=0&&!(t.tano?.hidden>0));
+      const aliveIds=new Set(enemies.map(t=>t.id));
+      for(const [id] of e.targets)if(!aliveIds.has(id))e.targets.delete(id);
+
+      for(const target of enemies){
+        const state=elsaTargetState(f,target);
+        state.contactCd=Math.max(0,(state.contactCd||0)-dt);
+        const inside=Math.hypot(target.x-f.x,target.y-f.y)<=radius+target.r;
+        if(!inside){
+          state.stay=0;state.damageCd=ELSA.auraTick;
+          continue;
+        }
+
+        state.damageCd-=dt;
+        if(state.damageCd<=0){
+          state.damageCd+=ELSA.auraTick;
+          const frozen=(target.elsaFreeze||0)>0;
+          const power=ELSA.auraDamage*(frozen?ELSA.frozenAuraMult:1);
+          damage(target,power,f,frozen?"빙결 냉기":"냉기 영역");
+          if(!fastSimMode&&target.alive)spawnParticles(target.x,target.y,frozen?"#f0f9ff":"#bae6fd",frozen?7:3);
+        }
+        if(!target.alive)continue;
+
+        if((target.elsaFreeze||0)>0||(target.elsaFreezeImmune||0)>0){
+          state.stay=0;continue;
+        }
+        state.stay+=dt;
+        while(state.stay>=ELSA.coldStay&&target.alive){
+          state.stay-=ELSA.coldStay;
+          applyElsaCold(f,target,1);
+          if((target.elsaFreeze||0)>0)break;
         }
       }
-
-      e.spearCd=Math.max(0,e.spearCd-dt);
-      e.waveCd=Math.max(0,e.waveCd-dt);
-      if(elsaBlocked(f))return;
-      if(e.waveCd<=0){fireElsaWave(f);return;}
-      if(e.spearCd<=0)fireElsaSpear(f);
     }
-    function elsaIceSpeedMultiplier(f){
-      let mult=f.elsa?.storm>0?ELSA.selfIceBoost:1;
-      let ownIce=false,enemyIce=false;
+    function elsaAuraSlowMultiplier(f){
+      if(!f?.alive||hasHarmfulImmunity(f))return 1;
       for(const source of fighters){
-        if(!source.alive||!source.elsa)continue;
-        for(const p of source.elsa.icePatches){
-          if(Math.hypot(f.x-p.x,f.y-p.y)<=ELSA.trailRadius+f.r*.35){
-            if(source.id===f.id)ownIce=true;
-            else if(areEnemies(source,f))enemyIce=true;
-          }
-        }
+        if(!source.alive||!source.elsa||source.id===f.id||!areEnemies(source,f))continue;
+        if(Math.hypot(f.x-source.x,f.y-source.y)<=elsaAuraRadius(source)+f.r)return ELSA.auraSlow;
       }
-      if(ownIce)mult=Math.max(mult,ELSA.selfIceBoost);
-      if(enemyIce)mult*=ELSA.enemyTrailSlow;
-      return mult;
+      return 1;
     }
     function drawElsaCharacter(f){
-      const e=f.elsa||{icePatches:[],storm:0};
-      if(!f.portraitOnly){
+      const e=f.elsa||{radius:ELSA.minRadius,moveSpeed:ELSA.maxSpeed,auraPulse:0};
+      if(!f.portraitOnly&&!fastSimMode){
+        const radius=e.radius||elsaAuraRadius(f),lost=1-elsaHpRatio(f),pulse=.5+.5*Math.sin(battleTime*3.2);
         ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();
-        for(const p of e.icePatches){
-          const alpha=clamp(p.life/p.maxLife,0,1);
-          ctx.globalAlpha=.10+.22*alpha;
-          ctx.fillStyle="#bae6fd";ctx.strokeStyle="#e0f2fe";ctx.lineWidth=1;
-          ctx.beginPath();ctx.ellipse(p.x,p.y,ELSA.trailRadius,ELSA.trailRadius*.55,.3,0,Math.PI*2);ctx.fill();ctx.stroke();
-          ctx.globalAlpha=.25*alpha;
-          for(let k=0;k<3;k++){const a=k*Math.PI/3+.4;ctx.beginPath();ctx.moveTo(p.x-Math.cos(a)*18,p.y-Math.sin(a)*10);ctx.lineTo(p.x+Math.cos(a)*18,p.y+Math.sin(a)*10);ctx.stroke();}
-        }
-        if(e.storm>0){
-          const alpha=clamp(e.storm/ELSA.stormDuration,0,1);
-          ctx.globalAlpha=.08+.08*alpha;ctx.fillStyle="#e0f2fe";ctx.fillRect(arena.x,arena.y,arena.size,arena.size);
-          ctx.globalAlpha=.55;
-          ctx.fillStyle="#f0f9ff";ctx.font="12px system-ui";ctx.textAlign="center";
-          for(let i=0;i<26;i++){
-            const x=arena.x+((i*73+battleTime*31)%arena.size);
-            const y=arena.y+((i*41+battleTime*(38+i%4*8))%arena.size);
-            ctx.fillText("❄",x,y);
-          }
-        }
-        if(e.waveFx){
-          const p=clamp(e.waveFx.time/.42,0,1);
-          ctx.globalAlpha=.14+.20*p;ctx.fillStyle="#7dd3fc";ctx.strokeStyle="#e0f2fe";ctx.lineWidth=3;
-          ctx.translate(f.x,f.y);ctx.rotate(e.waveFx.angle);
-          ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,ELSA.waveRange,-ELSA.waveHalfAngle,ELSA.waveHalfAngle);ctx.closePath();ctx.fill();ctx.stroke();
+        const g=ctx.createRadialGradient(f.x,f.y,Math.max(8,f.r),f.x,f.y,radius);
+        g.addColorStop(0,"rgba(224,242,254,"+(.12+lost*.08)+")");
+        g.addColorStop(.68,"rgba(125,211,252,"+(.08+lost*.10)+")");
+        g.addColorStop(1,"rgba(56,189,248,.025)");
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(f.x,f.y,radius,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle="rgba(186,230,253,"+(.58+pulse*.18)+")";ctx.lineWidth=2.4+lost*1.8;
+        ctx.setLineDash([7,8]);ctx.lineDashOffset=-battleTime*14;ctx.beginPath();ctx.arc(f.x,f.y,radius,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+        const flakes=8+Math.round(lost*8);
+        ctx.fillStyle="#e0f2fe";ctx.font="10px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";
+        for(let i=0;i<flakes;i++){
+          const a=i*Math.PI*2/flakes+battleTime*(i%2?.18:-.13),rr=radius*(.68+(i%3)*.09);
+          ctx.globalAlpha=.28+(i%4)*.10;ctx.fillText("❄",f.x+Math.cos(a)*rr,f.y+Math.sin(a)*rr);
         }
         ctx.restore();
       }
-
       ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
       ctx.fillStyle="#67e8f9";ctx.strokeStyle="#0e7490";ctx.lineWidth=1.2;
       ctx.beginPath();ctx.moveTo(-8,2);ctx.lineTo(-16,28);ctx.lineTo(0,32);ctx.lineTo(16,28);ctx.lineTo(8,2);ctx.closePath();ctx.fill();ctx.stroke();
       ctx.fillStyle="#e0f2fe";ctx.beginPath();ctx.moveTo(-8,5);ctx.lineTo(-23,19);ctx.lineTo(-18,28);ctx.lineTo(-6,20);ctx.closePath();ctx.fill();
       ctx.fillStyle="#f2c6a0";ctx.strokeStyle="#a16207";ctx.lineWidth=.8;ctx.beginPath();ctx.arc(0,-9,9,0,Math.PI*2);ctx.fill();ctx.stroke();
-      ctx.strokeStyle="#f8fafc";ctx.lineWidth=4;ctx.lineCap="round";
-      ctx.beginPath();ctx.moveTo(-4,-17);ctx.quadraticCurveTo(7,-23,9,-11);ctx.quadraticCurveTo(15,-4,13,6);ctx.stroke();
+      ctx.strokeStyle="#f8fafc";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-4,-17);ctx.quadraticCurveTo(7,-23,9,-11);ctx.quadraticCurveTo(15,-4,13,6);ctx.stroke();
       ctx.strokeStyle="#bae6fd";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-7,7);ctx.lineTo(-17,15);ctx.moveTo(7,7);ctx.lineTo(17,15);ctx.stroke();
       ctx.fillStyle="#f8fafc";ctx.beginPath();ctx.arc(-17,15,3,0,Math.PI*2);ctx.arc(17,15,3,0,Math.PI*2);ctx.fill();
       ctx.restore();
-
-      if(!f.portraitOnly&&e.castFx>0){
-        const p=e.castFx/.28;
-        drawRing(f.x,f.y,f.r+12+(1-p)*12,"rgba(186,230,253,.9)",3);
-      }
       drawHealthBar(f);drawName(f);
     }
 
@@ -5470,6 +5425,7 @@
     }
 
       const patchNotes = [
+      "v112: 엘사를 전면 재설계. v111의 얼음창·얼음파도·얼음길·렛 잇 고를 삭제하고 체력 연동 원형 냉기 영역 하나로 통합. HP170, 최대체력에서 반경55·기본이속2.9이며 체력이 줄수록 반경이 최대170까지 선형 증가하는 대신 기본이속은 최저1.9까지 선형 감소. 영역 안 적은 1초마다 피해2와 이속15% 감소, 연속2초 체류마다 냉기+1. 엘사와 직접 접촉해도 대상별1초 쿨로 냉기+1. 냉기5에서 1.2초 완전 빙결하며 이동·본체 스킬을 멈춘다. 빙결 중 냉기 영역 피해는1.5배(3)지만 빙결을 깨지 않으며, 엘사가 직접 충돌하면 파쇄18·강넉백으로 즉시 해제. 빙결 종료/파쇄 후2.5초 재빙결 면역. 기존 투사체·소환수처럼 이미 본체와 분리된 효과는 계속 동작. 냉기 영역과 현재 반경을 시각화하고 상태창/도감을 갱신.",
       "v111: 영화 캐릭터 '엘사' 추가. HP170·이속2.75. 얼음창은 2초마다 피해8·예측 조준·냉기1, 얼음파도는 7초마다 거리150·약116도 부채꼴 피해6·냉기1·약한 넉백. 냉기3중첩 시 1초 완전 빙결하며, 빙결된 적을 엘사가 다시 공격하면 추가20 얼음 파쇄 피해·넉백 후 2초 재빙결 면역. 이동 경로에 3초 얼음길을 남겨 적 이속25% 감소·엘사 이속20% 증가. HP가 처음50% 이하가 되면 5초 '렛 잇 고' 눈보라가 1회 발동하여 2초마다 적 전체 냉기1, 얼음길5초, 엘사 이속20% 증가, 얼음창 주기2→1.45초. 하늘색 드레스·흰 땋은 머리·얼음창·파도·눈보라·냉기/빙결 UI를 추가.",
       "v110: 오디세웠으를 현재 캐릭터 목록에서 삭제하고 노숙자/영웅 모드, 왕의 활, 열두 도끼, 회피, 화살 투사체, 상태창·도감·드로잉 등 전용 구현을 모두 제거했습니다. v103 패치노트는 과거 기록으로만 유지합니다.",
       "v109: 핑거스냅으로 최후의 상대가 탈락한 경우 3.6초 산화 연출이 완전히 끝난 뒤 타노 승리 문구가 표시되도록 승리 판정 타이밍을 조정했습니다.",
@@ -5617,7 +5573,7 @@
         tick:"검 발동 사거리: 몸 충돌보다 +8 · 광역 베기 범위: 몸 반경보다 +28 · 기동7초 · 준비0.45초 · 고속이동1초(초당650) · 와이어 강습 최대 3연속 · 일반 베기 재사용1.2초 · 출혈 약1초마다 5회",
         tip:"뉴헬로는 상대와 몸이 닿지 않아도 검 사거리(+8)에 들어오면 베기가 발동한다. 공격을 발동시킨 상대가 누구든, 그 순간 병장 중심의 더 큰 베기 원(+28) 안에 있는 모든 적이 같은 베기 피해와 출혈을 받는다. 와이어 강습 적중 시 즉시 재와이어하지만 한 사이클에서 총 3번까지만 연속 강습할 수 있고, 3번째 적중 뒤에는 7초 쿨타임이 적용된다. 중간 강습이 빗나가거나 끊기면 연속 횟수는 초기화된다. 출혈 폭발과 실제 몸 충돌 시 상대 접촉 반격은 기존대로 유지된다."};
       if (c.id === "riddle_lord") return {damage:"피엔드피레 0.4초마다3 + 화상2×3초 / 딱총나무 강화 0.4초마다4 + 화상3×3초 · 아바다 케다브라 4×5 / 강화 6×5",tick:"공유 쿨9초 · 첫 피엔드피레는 4초 뒤 · 이후 피엔드피레↔아바다 교대 · 피엔드피레4초 지속 · 아바다0.9초 다단 · 딱총나무16초 대기 후 등장·미획득 시25초 뒤 자동 습득·획득 시12초 강화",tip:"딱총나무 강화 중 피엔드피레 반경75→105, 아바다 케다브라는 거리와 조준을 무시하고 지정 대상에게 확정 적중한다. 첫 사망 때 호크룩스 7칸/7초 상태가 되며 이동·공격 불가. 적 접촉마다 1칸, 공격 피격마다 기본1칸＋피해10당 1칸 추가 감소. 피격 또는 접촉 1회마다 부활 HP도 70에서 10씩 감소한다. 생존하면 최대HP70·이속2.8로 남은 부활HP만큼 부활한다. 부활 후에도 원래 스킬과 지팡이를 그대로 사용한다. 지팡이는 획득 전까지 소멸하지 않고 등장 25초 뒤 자동 습득한다. 두 번째 부활은 없다."};
-      if (c.id === "elsa") return {damage:"얼음창8 / 얼음파도6 / 빙결 적 파쇄 추가20",tick:"얼음창2초(눈보라 중1.45초) · 얼음파도7초 · 냉기3중첩=빙결1초 · HP50% 렛 잇 고 1회",tip:"얼음창은 최근접 적 이동을 짧게 예측 조준한다. 얼음파도는 약116도·거리150 부채꼴로 냉기1을 쌓고 약하게 밀어낸다. 냉기3이 되면 1초 완전 빙결하며, 빙결 중 엘사의 얼음창/얼음파도에 맞으면 추가20 파쇄 피해와 넉백 후 2초간 재빙결 면역. 이동 자리에 3초 얼음길이 남아 적 이속-25%, 엘사는 +20%. HP가 처음50% 이하가 되면 5초 눈보라가 발동해 2초마다 모든 적에게 냉기1, 얼음길5초, 엘사 이속+20%, 얼음창 주기1.45초가 된다."};
+      if (c.id === "elsa") return {damage:"냉기 영역 초당2 / 빙결 중 냉기 영역3 / 빙결 상태 직접 접촉 파쇄18",tick:"냉기 영역 연속2초 체류마다 냉기+1 · 직접 접촉 대상별1초마다 냉기+1 · 냉기5중첩=1.2초 빙결 · 빙결 후2.5초 재빙결 면역",tip:"체력 비율에 따라 냉기 영역 반경이55→170으로 커지고 기본 이속은2.9→1.9로 느려진다. 영역 안 적은 이속15% 감소와 1초마다 피해2를 받는다. 영역을 벗어나면 연속 체류 시간은 초기화되지만 이미 쌓인 냉기는 유지된다. 냉기5에서 이동과 본체 스킬 사용이 막히는 1.2초 완전 빙결. 빙결 중에는 영역 지속피해가1.5배(3)가 되며 얼음은 깨지지 않는다. 대신 엘사가 직접 부딪히면 파쇄18·강넉백과 함께 즉시 해제된다. 이미 발사된 투사체·소환수 등 본체와 분리된 효과는 계속 진행된다."};
       if (c.id === "bald_cape") return {damage:"보통펀치28 + 맞은 상대 벽충돌16 / 가속충돌 8~17 / 연속 보통펀치8×8=64 / 진심펀치85",tick:"경기 시작부터 15초 · 이후 각 공격이 완전히 끝난 뒤 15초 · 보통45% / 연속35% / 진심20%",tip:"보통펀치는 벽 반사마다 기본 이동속도가 20%씩 상승하고, 5번째 반사 후 속도860으로 최근접 적을 계속 추적하며 돌진한다. 돌진 판정 반경도 넓어졌다. 연속 보통펀치는 완전히 멈춘 채 거리150·약130도 원뿔을 0.20초 간격 8타로 공격하며 매 타격마다 최근접 적 방향으로 다시 조준한다. 진심펀치는 최근접 적에게서 가장 먼 맵 구석으로 순간 이동한 뒤 반대편 모서리를 향해 약36도 붉은 부채꼴을 2.6초 차징하고 피해85를 준다. 차징 중에는 위치가 고정되어 넉백·강펀치·충돌로 밀려나지 않는다."};
       if (c.id === "hinta") return {damage:"속공 12 / 괴짜 속공 24 · 각 50% 확률 / 대쉬 충돌 10",tick:"첫 공 5초 · 공 소멸 후 5초 재등장 · 벽/적 합계 3회 접촉",tip:"대기 공을 4초간 못 잡으면 속도480으로 직선 돌진. 적별 돌진당 1회 피해10·측면 넉백, 넉백 후 2초간 이속40% 감소. 벽 반사 후 같은 적도 다시 피해를 받는다. 속공은 짧은 이동 예측 조준·속도380. 괴짜 속공은 조준 오차 ±20~40도·속도570. 발사 후 유도 없음. 공 반경10, 습득 범위는 본체+공 반경에24 추가. 비행 공은 재타격할 수 없고, 세 번째 접촉이 적이면 피해 후 소멸한다. 모서리 두 벽은 2회로 센다."};
       if (c.id === "oshi") return { damage: "노래 1~4단계 피해 4/5/7/9 · 반경 90/110/130/150 / 투어 초당2 · 누적 체류 3초마다15 / 후유증: 체류 2초당 총3을 5초 DOT / 도쿄돔 칼35 + 출혈3×8 / 공연 연장 반경175·초당4·누적 3초마다20", tick: "노래 2초 · 노래 적중 1명당 인지도+15 · 적 접촉 대상별 1초마다+4 · 인지도100에 투어", tip: "체류 추가 피해는 적별로 한 번의 투어 안에서 누적하며 이탈해도 유지된다. 누적 3초마다 발동하고 다음 투어에서는 초기화된다. 노래 적중자는 3초간 이동속도 20% 감소 및 최애에게 주는 모든 피해 20% 감소(감소 후 최소 피해 1). 최대 체력 비례 피해와 푸른 눈의 백룡 등 소환수 피해에도 적용된다. 투어 2회를 마친 뒤 다시 인지도100을 채우면 도쿄돔이 시작되며, 출혈 종료까지 생존하면 공연이 연장된다." };
@@ -6109,6 +6065,7 @@
         elsaCold: 0,
         elsaFreeze: 0,
         elsaFreezeImmune: 0,
+        elsaFreezeSourceId: "",
         harmfulImmune: 0,
         speedBoost: 0,
         attackBoost: 0,
@@ -6845,12 +6802,10 @@
     }
 
     function skillProgressInfo(f) {
-      if(f.elsa){const e=f.elsa;
-        const storm=e.storm>0?" · 눈보라 "+e.storm.toFixed(1)+"초":"";
-        return {ratio:e.storm>0?clamp(e.storm/ELSA.stormDuration,0,1):clamp(1-e.spearCd/ELSA.spearPeriod,0,1),
-          className:e.storm>0?"rage-fill":"skill-fill",
-          text:(e.storm>0?"렛 잇 고":"얼음창 "+e.spearCd.toFixed(1)+"초 / 파도 "+e.waveCd.toFixed(1)+"초")+storm,
-          extraTextHtml:'<div class="status-skill-label">냉기3 → 빙결1초 → 엘사 공격 시 파쇄+20 · 해제 후2초 재빙결 면역</div><div class="status-skill-label">얼음길: 적 -25% / 엘사 +20% · HP50%에서 렛 잇 고 1회</div>'};}
+      if(f.elsa){const e=f.elsa,radius=elsaAuraRadius(f),spd=elsaBaseMoveSpeed(f),lost=1-elsaHpRatio(f);
+        return {ratio:clamp(lost,0,1),className:"skill-fill",
+          text:"냉기 영역 반경 "+Math.round(radius)+" · 기본 이속 "+spd.toFixed(2),
+          extraTextHtml:'<div class="status-skill-label">영역: 1초마다 피해2 · 적 이속-15% · 연속2초 체류마다 냉기+1</div><div class="status-skill-label">직접 접촉 냉기+1(대상별1초) · 냉기5 → 1.2초 빙결 · 빙결 중 오라피해×1.5 · 직접 접촉 파쇄18</div>'};}
       if(f.baldCape){const b=f.baldCape;
         const using=!!(b.serious||b.combo||b.normalActive);
         const active=b.serious?"진심펀치 차징":b.combo?"연속 보통펀치 추적 연타":b.normalActive?(b.dash>0?"보통펀치 추적 돌진":"보통펀치 가속 "+b.bounces+"/"+BALD_CAPE.normalBounces):"다음 펀치";
@@ -9352,7 +9307,7 @@
       const gardenSlow = minaGardenSlowMultiplier(f);
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
       const oshiSlow = oshiSongSlowMultiplier(f) * (f.hintaConcussion > 0 ? HINTA.slowMultiplier : 1);
-      const elsaIce = elsaIceSpeedMultiplier(f);
+      const elsaIce = elsaAuraSlowMultiplier(f);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
       return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * oshiSlow * elsaIce;
     }
@@ -10316,7 +10271,7 @@
       const gardenSlow = minaGardenSlowMultiplier(f);
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
       const oshiSlow = oshiSongSlowMultiplier(f) * (f.hintaConcussion > 0 ? HINTA.slowMultiplier : 1);
-      const elsaIce = elsaIceSpeedMultiplier(f);
+      const elsaIce = elsaAuraSlowMultiplier(f);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
 
       if ((f.joltStop || 0) > 0) {
@@ -10436,8 +10391,8 @@
             const ny = dy / d;
             const overlap = minD - d;
 
-            const aCasting = isCasting(a) || !!a.baldCape?.combo || !!a.baldCape?.serious?.timer;
-            const bCasting = isCasting(b) || !!b.baldCape?.combo || !!b.baldCape?.serious?.timer;
+            const aCasting = isCasting(a) || !!a.baldCape?.combo || !!a.baldCape?.serious?.timer || (a.elsaFreeze||0)>0;
+            const bCasting = isCasting(b) || !!b.baldCape?.combo || !!b.baldCape?.serious?.timer || (b.elsaFreeze||0)>0;
 
             if (aCasting && !bCasting) {
               b.x += nx * overlap;
@@ -10506,6 +10461,8 @@
               baldCapeContact(b, a);
               baldCapeSpeedContact(a, b);
               baldCapeSpeedContact(b, a);
+              elsaContact(a, b);
+              elsaContact(b, a);
               hulkContact(a, b);
               hulkContact(b, a);
               logoContact(a, b);
@@ -10727,16 +10684,6 @@
               damageAtPoint(source, f.x, f.y, 72, hitPower, "화염마법", false);
               spawnHitFlash(f.x, f.y, p.color, 54);
               spawnBlast(f.x, f.y, 72, p.color);
-              p.hitIds.add(f.id);
-              projectiles.splice(i, 1);
-              break;
-            }
-
-            if (p.kind === "얼음창") {
-              const dealt = elsaHit(source, f, hitPower, "얼음창");
-              if (dealt > 0 && f.alive) applyElsaCold(source, f, 1);
-              spawnHitFlash(f.x, f.y, "#bae6fd", 44);
-              spawnBlast(f.x, f.y, 34, "#7dd3fc");
               p.hitIds.add(f.id);
               projectiles.splice(i, 1);
               break;
@@ -12861,13 +12808,6 @@
           ctx.moveTo(-len * 0.16, half * 0.72);
           ctx.quadraticCurveTo(len * 0.16, half * 0.45, len * 0.48, half * 0.05);
           ctx.stroke();
-        } else if (p.shape === "iceSpear") {
-          const a = Math.atan2(p.vy, p.vx);
-          ctx.translate(p.x,p.y);ctx.rotate(a);
-          ctx.shadowColor="#7dd3fc";ctx.shadowBlur=p.glow||30;
-          ctx.fillStyle="#e0f2fe";ctx.strokeStyle="#7dd3fc";ctx.lineWidth=2;
-          ctx.beginPath();ctx.moveTo(p.r*4.2,0);ctx.lineTo(-p.r*.8,-p.r*1.35);ctx.lineTo(-p.r*2.8,0);ctx.lineTo(-p.r*.8,p.r*1.35);ctx.closePath();ctx.fill();ctx.stroke();
-          ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-p.r*1.1,0);ctx.lineTo(p.r*2.7,0);ctx.stroke();
         } else if (p.shape === "arrow") {
           const a = Math.atan2(p.vy, p.vx);
           ctx.translate(p.x, p.y);
