@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v107</title>
+  <title>볼배틀 리뉴얼 v108</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v107</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v108</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1288,8 +1288,26 @@
         }
       });
     }
-    function drawIronBeams(){fighters.forEach(f=>{const cast=f.iron?.beam;if(!f.alive||!cast)return;const path=ironBeamPath(f,cast.angle);ctx.save();ctx.lineCap="round";ctx.lineJoin="round";ctx.globalCompositeOperation="lighter";if(cast.age<.45){ctx.setLineDash([7,7]);ctx.lineWidth=2;ctx.strokeStyle="rgba(103,232,249,.55)";path.forEach(s=>{ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x2,s.y2);ctx.stroke();});ctx.setLineDash([]);drawGlowCircle(f.x+Math.cos(cast.angle)*f.r,f.y+Math.sin(cast.angle)*f.r,4+cast.age*12,"#cffafe",.65);}else{ctx.shadowColor="#22d3ee";ctx.shadowBlur=34;for(const [width,color] of [[26,"rgba(14,165,233,.16)"],[17,"rgba(34,211,238,.45)"],[10,"#38bdf8"],[4,"#ecfeff"]]){ctx.lineWidth=width;ctx.strokeStyle=color;path.forEach(s=>{ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x2,s.y2);ctx.stroke();});}path.forEach(s=>{const len=Math.hypot(s.x2-s.x,s.y2-s.y),ang=Math.atan2(s.y2-s.y,s.x2-s.x);for(let i=18;i<len;i+=27){const off=Math.sin(i*.4+battleTime*35)*7;ctx.fillStyle=i%2?"#a5f3fc":"#fff";ctx.beginPath();ctx.arc(s.x+Math.cos(ang)*i-Math.sin(ang)*off,s.y+Math.sin(ang)*i+Math.cos(ang)*off,1.5+i%3,0,Math.PI*2);ctx.fill();}});drawGlowCircle(f.x+Math.cos(cast.angle)*f.r,f.y+Math.sin(cast.angle)*f.r,11,"#cffafe",.95);}ctx.restore();});}
-
+    function drawIronBeams() {
+      fighters.forEach(f => {
+        const cast = f.iron?.beam;
+        if (!f.alive || !cast) return;
+        const path = ironBeamPath(f, cast.angle);
+        ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+        if (cast.age < 0.45) {
+          ctx.setLineDash([6, 7]); ctx.lineWidth = 2; ctx.strokeStyle = "rgba(103,232,249,.38)";
+          path.forEach(s => { ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x2,s.y2); ctx.stroke(); });
+        } else {
+          ctx.shadowColor = "#22d3ee"; ctx.shadowBlur = 22;
+          for (const [width, color] of [[19,"rgba(34,211,238,.2)"],[12,"#38bdf8"],[5,"#ecfeff"]]) {
+            ctx.lineWidth = width; ctx.strokeStyle = color;
+            path.forEach(s => { ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x2,s.y2); ctx.stroke(); });
+          }
+          drawGlowCircle(f.x + Math.cos(cast.angle) * f.r, f.y + Math.sin(cast.angle) * f.r, 8, "#cffafe", 0.8);
+        }
+        ctx.restore();
+      });
+    }
     function drawIronCharacter(f) {
       const suit = f.iron.suit, naked = suit === "naked";
       const metal = suit === "war" ? "#475569" : suit === "mark42" ? "#eab308" : "#b91c1c";
@@ -2472,13 +2490,15 @@
         ctx.fillStyle="#fffbd0";ctx.beginPath();ctx.ellipse(side*7,-7,1.2,2,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#af3610";}
       ctx.strokeStyle="#bd5017";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-8,5);ctx.quadraticCurveTo(0,9,8,5);ctx.stroke();
       ctx.fillStyle="#fffbd5";for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*6,4);ctx.lineTo(side*3,10);ctx.lineTo(side*3,5);ctx.fill();}
+      ctx.restore();
 
       // 불꽃 꼬리 안쪽에 역회전하는 화염 이빨과 날리는 불씨를 더해 주문의 질량감을 준다.
       ctx.strokeStyle=elder?"#fff7ae":"#ffcf4a";ctx.lineWidth=2.2;ctx.shadowBlur=14;
       for(let i=0;i<18;i++){const a=-t*2.4+i*Math.PI*2/18,inner=radius-11-Math.sin(t*7+i)*4,outer=radius+9+Math.cos(t*9+i)*7;ctx.beginPath();ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);ctx.quadraticCurveTo(Math.cos(a+.12)*(radius+2),Math.sin(a+.12)*(radius+2),Math.cos(a+.2)*outer,Math.sin(a+.2)*outer);ctx.stroke();}
       for(let i=0;i<26;i++){const a=i*2.399-t*.65,rr=radius*(.25+(i%9)/10)+Math.sin(t*6+i)*7;ctx.globalAlpha=.35+(i%3)*.2;ctx.fillStyle=i%3?"#fb923c":"#fef08a";ctx.beginPath();ctx.arc(Math.cos(a)*rr,Math.sin(a)*rr,1.2+(i%4)*.55,0,Math.PI*2);ctx.fill();}
       ctx.globalAlpha=1;
-      ctx.restore();ctx.restore();
+      ctx.restore();
+
     }
 
     function drawRiddleAvada(f) {
@@ -5430,6 +5450,7 @@
     }
 
       const patchNotes = [
+      "v108: 피엔드피레를 리들 경 중심으로 재정렬하고 철가면 리펄서 두께를 복원했습니다. 오벨리스크 소환 연출을 강화하고, 마인드 스톤 정지 타이머가 캐릭터별 조기 반환에도 반드시 해제되도록 수정했습니다. 핑거스냅 사망은 3.6초 동안 천천히 가루로 산화됩니다.",
       "v107: v106의 상시 캐릭터 주변 오라를 롤백. 대머리망토 흉상 통일, 헐크크 점프 정지 버그 수정, 리들·리사·정의의 아군·철가면·최애·캡틴·타노·힌타의 발동 이펙트와 쟈바미 외형을 개선했습니다. 전투 수치와 판정은 유지됩니다.",
       "v105: v104에서 누락된 대머리망토 전면 드로잉과 펀치 연출, 앤드럼의 동심 음압파·박자·WHIPLASH 이펙트를 실제 렌더링 함수에 적용했습니다. 전투 수치는 유지됩니다.",      "v104: 대머리망토의 캐릭터 드로잉과 펀치 연출을 전면 개선하고, 앤드럼의 음압파·박자·피날레 공격 이펙트를 강화했습니다. 전투 수치는 유지됩니다.",
       "v103: 패밀리맨 캐릭터와 차량/니트로 전용 코드를 삭제. 영화 신캐 '오디세웠으' 추가. 체력180. 전투 시작 10초는 노숙자 모드(이속3.15)로 정체를 숨기며, 가까운 적이 접근하면 약3.4초마다 짧은 회피 이동. 10초 뒤 영웅 모드(이속2.7)로 영구 전환해 활을 주무기로 사용. 영웅은 1.55초마다 최근접 적을 예측 조준해 일반 화살(피해12, 차징0.42초)을 발사하고, 네 번째 화살마다 차징0.82초의 '열두 도끼' 관통 화살(피해28, 고속·다수 관통)을 사용. 노숙자/영웅 외형과 활·화살·도끼구멍 궤적 시각 효과 추가.",
@@ -8374,7 +8395,7 @@
 
     function triggerDeathEffect(target) {
       clearDefeatedFighterArtifacts(target);
-      if(target.snapDustDeath){target.snapDustDeath=false;if(fastSimMode)return;cinematicFreeze=Math.max(cinematicFreeze,.35);deathEffects.push({x:target.x,y:target.y,r:target.r,color:target.color,mark:target.mark,name:target.name,life:1.15,maxLife:1.15,burst:false,dust:true});return;}
+      if(target.snapDustDeath){target.snapDustDeath=false;if(fastSimMode)return;cinematicFreeze=Math.max(cinematicFreeze,.28);deathEffects.push({x:target.x,y:target.y,r:target.r,color:target.color,mark:target.mark,name:target.name,life:3.6,maxLife:3.6,burst:false,dust:true});return;}
       if (fastSimMode) {
         spawnParticles(target.x, target.y, "#ffffff", 42);
         spawnBlast(target.x, target.y, 72, "#ffffff");
@@ -8430,7 +8451,7 @@
     function drawDeathEffects() {
       deathEffects.forEach(e => {
         if (e.burst) return;
-        if(e.dust){const p=1-e.life/e.maxLife;ctx.save();ctx.translate(e.x,e.y);for(let i=0;i<42;i++){const a=i*2.399,base=e.r*Math.sqrt((i+.5)/42),drift=p*(18+(i%9)*4),x=Math.cos(a)*base+Math.cos(a-.4)*drift,y=Math.sin(a)*base-Math.abs(Math.sin(a*1.7))*drift*.65,fade=clamp(1-p*.75-(i%5)*.06,0,1);ctx.globalAlpha=fade;ctx.fillStyle=i%3?e.color:"#d1d5db";const sz=1.5+(i%4)*.75;ctx.fillRect(x,y,sz,sz);}ctx.globalAlpha=1-p;ctx.strokeStyle="rgba(255,255,255,.35)";ctx.beginPath();ctx.arc(0,0,e.r*(1-p*.35),0,Math.PI*2);ctx.stroke();ctx.restore();return;}
+        if(e.dust){const p=1-e.life/e.maxLife;ctx.save();ctx.translate(e.x,e.y);ctx.globalAlpha=clamp(1-p*.82,0,.9);ctx.fillStyle=e.color;ctx.beginPath();ctx.arc(0,0,e.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;for(let i=0;i<72;i++){const a=i*2.399,base=e.r*Math.sqrt((i+.5)/72),bx=Math.cos(a)*base,by=Math.sin(a)*base,front=(bx/e.r+1)*.5,peel=clamp((p-front*.62)/.38,0,1);if(peel<=.01)continue;const drift=peel*peel*(28+(i%11)*4),x=bx+drift*(.72+Math.cos(a)*.28),y=by-drift*(.28+Math.abs(Math.sin(a*1.9))*.42),fade=clamp(1-peel*.88,0,1);ctx.globalAlpha=fade;ctx.fillStyle=i%4?e.color:"#cbd5e1";const sz=1.3+(i%5)*.62;ctx.save();ctx.translate(x,y);ctx.rotate(a+peel*2.4);ctx.fillRect(-sz/2,-sz/2,sz,sz*.68);ctx.restore();}ctx.globalAlpha=clamp(1-p*1.08,0,1);ctx.strokeStyle="rgba(255,255,255,.28)";ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(0,0,e.r,0,Math.PI*2);ctx.stroke();ctx.restore();return;}
         const progress = 1 - e.life / e.maxLife;
         const shake = 1.5 + progress * 7;
         const ox = Math.sin(performance.now() * 0.075) * shake;
@@ -10038,6 +10059,8 @@
 
     function updateFighter(f, dt) {
       if (!f.alive) return;
+      // 마인드 스톤 정지는 캐릭터별 조기 반환보다 먼저 감소시켜 영구 정지를 방지한다.
+      f.tanoStop = Math.max(0, (f.tanoStop || 0) - dt);
       tickNewhello(f,dt);
       // 넉백 비행이 끝난 뒤부터 2초간 둔화한다. 경직 중에도 정상 만료된다.
       if(!(f.punchFlight>0))f.hintaConcussion=Math.max(0,(f.hintaConcussion||0)-dt);
@@ -10057,7 +10080,7 @@
         return;
       }
       // 마인드 스톤 정지 시간은 펀치 연출로 일찍 반환해도 계속 감소해야 한다.
-      f.tanoStop = Math.max(0, (f.tanoStop || 0) - dt);
+
       updateLisa(f, dt);
       updateOshi(f, dt);
       if (f.andrum) updateAndrum(f, dt);
@@ -11959,7 +11982,18 @@
       ctx.globalCompositeOperation = "source-over";
       drawGrid();
       const emergingGod=fighters.find(f=>f.alive&&f.duelMonster?.kind==="obelisk"&&(f.duelMonster.emerge||0)>0);
-      if(emergingGod){const p=clamp(emergingGod.duelMonster.emerge/1.2,0,1);ctx.save();ctx.fillStyle=`rgba(0,4,18,${.28+.38*p})`;ctx.fillRect(arena.x,arena.y,arena.size,arena.size);ctx.strokeStyle=`rgba(96,165,250,${.35+.45*Math.sin(performance.now()/60)})`;ctx.lineWidth=5;ctx.beginPath();ctx.arc(emergingGod.x,emergingGod.y,32+(1-p)*72,0,Math.PI*2);ctx.stroke();ctx.restore();}
+      if(emergingGod){
+        const p=clamp(emergingGod.duelMonster.emerge/1.2,0,1),q=1-p,t=performance.now()/1000,gx=emergingGod.x,gy=emergingGod.y;
+        ctx.save();
+        const veil=ctx.createRadialGradient(gx,gy,18,gx,gy,arena.size*.72);veil.addColorStop(0,`rgba(10,35,92,${.32+.28*p})`);veil.addColorStop(.45,`rgba(1,9,28,${.58+.2*p})`);veil.addColorStop(1,`rgba(0,2,12,${.82+.12*p})`);ctx.fillStyle=veil;ctx.fillRect(arena.x,arena.y,arena.size,arena.size);
+        ctx.globalCompositeOperation="screen";
+        for(let i=0;i<7;i++){const ang=i*Math.PI*2/7+t*.11,reach=arena.size*(.34+.06*(i%3));ctx.strokeStyle=`rgba(96,165,250,${.13+.16*Math.sin(t*5+i)})`;ctx.lineWidth=2+(i%2)*1.5;ctx.beginPath();ctx.moveTo(gx+Math.cos(ang)*28,gy+Math.sin(ang)*20);ctx.lineTo(gx+Math.cos(ang)*reach,gy+Math.sin(ang)*reach);ctx.stroke();}
+        const beam=ctx.createLinearGradient(gx,arena.y,gx,arena.y2);beam.addColorStop(0,"rgba(147,197,253,0)");beam.addColorStop(.28,`rgba(96,165,250,${.18+.22*q})`);beam.addColorStop(.72,`rgba(37,99,235,${.3+.25*q})`);beam.addColorStop(1,"rgba(30,58,138,0)");ctx.fillStyle=beam;ctx.beginPath();ctx.moveTo(gx-58-q*34,arena.y);ctx.lineTo(gx+58+q*34,arena.y);ctx.lineTo(gx+24,gy+20);ctx.lineTo(gx-24,gy+20);ctx.closePath();ctx.fill();
+        ctx.globalCompositeOperation="source-over";
+        for(let i=0;i<4;i++){const wave=clamp(q*1.35-i*.16,0,1);if(wave<=0)continue;ctx.strokeStyle=`rgba(96,165,250,${.72*(1-wave)})`;ctx.lineWidth=6-4*wave;ctx.beginPath();ctx.ellipse(gx,gy+18,28+wave*150,10+wave*48,0,0,Math.PI*2);ctx.stroke();}
+        ctx.strokeStyle="rgba(15,42,91,.95)";ctx.lineWidth=4;for(let i=0;i<10;i++){const a=i*Math.PI*2/10+.13,len=38+q*(48+(i%3)*14);ctx.beginPath();ctx.moveTo(gx+Math.cos(a)*18,gy+18+Math.sin(a)*7);ctx.lineTo(gx+Math.cos(a)*len*.5,gy+18+Math.sin(a)*len*.22);ctx.lineTo(gx+Math.cos(a)*len,gy+18+Math.sin(a)*len*.38);ctx.stroke();}
+        ctx.restore();
+      }
       drawTanoStones();
       drawIronObjects();
       drawCaptainShields();
