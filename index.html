@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v108</title>
+  <title>볼배틀 리뉴얼 v109</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v108</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v109</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -5450,6 +5450,7 @@
     }
 
       const patchNotes = [
+      "v109: 핑거스냅으로 최후의 상대가 탈락한 경우 3.6초 산화 연출이 완전히 끝난 뒤 타노 승리 문구가 표시되도록 승리 판정 타이밍을 조정했습니다.",
       "v108: 피엔드피레를 리들 경 중심으로 재정렬하고 철가면 리펄서 두께를 복원했습니다. 오벨리스크 소환 연출을 강화하고, 마인드 스톤 정지 타이머가 캐릭터별 조기 반환에도 반드시 해제되도록 수정했습니다. 핑거스냅 사망은 3.6초 동안 천천히 가루로 산화됩니다.",
       "v107: v106의 상시 캐릭터 주변 오라를 롤백. 대머리망토 흉상 통일, 헐크크 점프 정지 버그 수정, 리들·리사·정의의 아군·철가면·최애·캡틴·타노·힌타의 발동 이펙트와 쟈바미 외형을 개선했습니다. 전투 수치와 판정은 유지됩니다.",
       "v105: v104에서 누락된 대머리망토 전면 드로잉과 펀치 연출, 앤드럼의 동심 음압파·박자·WHIPLASH 이펙트를 실제 렌더링 함수에 적용했습니다. 전투 수치는 유지됩니다.",      "v104: 대머리망토의 캐릭터 드로잉과 펀치 연출을 전면 개선하고, 앤드럼의 음압파·박자·피날레 공격 이펙트를 강화했습니다. 전투 수치는 유지됩니다.",
@@ -11273,7 +11274,8 @@
     }
 
     function checkEnd() {
-      if (!running || ended || cinematicFreeze > 0) return;
+      // 핑거스냅으로 마지막 상대가 사라질 때는 산화가 끝난 뒤 승리 문구를 연다.
+      if (!running || ended || cinematicFreeze > 0 || deathEffects.some(e => e.dust && !e.burst)) return;
 
       if (battleMode === "team") {
         handleTeamReplacements();
