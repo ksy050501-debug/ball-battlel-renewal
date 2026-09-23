@@ -24,7 +24,7 @@ new_wall = '''function spiderWallPoint(x,y){
       return {x:clamp(x,arena.x+margin,arena.x2-margin),y:arena.y2};
     }
     function spiderFireSwingWeb'''
-sub_once(r'function spiderWallPoint\(x,y\)\{[\s\S]*?\n\s*\}\n\s*function spiderFireSwingWeb', new_wall, 'spiderWallPoint', re.M)
+sub_once(r'function\s+spiderWallPoint\s*\(\s*x\s*,\s*y\s*\)\s*\{[\s\S]*?function\s+spiderFireSwingWeb', new_wall, 'spiderWallPoint')
 
 new_arc = '''function spiderBeginArc(f,ax,ay){
       const s=f.spider,dx=f.x-ax,dy=f.y-ay;
@@ -46,9 +46,9 @@ new_arc = '''function spiderBeginArc(f,ax,ay){
       if(!fastSimMode)spawnBlast(ax,ay,26,"#e2e8f0");
     }
     function spiderBeginChase'''
-sub_once(r'function spiderBeginArc\(f,ax,ay\)\{[\s\S]*?\n\s*\}\n\s*function spiderBeginChase', new_arc, 'spiderBeginArc', re.M)
+sub_once(r'function\s+spiderBeginArc\s*\(\s*f\s*,\s*ax\s*,\s*ay\s*\)\s*\{[\s\S]*?function\s+spiderBeginChase', new_arc, 'spiderBeginArc')
 
-sub_once(r'const a=s\.arc;a\.t\+=dt;const p=clamp\(a\.t/SPIDER\.swingArcTime,0,1\),ang=a\.start\+a\.dir\*SPIDER\.swingArcAngle\*p;',
+sub_once(r'const\s+a\s*=\s*s\.arc\s*;\s*a\.t\s*\+=\s*dt\s*;\s*const\s+p\s*=\s*clamp\(a\.t\s*/\s*SPIDER\.swingArcTime\s*,\s*0\s*,\s*1\s*\)\s*,\s*ang\s*=\s*a\.start\s*\+\s*a\.dir\s*\*\s*SPIDER\.swingArcAngle\s*\*\s*p\s*;',
          'const a=s.arc;a.t+=dt;const p=clamp(a.t/SPIDER.swingArcTime,0,1),ang=a.start+a.dir*(a.swingAngle||SPIDER.swingArcAngle)*p;',
          'arc motion')
 
