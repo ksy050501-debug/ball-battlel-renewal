@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v126</title>
+  <title>볼배틀 리뉴얼 v127</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v126</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v127</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1447,7 +1447,7 @@
         return;
       }
       if (l.mode === "rock" && l.rock <= 100 * LISA.rageDuration / LISA.duration + 1e-9) enterLisaRage(f);
-      if (f.tanoStop > 0 || f.punchHold > 0 || f.punchFlight > 0 || f.vampSuppressed > 0) return;
+      if (f.stun > 0 || f.punchHold > 0 || f.punchFlight > 0 || f.vampSuppressed > 0) return;
       l.attack -= dt;
       if (l.attack <= 0) { lisaAttack(f); l.attack = l.mode === "rage" ? LISA.ragePeriod : LISA.period; }
     }
@@ -1602,7 +1602,7 @@
     }
 
     function logoContact(f,target) {
-      const l=f.logo;if(!l || l.mode==="doctor" || l.jump || l.smashCd>0 || f.tanoStop>0 || !target?.alive || !areEnemies(f,target))return;
+      const l=f.logo;if(!l || l.mode==="doctor" || l.jump || l.smashCd>0 || f.stun>0 || !target?.alive || !areEnemies(f,target))return;
       const huge=l.mode==="hulk",power=huge?LOGO.smash:LOGO.smartSmash;
       l.smashCd=huge?1.05:1.2;
       if(huge){l.fistTime=.24;l.fistAngle=Math.atan2(target.y-f.y,target.x-f.x);}
@@ -1639,7 +1639,7 @@
       return 1+Math.min(NEWHELLO.maxBonus,Math.max(0,e.hp-f.hp)/NEWHELLO.gapForCap*NEWHELLO.maxBonus);
     }
     function newhelloBlocked(f) {
-      return !f.alive || f.tanoStop>0 || f.punchHold>0 || f.punchFlight>0 ||
+      return !f.alive || f.stun>0 || f.punchHold>0 || f.punchFlight>0 ||
         f.vampSuppressed>0 || f.joltStop>0 || isCasting(f);
     }
     function newhelloWallPoint(f,a) {
@@ -2622,7 +2622,7 @@
       };
     }
     function baldCapeBlocked(f){
-      return !f?.alive||f.tanoStop>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
+      return !f?.alive||f.stun>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
     }
     function baldCapeAngleDiff(a,b){return Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));}
     function baldCapeConeTargets(f,angle,range,halfAngle){
@@ -3342,7 +3342,7 @@
         }
         const b=h.ball;b.age+=dt;b.spin+=dt*(b.flying?14:1.5);
         if(!b.flying){
-          const locked=f.tanoStop>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
+          const locked=f.stun>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
           if(!h.dash)h.wait+=dt;
           if(!locked && b.age>.15 && dist(f,b)<=f.r+b.r+HINTA.pickupBonus)spikeHintaBall(f);
           else if(!locked && !h.dash && h.wait>=HINTA.dashWait)startHintaDash(f);
@@ -3517,7 +3517,7 @@
       return true;
     }
     function captainContact(f, target) {
-      if (!f.captain || f.captain.counterCd > 0 || f.tanoStop > 0 || !target?.alive || !areEnemies(f, target)) return;
+      if (!f.captain || f.captain.counterCd > 0 || f.stun > 0 || !target?.alive || !areEnemies(f, target)) return;
       f.captain.counterCd = CAPTAIN.counterCooldown;
       const held = f.captain.hasShield;
       if (!held) {
@@ -4197,7 +4197,7 @@
         }
         return;
       }
-      if (f.tanoStop > 0) return;
+      if (f.stun > 0) return;
       if (i.dash > 0) { i.dash = Math.max(0, i.dash - dt); if (i.dash <= 0) normalizeIronVelocity(f); }
       if (i.suit !== "hulk") {
         i.attackCd -= dt;
@@ -5591,7 +5591,8 @@
     }
 
       const patchNotes = [
-      "v126: CC 내부 구조를 성능 변화 없이 정리했습니다. 공용 행동정지 applyStun, 강둔화 applyHeavySlow, 시간형 CC 타이머 refreshCcTimer를 추가하고 타노 마인드·고난 둔기·거미남 벽속박·고난 흉기·거미남 웹·힌타 뇌진탕·오벨리스크 강둔화 호출을 공용 명칭으로 연결했습니다. 기존 tanoStop·freeze·캐릭터별 타이머 저장값과 지속시간·중첩·면역·넉백·피해·연출은 그대로 유지해 전투 성능은 변경하지 않았습니다.",
+      "v127: 공용 행동정지의 내부 저장명까지 정리했습니다. 기존 캐릭터 전용 이름의 행동정지 프로퍼티를 stun으로 전수 이름 변경하고 applyStun 및 모든 행동정지 판정·감소·차단 참조를 같은 stun 저장값으로 통일했습니다. 숫자·지속시간·적용 조건·면역·피해·넉백·연출은 변경하지 않은 순수 명칭 리팩터링입니다.",
+      "v126: CC 내부 구조를 성능 변화 없이 정리했습니다. 공용 행동정지 applyStun, 강둔화 applyHeavySlow, 시간형 CC 타이머 refreshCcTimer를 추가하고 타노 마인드·고난 둔기·거미남 벽속박·고난 흉기·거미남 웹·힌타 뇌진탕·오벨리스크 강둔화 호출을 공용 명칭으로 연결했습니다. 기존 행동정지 저장값·freeze·캐릭터별 타이머의 지속시간·중첩·면역·넉백·피해·연출은 그대로 유지해 전투 성능은 변경하지 않았습니다.",
       "v125: 거미남 웹스윙 전투성을 개선했습니다. 웹스윙 부채꼴 이동 중 적과 몸으로 충돌해도 즉시 근접18+강넉백 공격이 발동하고, 벽까지 밀리면 기존 벽충돌12도 이어집니다. 140px보다 가까운 벽은 웹스윙 앵커로 사용하지 않으며 랜덤 웹도 먼 벽 지점을 우선 조준합니다. 벽 웹스윙 연쇄는 최대5회까지만 이어지고 5번째 시도는 적 방향을 우선 조준하며, 5회 모두 실패하면 웹스윙을 종료하고 8초 쿨타임으로 복귀합니다.",
       "v124: 거미남 웹스윙 이동을 수정했습니다. 먼 벽에 걸린 거미줄은 실제 현재 위치-앵커 거리를 스윙 반경으로 사용해 순간이동하지 않으며, 거리가 멀수록 회전각을 줄여 자연스럽게 이동합니다. 벽 앵커는 구석에서 72px 떨어진 지점으로 보정하고, 두 스윙 방향 중 경기장 안쪽으로 향하는 방향을 선택해 구석에서 비정상적으로 끼는 움직임을 줄였습니다.",
       "v123: 고난 체력을165→160으로 조정. 영화 신캐 '거미남' 추가(HP170·이속2.9). 8초마다 랜덤 거미줄을 발사해 적중 시 줄을 따라 접근해 근접18+강넉백, 벽충돌 시 추가12. 적 대신 벽에 맞으면 0.62초 부채꼴 웹스윙 뒤 다시 랜덤 거미줄을 발사하며 적중할 때까지 반복. 웹스윙 중이 아닐 때는 5초마다 웹슈터6연사(발당2·약넉백·0.9초 22% 둔화). 웹슈터 넉백으로 벽에 닿으면 1.6초 거미줄 속박, 즉시 웹스윙 쿨 초기화 후 속박 대상을 타게팅해 발사.",
@@ -7701,7 +7702,7 @@
     // v126 공용 CC 어댑터.
     // 주의: 밸런스 보존을 위해 기존 저장 필드와 중첩/면역 규칙은 그대로 둔다.
     // freeze는 역사적으로 "빙결"이라는 이름이지만 실제 효과는 이속 42%의 강둔화다.
-    // tanoStop은 역사적 이름을 유지하되 공용 행동정지(stun/stop) API를 통해 사용한다.
+    // stun은 역사적 이름을 유지하되 공용 행동정지(stun/stop) API를 통해 사용한다.
     function applyHeavySlow(target, duration) {
       if (!target || !target.alive || hasHarmfulImmunity(target)) return false;
       target.freeze = Math.max(target.freeze || 0, duration);
@@ -7712,7 +7713,7 @@
     }
     function applyStun(target, duration) {
       if (!target || !target.alive) return false;
-      target.tanoStop = Math.max(target.tanoStop || 0, duration);
+      target.stun = Math.max(target.stun || 0, duration);
       return true;
     }
     function refreshCcTimer(target, stateKey, duration) {
@@ -10422,7 +10423,7 @@
     function updateFighter(f, dt) {
       if (!f.alive) return;
       // 마인드 스톤 정지는 캐릭터별 조기 반환보다 먼저 감소시켜 영구 정지를 방지한다.
-      f.tanoStop = Math.max(0, (f.tanoStop || 0) - dt);
+      f.stun = Math.max(0, (f.stun || 0) - dt);
       f.elsaFreezeImmune = Math.max(0, (f.elsaFreezeImmune || 0) - dt);
       if ((f.elsaFreeze || 0) > 0) {
         f.elsaFreeze = Math.max(0, f.elsaFreeze - dt);
@@ -10440,7 +10441,7 @@
       f.spiderBind=Math.max(0,(f.spiderBind||0)-dt);
       if(f.spiderBind>0){applyStun(f,f.spiderBind);f.vx=0;f.vy=0;}
       if(f.conanKnifeSlow>0&&!fastSimMode&&Math.random()<dt*5)spawnParticles(f.x+rand(-f.r*.5,f.r*.5),f.y+rand(-f.r*.5,f.r*.5),"#7f1d1d",1);
-      if(f.hinta?.dash && (f.tanoStop>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f)))endHintaDash(f);
+      if(f.hinta?.dash && (f.stun>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f)))endHintaDash(f);
       updateOshiSongDebuffs(f, dt);
       updateOshiAftershock(f, dt);
       if (!f.alive) return;
@@ -10654,7 +10655,7 @@
         return;
       }
 
-      if (f.tanoStop > 0) return;
+      if (f.stun > 0) return;
       if (updateCastPause(f, dt)) {
         return;
       }
