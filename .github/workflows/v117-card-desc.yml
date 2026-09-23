@@ -1,0 +1,99 @@
+name: v117 concise character cards
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v117-card-desc.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch index.html
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('index.html')
+          c=p.read_text(encoding='utf-8')
+
+          def rep(old,new,count=1):
+              global c
+              n=c.count(old)
+              if n!=count:
+                  raise SystemExit(f'expected {count}, found {n}: {old[:120]!r}')
+              c=c.replace(old,new,count)
+
+          rep('<title>볼배틀 리뉴얼 v116</title>','<title>볼배틀 리뉴얼 v117</title>')
+          rep('<h1 id="mainTitle">볼배틀 리뉴얼 v116</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v117</h1>')
+
+          summaries={
+            'newhello_sergeant':'사슬 와이어로 고속 돌진해 광역 회전베기를 펼친다. 적중 시 연속 기동하며, 출혈 중인 적을 다시 베면 남은 출혈을 한꺼번에 터뜨린다.',
+            'riddle_lord':'피엔드피레와 아바다 케다브라를 번갈아 사용하고, 딱총나무 지팡이로 주문을 강화한다. 첫 사망 시 호크룩스로 버티면 한 번 부활한다.',
+            'andrum':'드럼 비트의 킥으로 주변 적을 공격하며 연주가 이어질수록 그루브가 오른다. 적중을 쌓아 WHIPLASH 게이지를 채우면 강력한 드럼 솔로에 들어간다.',
+            'elsa':'체력이 낮아질수록 넓어지는 냉기 영역으로 적을 서서히 얼린다. 냉기가 충분히 쌓이면 완전 빙결시키고, 직접 부딪혀 파쇄할 수 있다.',
+            'bald_cape':'긴 대기 끝에 보통펀치·연속 보통펀치·진심펀치 중 하나를 사용한다. 공격 빈도는 낮지만 한 번의 공격이 강력하다.',
+            'hinta':'배구공을 잡으면 속공이나 괴짜 속공으로 강하게 스파이크한다. 공을 오래 잡지 못하면 직접 돌진해 적을 밀어내고 둔화시킨다.',
+            'lisa':'숙녀 상태에서는 공격하지 않고 인내를 쌓는다. 인내가 차면 록 모드로 전환해 기타 음파를 연속으로 퍼붓고 마지막에는 폭주한다.',
+            'oshi':'노래로 적을 약화시키며 인지도를 모아 투어를 연다. 공연을 거칠수록 노래가 성장하고, 마지막에는 도쿄돔 공연으로 이어진다.',
+            'iron_mask':'리펄서와 부스터로 싸우며 슈트의 보호막이 전투를 대신 버틴다. 슈트가 파괴되면 잠시 무능력해졌다가 특수 슈트 중 하나로 재장착한다.',
+            'tano':'전장에 나타나는 인피니티 스톤을 하나씩 모아 능력을 확장한다. 여섯 개를 완성하면 핑거플립을 사용한 뒤 다시 스톤 수집을 시작한다.',
+            'captain':'방패를 던져 적과 벽 사이를 튕기며 공격한다. 비행 중 방패를 다시 잡으면 즉시 재투척하고, 방패가 없을 때는 강펀치로 맞선다.',
+            'jabami':'접촉한 적들과 판돈을 걸고 하이카드 승부를 벌인다. 저체력과 빚 상태에서는 승부가 더 위험해지며, 조커로 흐름을 뒤집을 수 있다.',
+            'justice_ally':'백룡을 소환해 버스트 스트림을 사용하고, 융합으로 더 강한 소환수를 만든다. 마지막 소환수를 릴리스하면 오벨리스크가 등장한다.',
+            'logo_doctor':'박사는 직접 공격하지 않지만 쓰러지면 헐크크로 변신한다. 분노가 소진되면 스마트 헐크크로 다시 변해 전투를 이어간다.'
+          }
+
+          for cid,text in summaries.items():
+              pattern=r'(\{\s*id\s*:\s*["\']'+re.escape(cid)+r'["\'][\s\S]*?\bdesc\s*:\s*")[^"]*("\s*\})'
+              c2,n=re.subn(pattern,lambda m:m.group(1)+text+m.group(2),c,count=1)
+              if n!=1:
+                  raise SystemExit(f'{cid}: desc replace count {n}')
+              c=c2
+
+          marker='      const patchNotes = [\n'
+          note='      "v117: 캐릭터 선택 카드의 설명을 전면 정리했습니다. 훈련용 더미를 제외한 14개 캐릭터의 desc를 핵심 전투 콘셉트 중심의 짧은 2문장 요약으로 통일하고, 세부 수치·쿨타임·조건은 기존 ? 상세창과 상태 UI에 남겼습니다. 전투 수치와 판정은 변경하지 않았습니다.",\n'
+          rep(marker,marker+note)
+
+          p.write_text(c,encoding='utf-8')
+          PY
+
+      - name: Validate inline JavaScript and card summaries
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const c=fs.readFileSync('index.html','utf8');
+          const scripts=[...c.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
+          if(!scripts.length) throw new Error('No inline scripts found');
+          for(const s of scripts)new Function(s);
+          const ids=['newhello_sergeant','riddle_lord','andrum','elsa','bald_cape','hinta','lisa','oshi','iron_mask','tano','captain','jabami','justice_ally','logo_doctor'];
+          for(const id of ids){
+            const re=new RegExp('id\\s*:\\s*["\\\']'+id+'["\\\'][\\s\\S]*?desc\\s*:\\s*"([^"]*)"');
+            const m=c.match(re);
+            if(!m) throw new Error('Missing card desc: '+id);
+            if(m[1].length>110) throw new Error('Description still too long: '+id+' '+m[1].length);
+          }
+          if(!c.includes('볼배틀 리뉴얼 v117')) throw new Error('v117 missing');
+          if(!c.includes('v117: 캐릭터 선택 카드의 설명을 전면 정리했습니다.')) throw new Error('v117 note missing');
+          console.log('v117 validation passed');
+          NODE
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'v117: simplify all character card descriptions'
+          git push origin HEAD:main
