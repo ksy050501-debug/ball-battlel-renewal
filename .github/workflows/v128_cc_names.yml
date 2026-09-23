@@ -1,0 +1,46 @@
+name: v128 CC naming cleanup
+on:
+  push:
+    paths:
+      - '.github/workflows/v128_cc_names.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply CC naming cleanup
+        run: python .github/scripts/v128_cc_names.py
+      - name: Validate JavaScript
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          a=s.index('<script>')+len('<script>')
+          b=s.rindex('</script>')
+          Path('/tmp/ballbattle-v128.js').write_text(s[a:b],encoding='utf-8')
+          PY
+          node --check /tmp/ballbattle-v128.js
+      - name: Validate patch scope
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert '<title>볼배틀 리뉴얼 v128</title>' in s
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v128</h1>' in s
+          old=['conanKnifeSlow','spiderWebSlow','hintaConcussion','spiderBind','elsaFreeze','oshiSongDebuffs','oshiSongSlowMultiplier','updateOshiSongDebuffs','applyOshiSongDebuff','oshiReducedIncomingDamage']
+          for x in old: assert x not in s, x
+          for x in ['knifeSlow','webSlow','concussionSlow','bindStun','hardFreeze','songDebuffs','stun']:
+              assert x in s, x
+          PY
+      - name: Commit v128
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'refactor: remove character names from CC state v128'
+          git push
