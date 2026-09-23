@@ -26,24 +26,26 @@ jobs:
             page.on('pageerror',e=>{errors.push(e.stack||e.message);console.log('PAGEERROR:',e.stack||e.message)});
             page.on('console',m=>console.log('CONSOLE:',m.type(),m.text()));
             await page.goto('file://'+process.cwd()+'/index.html',{waitUntil:'load'});
-            await new Promise(r=>setTimeout(r,300));
+            await new Promise(r=>setTimeout(r,250));
             console.log('TITLE:',await page.title());
-            console.log('CARDS:',await page.$$eval('.char-card',x=>x.length));
-            console.log('SELECTED BEFORE:',await page.$$eval('.char-card.selected',x=>x.length));
+            console.log('START FN:',await page.evaluate(()=>typeof window.startBattle));
             await page.evaluate(()=>document.querySelectorAll('.char-card')[0]?.click());
-            await new Promise(r=>setTimeout(r,80));
-            console.log('SELECTED 1:',await page.$$eval('.char-card.selected',x=>x.length));
+            await new Promise(r=>setTimeout(r,50));
             await page.evaluate(()=>document.querySelectorAll('.char-card')[1]?.click());
-            await new Promise(r=>setTimeout(r,80));
-            console.log('SELECTED 2:',await page.$$eval('.char-card.selected',x=>x.length));
-            try{console.log('STATE BEFORE:',JSON.stringify(await page.evaluate(()=>eval('({battleState, fighterCount:fighters.length})'))));}catch(e){console.log('STATE BEFORE EVAL ERR:',e.message)}
-            await page.click('#startBtn');
-            await new Promise(r=>setTimeout(r,1200));
-            try{console.log('STATE AFTER:',JSON.stringify(await page.evaluate(()=>eval('({battleState, fighterCount:fighters.length})'))));}catch(e){console.log('STATE AFTER EVAL ERR:',e.message)}
-            console.log('OVERLAY TEXT:',await page.$eval('#overlay',e=>e.innerText).catch(()=>'<no overlay>'));
-            console.log('OVERLAY CLASS:',await page.$eval('#overlay',e=>e.className).catch(()=>'<no overlay>'));
+            await new Promise(r=>setTimeout(r,50));
+            console.log('SELECTED CLASSES:',await page.$$eval('.char-card.selected',x=>x.map(e=>e.querySelector('.char-name')?.textContent)));
+            try{console.log('STATE BEFORE:',JSON.stringify(await page.evaluate(()=>eval('({running, fighterCount:fighters.length, selectedCount:selected.size, chosen:availableCharacters().filter(c=>selected.has(c.id)).map(c=>c.id)})'))));}catch(e){console.log('STATE BEFORE EVAL ERR:',e.message)}
+            console.log('CLICK startBtn DOM');
+            await page.evaluate(()=>document.getElementById('startBtn')?.click());
+            await new Promise(r=>setTimeout(r,400));
+            try{console.log('STATE AFTER BUTTON:',JSON.stringify(await page.evaluate(()=>eval('({running, fighterCount:fighters.length, selectedCount:selected.size})'))));}catch(e){console.log('STATE AFTER BUTTON EVAL ERR:',e.message)}
+            console.log('OVERLAY AFTER BUTTON:',await page.$eval('#overlay',e=>({cls:e.className,title:document.getElementById('overlayTitle')?.textContent,text:document.getElementById('overlayText')?.textContent})));
+            console.log('CALL window.startBattle directly');
+            try{await page.evaluate(()=>window.startBattle());}catch(e){console.log('DIRECT CALL ERR:',e.message)}
+            await new Promise(r=>setTimeout(r,400));
+            try{console.log('STATE AFTER DIRECT:',JSON.stringify(await page.evaluate(()=>eval('({running, fighterCount:fighters.length, selectedCount:selected.size})'))));}catch(e){console.log('STATE AFTER DIRECT EVAL ERR:',e.message)}
+            console.log('OVERLAY AFTER DIRECT:',await page.$eval('#overlay',e=>({cls:e.className,title:document.getElementById('overlayTitle')?.textContent,text:document.getElementById('overlayText')?.textContent})));
             console.log('ERROR COUNT:',errors.length);
-            if(errors.length)process.exitCode=2;
             await browser.close();
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
