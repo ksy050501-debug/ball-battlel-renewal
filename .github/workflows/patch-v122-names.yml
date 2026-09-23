@@ -1,0 +1,58 @@
+name: Patch v122 character names
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-v122-names.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v122 rename
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+
+          assert '<title>볼배틀 리뉴얼 v121</title>' in text
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v121</h1>' in text
+          assert 'name: "엘사"' in text
+          assert 'name: "코난"' in text
+
+          text = text.replace('<title>볼배틀 리뉴얼 v121</title>', '<title>볼배틀 리뉴얼 v122</title>', 1)
+          text = text.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v121</h1>', '<h1 id="mainTitle">볼배틀 리뉴얼 v122</h1>', 1)
+
+          # Display-name-only rename. Internal ids/functions remain elsa/conan.
+          text = text.replace('엘사', '엘팔아')
+          text = text.replace('코난', '고난')
+
+          anchor = '      const patchNotes = [\n'
+          assert anchor in text
+          note = '      "v122: 캐릭터 표시 이름을 엘팔아·고난으로 변경했습니다. 내부 ID와 전투 수치·판정·기믹은 그대로 유지합니다.",\n'
+          text = text.replace(anchor, anchor + note, 1)
+
+          assert '<title>볼배틀 리뉴얼 v122</title>' in text
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v122</h1>' in text
+          assert 'name: "엘팔아"' in text
+          assert 'name: "고난"' in text
+          assert 'name: "엘사"' not in text
+          assert 'name: "코난"' not in text
+          p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit v122 and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/patch-v122-names.yml
+          git add index.html .github/workflows/patch-v122-names.yml
+          git commit -m "chore: rename Elsa and Conan display names v122"
+          git push
