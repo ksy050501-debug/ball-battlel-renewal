@@ -25,41 +25,39 @@ jobs:
           p = Path('index.html')
           c = p.read_text(encoding='utf-8')
 
-          marker = '      const patchNotes = ['
-          if marker not in c:
-              raise SystemExit('patchNotes marker not found')
-          prefix, notes = c.split(marker, 1)
-
-          def rep(s, old, new, count=1):
-              n = s.count(old)
+          def rep(old, new, count=1):
+              global c
+              n = c.count(old)
               if n != count:
-                  raise SystemExit(f'expected {count}, found {n}: {old[:120]!r}')
-              return s.replace(old, new, count)
+                  raise SystemExit(f'expected {count}, found {n}: {old[:140]!r}')
+              c = c.replace(old, new, count)
 
-          prefix = rep(prefix, '<title>볼배틀 리뉴얼 v115</title>', '<title>볼배틀 리뉴얼 v116</title>')
-          prefix = rep(prefix, '<h1 id="mainTitle">볼배틀 리뉴얼 v115</h1>', '<h1 id="mainTitle">볼배틀 리뉴얼 v116</h1>')
+          rep('<title>볼배틀 리뉴얼 v115</title>', '<title>볼배틀 리뉴얼 v116</title>')
+          rep('<h1 id="mainTitle">볼배틀 리뉴얼 v115</h1>', '<h1 id="mainTitle">볼배틀 리뉴얼 v116</h1>')
 
-          prefix = rep(prefix, '      minRadius:55, maxRadius:170,', '      minRadius:80, maxRadius:170,')
-          prefix = rep(prefix, '      auraDamage:5, auraTick:1.0, auraSlow:.85,', '      auraDamage:6, auraTick:1.0, auraSlow:.85,')
-          prefix = rep(prefix, '      shatterDamage:25, shatterKnock:420', '      shatterDamage:30, shatterKnock:420')
+          rep('      minRadius:55, maxRadius:170,', '      minRadius:80, maxRadius:170,')
+          rep('      auraDamage:5, auraTick:1.0, auraSlow:.85,', '      auraDamage:6, auraTick:1.0, auraSlow:.85,')
+          rep('      shatterDamage:25, shatterKnock:420', '      shatterDamage:30, shatterKnock:420')
 
           # Character card description.
-          prefix = rep(prefix, '체력이 줄수록 반경55→170으로 커지지만 기본 이속은2.9→1.3으로 크게 느려진다.', '체력이 줄수록 반경80→170으로 커지지만 기본 이속은2.9→1.3으로 크게 느려진다.')
-          prefix = rep(prefix, '영역 안의 적은 1초마다 피해5와 15% 둔화를 받고', '영역 안의 적은 1초마다 피해6과 15% 둔화를 받고')
-          prefix = rep(prefix, '파쇄 피해25와 강한 넉백으로 즉시 빙결을 끝낸다.', '파쇄 피해30과 강한 넉백으로 즉시 빙결을 끝낸다.')
+          rep('체력이 줄수록 반경55→170으로 커지지만 기본 이속은2.9→1.3으로 크게 느려진다.', '체력이 줄수록 반경80→170으로 커지지만 기본 이속은2.9→1.3으로 크게 느려진다.')
+          rep('영역 안의 적은 1초마다 피해5와 15% 둔화를 받고', '영역 안의 적은 1초마다 피해6과 15% 둔화를 받고')
+          rep('파쇄 피해25와 강한 넉백으로 즉시 빙결을 끝낸다.', '파쇄 피해30과 강한 넉백으로 즉시 빙결을 끝낸다.')
 
           # Status panel.
-          prefix = rep(prefix, '영역: 1초마다 피해5 · 적 이속-15% · 체류게이지 안 +1.0초/밖 -0.5초 · 누적2초마다 냉기+1', '영역: 1초마다 피해6 · 적 이속-15% · 체류게이지 안 +1.0초/밖 -0.5초 · 누적2초마다 냉기+1')
-          prefix = rep(prefix, '빙결 중 오라피해×1.5 · 직접 접촉 파쇄25', '빙결 중 오라피해×1.5 · 직접 접촉 파쇄30')
+          rep('영역: 1초마다 피해5 · 적 이속-15% · 체류게이지 안 +1.0초/밖 -0.5초 · 누적2초마다 냉기+1', '영역: 1초마다 피해6 · 적 이속-15% · 체류게이지 안 +1.0초/밖 -0.5초 · 누적2초마다 냉기+1')
+          rep('빙결 중 오라피해×1.5 · 직접 접촉 파쇄25', '빙결 중 오라피해×1.5 · 직접 접촉 파쇄30')
 
           # Encyclopedia.
-          prefix = rep(prefix, 'damage:"냉기 영역 초당5 / 빙결 중 냉기 영역7.5(실제 정수 피해는 반올림) / 빙결 상태 직접 접촉 파쇄25"', 'damage:"냉기 영역 초당6 / 빙결 중 냉기 영역9 / 빙결 상태 직접 접촉 파쇄30"')
-          prefix = rep(prefix, '냉기 영역 반경이55→170으로 커지고 기본 이속은2.9→1.3으로 느려진다.', '냉기 영역 반경이80→170으로 커지고 기본 이속은2.9→1.3으로 느려진다.')
-          prefix = rep(prefix, '영역 안 적은 이속15% 감소와 1초마다 피해5를 받는다.', '영역 안 적은 이속15% 감소와 1초마다 피해6을 받는다.')
-          prefix = rep(prefix, '엘사가 직접 부딪히면 파쇄25·강넉백과 함께 즉시 해제된다.', '엘사가 직접 부딪히면 파쇄30·강넉백과 함께 즉시 해제된다.')
+          rep('damage:"냉기 영역 초당5 / 빙결 중 냉기 영역7.5(실제 정수 피해는 반올림) / 빙결 상태 직접 접촉 파쇄25"', 'damage:"냉기 영역 초당6 / 빙결 중 냉기 영역9 / 빙결 상태 직접 접촉 파쇄30"')
+          rep('냉기 영역 반경이55→170으로 커지고 기본 이속은2.9→1.3으로 느려진다.', '냉기 영역 반경이80→170으로 커지고 기본 이속은2.9→1.3으로 느려진다.')
+          rep('영역 안 적은 이속15% 감소와 1초마다 피해5를 받는다.', '영역 안 적은 이속15% 감소와 1초마다 피해6을 받는다.')
+          rep('엘사가 직접 부딪히면 파쇄25·강넉백과 함께 즉시 해제된다.', '엘사가 직접 부딪히면 파쇄30·강넉백과 함께 즉시 해제된다.')
 
-          new_note = '\n      "v116: 엘사 공격 성능을 상향했습니다. 냉기 영역 시작 반경을55→80, 영역 피해를 초당5→6, 빙결 상태 직접 접촉 파쇄 피해를25→30으로 조정했습니다. 최대 반경170, 체류게이지 안 +1.0초/밖 -0.5초, 누적2초마다 냉기+1, 냉기5중첩, 빙결5.5초, 빙결 중 오라피해×1.5, 이속2.9→1.3 등 나머지 규칙은 v115와 동일합니다.",'
-          c = prefix + marker + new_note + notes
+          marker = '      const patchNotes = [\n'
+          note = '      "v116: 엘사 공격 성능을 상향했습니다. 냉기 영역 시작 반경을55→80, 영역 피해를 초당5→6, 빙결 상태 직접 접촉 파쇄 피해를25→30으로 조정했습니다. 최대 반경170, 체류게이지 안 +1.0초/밖 -0.5초, 누적2초마다 냉기+1, 냉기5중첩, 빙결5.5초, 빙결 중 오라피해×1.5, 이속2.9→1.3 등 나머지 규칙은 v115와 동일합니다.",\n'
+          rep(marker, marker + note)
+
           p.write_text(c, encoding='utf-8')
           PY
 
@@ -78,6 +76,8 @@ jobs:
             'auraDamage:6',
             'shatterDamage:30',
             'coldOutsideDecay:.5',
+            '냉기 영역 초당6',
+            '직접 접촉 파쇄30',
             'v116: 엘사 공격 성능을 상향했습니다.'
           ];
           for (const s of required) if (!c.includes(s)) throw new Error('Missing: '+s);
