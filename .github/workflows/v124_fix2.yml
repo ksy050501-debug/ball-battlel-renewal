@@ -1,0 +1,106 @@
+name: v124 fix2
+
+on:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          t = p.read_text(encoding='utf-8')
+
+          t = t.replace('<title>볼배틀 리뉴얼 v123</title>', '<title>볼배틀 리뉴얼 v124</title>', 1)
+          t = t.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v123</h1>', '<h1 id="mainTitle">볼배틀 리뉴얼 v124</h1>', 1)
+
+          old_wall = '''    function spiderWallPoint(x,y){
+      return {x:clamp(x,arena.x,arena.x2),y:clamp(y,arena.y,arena.y2)};
+    }'''
+          new_wall = '''    function spiderWallPoint(x,y){
+      const margin=72;
+      const dl=Math.abs(x-arena.x),dr=Math.abs(x-arena.x2),dt=Math.abs(y-arena.y),db=Math.abs(y-arena.y2);
+      const m=Math.min(dl,dr,dt,db);
+      if(m===dl)return {x:arena.x,y:clamp(y,arena.y+margin,arena.y2-margin)};
+      if(m===dr)return {x:arena.x2,y:clamp(y,arena.y+margin,arena.y2-margin)};
+      if(m===dt)return {x:clamp(x,arena.x+margin,arena.x2-margin),y:arena.y};
+      return {x:clamp(x,arena.x+margin,arena.x2-margin),y:arena.y2};
+    }'''
+          if old_wall not in t:
+              raise SystemExit('missing spiderWallPoint')
+          t = t.replace(old_wall, new_wall, 1)
+
+          old_arc = '''    function spiderBeginArc(f,ax,ay){
+      const s=f.spider,dx=f.x-ax,dy=f.y-ay;
+      const radius=clamp(Math.hypot(dx,dy)||SPIDER.swingMinRadius,SPIDER.swingMinRadius,SPIDER.swingMaxRadius);
+      s.mode="arc";s.swingWeb=null;s.chase=null;
+      s.arc={ax,ay,radius,start:Math.atan2(dy,dx),dir:Math.random()<.5?-1:1,t:0};
+      f.vx=0;f.vy=0;
+      if(!fastSimMode)spawnBlast(ax,ay,26,"#e2e8f0");
+    }'''
+          new_arc = '''    function spiderBeginArc(f,ax,ay){
+      const s=f.spider,dx=f.x-ax,dy=f.y-ay;
+      const radius=Math.max(1,Math.hypot(dx,dy));
+      const start=Math.atan2(dy,dx);
+      const swingAngle=clamp(150/radius,.28,1.28);
+      const cx=(arena.x+arena.x2)/2,cy=(arena.y+arena.y2)/2;
+      const score=dir=>{
+        const a=start+dir*swingAngle;
+        const ex=ax+Math.cos(a)*radius,ey=ay+Math.sin(a)*radius;
+        const ox=Math.max(0,arena.x+f.r-ex,ex-(arena.x2-f.r));
+        const oy=Math.max(0,arena.y+f.r-ey,ey-(arena.y2-f.r));
+        return (ox*ox+oy*oy)*20+Math.hypot(ex-cx,ey-cy);
+      };
+      const dir=score(1)<=score(-1)?1:-1;
+      s.mode="arc";s.swingWeb=null;s.chase=null;
+      s.arc={ax,ay,radius,start,dir,swingAngle,t:0};
+      f.vx=0;f.vy=0;
+      if(!fastSimMode)spawnBlast(ax,ay,26,"#e2e8f0");
+    }'''
+          if old_arc not in t:
+              raise SystemExit('missing spiderBeginArc')
+          t = t.replace(old_arc, new_arc, 1)
+
+          old_motion = 'const a=s.arc;a.t+=dt;const p=clamp(a.t/SPIDER.swingArcTime,0,1),ang=a.start+a.dir*SPIDER.swingArcAngle*p;'
+          new_motion = 'const a=s.arc;a.t+=dt;const p=clamp(a.t/SPIDER.swingArcTime,0,1),ang=a.start+a.dir*(a.swingAngle||SPIDER.swingArcAngle)*p;'
+          if old_motion not in t:
+              raise SystemExit('missing arc motion')
+          t = t.replace(old_motion, new_motion, 1)
+
+          note = '      "v124: 거미남 웹스윙 이동을 수정했습니다. 먼 벽에 걸린 거미줄은 실제 현재 위치-앵커 거리를 스윙 반경으로 사용해 순간이동하지 않으며, 거리가 멀수록 회전각을 줄여 자연스럽게 이동합니다. 벽 앵커는 구석에서 72px 떨어진 지점으로 보정하고, 두 스윙 방향 중 경기장 안쪽으로 향하는 방향을 선택해 구석에서 비정상적으로 끼는 움직임을 줄였습니다.",\n'
+          anchor = '      "v123: 고난 체력을165→160으로 조정.'
+          if anchor not in t:
+              raise SystemExit('missing patch note anchor')
+          t = t.replace(anchor, note + anchor, 1)
+
+          p.write_text(t, encoding='utf-8')
+          PY
+      - name: Validate JavaScript
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          t=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',t)
+          Path('/tmp/game.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/game.js
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "fix: stabilize Geominam web swing v124"
+          git push
