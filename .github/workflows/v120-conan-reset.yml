@@ -1,0 +1,88 @@
+name: v120 Conan reset patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v120-conan-reset.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch index.html
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p=Path('index.html')
+          c=p.read_text(encoding='utf-8')
+
+          def rep(old,new,count=1):
+              global c
+              n=c.count(old)
+              if n!=count:
+                  raise SystemExit(f'expected {count}, found {n}: {old[:180]!r}')
+              c=c.replace(old,new,count)
+
+          rep('<title>볼배틀 리뉴얼 v119</title>','<title>볼배틀 리뉴얼 v120</title>')
+          rep('<h1 id="mainTitle">볼배틀 리뉴얼 v119</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v120</h1>')
+
+          rep('condition: "반경130 안 초당 사신+5 · 직접 접촉+15 · 사신100 → 사건 발생"',
+              'condition: "반경130 안 초당 사신+5 · 직접 접촉+10 · 사신100 → 사건 발생"')
+
+          rep('radius:130, maxMeter:100, auraPerSec:5, contactGain:15, contactCd:1.0,\n      assaultWindup:.9, assaultDamage:100, resetMeter:40, knock:560',
+              'radius:130, maxMeter:100, auraPerSec:5, contactGain:10, contactCd:1.0,\n      assaultWindup:.9, assaultDamage:100, resetMeter:0, knock:560')
+
+          rep('if (c.id === "conan") return {damage:"범인의 습격100 + 강한 넉백",tick:"반경130 안 초당 사신+5 · 직접 접촉 대상별1초마다+15 · 사신100에서 사건 발생 · 습격 예고0.9초 · 사건 후 사신40",tip:"코난은 직접 공격하지 않는다. 적이 반경130 안에 머무는 동안 사신 수치가 초당5씩 누적되며 범위를 벗어나도 감소하지 않는다. 직접 부딪히면 별도로 사신15가 오른다. 사신100이 되면 정체불명의 검은 범인이 경기장 가장자리에서 나타나 대상을 습격해 피해100과 강한 넉백을 준다. 사건이 끝나면 해당 대상의 사신은40으로 내려가 다시 누적된다."};',
+              'if (c.id === "conan") return {damage:"범인의 습격100 + 강한 넉백",tick:"반경130 안 초당 사신+5 · 직접 접촉 대상별1초마다+10 · 사신100에서 사건 발생 · 습격 예고0.9초 · 사건 후 사신0",tip:"코난은 직접 공격하지 않는다. 적이 반경130 안에 머무는 동안 사신 수치가 초당5씩 누적되며 범위를 벗어나도 감소하지 않는다. 직접 부딪히면 별도로 사신10이 오른다. 사신100이 되면 정체불명의 검은 범인이 경기장 가장자리에서 나타나 대상을 습격해 피해100과 강한 넉백을 준다. 사건이 끝나면 해당 대상의 사신은0으로 완전히 초기화되어 다시 처음부터 누적된다."};')
+
+          rep("extraTextHtml:'<div class=\"status-skill-label\">반경130 안 초당 사신+5 · 범위 밖에서도 누적 유지</div><div class=\"status-skill-label\">직접 접촉 +15(대상별1초) · 100에서 0.9초 예고 후 범인의 습격100 · 사건 후40</div>'",
+              "extraTextHtml:'<div class=\"status-skill-label\">반경130 안 초당 사신+5 · 범위 밖에서도 누적 유지</div><div class=\"status-skill-label\">직접 접촉 +10(대상별1초) · 100에서 0.9초 예고 후 범인의 습격100 · 사건 후0</div>'")
+
+          marker='      const patchNotes = [\n'
+          note='      "v120: 코난 연쇄 사건 빈도를 하향했습니다. 사신 범위130·범위 안 초당+5·범인의 습격100은 유지하면서 직접 접촉 사신을+15→+10으로 낮추고, 사건 종료 후 사신을40→0으로 완전 초기화합니다. 사신 최대100, 범위 밖 누적 유지, 대상별 접촉 쿨1초, 습격 예고0.9초, 강한 넉백은 유지합니다.",\n'
+          rep(marker,marker+note)
+
+          p.write_text(c,encoding='utf-8')
+          PY
+
+      - name: Validate inline JavaScript and v120 values
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const c=fs.readFileSync('index.html','utf8');
+          const scripts=[...c.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
+          if(!scripts.length) throw new Error('No inline scripts found');
+          for(const s of scripts)new Function(s);
+          const checks=[
+            '<title>볼배틀 리뉴얼 v120</title>',
+            '<h1 id="mainTitle">볼배틀 리뉴얼 v120</h1>',
+            'radius:130, maxMeter:100, auraPerSec:5, contactGain:10, contactCd:1.0',
+            'assaultWindup:.9, assaultDamage:100, resetMeter:0, knock:560',
+            '반경130 안 초당 사신+5 · 직접 접촉+10 · 사신100 → 사건 발생',
+            '사건 후 사신0',
+            'v120: 코난 연쇄 사건 빈도를 하향했습니다.'
+          ];
+          for(const x of checks) if(!c.includes(x)) throw new Error('missing: '+x);
+          if(c.includes('contactGain:15')) throw new Error('old contact gain still present');
+          console.log('v120 validation passed');
+          NODE
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'v120: reset Conan death flag after assault'
+          git push origin HEAD:main
