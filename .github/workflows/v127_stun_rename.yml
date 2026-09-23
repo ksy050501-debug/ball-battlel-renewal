@@ -1,0 +1,48 @@
+name: v127 stun rename
+on:
+  push:
+    paths:
+      - '.github/scripts/v127_stun_rename.py'
+      - '.github/workflows/v127_stun_rename.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply rename
+        run: python .github/scripts/v127_stun_rename.py
+      - name: Validate JavaScript
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const html=fs.readFileSync('index.html','utf8');
+          const m=html.match(/<script>([\s\S]*)<\/script>/);
+          if(!m) throw new Error('script block missing');
+          new Function(m[1]);
+          console.log('JS parse OK');
+          NODE
+      - name: Validate pure rename
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          hist='기존 tanoStop·freeze·캐릭터별 타이머 저장값'
+          assert s.count('tanoStop') == 1, s.count('tanoStop')
+          assert hist in s
+          assert s.count('.stun') >= 8
+          assert 'target.stun = Math.max(target.stun || 0, duration);' in s
+          assert '<title>볼배틀 리뉴얼 v127</title>' in s
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v127</h1>' in s
+          print('stun rename validation OK')
+          PY
+      - name: Commit rename
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'refactor: rename tanoStop storage to stun v127'
+          git push
