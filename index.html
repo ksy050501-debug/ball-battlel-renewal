@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v127</title>
+  <title>볼배틀 리뉴얼 v128</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v127</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v128</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -2932,8 +2932,8 @@
       if(!fastSimMode)spawnFloatingText(target.x,target.y-target.r-32,"사신 +"+CONAN.contactGain,"#f87171");
       if(s.meter>=CONAN.maxMeter)triggerConanAssault(source,target,s);
     }
-    function conanKnifeSlowMultiplier(f){
-      return (f?.conanKnifeSlow||0)>0&&!hasHarmfulImmunity(f)?CONAN.knifeSlow:1;
+    function knifeSlowMultiplier(f){
+      return (f?.knifeSlow||0)>0&&!hasHarmfulImmunity(f)?CONAN.knifeSlow:1;
     }
     function resolveConanAssault(f,a,target){
       const dx=target.x-a.x,dy=target.y-a.y,d=Math.hypot(dx,dy)||1;
@@ -2943,7 +2943,7 @@
         label="흉기 습격! -"+Math.round(dealt)+" + 출혈30";color="#fca5a5";
         if(target.alive&&dealt>0&&!hasHarmfulImmunity(target)){
           applyBleed(target,f,CONAN.knifeBleedPower,CONAN.knifeBleedDuration,.55,CONAN.knifeBleedTicks);
-          refreshCcTimer(target,"conanKnifeSlow",CONAN.knifeSlowDuration);
+          refreshCcTimer(target,"knifeSlow",CONAN.knifeSlowDuration);
         }
         if(target.alive&&dealt>0){target.vx=dx/d*180;target.vy=dy/d*180;}
       }else if(a.type==="car"){
@@ -3081,7 +3081,7 @@
     }
     function applyElsaCold(source,target,amount=1){
       if(!source?.alive||!target?.alive||!areEnemies(source,target)||hasHarmfulImmunity(target))return false;
-      if((target.elsaFreeze||0)>0||(target.elsaFreezeImmune||0)>0)return false;
+      if((target.hardFreeze||0)>0||(target.hardFreezeImmune||0)>0)return false;
       target.elsaCold=Math.min(ELSA.coldMax,(target.elsaCold||0)+amount);
       if(!fastSimMode){
         spawnFloatingText(target.x,target.y-target.r-34,"냉기 "+target.elsaCold+"/"+ELSA.coldMax,"#bae6fd");
@@ -3089,8 +3089,8 @@
       }
       if(target.elsaCold>=ELSA.coldMax){
         target.elsaCold=0;
-        target.elsaFreeze=ELSA.freezeTime;
-        target.elsaFreezeSourceId=source.id;
+        target.hardFreeze=ELSA.freezeTime;
+        target.hardFreezeSourceId=source.id;
         target.vx=0;target.vy=0;
         if(!fastSimMode){
           spawnBlast(target.x,target.y,52,"#7dd3fc");
@@ -3101,9 +3101,9 @@
       return true;
     }
     function elsaShatter(source,target){
-      if(!source?.elsa||!target?.alive||(target.elsaFreeze||0)<=0)return false;
-      target.elsaFreeze=0;target.elsaCold=0;target.elsaFreezeSourceId="";
-      target.elsaFreezeImmune=Math.max(target.elsaFreezeImmune||0,ELSA.freezeImmune);
+      if(!source?.elsa||!target?.alive||(target.hardFreeze||0)<=0)return false;
+      target.hardFreeze=0;target.elsaCold=0;target.hardFreezeSourceId="";
+      target.hardFreezeImmune=Math.max(target.hardFreezeImmune||0,ELSA.freezeImmune);
       const dealt=damage(target,ELSA.shatterDamage,source,"빙결 파쇄");
       if(target.alive){
         const dx=target.x-source.x,dy=target.y-source.y,d=Math.hypot(dx,dy)||1;
@@ -3120,7 +3120,7 @@
     }
     function elsaContact(source,target){
       if(!source?.alive||!source.elsa||!target?.alive||!areEnemies(source,target))return;
-      if((target.elsaFreeze||0)>0){elsaShatter(source,target);return;}
+      if((target.hardFreeze||0)>0){elsaShatter(source,target);return;}
       const state=elsaTargetState(source,target);
       if(!state||state.contactCd>0)return;
       state.contactCd=ELSA.contactColdCd;
@@ -3156,25 +3156,25 @@
         state.damageCd-=dt;
         if(state.damageCd<=0){
           state.damageCd+=ELSA.auraTick;
-          const frozen=(target.elsaFreeze||0)>0;
+          const frozen=(target.hardFreeze||0)>0;
           const power=ELSA.auraDamage*(frozen?ELSA.frozenAuraMult:1);
           damage(target,power,f,frozen?"빙결 냉기":"냉기 영역");
           if(!fastSimMode&&target.alive)spawnParticles(target.x,target.y,frozen?"#f0f9ff":"#bae6fd",frozen?7:3);
         }
         if(!target.alive)continue;
 
-        if((target.elsaFreeze||0)>0||(target.elsaFreezeImmune||0)>0){
+        if((target.hardFreeze||0)>0||(target.hardFreezeImmune||0)>0){
           state.stay=0;continue;
         }
         state.stay+=dt;
         while(state.stay>=ELSA.coldStay&&target.alive){
           state.stay-=ELSA.coldStay;
           applyElsaCold(f,target,1);
-          if((target.elsaFreeze||0)>0)break;
+          if((target.hardFreeze||0)>0)break;
         }
       }
     }
-    function elsaAuraSlowMultiplier(f){
+    function coldAuraSlowMultiplier(f){
       if(!f?.alive||hasHarmfulImmunity(f))return 1;
       for(const source of fighters){
         if(!source.alive||!source.elsa||source.id===f.id||!areEnemies(source,f))continue;
@@ -3290,7 +3290,7 @@
       let remaining=dt;
       while(remaining>1e-7 && h.dash && f.alive){
         const step=Math.min(remaining,1/120);remaining-=step;
-        const slow=(f.freeze>0?.42:1)*oshiSongSlowMultiplier(f)*(f.hintaConcussion>0?HINTA.slowMultiplier:1)*timedCcSlowMultiplier(f);
+        const slow=(f.freeze>0?.42:1)*songSlowMultiplier(f)*(f.concussionSlow>0?HINTA.slowMultiplier:1)*timedCcSlowMultiplier(f);
         const advance=Math.min(d.left,HINTA.dashSpeed*slow*step);
         f.vx=d.dx*HINTA.dashSpeed;f.vy=d.dy*HINTA.dashSpeed;
         f.x+=d.dx*advance;f.y+=d.dy*advance;d.left-=advance;
@@ -3304,7 +3304,7 @@
             const nx=-d.dy*side,ny=d.dx*side;
             e.vx=nx*480;e.vy=ny*480;e.punchFlight=Math.max(e.punchFlight||0,.25);
             e.punchSource=null;e.punchWallPower=0;
-            refreshCcTimer(e,"hintaConcussion",HINTA.concussion);
+            refreshCcTimer(e,"concussionSlow",HINTA.concussion);
             spawnFloatingText(e.x,e.y-e.r-32,"뇌진탕 · 둔화 2초","#fde68a");
           }
           spawnFloatingText(f.x,f.y-f.r-40,"비켜!!!","#fdba74");
@@ -3320,8 +3320,8 @@
       }
       return true;
     }
-    function drawHintaConcussion(f) {
-      if(!(f.hintaConcussion>0)||f.portraitOnly)return;
+    function drawConcussionSlow(f) {
+      if(!(f.concussionSlow>0)||f.portraitOnly)return;
       ctx.save();ctx.font="bold 10px system-ui";ctx.textAlign="center";ctx.fillStyle="#fde047";
       for(let i=0;i<3;i++){
         const a=battleTime*5+i*Math.PI*2/3;
@@ -4411,8 +4411,8 @@
     // v54부터 최애는 벽을 사용하지 않는다. 기존 벽 충돌 호출부와의 호환을 위한 no-op.
     function oshiWallCollision() {}
 
-    function updateOshiSongDebuffs(f, dt) {
-      const debuffs = f?.oshiSongDebuffs;
+    function updateSongDebuffs(f, dt) {
+      const debuffs = f?.songDebuffs;
       if (!(debuffs instanceof Map) || debuffs.size === 0) return;
       for (const [sourceId, time] of [...debuffs.entries()]) {
         const next = time - dt;
@@ -4421,25 +4421,25 @@
       }
     }
 
-    function oshiSongSlowMultiplier(f) {
-      const debuffs = f?.oshiSongDebuffs;
+    function songSlowMultiplier(f) {
+      const debuffs = f?.songDebuffs;
       if (!(debuffs instanceof Map) || debuffs.size === 0) return 1;
       for (const time of debuffs.values()) if (time > 0) return OSHI.slowMultiplier;
       return 1;
     }
 
-    function applyOshiSongDebuff(target, source) {
+    function applySongDebuff(target, source) {
       if (!target?.alive || !source?.alive) return;
-      if (!(target.oshiSongDebuffs instanceof Map)) target.oshiSongDebuffs = new Map();
-      target.oshiSongDebuffs.set(source.id, OSHI.debuffDuration);
+      if (!(target.songDebuffs instanceof Map)) target.songDebuffs = new Map();
+      target.songDebuffs.set(source.id, OSHI.debuffDuration);
       if (!fastSimMode) spawnFloatingText(target.x, target.y - target.r - 28, "노래 디버프", "#f9a8d4");
     }
 
     // 노래 디버프에 걸린 공격자가 해당 최애에게 주는 모든 피해를 20% 줄인다.
     // 소수 피해가 생기지 않도록 정수 반올림하며, 감소 뒤에도 최소 피해는 1이다.
-    function oshiReducedIncomingDamage(target, amount, source) {
+    function songDebuffReducedIncomingDamage(target, amount, source) {
       if (!(amount > 0) || !target?.oshi || !source || source === target) return amount;
-      const debuffs = source.oshiSongDebuffs;
+      const debuffs = source.songDebuffs;
       const remaining = debuffs instanceof Map ? (debuffs.get(target.id) || 0) : 0;
       if (remaining <= 0) return amount;
       return Math.max(1, Math.round(amount * OSHI.damageMultiplier));
@@ -4479,7 +4479,7 @@
         const dealt = damage(enemy, spec.damage, f, `노래 ${level + 1}단계`);
         if (dealt <= 0) return;
         hits += 1;
-        applyOshiSongDebuff(enemy, f);
+        applySongDebuff(enemy, f);
         if (!fastSimMode) spawnHitFlash(enemy.x, enemy.y, "#f9a8d4", 24 + level * 5);
       });
       o.songFx=.75;o.songFxLevel=level;
@@ -5591,6 +5591,7 @@
     }
 
       const patchNotes = [
+      "v128: CC 내부 이름에서 캐릭터명을 제거했습니다. 고난 흉기 둔화·거미남 웹 둔화·힌타 뇌진탕·거미남 벽속박·엘팔아 완전빙결·최애 노래 디버프의 저장값/보조 함수명을 knifeSlow·webSlow·concussionSlow·bindStun·hardFreeze·songDebuffs 등 효과 기준 이름으로 전수 변경했습니다. 수치·지속시간·중첩·면역·피해·넉백·판정·연출은 변경하지 않은 순수 명칭 리팩터링입니다.",
       "v127: 공용 행동정지의 내부 저장명까지 정리했습니다. 기존 캐릭터 전용 이름의 행동정지 프로퍼티를 stun으로 전수 이름 변경하고 applyStun 및 모든 행동정지 판정·감소·차단 참조를 같은 stun 저장값으로 통일했습니다. 숫자·지속시간·적용 조건·면역·피해·넉백·연출은 변경하지 않은 순수 명칭 리팩터링입니다.",
       "v126: CC 내부 구조를 성능 변화 없이 정리했습니다. 공용 행동정지 applyStun, 강둔화 applyHeavySlow, 시간형 CC 타이머 refreshCcTimer를 추가하고 타노 마인드·고난 둔기·거미남 벽속박·고난 흉기·거미남 웹·힌타 뇌진탕·오벨리스크 강둔화 호출을 공용 명칭으로 연결했습니다. 기존 행동정지 저장값·freeze·캐릭터별 타이머의 지속시간·중첩·면역·넉백·피해·연출은 그대로 유지해 전투 성능은 변경하지 않았습니다.",
       "v125: 거미남 웹스윙 전투성을 개선했습니다. 웹스윙 부채꼴 이동 중 적과 몸으로 충돌해도 즉시 근접18+강넉백 공격이 발동하고, 벽까지 밀리면 기존 벽충돌12도 이어집니다. 140px보다 가까운 벽은 웹스윙 앵커로 사용하지 않으며 랜덤 웹도 먼 벽 지점을 우선 조준합니다. 벽 웹스윙 연쇄는 최대5회까지만 이어지고 5번째 시도는 적 방향을 우선 조준하며, 5회 모두 실패하면 웹스윙을 종료하고 8초 쿨타임으로 복귀합니다.",
@@ -6248,9 +6249,9 @@
         burningTicks: [],
         freeze: 0,
         elsaCold: 0,
-        elsaFreeze: 0,
-        elsaFreezeImmune: 0,
-        elsaFreezeSourceId: "",
+        hardFreeze: 0,
+        hardFreezeImmune: 0,
+        hardFreezeSourceId: "",
         harmfulImmune: 0,
         speedBoost: 0,
         attackBoost: 0,
@@ -7000,8 +7001,8 @@
       f.spider={swingCd:SPIDER.swingCooldown,mode:"idle",swingWeb:null,arc:null,chase:null,swingCount:0,
         webs:[],volleyCd:2.4,volleyLeft:0,volleyTimer:0,wallWebs:[]};
     }
-    function spiderWebSlowMultiplier(f){
-      return (f?.spiderWebSlow||0)>0&&!hasHarmfulImmunity(f)?SPIDER.webSlow:1;
+    function webSlowMultiplier(f){
+      return (f?.webSlow||0)>0&&!hasHarmfulImmunity(f)?SPIDER.webSlow:1;
     }
     function spiderSegHit(x1,y1,x2,y2,cx,cy,r){
       const dx=x2-x1,dy=y2-y1,l2=dx*dx+dy*dy||1;
@@ -7091,9 +7092,9 @@
       const a=Math.atan2(target.y-f.y,target.x-f.x)+rand(-.075,.075);
       s.webs.push({x:f.x,y:f.y,vx:Math.cos(a)*SPIDER.webSpeed,vy:Math.sin(a)*SPIDER.webSpeed,life:1.35});if(!fastSimMode)playSound("magic",.42);
     }
-    function spiderBindTarget(f,target){
+    function bindStunTarget(f,target){
       if(!target?.alive||hasHarmfulImmunity(target))return false;
-      target.spiderBind=Math.max(target.spiderBind||0,SPIDER.bindTime);target.spiderWebSlow=0;target.spiderPushWindow=0;target.vx=0;target.vy=0;
+      target.bindStun=Math.max(target.bindStun||0,SPIDER.bindTime);target.webSlow=0;target.spiderPushWindow=0;target.vx=0;target.vy=0;
       const s=f.spider;s.wallWebs.push({x:target.x,y:target.y,t:SPIDER.bindTime+.35,max:SPIDER.bindTime+.35});
       if(!fastSimMode){spawnBlast(target.x,target.y,54,"#e2e8f0");spawnParticles(target.x,target.y,"#f8fafc",24);spawnFloatingText(target.x,target.y-target.r-38,"벽 거미줄 속박!","#f8fafc");}
       s.swingCd=0;startSpiderSwing(f,target.id);return true;
@@ -7103,7 +7104,7 @@
         if(!target.alive)continue;
         const nearWall=target.x-target.r<=arena.x+2||target.x+target.r>=arena.x2-2||target.y-target.r<=arena.y+2||target.y+target.r>=arena.y2-2;
         if((target.spiderWallMark||0)>0&&target.spiderWallSourceId===f.id&&nearWall){target.spiderWallMark=0;const dealt=damage(target,SPIDER.wallDamage,f,"웹스윙 벽충돌");if(!fastSimMode){spawnBlast(target.x,target.y,76,"#f8fafc");spawnFloatingText(target.x,target.y-target.r-38,"벽충돌 -"+Math.round(dealt),"#fecaca");}}
-        if((target.spiderPushWindow||0)>0&&target.spiderPushSourceId===f.id&&nearWall&&!(target.spiderBind>0))spiderBindTarget(f,target);
+        if((target.spiderPushWindow||0)>0&&target.spiderPushSourceId===f.id&&nearWall&&!(target.bindStun>0))bindStunTarget(f,target);
       }
       f.spider.wallWebs.forEach(w=>w.t-=dt);f.spider.wallWebs=f.spider.wallWebs.filter(w=>w.t>0);
     }
@@ -7122,7 +7123,7 @@
         for(const e of enemiesOf(f)){if(!e.alive||e.tano?.hidden>0)continue;const h=spiderSegHit(x1,y1,x2,y2,e.x,e.y,e.r+5);if(h!==null&&h<best){best=h;hit=e;}}
         if(hit){
           const dealt=damage(hit,SPIDER.webDamage,f,"웹슈터");
-          if(hit.alive&&dealt>0&&!hasHarmfulImmunity(hit)){const d=Math.hypot(w.vx,w.vy)||1;hit.vx+=w.vx/d*SPIDER.webKnock;hit.vy+=w.vy/d*SPIDER.webKnock;refreshCcTimer(hit,"spiderWebSlow",SPIDER.webSlowTime);hit.spiderPushWindow=Math.max(hit.spiderPushWindow||0,SPIDER.webPushWindow);hit.spiderPushSourceId=f.id;}
+          if(hit.alive&&dealt>0&&!hasHarmfulImmunity(hit)){const d=Math.hypot(w.vx,w.vy)||1;hit.vx+=w.vx/d*SPIDER.webKnock;hit.vy+=w.vy/d*SPIDER.webKnock;refreshCcTimer(hit,"webSlow",SPIDER.webSlowTime);hit.spiderPushWindow=Math.max(hit.spiderPushWindow||0,SPIDER.webPushWindow);hit.spiderPushSourceId=f.id;}
           if(!fastSimMode){spawnHitFlash(hit.x,hit.y,"#e2e8f0",55);spawnParticles(hit.x,hit.y,"#f8fafc",5);}s.webs.splice(i,1);continue;
         }
         w.x=x2;w.y=y2;w.life-=dt;if(w.life<=0||w.x<arena.x-10||w.x>arena.x2+10||w.y<arena.y-10||w.y>arena.y2+10)s.webs.splice(i,1);
@@ -7722,7 +7723,7 @@
       return true;
     }
     function timedCcSlowMultiplier(target) {
-      return conanKnifeSlowMultiplier(target) * spiderWebSlowMultiplier(target);
+      return knifeSlowMultiplier(target) * webSlowMultiplier(target);
     }
 
     function applyJolt(target, duration = 4.0) {
@@ -8833,7 +8834,7 @@
       if (target.riddle?.horcruxActive) return damageRiddleHorcrux(target, amount, source, reason);
       if ((target.duelMonster?.invuln || 0) > 0 || target.duelMonster?.fusing) { spawnFloatingText(target.x,target.y-target.r-22,"무적","#fde68a"); return 0; }
       if (tryHeroLeonGuardBlock(target, reason)) return 0;
-      amount = oshiReducedIncomingDamage(target, amount, source);
+      amount = songDebuffReducedIncomingDamage(target, amount, source);
       if (target.iron) {
         const armor = absorbIronDamage(target, amount, source, reason);
         amount = armor.remaining;
@@ -9071,7 +9072,7 @@
       if (!target || !target.alive || (target.tano?.hidden > 0 && reason !== "스톤 소실")) return 0;
       if (target.riddle?.horcruxActive) return damageRiddleHorcrux(target, amount, source, reason);
       if (tryHeroLeonGuardBlock(target, reason)) return 0;
-      amount = oshiReducedIncomingDamage(target, amount, source);
+      amount = songDebuffReducedIncomingDamage(target, amount, source);
       if (target.iron) {
         const armor = absorbIronDamage(target, amount, source, reason);
         amount = armor.remaining;
@@ -9689,11 +9690,11 @@
       const slow = f.freeze > 0 ? 0.42 : 1;
       const gardenSlow = minaGardenSlowMultiplier(f);
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
-      const oshiSlow = oshiSongSlowMultiplier(f) * (f.hintaConcussion > 0 ? HINTA.slowMultiplier : 1);
-      const elsaIce = elsaAuraSlowMultiplier(f);
+      const songAndConcussionSlow = songSlowMultiplier(f) * (f.concussionSlow > 0 ? HINTA.slowMultiplier : 1);
+      const coldAuraSlow = coldAuraSlowMultiplier(f);
       const timedCcSlow = timedCcSlowMultiplier(f);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
-      return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * oshiSlow * elsaIce * timedCcSlow;
+      return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * timedCcSlow;
     }
 
     function useSkill(f, label) {
@@ -10424,25 +10425,25 @@
       if (!f.alive) return;
       // 마인드 스톤 정지는 캐릭터별 조기 반환보다 먼저 감소시켜 영구 정지를 방지한다.
       f.stun = Math.max(0, (f.stun || 0) - dt);
-      f.elsaFreezeImmune = Math.max(0, (f.elsaFreezeImmune || 0) - dt);
-      if ((f.elsaFreeze || 0) > 0) {
-        f.elsaFreeze = Math.max(0, f.elsaFreeze - dt);
+      f.hardFreezeImmune = Math.max(0, (f.hardFreezeImmune || 0) - dt);
+      if ((f.hardFreeze || 0) > 0) {
+        f.hardFreeze = Math.max(0, f.hardFreeze - dt);
         f.vx = 0; f.vy = 0;
-        if (f.elsaFreeze > 0) return;
-        f.elsaFreezeImmune = Math.max(f.elsaFreezeImmune || 0, ELSA.freezeImmune);
+        if (f.hardFreeze > 0) return;
+        f.hardFreezeImmune = Math.max(f.hardFreezeImmune || 0, ELSA.freezeImmune);
       }
       tickNewhello(f,dt);
       // 넉백 비행이 끝난 뒤부터 2초간 둔화한다. 경직 중에도 정상 만료된다.
-      if(!(f.punchFlight>0))f.hintaConcussion=Math.max(0,(f.hintaConcussion||0)-dt);
-      f.conanKnifeSlow=Math.max(0,(f.conanKnifeSlow||0)-dt);
-      f.spiderWebSlow=Math.max(0,(f.spiderWebSlow||0)-dt);
+      if(!(f.punchFlight>0))f.concussionSlow=Math.max(0,(f.concussionSlow||0)-dt);
+      f.knifeSlow=Math.max(0,(f.knifeSlow||0)-dt);
+      f.webSlow=Math.max(0,(f.webSlow||0)-dt);
       f.spiderPushWindow=Math.max(0,(f.spiderPushWindow||0)-dt);
       f.spiderWallMark=Math.max(0,(f.spiderWallMark||0)-dt);
-      f.spiderBind=Math.max(0,(f.spiderBind||0)-dt);
-      if(f.spiderBind>0){applyStun(f,f.spiderBind);f.vx=0;f.vy=0;}
-      if(f.conanKnifeSlow>0&&!fastSimMode&&Math.random()<dt*5)spawnParticles(f.x+rand(-f.r*.5,f.r*.5),f.y+rand(-f.r*.5,f.r*.5),"#7f1d1d",1);
+      f.bindStun=Math.max(0,(f.bindStun||0)-dt);
+      if(f.bindStun>0){applyStun(f,f.bindStun);f.vx=0;f.vy=0;}
+      if(f.knifeSlow>0&&!fastSimMode&&Math.random()<dt*5)spawnParticles(f.x+rand(-f.r*.5,f.r*.5),f.y+rand(-f.r*.5,f.r*.5),"#7f1d1d",1);
       if(f.hinta?.dash && (f.stun>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f)))endHintaDash(f);
-      updateOshiSongDebuffs(f, dt);
+      updateSongDebuffs(f, dt);
       updateOshiAftershock(f, dt);
       if (!f.alive) return;
       if (f.riddle && updateRiddle(f, dt)) return;
@@ -10663,9 +10664,9 @@
       const slow = f.freeze > 0 ? 0.42 : 1;
       const gardenSlow = minaGardenSlowMultiplier(f);
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
-      const oshiSlow = oshiSongSlowMultiplier(f) * (f.hintaConcussion > 0 ? HINTA.slowMultiplier : 1);
-      const elsaIce = elsaAuraSlowMultiplier(f);
-      const conanSlow = conanKnifeSlowMultiplier(f) * spiderWebSlowMultiplier(f);
+      const songAndConcussionSlow = songSlowMultiplier(f) * (f.concussionSlow > 0 ? HINTA.slowMultiplier : 1);
+      const coldAuraSlow = coldAuraSlowMultiplier(f);
+      const timedCcSlow = timedCcSlowMultiplier(f);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
 
       if ((f.joltStop || 0) > 0) {
@@ -10678,8 +10679,8 @@
       if (f.hinta && moveHintaDash(f, dt)) return;
       if (f.logo && moveLogoJump(f, dt)) return;
       recoverOwnMoveSpeed(f, dt);
-      f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * oshiSlow * elsaIce * dt;
-      f.y += f.vy * slow * boost * gardenSlow * irisGlassSlow * oshiSlow * elsaIce * dt;
+      f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * dt;
+      f.y += f.vy * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * dt;
 
       bounceWalls(f);
       // 뉴헬로는 몸 충돌보다 넓은 검 사거리 안에 적이 들어오면 일반 광역베기를 발동한다.
@@ -10785,8 +10786,8 @@
             const ny = dy / d;
             const overlap = minD - d;
 
-            const aCasting = isCasting(a) || !!a.baldCape?.combo || !!a.baldCape?.serious?.timer || (a.elsaFreeze||0)>0;
-            const bCasting = isCasting(b) || !!b.baldCape?.combo || !!b.baldCape?.serious?.timer || (b.elsaFreeze||0)>0;
+            const aCasting = isCasting(a) || !!a.baldCape?.combo || !!a.baldCape?.serious?.timer || (a.hardFreeze||0)>0;
+            const bCasting = isCasting(b) || !!b.baldCape?.combo || !!b.baldCape?.serious?.timer || (b.hardFreeze||0)>0;
 
             if (aCasting && !bCasting) {
               b.x += nx * overlap;
@@ -13454,7 +13455,7 @@
       if(mode==="hulk")drawRing(f.x,f.y,f.r+7,"rgba(239,68,68,.62)",2);
     }
     function drawFighter(f) {
-      drawHintaConcussion(f);
+      drawConcussionSlow(f);
       drawPowerFist(f);
       drawIronSuit(f);
       if (f.duelMonster) { drawDuelMonster(f); return; }
@@ -13785,7 +13786,7 @@
 
     function drawHealthBar(f) {
       if (f.portraitOnly) return;
-      if ((f.elsaFreeze || 0) > 0) {
+      if ((f.hardFreeze || 0) > 0) {
         ctx.save();
         ctx.globalAlpha=.34;ctx.fillStyle="#bae6fd";ctx.strokeStyle="#e0f2fe";ctx.lineWidth=3;
         ctx.beginPath();ctx.arc(f.x,f.y,f.r+6,0,Math.PI*2);ctx.fill();ctx.stroke();
