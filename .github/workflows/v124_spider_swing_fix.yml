@@ -1,16 +1,13 @@
 name: v124 spider swing fix
 
-on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/v124_spider_swing_fix.yml'
+on: [push]
 
 permissions:
   contents: write
 
 jobs:
   patch:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
