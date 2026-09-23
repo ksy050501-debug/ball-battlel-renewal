@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Apply patch
-        run: python .github/scripts/v123_patch.py
+        run: python .github/scripts/v123_patch2.py
       - name: Validate JavaScript
         run: node --check /tmp/index_js_check.js
       - name: Validate diff
