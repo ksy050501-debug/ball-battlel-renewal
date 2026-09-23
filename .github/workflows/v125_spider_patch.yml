@@ -1,0 +1,32 @@
+name: v125 spider patch
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/v125_spider_patch.yml'
+      - '.github/scripts/v125_spider_patch.py'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: python .github/scripts/v125_spider_patch.py
+      - name: Validate JavaScript
+        run: node --check /tmp/index_js_check.js
+      - name: Validate changes
+        run: |
+          grep -q '<title>볼배틀 리뉴얼 v125</title>' index.html
+          grep -q 'swingMinAnchorDistance:140' index.html
+          grep -q 'swingMaxChains:5' index.html
+          grep -q '웹스윙 종료' index.html
+          git diff --check
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'fix: improve Geominam web swing combat v125'
+          git push
