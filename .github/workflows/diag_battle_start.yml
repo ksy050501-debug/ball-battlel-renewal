@@ -1,0 +1,53 @@
+name: diagnose battle start
+on:
+  push:
+    paths:
+      - '.github/workflows/diag_battle_start.yml'
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find Chrome
+        run: |
+          google-chrome --version || chromium --version || chromium-browser --version
+          which google-chrome || which chromium || which chromium-browser
+      - name: Install puppeteer core
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer-core@24 --no-save >/dev/null 2>&1
+      - name: Reproduce start battle
+        run: |
+          node <<'JS'
+          const puppeteer=require('puppeteer-core');
+          const {execSync}=require('child_process');
+          (async()=>{
+            const executablePath=execSync('which google-chrome || which chromium || which chromium-browser').toString().trim();
+            const browser=await puppeteer.launch({headless:true,executablePath,args:['--no-sandbox','--disable-gpu']});
+            const page=await browser.newPage();
+            page.on('pageerror',e=>console.log('PAGEERROR:',e.stack||e.message));
+            page.on('console',m=>console.log('CONSOLE:',m.type(),m.text()));
+            await page.goto('file://'+process.cwd()+'/index.html',{waitUntil:'load'});
+            await new Promise(r=>setTimeout(r,300));
+            console.log('TITLE:',await page.title());
+            console.log('CARDS:',await page.$$eval('.char-card',x=>x.length));
+            console.log('SELECTED BEFORE:',await page.$$eval('.char-card.selected',x=>x.length));
+            const cards=await page.$$('.char-card');
+            if((await page.$$eval('.char-card.selected',x=>x.length))<2 && cards.length>=2){await cards[0].click();await cards[1].click();}
+            console.log('SELECTED AFTER:',await page.$$eval('.char-card.selected',x=>x.length));
+            try{
+              const state=await page.evaluate(()=>eval('({battleState, fighterCount:fighters.length, selectedIds:[...selectedIds]})'));
+              console.log('STATE BEFORE:',JSON.stringify(state));
+            }catch(e){console.log('STATE BEFORE EVAL ERR:',e.message)}
+            await page.click('#startBtn');
+            await new Promise(r=>setTimeout(r,1200));
+            try{
+              const state=await page.evaluate(()=>eval('({battleState, fighterCount:fighters.length, selectedIds:[...selectedIds]})'));
+              console.log('STATE AFTER:',JSON.stringify(state));
+            }catch(e){console.log('STATE AFTER EVAL ERR:',e.message)}
+            console.log('BODY SNIP:',(await page.$eval('body',e=>e.innerText)).slice(0,1200).replace(/\n/g,' | '));
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
