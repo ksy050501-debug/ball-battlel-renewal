@@ -1,0 +1,39 @@
+name: v126 CC refactor
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/v126_cc_refactor.yml'
+      - '.github/scripts/v126_cc_refactor.py'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply refactor
+        run: python .github/scripts/v126_cc_refactor.py
+      - name: Validate JavaScript
+        run: node --check /tmp/index_js_check.js
+      - name: Validate behavior-preserving refactor
+        run: |
+          grep -q '<title>볼배틀 리뉴얼 v126</title>' index.html
+          grep -q '<h1 id="mainTitle">볼배틀 리뉴얼 v126</h1>' index.html
+          grep -q 'function applyStun' index.html
+          grep -q 'function applyHeavySlow' index.html
+          grep -q 'function refreshCcTimer' index.html
+          grep -q 'mindDuration: 1.5' index.html
+          grep -q 'knifeSlow:.75, knifeSlowDuration:3.4' index.html
+          grep -q 'bluntStun:.55, bluntKnock:240' index.html
+          grep -q 'webKnock:105, webSlow:.78, webSlowTime:.9' index.html
+          grep -q 'bindTime:1.6' index.html
+          grep -q 'concussion: 2, slowMultiplier: .6' index.html
+          git diff --check
+      - name: Commit refactor
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'refactor: normalize CC naming without balance changes v126'
+          git push
