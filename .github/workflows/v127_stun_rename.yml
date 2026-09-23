@@ -30,11 +30,10 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text(encoding='utf-8')
-          hist='기존 tanoStop·freeze·캐릭터별 타이머 저장값'
-          assert s.count('tanoStop') == 1, s.count('tanoStop')
-          assert hist in s
+          assert 'tanoStop' not in s
           assert s.count('.stun') >= 8
           assert 'target.stun = Math.max(target.stun || 0, duration);' in s
+          assert 'f.stun = Math.max(0, (f.stun || 0) - dt);' in s
           assert '<title>볼배틀 리뉴얼 v127</title>' in s
           assert '<h1 id="mainTitle">볼배틀 리뉴얼 v127</h1>' in s
           print('stun rename validation OK')
@@ -44,5 +43,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git commit -m 'refactor: rename tanoStop storage to stun v127'
+          git commit -m 'refactor: rename action-stop storage to stun v127'
           git push
