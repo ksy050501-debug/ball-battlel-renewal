@@ -1,0 +1,89 @@
+name: Apply v115 Elsa exposure patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v115-elsa-exposure.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-v115:
+    if: github.event.head_commit.message == 'chore: apply v115 Elsa exposure patch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch Elsa exposure memory
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          c = p.read_text(encoding='utf-8')
+
+          def rep(old, new, count=1):
+              global c
+              n = c.count(old)
+              if n != count:
+                  raise SystemExit(f'expected {count}, found {n}: {old[:100]!r}')
+              c = c.replace(old, new, count)
+
+          rep('<title>볼배틀 리뉴얼 v114</title>', '<title>볼배틀 리뉴얼 v115</title>')
+          rep('<h1 id="mainTitle">볼배틀 리뉴얼 v114</h1>', '<h1 id="mainTitle">볼배틀 리뉴얼 v115</h1>')
+
+          rep(
+              '      coldStay:2.0, contactColdCd:1.0, coldMax:5,',
+              '      coldStay:2.0, coldOutsideDecay:.5, contactColdCd:1.0, coldMax:5,'
+          )
+
+          rep(
+              '''        if(!inside){\n          state.stay=0;state.damageCd=ELSA.auraTick;\n          continue;\n        }''',
+              '''        if(!inside){\n          // 잠깐 영역을 벗어나도 누적 노출이 사라지지 않고 절반 속도로 식는다.\n          state.stay=Math.max(0,state.stay-dt*ELSA.coldOutsideDecay);\n          state.damageCd=ELSA.auraTick;\n          continue;\n        }'''
+          )
+
+          rep(
+              '영역: 1초마다 피해5 · 적 이속-15% · 연속2초 체류마다 냉기+1</div><div class="status-skill-label">직접 접촉 냉기+1(대상별1초) · 냉기5 → 5.5초 빙결 · 빙결 중 오라피해×1.5 · 직접 접촉 파쇄25',
+              '영역: 1초마다 피해5 · 적 이속-15% · 체류게이지 안 +1.0초/밖 -0.5초 · 누적2초마다 냉기+1</div><div class="status-skill-label">직접 접촉 냉기+1(대상별1초) · 체류냉기와 독립 동시 누적 가능 · 냉기5 → 5.5초 빙결 · 빙결 중 오라피해×1.5 · 직접 접촉 파쇄25'
+          )
+
+          rep(
+              '영역을 벗어나면 연속 체류 시간은 초기화되지만 이미 쌓인 냉기는 유지된다.',
+              '영역 안에서는 체류 게이지가 초당1초씩 차고, 영역 밖에서는 초당0.5초씩 감소한다. 따라서 잠깐 벗어나도 체류 누적이 즉시 0으로 초기화되지 않는다. 직접 접촉 냉기와 체류 냉기는 서로 독립적으로 적용된다.'
+          )
+
+          rep(
+              '      const patchNotes = [\n      "v114: 엘사 빙결 적 끌어당김 제거.',
+              '      const patchNotes = [\n      "v115: 엘사 냉기 체류 누적 방식을 개선했습니다. 냉기 영역을 잠깐 벗어나도 체류 게이지가 즉시 0으로 초기화되지 않고 바깥에서 초당0.5초씩 감소합니다. 영역 안에서는 기존대로 초당1초씩 누적되어 누적2초마다 냉기+1. 직접 접촉 냉기+1과 체류 냉기는 독립적으로 동시에 누적할 수 있습니다. 냉기 영역 피해5, 5중첩, 빙결5.5초, 파쇄25, 반경55→170, 이속2.9→1.3 등 나머지 수치는 v114 유지.",\n      "v114: 엘사 빙결 적 끌어당김 제거.'
+          )
+
+          p.write_text(c, encoding='utf-8')
+          PY
+
+      - name: Validate inline JavaScript
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const c = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...c.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(m => m[1]);
+          if (!scripts.length) throw new Error('No inline scripts found');
+          for (const s of scripts) new Function(s);
+          if (!c.includes('볼배틀 리뉴얼 v115')) throw new Error('v115 version missing');
+          if (!c.includes('coldOutsideDecay:.5')) throw new Error('coldOutsideDecay missing');
+          if (!c.includes('state.stay=Math.max(0,state.stay-dt*ELSA.coldOutsideDecay)')) throw new Error('outside decay logic missing');
+          console.log('v115 validation passed');
+          NODE
+
+      - name: Commit v115
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'v115: preserve Elsa cold exposure outside aura'
+          git push origin HEAD:main
