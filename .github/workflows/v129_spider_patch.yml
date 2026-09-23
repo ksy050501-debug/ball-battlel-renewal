@@ -1,0 +1,46 @@
+name: v129 Spider redesign
+on:
+  push:
+    paths:
+      - '.github/workflows/v129_spider_patch.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply v129 patch
+        run: python .github/scripts/v129_spider_patch.py
+      - name: Validate JavaScript
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          a=s.index('<script>')+len('<script>')
+          b=s.rindex('</script>')
+          Path('/tmp/ballbattle-v129.js').write_text(s[a:b],encoding='utf-8')
+          PY
+          node --check /tmp/ballbattle-v129.js
+      - name: Validate scope
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert '<title>볼배틀 리뉴얼 v129</title>' in s
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v129</h1>' in s
+          for x in ['spiderPushWindow','spiderPushSourceId','swingCooldown:8','spiderBeginArc','updateSpiderSwingWeb','spiderFireSwingWeb']:
+              assert x not in s, x
+          for x in ['webKnockDuration:.22','webKnockTime','웹슈터 넉백 중 벽충돌 시 속박→웹스윙 돌진','startSpiderSwing(f,target.id)']:
+              assert x in s, x
+          PY
+      - name: Commit v129
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'feat: simplify Spider web-swing trigger v129'
+          git push
