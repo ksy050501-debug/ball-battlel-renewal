@@ -4,18 +4,17 @@ import re
 p = Path('index.html')
 t = p.read_text(encoding='utf-8')
 
-def rep(old, new, label):
+def sub_once(pattern, repl, label, flags=0):
     global t
-    if old not in t:
-        raise SystemExit('missing ' + label)
-    t = t.replace(old, new, 1)
+    t2, n = re.subn(pattern, repl, t, count=1, flags=flags)
+    if n != 1:
+        raise SystemExit(f'missing/ambiguous {label}: {n}')
+    t = t2
 
-rep('<title>볼배틀 리뉴얼 v123</title>', '<title>볼배틀 리뉴얼 v124</title>', 'title')
-rep('<h1 id="mainTitle">볼배틀 리뉴얼 v123</h1>', '<h1 id="mainTitle">볼배틀 리뉴얼 v124</h1>', 'main title')
+sub_once(r'<title>볼배틀 리뉴얼 v123</title>', '<title>볼배틀 리뉴얼 v124</title>', 'title')
+sub_once(r'<h1 id="mainTitle">볼배틀 리뉴얼 v123</h1>', '<h1 id="mainTitle">볼배틀 리뉴얼 v124</h1>', 'main title')
 
-rep('''    function spiderWallPoint(x,y){
-      return {x:clamp(x,arena.x,arena.x2),y:clamp(y,arena.y,arena.y2)};
-    }''','''    function spiderWallPoint(x,y){
+new_wall = '''function spiderWallPoint(x,y){
       const margin=72;
       const dl=Math.abs(x-arena.x),dr=Math.abs(x-arena.x2),dt=Math.abs(y-arena.y),db=Math.abs(y-arena.y2);
       const m=Math.min(dl,dr,dt,db);
@@ -23,16 +22,11 @@ rep('''    function spiderWallPoint(x,y){
       if(m===dr)return {x:arena.x2,y:clamp(y,arena.y+margin,arena.y2-margin)};
       if(m===dt)return {x:clamp(x,arena.x+margin,arena.x2-margin),y:arena.y};
       return {x:clamp(x,arena.x+margin,arena.x2-margin),y:arena.y2};
-    }''','spiderWallPoint')
+    }
+    function spiderFireSwingWeb'''
+sub_once(r'function spiderWallPoint\(x,y\)\{[\s\S]*?\n\s*\}\n\s*function spiderFireSwingWeb', new_wall, 'spiderWallPoint', re.M)
 
-rep('''    function spiderBeginArc(f,ax,ay){
-      const s=f.spider,dx=f.x-ax,dy=f.y-ay;
-      const radius=clamp(Math.hypot(dx,dy)||SPIDER.swingMinRadius,SPIDER.swingMinRadius,SPIDER.swingMaxRadius);
-      s.mode="arc";s.swingWeb=null;s.chase=null;
-      s.arc={ax,ay,radius,start:Math.atan2(dy,dx),dir:Math.random()<.5?-1:1,t:0};
-      f.vx=0;f.vy=0;
-      if(!fastSimMode)spawnBlast(ax,ay,26,"#e2e8f0");
-    }''','''    function spiderBeginArc(f,ax,ay){
+new_arc = '''function spiderBeginArc(f,ax,ay){
       const s=f.spider,dx=f.x-ax,dy=f.y-ay;
       const radius=Math.max(1,Math.hypot(dx,dy));
       const start=Math.atan2(dy,dx);
@@ -50,11 +44,13 @@ rep('''    function spiderBeginArc(f,ax,ay){
       s.arc={ax,ay,radius,start,dir,swingAngle,t:0};
       f.vx=0;f.vy=0;
       if(!fastSimMode)spawnBlast(ax,ay,26,"#e2e8f0");
-    }''','spiderBeginArc')
+    }
+    function spiderBeginChase'''
+sub_once(r'function spiderBeginArc\(f,ax,ay\)\{[\s\S]*?\n\s*\}\n\s*function spiderBeginChase', new_arc, 'spiderBeginArc', re.M)
 
-rep('const a=s.arc;a.t+=dt;const p=clamp(a.t/SPIDER.swingArcTime,0,1),ang=a.start+a.dir*SPIDER.swingArcAngle*p;',
-    'const a=s.arc;a.t+=dt;const p=clamp(a.t/SPIDER.swingArcTime,0,1),ang=a.start+a.dir*(a.swingAngle||SPIDER.swingArcAngle)*p;',
-    'arc motion')
+sub_once(r'const a=s\.arc;a\.t\+=dt;const p=clamp\(a\.t/SPIDER\.swingArcTime,0,1\),ang=a\.start\+a\.dir\*SPIDER\.swingArcAngle\*p;',
+         'const a=s.arc;a.t+=dt;const p=clamp(a.t/SPIDER.swingArcTime,0,1),ang=a.start+a.dir*(a.swingAngle||SPIDER.swingArcAngle)*p;',
+         'arc motion')
 
 note = '      "v124: 거미남 웹스윙 이동을 수정했습니다. 먼 벽에 걸린 거미줄은 실제 현재 위치-앵커 거리를 스윙 반경으로 사용해 순간이동하지 않으며, 거리가 멀수록 회전각을 줄여 자연스럽게 이동합니다. 벽 앵커는 구석에서 72px 떨어진 지점으로 보정하고, 두 스윙 방향 중 경기장 안쪽으로 향하는 방향을 선택해 구석에서 비정상적으로 끼는 움직임을 줄였습니다.",\n'
 anchor = '      "v123: 고난 체력을165→160으로 조정.'
