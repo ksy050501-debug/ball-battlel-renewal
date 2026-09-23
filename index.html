@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v130</title>
+  <title>볼배틀 리뉴얼 v131</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v130</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v131</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -5591,6 +5591,7 @@
     }
 
       const patchNotes = [
+      "v131: 경기 시작 직후 전투 루프가 멈추던 버그를 수정했습니다. v128 CC 명칭 정리 뒤 뉴헬로 병장의 특수 이동 계산에 옛 지역 변수 oshiSlow·elsaIce 참조가 남아 ReferenceError가 발생하던 문제를 현재 공용 둔화 계산 songAndConcussionSlow·coldAuraSlow로 연결했습니다. 기존 최애 노래·힌타 뇌진탕·엘팔아 냉기 둔화 수치와 병장 이동 성능은 변경하지 않았습니다.",
       "v130: 거미남의 웹스윙 돌진 후 벽충돌 추가 피해를 완전히 제거했습니다. 웹스윙 근접타격18과 강한 넉백은 유지하지만, 그 넉백은 공용 강펀치 벽충돌 피해 판정에 연결되지 않으며 거미남 전용 벽충돌12 판정도 삭제했습니다. 따라서 웹스윙으로 날아간 상대가 벽에 여러 번 튕겨도 추가 피해는 0입니다.",
       "v129: 거미남의 자동·랜덤 웹스윙 시스템을 삭제했습니다. 8초 자동 웹스윙·벽 앵커·부채꼴 스윙·최대5연속 재발사를 제거하고, 웹슈터와 웹슈터 벽속박 연계 타게팅 웹스윙 돌진만 유지합니다. 웹슈터에 맞은 뒤 1.15초 동안 벽속박 가능하던 지연 판정을 삭제하고, 각 탄의 실제 넉백 직후 0.22초 동안 벽에 충돌한 경우에만 1.6초 속박→타게팅 웹스윙이 발동합니다. 웹슈터2×6·22% 둔화0.9초·웹스윙18+강넉백·웹스윙 벽충돌12 수치는 유지합니다.",
       "v128: CC 내부 이름에서 캐릭터명을 제거했습니다. 고난 흉기 둔화·거미남 웹 둔화·힌타 뇌진탕·거미남 벽속박·엘팔아 완전빙결·최애 노래 디버프의 저장값/보조 함수명을 knifeSlow·webSlow·concussionSlow·bindStun·hardFreeze·songDebuffs 등 효과 기준 이름으로 전수 변경했습니다. 수치·지속시간·중첩·면역·피해·넉백·판정·연출은 변경하지 않은 순수 명칭 리팩터링입니다.",
@@ -10573,7 +10574,7 @@
         return;
       }
 
-      if (f.newhello && moveNewhello(f, dt, slow * boost * gardenSlow * irisGlassSlow * oshiSlow * elsaIce)) return;
+      if (f.newhello && moveNewhello(f, dt, slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow)) return;
       if (f.hinta && moveHintaDash(f, dt)) return;
       if (f.logo && moveLogoJump(f, dt)) return;
       recoverOwnMoveSpeed(f, dt);
