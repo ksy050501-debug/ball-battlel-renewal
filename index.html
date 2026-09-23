@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v124</title>
+  <title>볼배틀 리뉴얼 v125</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v124</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v125</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -5591,6 +5591,7 @@
     }
 
       const patchNotes = [
+      "v125: 거미남 웹스윙 전투성을 개선했습니다. 웹스윙 부채꼴 이동 중 적과 몸으로 충돌해도 즉시 근접18+강넉백 공격이 발동하고, 벽까지 밀리면 기존 벽충돌12도 이어집니다. 140px보다 가까운 벽은 웹스윙 앵커로 사용하지 않으며 랜덤 웹도 먼 벽 지점을 우선 조준합니다. 벽 웹스윙 연쇄는 최대5회까지만 이어지고 5번째 시도는 적 방향을 우선 조준하며, 5회 모두 실패하면 웹스윙을 종료하고 8초 쿨타임으로 복귀합니다.",
       "v124: 거미남 웹스윙 이동을 수정했습니다. 먼 벽에 걸린 거미줄은 실제 현재 위치-앵커 거리를 스윙 반경으로 사용해 순간이동하지 않으며, 거리가 멀수록 회전각을 줄여 자연스럽게 이동합니다. 벽 앵커는 구석에서 72px 떨어진 지점으로 보정하고, 두 스윙 방향 중 경기장 안쪽으로 향하는 방향을 선택해 구석에서 비정상적으로 끼는 움직임을 줄였습니다.",
       "v123: 고난 체력을165→160으로 조정. 영화 신캐 '거미남' 추가(HP170·이속2.9). 8초마다 랜덤 거미줄을 발사해 적중 시 줄을 따라 접근해 근접18+강넉백, 벽충돌 시 추가12. 적 대신 벽에 맞으면 0.62초 부채꼴 웹스윙 뒤 다시 랜덤 거미줄을 발사하며 적중할 때까지 반복. 웹스윙 중이 아닐 때는 5초마다 웹슈터6연사(발당2·약넉백·0.9초 22% 둔화). 웹슈터 넉백으로 벽에 닿으면 1.6초 거미줄 속박, 즉시 웹스윙 쿨 초기화 후 속박 대상을 타게팅해 발사.",
       "v122: 캐릭터 표시 이름을 엘팔아·고난으로 변경했습니다. 내부 ID와 전투 수치·판정·기믹은 그대로 유지합니다.",
@@ -6988,13 +6989,13 @@
 
     const SPIDER = {
       swingCooldown:8, swingWebSpeed:680, swingArcTime:.62, swingArcAngle:1.55,
-      swingMinRadius:72, swingMaxRadius:135, chaseSpeed:720,
+      swingMinRadius:72, swingMaxRadius:135, swingMinAnchorDistance:140, swingMaxChains:5, chaseSpeed:720,
       meleeDamage:18, meleeKnock:620, wallDamage:12, wallMarkTime:1.25,
       volleyCooldown:5, volleyCount:6, volleyGap:.09, webSpeed:560, webDamage:2,
       webKnock:105, webSlow:.78, webSlowTime:.9, webPushWindow:1.15, bindTime:1.6
     };
     function initSpiderMan(f){
-      f.spider={swingCd:SPIDER.swingCooldown,mode:"idle",swingWeb:null,arc:null,chase:null,
+      f.spider={swingCd:SPIDER.swingCooldown,mode:"idle",swingWeb:null,arc:null,chase:null,swingCount:0,
         webs:[],volleyCd:2.4,volleyLeft:0,volleyTimer:0,wallWebs:[]};
     }
     function spiderWebSlowMultiplier(f){
@@ -7015,20 +7016,44 @@
       if(m===dt)return {x:clamp(x,arena.x+margin,arena.x2-margin),y:arena.y};
       return {x:clamp(x,arena.x+margin,arena.x2-margin),y:arena.y2};
     }
+    function spiderFarWallAnchor(f){
+      const margin=72,candidates=[];
+      for(let i=0;i<16;i++){
+        const wall=Math.floor(Math.random()*4);
+        let p;
+        if(wall===0)p={x:arena.x,y:rand(arena.y+margin,arena.y2-margin)};
+        else if(wall===1)p={x:arena.x2,y:rand(arena.y+margin,arena.y2-margin)};
+        else if(wall===2)p={x:rand(arena.x+margin,arena.x2-margin),y:arena.y};
+        else p={x:rand(arena.x+margin,arena.x2-margin),y:arena.y2};
+        candidates.push(p);
+      }
+      const valid=candidates.filter(p=>Math.hypot(p.x-f.x,p.y-f.y)>=SPIDER.swingMinAnchorDistance);
+      if(valid.length)return pick(valid);
+      return candidates.reduce((best,p)=>Math.hypot(p.x-f.x,p.y-f.y)>Math.hypot(best.x-f.x,best.y-f.y)?p:best,candidates[0]);
+    }
     function spiderFireSwingWeb(f,targetId=null,initial=false){
       const s=f?.spider;if(!s||!f.alive)return;
-      let a=Math.random()*Math.PI*2;
-      const target=targetId?fighters.find(e=>e.id===targetId&&e.alive):null;
+      let target=targetId?fighters.find(e=>e.id===targetId&&e.alive):null;
+      // 마지막(5번째) 시도는 적 방향을 우선해 웹스윙이 공격으로 이어질 가능성을 높인다.
+      if(!target&&(s.swingCount||0)>=SPIDER.swingMaxChains-1)target=nearestEnemy(f)?.enemy||null;
+      let a;
       if(target)a=Math.atan2(target.y-f.y,target.x-f.x);
+      else{const anchor=spiderFarWallAnchor(f);a=Math.atan2(anchor.y-f.y,anchor.x-f.x);}
       s.mode="shot";s.arc=null;s.chase=null;
       s.swingWeb={x:f.x,y:f.y,vx:Math.cos(a)*SPIDER.swingWebSpeed,vy:Math.sin(a)*SPIDER.swingWebSpeed,life:1.35,targetId:target?.id||null};
       if(initial)s.swingCd=SPIDER.swingCooldown;
       if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-26,target?"타게팅 웹!":"웹스윙!","#e2e8f0");playSound("magic",.78);}
     }
-    function startSpiderSwing(f,targetId=null){const s=f?.spider;if(!s||!f.alive)return;s.volleyLeft=0;s.volleyTimer=0;spiderFireSwingWeb(f,targetId,true);}
+    function startSpiderSwing(f,targetId=null){const s=f?.spider;if(!s||!f.alive)return;s.volleyLeft=0;s.volleyTimer=0;s.swingCount=0;spiderFireSwingWeb(f,targetId,true);}
     function spiderBeginArc(f,ax,ay){
       const s=f.spider,dx=f.x-ax,dy=f.y-ay;
       const radius=Math.max(1,Math.hypot(dx,dy));
+      // 너무 가까운 벽은 스윙축으로 쓰지 않는다. 마지막 시도라면 연쇄를 끝낸다.
+      if(radius<SPIDER.swingMinAnchorDistance){
+        if((s.swingCount||0)>=SPIDER.swingMaxChains-1){spiderStopSwing(f);return;}
+        spiderFireSwingWeb(f,null,false);return;
+      }
+      s.swingCount=(s.swingCount||0)+1;
       const start=Math.atan2(dy,dx);
       const swingAngle=clamp(150/radius,.28,1.28);
       const cx=(arena.x+arena.x2)/2,cy=(arena.y+arena.y2)/2;
@@ -7051,7 +7076,13 @@
       const dealt=damage(target,SPIDER.meleeDamage,f,"웹스윙 근접타격");
       if(target.alive&&dealt>0){target.vx=dx/d*SPIDER.meleeKnock;target.vy=dy/d*SPIDER.meleeKnock;target.punchFlight=Math.max(target.punchFlight||0,.34);target.punchSource=f;target.punchWallPower=0;target.punchWallHits=0;target.spiderWallMark=Math.max(target.spiderWallMark||0,SPIDER.wallMarkTime);target.spiderWallSourceId=f.id;}
       if(!fastSimMode){spawnHitFlash(target.x,target.y,"#f8fafc",115);spawnBlast(target.x,target.y,72,"#dc2626");playSound("hit",1.0);}
-      s.mode="idle";s.chase=null;s.swingCd=SPIDER.swingCooldown;
+      s.mode="idle";s.chase=null;s.arc=null;s.swingWeb=null;s.swingCount=0;s.swingCd=SPIDER.swingCooldown;
+    }
+    function spiderStopSwing(f){
+      const s=f?.spider;if(!s)return;
+      s.mode="idle";s.swingWeb=null;s.arc=null;s.chase=null;s.swingCount=0;s.swingCd=SPIDER.swingCooldown;
+      const v=randomVelocity(f.baseSpeed||f.speed||2.9);f.vx=v.vx;f.vy=v.vy;
+      if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-28,"웹스윙 종료","#cbd5e1");
     }
     function spiderFireVolleyShot(f){
       const s=f.spider,target=nearestEnemy(f)?.enemy;if(!target)return;
@@ -7098,7 +7129,15 @@
     function updateSpiderMan(f,dt){
       const s=f?.spider;if(!s||!f.alive)return;spiderCheckWallEffects(f,dt);updateSpiderVolleyWebs(f,dt);s.swingCd=Math.max(0,s.swingCd-dt);
       if(s.mode==="shot")updateSpiderSwingWeb(f,dt);
-      else if(s.mode==="arc"&&s.arc){const a=s.arc;a.t+=dt;const p=clamp(a.t/SPIDER.swingArcTime,0,1),ang=a.start+a.dir*(a.swingAngle||SPIDER.swingArcAngle)*p;f.x=clamp(a.ax+Math.cos(ang)*a.radius,arena.x+f.r,arena.x2-f.r);f.y=clamp(a.ay+Math.sin(ang)*a.radius,arena.y+f.r,arena.y2-f.r);f.vx=0;f.vy=0;if(p>=1)spiderFireSwingWeb(f,null,false);}
+      else if(s.mode==="arc"&&s.arc){
+        const a=s.arc;a.t+=dt;
+        const p=clamp(a.t/SPIDER.swingArcTime,0,1),ang=a.start+a.dir*(a.swingAngle||SPIDER.swingArcAngle)*p;
+        f.x=clamp(a.ax+Math.cos(ang)*a.radius,arena.x+f.r,arena.x2-f.r);f.y=clamp(a.ay+Math.sin(ang)*a.radius,arena.y+f.r,arena.y2-f.r);f.vx=0;f.vy=0;
+        // 벽을 타는 도중 몸으로 적을 들이받아도 웹스윙 근접타격이 성공한다.
+        const swingHit=enemiesOf(f).find(e=>e.alive&&!(e.tano?.hidden>0)&&Math.hypot(e.x-f.x,e.y-f.y)<=f.r+e.r+5);
+        if(swingHit){spiderFinishMelee(f,swingHit);return;}
+        if(p>=1){if((s.swingCount||0)>=SPIDER.swingMaxChains)spiderStopSwing(f);else spiderFireSwingWeb(f,null,false);}
+      }
       else if(s.mode==="chase"&&s.chase){const target=fighters.find(e=>e.id===s.chase.targetId&&e.alive);if(!target){s.mode="idle";s.chase=null;return;}const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,contact=f.r+target.r+5;if(d<=contact)spiderFinishMelee(f,target);else{const step=Math.min(Math.max(0,d-contact),SPIDER.chaseSpeed*dt);f.x=clamp(f.x+dx/d*step,arena.x+f.r,arena.x2-f.r);f.y=clamp(f.y+dy/d*step,arena.y+f.r,arena.y2-f.r);f.vx=0;f.vy=0;if(d-step<=contact+.5)spiderFinishMelee(f,target);}}
       if(s.mode!=="idle")return;
       s.volleyCd-=dt;if(s.swingCd<=0){startSpiderSwing(f);return;}
@@ -7117,7 +7156,7 @@
     }
 
     function skillProgressInfo(f) {
-      if(f.spider){const s=f.spider||{};const active=s.mode&&s.mode!=="idle";return {ratio:active?1:clamp(1-(s.swingCd||0)/SPIDER.swingCooldown,0,1),className:active?"rage-fill":"skill-fill",text:active?(s.mode==="arc"?"웹스윙 · 벽 타기":s.mode==="chase"?"웹스윙 · 적 추격":"웹스윙 · 거미줄 발사"):("웹스윙 "+Math.max(0,s.swingCd||0).toFixed(1)+"초"),extraTextHtml:'<div class="status-skill-label">웹스윙 8초 · 적을 못 맞히면 벽을 축으로 부채꼴 이동 후 다시 발사, 적중할 때까지 반복</div><div class="status-skill-label">비스윙 중 5초마다 웹슈터 6연사 · 발당2·약넉백·0.9초 둔화 · 벽에 밀리면 1.6초 속박 후 타게팅 웹스윙</div>'};}
+      if(f.spider){const s=f.spider||{};const active=s.mode&&s.mode!=="idle";return {ratio:active?1:clamp(1-(s.swingCd||0)/SPIDER.swingCooldown,0,1),className:active?"rage-fill":"skill-fill",text:active?(s.mode==="arc"?("웹스윙 · 벽 타기 "+(s.swingCount||0)+"/"+SPIDER.swingMaxChains):s.mode==="chase"?"웹스윙 · 적 추격":"웹스윙 · 거미줄 발사"):("웹스윙 "+Math.max(0,s.swingCd||0).toFixed(1)+"초"),extraTextHtml:'<div class="status-skill-label">웹스윙 8초 · 적을 못 맞히면 벽을 축으로 부채꼴 이동 후 다시 발사, 적중할 때까지 반복</div><div class="status-skill-label">비스윙 중 5초마다 웹슈터 6연사 · 발당2·약넉백·0.9초 둔화 · 벽에 밀리면 1.6초 속박 후 타게팅 웹스윙</div>'};}
       if(f.conan){
         let top=0,name="";for(const [id,s] of f.conan.targets){if((s.meter||0)>top){top=s.meter||0;const t=fighters.find(x=>x.id===id);name=t?.name||"";}}
         const pending=f.conan.assaults.length>0;
