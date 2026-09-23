@@ -1,0 +1,91 @@
+name: v119 Conan balance patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v119-conan-buff.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch index.html
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          c=p.read_text(encoding='utf-8')
+
+          def rep(old,new,count=1):
+              global c
+              n=c.count(old)
+              if n!=count:
+                  raise SystemExit(f'expected {count}, found {n}: {old[:140]!r}')
+              c=c.replace(old,new,count)
+
+          rep('<title>볼배틀 리뉴얼 v118</title>','<title>볼배틀 리뉴얼 v119</title>')
+          rep('<h1 id="mainTitle">볼배틀 리뉴얼 v118</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v119</h1>')
+
+          # 코난 핵심 수치. 범위 130은 의도적으로 그대로 둔다.
+          rep('radius:130, maxMeter:100, auraPerSec:3, contactGain:10, contactCd:1.0,','radius:130, maxMeter:100, auraPerSec:5, contactGain:15, contactCd:1.0,')
+          rep('assaultWindup:.9, assaultDamage:80, resetMeter:40, knock:560','assaultWindup:.9, assaultDamage:100, resetMeter:40, knock:560')
+
+          # 캐릭터 카드 조건.
+          rep('condition: "반경130 안 초당 사신+3 · 직접 접촉+10 · 사신100 → 사건 발생"','condition: "반경130 안 초당 사신+5 · 직접 접촉+15 · 사신100 → 사건 발생"')
+
+          # 상태창.
+          rep('반경130 안 초당 사신+3 · 범위 밖에서도 누적 유지','반경130 안 초당 사신+5 · 범위 밖에서도 누적 유지')
+          rep('직접 접촉 +10(대상별1초) · 100에서 0.9초 예고 후 범인의 습격80 · 사건 후40','직접 접촉 +15(대상별1초) · 100에서 0.9초 예고 후 범인의 습격100 · 사건 후40')
+
+          # 도감/상세창.
+          rep('damage:"범인의 습격80 + 강한 넉백"','damage:"범인의 습격100 + 강한 넉백"')
+          rep('tick:"반경130 안 초당 사신+3 · 직접 접촉 대상별1초마다+10 · 사신100에서 사건 발생 · 습격 예고0.9초 · 사건 후 사신40"','tick:"반경130 안 초당 사신+5 · 직접 접촉 대상별1초마다+15 · 사신100에서 사건 발생 · 습격 예고0.9초 · 사건 후 사신40"')
+          rep('적이 반경130 안에 머무는 동안 사신 수치가 초당3씩 누적되며 범위를 벗어나도 감소하지 않는다. 직접 부딪히면 별도로 사신10이 오른다. 사신100이 되면 정체불명의 검은 범인이 경기장 가장자리에서 나타나 대상을 습격해 피해80과 강한 넉백을 준다.','적이 반경130 안에 머무는 동안 사신 수치가 초당5씩 누적되며 범위를 벗어나도 감소하지 않는다. 직접 부딪히면 별도로 사신15가 오른다. 사신100이 되면 정체불명의 검은 범인이 경기장 가장자리에서 나타나 대상을 습격해 피해100과 강한 넉백을 준다.')
+
+          marker='      const patchNotes = [\n'
+          note='      "v119: 코난 대형 버프. 사신 발생 범위는 반경130으로 그대로 유지하면서 범위 안 사신 누적을 초당3→5, 직접 접촉 사신을+10→+15, 범인의 습격 피해를80→100으로 상향했습니다. 사신 최대100, 범위 밖 누적 유지, 대상별 접촉 쿨1초, 습격 예고0.9초, 사건 후 사신40, 강한 넉백은 유지합니다.",\n'
+          rep(marker,marker+note)
+
+          p.write_text(c,encoding='utf-8')
+          PY
+
+      - name: Validate inline JavaScript and v119 values
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const c=fs.readFileSync('index.html','utf8');
+          const scripts=[...c.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
+          if(!scripts.length) throw new Error('No inline scripts found');
+          for(const s of scripts)new Function(s);
+          const required=[
+            '볼배틀 리뉴얼 v119',
+            'radius:130, maxMeter:100, auraPerSec:5, contactGain:15',
+            'assaultDamage:100, resetMeter:40',
+            '반경130 안 초당 사신+5',
+            '직접 접촉 +15(대상별1초)',
+            '범인의 습격100',
+            'v119: 코난 대형 버프.'
+          ];
+          for(const s of required) if(!c.includes(s)) throw new Error('Missing: '+s);
+          if(c.includes('radius:160, maxMeter:100')) throw new Error('Conan radius was accidentally increased');
+          console.log('v119 validation passed');
+          NODE
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'v119: buff Conan death flag rate and assault damage'
+          git push origin HEAD:main
