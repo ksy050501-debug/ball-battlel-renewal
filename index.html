@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v128</title>
+  <title>볼배틀 리뉴얼 v129</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v128</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v129</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1245,7 +1245,7 @@
       { id: "conan", name: "고난", mark: "🔍", role: "애니", color: "#2563eb", hp: 160, attack: 0, speed: 2.8, range: 130,
         skillName: "사신 · 사건 발생", condition: "반경130 안 초당 사신+5 · 직접 접촉+10 · 사신100 → 3종 사건 중 하나", desc: "고난 근처에 오래 머문 적에게 사신이 누적된다. 사신이 가득 차면 흉기 습격·차량 돌진·둔기 습격 중 하나의 사건에 휘말린다." },
       { id: "spider_man", name: "거미남", mark: "🕷", role: "영화", color: "#dc2626", hp: 170, attack: 0, speed: 2.9, range: 0,
-        skillName: "웹스윙 · 웹슈터", condition: "웹스윙 8초 · 빗나가면 먼 벽으로 최대5연속 스윙 · 비스윙 중 5초마다 거미줄 6연사", desc: "거미줄을 벽과 적에게 걸어 경기장을 연속으로 가로지른다. 평상시에는 웹슈터 연사로 적을 벽에 몰아붙여 속박한 뒤 즉시 타게팅 웹스윙으로 추격한다." },
+        skillName: "웹슈터 · 웹스윙", condition: "5초마다 거미줄 6연사 · 웹슈터 넉백 중 벽충돌 시 속박→웹스윙 돌진", desc: "웹슈터 연사로 적을 밀어낸다. 웹슈터에 맞아 밀려나는 바로 그 순간 벽에 충돌하면 속박하고 즉시 타게팅 웹스윙으로 돌진한다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -5591,6 +5591,7 @@
     }
 
       const patchNotes = [
+      "v129: 거미남의 자동·랜덤 웹스윙 시스템을 삭제했습니다. 8초 자동 웹스윙·벽 앵커·부채꼴 스윙·최대5연속 재발사를 제거하고, 웹슈터와 웹슈터 벽속박 연계 타게팅 웹스윙 돌진만 유지합니다. 웹슈터에 맞은 뒤 1.15초 동안 벽속박 가능하던 지연 판정을 삭제하고, 각 탄의 실제 넉백 직후 0.22초 동안 벽에 충돌한 경우에만 1.6초 속박→타게팅 웹스윙이 발동합니다. 웹슈터2×6·22% 둔화0.9초·웹스윙18+강넉백·웹스윙 벽충돌12 수치는 유지합니다.",
       "v128: CC 내부 이름에서 캐릭터명을 제거했습니다. 고난 흉기 둔화·거미남 웹 둔화·힌타 뇌진탕·거미남 벽속박·엘팔아 완전빙결·최애 노래 디버프의 저장값/보조 함수명을 knifeSlow·webSlow·concussionSlow·bindStun·hardFreeze·songDebuffs 등 효과 기준 이름으로 전수 변경했습니다. 수치·지속시간·중첩·면역·피해·넉백·판정·연출은 변경하지 않은 순수 명칭 리팩터링입니다.",
       "v127: 공용 행동정지의 내부 저장명까지 정리했습니다. 기존 캐릭터 전용 이름의 행동정지 프로퍼티를 stun으로 전수 이름 변경하고 applyStun 및 모든 행동정지 판정·감소·차단 참조를 같은 stun 저장값으로 통일했습니다. 숫자·지속시간·적용 조건·면역·피해·넉백·연출은 변경하지 않은 순수 명칭 리팩터링입니다.",
       "v126: CC 내부 구조를 성능 변화 없이 정리했습니다. 공용 행동정지 applyStun, 강둔화 applyHeavySlow, 시간형 CC 타이머 refreshCcTimer를 추가하고 타노 마인드·고난 둔기·거미남 벽속박·고난 흉기·거미남 웹·힌타 뇌진탕·오벨리스크 강둔화 호출을 공용 명칭으로 연결했습니다. 기존 행동정지 저장값·freeze·캐릭터별 타이머의 지속시간·중첩·면역·넉백·피해·연출은 그대로 유지해 전투 성능은 변경하지 않았습니다.",
@@ -5755,7 +5756,7 @@
         tick:"검 발동 사거리: 몸 충돌보다 +8 · 광역 베기 범위: 몸 반경보다 +28 · 기동7초 · 준비0.45초 · 고속이동1초(초당650) · 와이어 강습 최대 3연속 · 일반 베기 재사용1.2초 · 출혈 약1초마다 5회",
         tip:"뉴헬로는 상대와 몸이 닿지 않아도 검 사거리(+8)에 들어오면 베기가 발동한다. 공격을 발동시킨 상대가 누구든, 그 순간 병장 중심의 더 큰 베기 원(+28) 안에 있는 모든 적이 같은 베기 피해와 출혈을 받는다. 와이어 강습 적중 시 즉시 재와이어하지만 한 사이클에서 총 3번까지만 연속 강습할 수 있고, 3번째 적중 뒤에는 7초 쿨타임이 적용된다. 중간 강습이 빗나가거나 끊기면 연속 횟수는 초기화된다. 출혈 폭발과 실제 몸 충돌 시 상대 접촉 반격은 기존대로 유지된다."};
       if (c.id === "riddle_lord") return {damage:"피엔드피레 0.4초마다3 + 화상2×3초 / 딱총나무 강화 0.4초마다4 + 화상3×3초 · 아바다 케다브라 4×5 / 강화 6×5",tick:"공유 쿨9초 · 첫 피엔드피레는 4초 뒤 · 이후 피엔드피레↔아바다 교대 · 피엔드피레4초 지속 · 아바다0.9초 다단 · 딱총나무16초 대기 후 등장·미획득 시25초 뒤 자동 습득·획득 시12초 강화",tip:"딱총나무 강화 중 피엔드피레 반경75→105, 아바다 케다브라는 거리와 조준을 무시하고 지정 대상에게 확정 적중한다. 첫 사망 때 호크룩스 7칸/7초 상태가 되며 이동·공격 불가. 적 접촉마다 1칸, 공격 피격마다 기본1칸＋피해10당 1칸 추가 감소. 피격 또는 접촉 1회마다 부활 HP도 70에서 10씩 감소한다. 생존하면 최대HP70·이속2.8로 남은 부활HP만큼 부활한다. 부활 후에도 원래 스킬과 지팡이를 그대로 사용한다. 지팡이는 획득 전까지 소멸하지 않고 등장 25초 뒤 자동 습득한다. 두 번째 부활은 없다."};
-      if (c.id === "spider_man") return {damage:"웹스윙 근접타격18 + 벽충돌12 / 웹슈터2×6",tick:"웹스윙8초 · 벽에 걸리면 0.62초 부채꼴 스윙 후 재발사 · 웹슈터5초마다6발(0.09초 간격) · 벽 속박1.6초",tip:"웹스윙 거미줄이 적에게 닿으면 줄을 따라 즉시 접근해 근접타격18과 강한 넉백을 준다. 넉백된 적이 벽에 닿으면 추가12. 거미줄이 적 대신 벽에 닿으면 그 지점을 축으로 부채꼴 웹스윙한 뒤 다시 랜덤 거미줄을 발사하며, 상대에게 적중할 때까지 반복한다. 웹스윙 중이 아닐 때는 5초마다 웹슈터를 6연사한다. 각 탄은 피해2·약한 넉백·0.9초 22% 둔화를 주며, 이 넉백으로 상대가 벽에 닿으면 벽에 거미줄 이펙트와 함께 1.6초 속박된다. 속박 성공 시 웹스윙 쿨타임을 초기화하고 해당 상대를 향해 타게팅 거미줄을 즉시 발사한다."};
+      if (c.id === "spider_man") return {damage:"웹슈터2×6 / 속박 연계 웹스윙 근접타격18 + 벽충돌12",tick:"웹슈터5초마다6발(0.09초 간격) · 웹슈터 넉백 판정0.22초 · 그동안 벽충돌 시 속박1.6초→웹스윙 돌진",tip:"5초마다 웹슈터를 6연사한다. 각 탄은 피해2·약한 넉백·0.9초 22% 둔화를 준다. 웹슈터에 맞아 밀려나는 0.22초 안에 실제로 벽에 충돌한 경우에만 1.6초 속박되며, 예전에 맞은 뒤 한참 후 벽에 닿는 것은 속박되지 않는다. 속박 성공 시 해당 상대에게만 웹스윙 돌진을 사용해 근접타격18과 강한 넉백을 주고, 그 넉백으로 벽에 닿으면 추가12 피해를 준다. 자동·랜덤 웹스윙과 벽 부채꼴 연쇄 스윙은 없다."};
       if (c.id === "conan") return {damage:"사건 3종 모두 명목 총 피해100 · 흉기70+출혈5×6 / 차량100 / 둔기100",tick:"반경130 안 초당 사신+5 · 직접 접촉 대상별1초마다+10 · 사신100에서 사건 발생 · 예고0.9초 · 사건 후 사신0",tip:"사신100이 되면 세 사건 중 하나가 동일 확률로 발생한다. 흉기 습격은 즉시70+출혈5×6회(총100)와 3.4초간 이속25% 감소, 차량 돌진은 피해100과 매우 강한 넉백, 둔기 습격은 피해100과 0.55초 기절을 준다. 세 사건 모두 0.9초 예고 후 대상에게 확정 적중하며, 사건 종료 후 사신은0으로 초기화된다."};
       if (c.id === "elsa") return {damage:"냉기 영역 초당6 / 빙결 중 냉기 영역9 / 빙결 상태 직접 접촉 파쇄30",tick:"냉기 영역 연속2초 체류마다 냉기+1 · 직접 접촉 대상별1초마다 냉기+1 · 냉기5중첩=5.5초 빙결 · 빙결 후2.5초 재빙결 면역",tip:"체력 비율에 따라 냉기 영역 반경이80→170으로 커지고 기본 이속은2.9→1.3으로 느려진다. 영역 안 적은 이속15% 감소와 1초마다 피해6을 받는다. 영역 안에서는 체류 게이지가 초당1초씩 차고, 영역 밖에서는 초당0.5초씩 감소한다. 따라서 잠깐 벗어나도 체류 누적이 즉시 0으로 초기화되지 않는다. 직접 접촉 냉기와 체류 냉기는 서로 독립적으로 적용된다. 냉기5에서 이동과 본체 스킬 사용이 막히는 5.5초 완전 빙결. 빙결 중에는 영역 지속피해가1.5배가 되며 얼음은 깨지지 않는다. 엘팔아가 직접 부딪히면 파쇄30·강넉백과 함께 즉시 해제된다. 이미 발사된 투사체·소환수 등 본체와 분리된 효과는 계속 진행된다."};
       if (c.id === "bald_cape") return {damage:"보통펀치28 + 맞은 상대 벽충돌16 / 가속충돌 8~17 / 연속 보통펀치8×8=64 / 진심펀치85",tick:"경기 시작부터 15초 · 이후 각 공격이 완전히 끝난 뒤 15초 · 보통45% / 연속35% / 진심20%",tip:"보통펀치는 벽 반사마다 기본 이동속도가 20%씩 상승하고, 5번째 반사 후 속도860으로 최근접 적을 계속 추적하며 돌진한다. 돌진 판정 반경도 넓어졌다. 연속 보통펀치는 완전히 멈춘 채 거리150·약130도 원뿔을 0.20초 간격 8타로 공격하며 매 타격마다 최근접 적 방향으로 다시 조준한다. 진심펀치는 최근접 적에게서 가장 먼 맵 구석으로 순간 이동한 뒤 반대편 모서리를 향해 약36도 붉은 부채꼴을 2.6초 차징하고 피해85를 준다. 차징 중에는 위치가 고정되어 넉백·강펀치·충돌로 밀려나지 않는다."};
@@ -6991,161 +6992,58 @@
 
 
     const SPIDER = {
-      swingCooldown:8, swingWebSpeed:680, swingArcTime:.62, swingArcAngle:1.55,
-      swingMinRadius:72, swingMaxRadius:135, swingMinAnchorDistance:140, swingMaxChains:5, chaseSpeed:720,
+      chaseSpeed:720,
       meleeDamage:18, meleeKnock:620, wallDamage:12, wallMarkTime:1.25,
       volleyCooldown:5, volleyCount:6, volleyGap:.09, webSpeed:560, webDamage:2,
-      webKnock:105, webSlow:.78, webSlowTime:.9, webPushWindow:1.15, bindTime:1.6
+      webKnock:105, webKnockDuration:.22, webSlow:.78, webSlowTime:.9, bindTime:1.6
     };
     function initSpiderMan(f){
-      f.spider={swingCd:SPIDER.swingCooldown,mode:"idle",swingWeb:null,arc:null,chase:null,swingCount:0,
-        webs:[],volleyCd:2.4,volleyLeft:0,volleyTimer:0,wallWebs:[]};
+      f.spider={mode:"idle",chase:null,webs:[],volleyCd:2.4,volleyLeft:0,volleyTimer:0,wallWebs:[]};
     }
-    function webSlowMultiplier(f){
-      return (f?.webSlow||0)>0&&!hasHarmfulImmunity(f)?SPIDER.webSlow:1;
-    }
+    function webSlowMultiplier(f){return (f?.webSlow||0)>0&&!hasHarmfulImmunity(f)?SPIDER.webSlow:1;}
     function spiderSegHit(x1,y1,x2,y2,cx,cy,r){
-      const dx=x2-x1,dy=y2-y1,l2=dx*dx+dy*dy||1;
-      const t=clamp(((cx-x1)*dx+(cy-y1)*dy)/l2,0,1);
-      const px=x1+dx*t,py=y1+dy*t;
+      const dx=x2-x1,dy=y2-y1,l2=dx*dx+dy*dy||1,t=clamp(((cx-x1)*dx+(cy-y1)*dy)/l2,0,1),px=x1+dx*t,py=y1+dy*t;
       return Math.hypot(px-cx,py-cy)<=r?t:null;
     }
-    function spiderWallPoint(x,y){
-      const margin=72;
-      const dl=Math.abs(x-arena.x),dr=Math.abs(x-arena.x2),dt=Math.abs(y-arena.y),db=Math.abs(y-arena.y2);
-      const m=Math.min(dl,dr,dt,db);
-      if(m===dl)return {x:arena.x,y:clamp(y,arena.y+margin,arena.y2-margin)};
-      if(m===dr)return {x:arena.x2,y:clamp(y,arena.y+margin,arena.y2-margin)};
-      if(m===dt)return {x:clamp(x,arena.x+margin,arena.x2-margin),y:arena.y};
-      return {x:clamp(x,arena.x+margin,arena.x2-margin),y:arena.y2};
+    function startSpiderSwing(f,targetId){
+      const s=f?.spider,target=fighters.find(e=>e.id===targetId&&e.alive);if(!s||!f.alive||!target)return false;
+      s.volleyLeft=0;s.volleyTimer=0;s.mode="chase";s.chase={targetId:target.id};
+      if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-28,"웹스윙 돌진!","#e2e8f0");playSound("magic",.78);}return true;
     }
-    function spiderFarWallAnchor(f){
-      const margin=72,candidates=[];
-      for(let i=0;i<16;i++){
-        const wall=Math.floor(Math.random()*4);
-        let p;
-        if(wall===0)p={x:arena.x,y:rand(arena.y+margin,arena.y2-margin)};
-        else if(wall===1)p={x:arena.x2,y:rand(arena.y+margin,arena.y2-margin)};
-        else if(wall===2)p={x:rand(arena.x+margin,arena.x2-margin),y:arena.y};
-        else p={x:rand(arena.x+margin,arena.x2-margin),y:arena.y2};
-        candidates.push(p);
-      }
-      const valid=candidates.filter(p=>Math.hypot(p.x-f.x,p.y-f.y)>=SPIDER.swingMinAnchorDistance);
-      if(valid.length)return pick(valid);
-      return candidates.reduce((best,p)=>Math.hypot(p.x-f.x,p.y-f.y)>Math.hypot(best.x-f.x,best.y-f.y)?p:best,candidates[0]);
-    }
-    function spiderFireSwingWeb(f,targetId=null,initial=false){
-      const s=f?.spider;if(!s||!f.alive)return;
-      let target=targetId?fighters.find(e=>e.id===targetId&&e.alive):null;
-      // 마지막(5번째) 시도는 적 방향을 우선해 웹스윙이 공격으로 이어질 가능성을 높인다.
-      if(!target&&(s.swingCount||0)>=SPIDER.swingMaxChains-1)target=nearestEnemy(f)?.enemy||null;
-      let a;
-      if(target)a=Math.atan2(target.y-f.y,target.x-f.x);
-      else{const anchor=spiderFarWallAnchor(f);a=Math.atan2(anchor.y-f.y,anchor.x-f.x);}
-      s.mode="shot";s.arc=null;s.chase=null;
-      s.swingWeb={x:f.x,y:f.y,vx:Math.cos(a)*SPIDER.swingWebSpeed,vy:Math.sin(a)*SPIDER.swingWebSpeed,life:1.35,targetId:target?.id||null};
-      if(initial)s.swingCd=SPIDER.swingCooldown;
-      if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-26,target?"타게팅 웹!":"웹스윙!","#e2e8f0");playSound("magic",.78);}
-    }
-    function startSpiderSwing(f,targetId=null){const s=f?.spider;if(!s||!f.alive)return;s.volleyLeft=0;s.volleyTimer=0;s.swingCount=0;spiderFireSwingWeb(f,targetId,true);}
-    function spiderBeginArc(f,ax,ay){
-      const s=f.spider,dx=f.x-ax,dy=f.y-ay;
-      const radius=Math.max(1,Math.hypot(dx,dy));
-      // 너무 가까운 벽은 스윙축으로 쓰지 않는다. 마지막 시도라면 연쇄를 끝낸다.
-      if(radius<SPIDER.swingMinAnchorDistance){
-        if((s.swingCount||0)>=SPIDER.swingMaxChains-1){spiderStopSwing(f);return;}
-        spiderFireSwingWeb(f,null,false);return;
-      }
-      s.swingCount=(s.swingCount||0)+1;
-      const start=Math.atan2(dy,dx);
-      const swingAngle=clamp(150/radius,.28,1.28);
-      const cx=(arena.x+arena.x2)/2,cy=(arena.y+arena.y2)/2;
-      const score=dir=>{
-        const a=start+dir*swingAngle;
-        const ex=ax+Math.cos(a)*radius,ey=ay+Math.sin(a)*radius;
-        const ox=Math.max(0,arena.x+f.r-ex,ex-(arena.x2-f.r));
-        const oy=Math.max(0,arena.y+f.r-ey,ey-(arena.y2-f.r));
-        return (ox*ox+oy*oy)*20+Math.hypot(ex-cx,ey-cy);
-      };
-      const dir=score(1)<=score(-1)?1:-1;
-      s.mode="arc";s.swingWeb=null;s.chase=null;
-      s.arc={ax,ay,radius,start,dir,swingAngle,t:0};
-      f.vx=0;f.vy=0;
-      if(!fastSimMode)spawnBlast(ax,ay,26,"#e2e8f0");
-    }
-    function spiderBeginChase(f,target){const s=f.spider;s.mode="chase";s.swingWeb=null;s.arc=null;s.chase={targetId:target.id};if(!fastSimMode)spawnFloatingText(target.x,target.y-target.r-30,"거미줄 적중!","#f8fafc");}
     function spiderFinishMelee(f,target){
-      const s=f.spider,dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1;
-      const dealt=damage(target,SPIDER.meleeDamage,f,"웹스윙 근접타격");
+      const s=f.spider,dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,SPIDER.meleeDamage,f,"웹스윙 근접타격");
       if(target.alive&&dealt>0){target.vx=dx/d*SPIDER.meleeKnock;target.vy=dy/d*SPIDER.meleeKnock;target.punchFlight=Math.max(target.punchFlight||0,.34);target.punchSource=f;target.punchWallPower=0;target.punchWallHits=0;target.spiderWallMark=Math.max(target.spiderWallMark||0,SPIDER.wallMarkTime);target.spiderWallSourceId=f.id;}
-      if(!fastSimMode){spawnHitFlash(target.x,target.y,"#f8fafc",115);spawnBlast(target.x,target.y,72,"#dc2626");playSound("hit",1.0);}
-      s.mode="idle";s.chase=null;s.arc=null;s.swingWeb=null;s.swingCount=0;s.swingCd=SPIDER.swingCooldown;
-    }
-    function spiderStopSwing(f){
-      const s=f?.spider;if(!s)return;
-      s.mode="idle";s.swingWeb=null;s.arc=null;s.chase=null;s.swingCount=0;s.swingCd=SPIDER.swingCooldown;
-      const v=randomVelocity(f.baseSpeed||f.speed||2.9);f.vx=v.vx;f.vy=v.vy;
-      if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-28,"웹스윙 종료","#cbd5e1");
+      if(!fastSimMode){spawnHitFlash(target.x,target.y,"#f8fafc",115);spawnBlast(target.x,target.y,72,"#dc2626");playSound("hit",1.0);}s.mode="idle";s.chase=null;
     }
     function spiderFireVolleyShot(f){
-      const s=f.spider,target=nearestEnemy(f)?.enemy;if(!target)return;
-      const a=Math.atan2(target.y-f.y,target.x-f.x)+rand(-.075,.075);
+      const s=f.spider,target=nearestEnemy(f)?.enemy;if(!target)return;const a=Math.atan2(target.y-f.y,target.x-f.x)+rand(-.075,.075);
       s.webs.push({x:f.x,y:f.y,vx:Math.cos(a)*SPIDER.webSpeed,vy:Math.sin(a)*SPIDER.webSpeed,life:1.35});if(!fastSimMode)playSound("magic",.42);
     }
     function bindStunTarget(f,target){
       if(!target?.alive||hasHarmfulImmunity(target))return false;
-      target.bindStun=Math.max(target.bindStun||0,SPIDER.bindTime);target.webSlow=0;target.spiderPushWindow=0;target.vx=0;target.vy=0;
+      target.bindStun=Math.max(target.bindStun||0,SPIDER.bindTime);target.webSlow=0;target.webKnockTime=0;target.webKnockSourceId="";target.vx=0;target.vy=0;
       const s=f.spider;s.wallWebs.push({x:target.x,y:target.y,t:SPIDER.bindTime+.35,max:SPIDER.bindTime+.35});
       if(!fastSimMode){spawnBlast(target.x,target.y,54,"#e2e8f0");spawnParticles(target.x,target.y,"#f8fafc",24);spawnFloatingText(target.x,target.y-target.r-38,"벽 거미줄 속박!","#f8fafc");}
-      s.swingCd=0;startSpiderSwing(f,target.id);return true;
+      startSpiderSwing(f,target.id);return true;
     }
     function spiderCheckWallEffects(f,dt){
-      for(const target of enemiesOf(f)){
-        if(!target.alive)continue;
-        const nearWall=target.x-target.r<=arena.x+2||target.x+target.r>=arena.x2-2||target.y-target.r<=arena.y+2||target.y+target.r>=arena.y2-2;
+      for(const target of enemiesOf(f)){if(!target.alive)continue;const nearWall=target.x-target.r<=arena.x+2||target.x+target.r>=arena.x2-2||target.y-target.r<=arena.y+2||target.y+target.r>=arena.y2-2;
         if((target.spiderWallMark||0)>0&&target.spiderWallSourceId===f.id&&nearWall){target.spiderWallMark=0;const dealt=damage(target,SPIDER.wallDamage,f,"웹스윙 벽충돌");if(!fastSimMode){spawnBlast(target.x,target.y,76,"#f8fafc");spawnFloatingText(target.x,target.y-target.r-38,"벽충돌 -"+Math.round(dealt),"#fecaca");}}
-        if((target.spiderPushWindow||0)>0&&target.spiderPushSourceId===f.id&&nearWall&&!(target.bindStun>0))bindStunTarget(f,target);
+        if((target.webKnockTime||0)>0&&target.webKnockSourceId===f.id&&nearWall&&!(target.bindStun>0))bindStunTarget(f,target);
       }
       f.spider.wallWebs.forEach(w=>w.t-=dt);f.spider.wallWebs=f.spider.wallWebs.filter(w=>w.t>0);
     }
-    function updateSpiderSwingWeb(f,dt){
-      const s=f.spider,w=s.swingWeb;if(!w)return;
-      const x1=w.x,y1=w.y,x2=w.x+w.vx*dt,y2=w.y+w.vy*dt;let hit=null,best=2;
-      for(const e of enemiesOf(f)){if(!e.alive||e.tano?.hidden>0)continue;const h=spiderSegHit(x1,y1,x2,y2,e.x,e.y,e.r+7);if(h!==null&&h<best){best=h;hit=e;}}
-      if(hit){w.x=x1+(x2-x1)*best;w.y=y1+(y2-y1)*best;spiderBeginChase(f,hit);return;}
-      w.x=x2;w.y=y2;w.life-=dt;
-      if(w.x<=arena.x||w.x>=arena.x2||w.y<=arena.y||w.y>=arena.y2||w.life<=0){const p=spiderWallPoint(w.x,w.y);spiderBeginArc(f,p.x,p.y);}
-    }
     function updateSpiderVolleyWebs(f,dt){
-      const s=f.spider;
-      for(let i=s.webs.length-1;i>=0;i--){
-        const w=s.webs[i],x1=w.x,y1=w.y,x2=w.x+w.vx*dt,y2=w.y+w.vy*dt;let hit=null,best=2;
+      const s=f.spider;for(let i=s.webs.length-1;i>=0;i--){const w=s.webs[i],x1=w.x,y1=w.y,x2=w.x+w.vx*dt,y2=w.y+w.vy*dt;let hit=null,best=2;
         for(const e of enemiesOf(f)){if(!e.alive||e.tano?.hidden>0)continue;const h=spiderSegHit(x1,y1,x2,y2,e.x,e.y,e.r+5);if(h!==null&&h<best){best=h;hit=e;}}
-        if(hit){
-          const dealt=damage(hit,SPIDER.webDamage,f,"웹슈터");
-          if(hit.alive&&dealt>0&&!hasHarmfulImmunity(hit)){const d=Math.hypot(w.vx,w.vy)||1;hit.vx+=w.vx/d*SPIDER.webKnock;hit.vy+=w.vy/d*SPIDER.webKnock;refreshCcTimer(hit,"webSlow",SPIDER.webSlowTime);hit.spiderPushWindow=Math.max(hit.spiderPushWindow||0,SPIDER.webPushWindow);hit.spiderPushSourceId=f.id;}
-          if(!fastSimMode){spawnHitFlash(hit.x,hit.y,"#e2e8f0",55);spawnParticles(hit.x,hit.y,"#f8fafc",5);}s.webs.splice(i,1);continue;
-        }
+        if(hit){const dealt=damage(hit,SPIDER.webDamage,f,"웹슈터");if(hit.alive&&dealt>0&&!hasHarmfulImmunity(hit)){const d=Math.hypot(w.vx,w.vy)||1;hit.vx+=w.vx/d*SPIDER.webKnock;hit.vy+=w.vy/d*SPIDER.webKnock;refreshCcTimer(hit,"webSlow",SPIDER.webSlowTime);hit.webKnockTime=Math.max(hit.webKnockTime||0,SPIDER.webKnockDuration);hit.webKnockSourceId=f.id;}if(!fastSimMode){spawnHitFlash(hit.x,hit.y,"#e2e8f0",55);spawnParticles(hit.x,hit.y,"#f8fafc",5);}s.webs.splice(i,1);continue;}
         w.x=x2;w.y=y2;w.life-=dt;if(w.life<=0||w.x<arena.x-10||w.x>arena.x2+10||w.y<arena.y-10||w.y>arena.y2+10)s.webs.splice(i,1);
       }
     }
     function updateSpiderMan(f,dt){
-      const s=f?.spider;if(!s||!f.alive)return;spiderCheckWallEffects(f,dt);updateSpiderVolleyWebs(f,dt);s.swingCd=Math.max(0,s.swingCd-dt);
-      if(s.mode==="shot")updateSpiderSwingWeb(f,dt);
-      else if(s.mode==="arc"&&s.arc){
-        const a=s.arc;a.t+=dt;
-        const p=clamp(a.t/SPIDER.swingArcTime,0,1),ang=a.start+a.dir*(a.swingAngle||SPIDER.swingArcAngle)*p;
-        f.x=clamp(a.ax+Math.cos(ang)*a.radius,arena.x+f.r,arena.x2-f.r);f.y=clamp(a.ay+Math.sin(ang)*a.radius,arena.y+f.r,arena.y2-f.r);f.vx=0;f.vy=0;
-        // 벽을 타는 도중 몸으로 적을 들이받아도 웹스윙 근접타격이 성공한다.
-        const swingHit=enemiesOf(f).find(e=>e.alive&&!(e.tano?.hidden>0)&&Math.hypot(e.x-f.x,e.y-f.y)<=f.r+e.r+5);
-        if(swingHit){spiderFinishMelee(f,swingHit);return;}
-        if(p>=1){if((s.swingCount||0)>=SPIDER.swingMaxChains)spiderStopSwing(f);else spiderFireSwingWeb(f,null,false);}
-      }
-      else if(s.mode==="chase"&&s.chase){const target=fighters.find(e=>e.id===s.chase.targetId&&e.alive);if(!target){s.mode="idle";s.chase=null;return;}const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,contact=f.r+target.r+5;if(d<=contact)spiderFinishMelee(f,target);else{const step=Math.min(Math.max(0,d-contact),SPIDER.chaseSpeed*dt);f.x=clamp(f.x+dx/d*step,arena.x+f.r,arena.x2-f.r);f.y=clamp(f.y+dy/d*step,arena.y+f.r,arena.y2-f.r);f.vx=0;f.vy=0;if(d-step<=contact+.5)spiderFinishMelee(f,target);}}
-      if(s.mode!=="idle")return;
-      s.volleyCd-=dt;if(s.swingCd<=0){startSpiderSwing(f);return;}
-      if(s.volleyLeft<=0&&s.volleyCd<=0){s.volleyLeft=SPIDER.volleyCount;s.volleyTimer=0;s.volleyCd=SPIDER.volleyCooldown;}
-      if(s.volleyLeft>0){s.volleyTimer-=dt;while(s.volleyLeft>0&&s.volleyTimer<=0){spiderFireVolleyShot(f);s.volleyLeft--;s.volleyTimer+=SPIDER.volleyGap;}}
+      const s=f?.spider;if(!s||!f.alive)return;spiderCheckWallEffects(f,dt);updateSpiderVolleyWebs(f,dt);
+      if(s.mode==="chase"&&s.chase){const target=fighters.find(e=>e.id===s.chase.targetId&&e.alive);if(!target){s.mode="idle";s.chase=null;return;}const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,contact=f.r+target.r+5;if(d<=contact)spiderFinishMelee(f,target);else{const step=Math.min(Math.max(0,d-contact),SPIDER.chaseSpeed*dt);f.x=clamp(f.x+dx/d*step,arena.x+f.r,arena.x2-f.r);f.y=clamp(f.y+dy/d*step,arena.y+f.r,arena.y2-f.r);f.vx=0;f.vy=0;if(d-step<=contact+.5)spiderFinishMelee(f,target);}}
+      if(s.mode!=="idle")return;s.volleyCd-=dt;if(s.volleyLeft<=0&&s.volleyCd<=0){s.volleyLeft=SPIDER.volleyCount;s.volleyTimer=0;s.volleyCd=SPIDER.volleyCooldown;}if(s.volleyLeft>0){s.volleyTimer-=dt;while(s.volleyLeft>0&&s.volleyTimer<=0){spiderFireVolleyShot(f);s.volleyLeft--;s.volleyTimer+=SPIDER.volleyGap;}}
     }
     function drawSpiderWebDecal(w){
       const alpha=clamp(w.t/w.max,0,1);ctx.save();ctx.globalAlpha=.25+.65*alpha;ctx.translate(w.x,w.y);ctx.strokeStyle="#f8fafc";ctx.lineWidth=1.4;
@@ -7154,12 +7052,12 @@
     }
     function drawSpiderCharacter(f){
       const s=f.spider||{webs:[],wallWebs:[]};
-      if(!f.portraitOnly&&!fastSimMode){ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();for(const w of s.wallWebs||[])drawSpiderWebDecal(w);if(s.swingWeb){ctx.strokeStyle="rgba(248,250,252,.85)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(s.swingWeb.x,s.swingWeb.y);ctx.stroke();}if(s.arc){ctx.strokeStyle="rgba(248,250,252,.82)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(s.arc.ax,s.arc.ay);ctx.stroke();}if(s.chase){const t=fighters.find(e=>e.id===s.chase.targetId&&e.alive);if(t){ctx.strokeStyle="rgba(248,250,252,.9)";ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(t.x,t.y);ctx.stroke();}}for(const w of s.webs||[]){ctx.fillStyle="#f8fafc";ctx.beginPath();ctx.arc(w.x,w.y,3,0,Math.PI*2);ctx.fill();}ctx.restore();}
+      if(!f.portraitOnly&&!fastSimMode){ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();for(const w of s.wallWebs||[])drawSpiderWebDecal(w);if(s.chase){const t=fighters.find(e=>e.id===s.chase.targetId&&e.alive);if(t){ctx.strokeStyle="rgba(248,250,252,.9)";ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(t.x,t.y);ctx.stroke();}}for(const w of s.webs||[]){ctx.fillStyle="#f8fafc";ctx.beginPath();ctx.arc(w.x,w.y,3,0,Math.PI*2);ctx.fill();}ctx.restore();}
       ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);ctx.fillStyle="#dc2626";ctx.beginPath();ctx.ellipse(0,-3,15,18,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#1d4ed8";ctx.beginPath();ctx.moveTo(-13,8);ctx.lineTo(-8,18);ctx.lineTo(8,18);ctx.lineTo(13,8);ctx.closePath();ctx.fill();ctx.strokeStyle="#111827";ctx.lineWidth=1;for(let i=0;i<6;i++){const a=i*Math.PI/3;ctx.beginPath();ctx.moveTo(0,-3);ctx.lineTo(Math.cos(a)*14,Math.sin(a)*16-3);ctx.stroke();}for(const r of [5,10]){ctx.beginPath();ctx.arc(0,-3,r,0,Math.PI*2);ctx.stroke();}ctx.fillStyle="#f8fafc";ctx.strokeStyle="#111827";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(-5,-6,3.5,6,-.35,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(5,-6,3.5,6,.35,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();drawHealthBar(f);drawName(f);
     }
 
     function skillProgressInfo(f) {
-      if(f.spider){const s=f.spider||{};const active=s.mode&&s.mode!=="idle";return {ratio:active?1:clamp(1-(s.swingCd||0)/SPIDER.swingCooldown,0,1),className:active?"rage-fill":"skill-fill",text:active?(s.mode==="arc"?("웹스윙 · 벽 타기 "+(s.swingCount||0)+"/"+SPIDER.swingMaxChains):s.mode==="chase"?"웹스윙 · 적 추격":"웹스윙 · 거미줄 발사"):("웹스윙 "+Math.max(0,s.swingCd||0).toFixed(1)+"초"),extraTextHtml:'<div class="status-skill-label">웹스윙 8초 · 먼 벽으로 최대5연속 · 스윙 중 몸 충돌도 근접18+강넉백</div><div class="status-skill-label">비스윙 중 5초마다 웹슈터 6연사 · 발당2·약넉백·0.9초 둔화 · 벽에 밀리면 1.6초 속박 후 타게팅 웹스윙</div>'};}
+      if(f.spider){const s=f.spider||{};const active=s.mode==="chase",firing=(s.volleyLeft||0)>0;return {ratio:active||firing?1:clamp(1-Math.max(0,s.volleyCd||0)/SPIDER.volleyCooldown,0,1),className:active?"rage-fill":"skill-fill",text:active?"웹스윙 · 적 추격":firing?("웹슈터 연사 · "+(SPIDER.volleyCount-(s.volleyLeft||0))+"/"+SPIDER.volleyCount):("웹슈터 "+Math.max(0,s.volleyCd||0).toFixed(1)+"초"),extraTextHtml:'<div class="status-skill-label">웹슈터 5초마다 6연사 · 발당2·약넉백·0.9초 둔화</div><div class="status-skill-label">웹슈터 넉백 중 벽에 충돌해야만 1.6초 속박 · 속박 성공 시 타게팅 웹스윙 돌진18+강넉백</div>'};}
       if(f.conan){
         let top=0,name="";for(const [id,s] of f.conan.targets){if((s.meter||0)>top){top=s.meter||0;const t=fighters.find(x=>x.id===id);name=t?.name||"";}}
         const pending=f.conan.assaults.length>0;
@@ -10437,7 +10335,8 @@
       if(!(f.punchFlight>0))f.concussionSlow=Math.max(0,(f.concussionSlow||0)-dt);
       f.knifeSlow=Math.max(0,(f.knifeSlow||0)-dt);
       f.webSlow=Math.max(0,(f.webSlow||0)-dt);
-      f.spiderPushWindow=Math.max(0,(f.spiderPushWindow||0)-dt);
+      f.webKnockTime=Math.max(0,(f.webKnockTime||0)-dt);
+      if(f.webKnockTime<=0)f.webKnockSourceId="";
       f.spiderWallMark=Math.max(0,(f.spiderWallMark||0)-dt);
       f.bindStun=Math.max(0,(f.bindStun||0)-dt);
       if(f.bindStun>0){applyStun(f,f.bindStun);f.vx=0;f.vy=0;}
