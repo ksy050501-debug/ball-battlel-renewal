@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v125</title>
+  <title>볼배틀 리뉴얼 v126</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v125</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v126</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -2943,7 +2943,7 @@
         label="흉기 습격! -"+Math.round(dealt)+" + 출혈30";color="#fca5a5";
         if(target.alive&&dealt>0&&!hasHarmfulImmunity(target)){
           applyBleed(target,f,CONAN.knifeBleedPower,CONAN.knifeBleedDuration,.55,CONAN.knifeBleedTicks);
-          target.conanKnifeSlow=Math.max(target.conanKnifeSlow||0,CONAN.knifeSlowDuration);
+          refreshCcTimer(target,"conanKnifeSlow",CONAN.knifeSlowDuration);
         }
         if(target.alive&&dealt>0){target.vx=dx/d*180;target.vy=dy/d*180;}
       }else if(a.type==="car"){
@@ -2958,7 +2958,7 @@
         dealt=damage(target,CONAN.assaultDamage,f,"둔기 습격");
         label="둔기 습격! -"+Math.round(dealt)+" · 기절";color="#ddd6fe";
         if(target.alive&&dealt>0){
-          if(!hasHarmfulImmunity(target))target.tanoStop=Math.max(target.tanoStop||0,CONAN.bluntStun);
+          if(!hasHarmfulImmunity(target))applyStun(target,CONAN.bluntStun);
           target.vx=dx/d*CONAN.bluntKnock;target.vy=dy/d*CONAN.bluntKnock;
         }
       }
@@ -3290,7 +3290,7 @@
       let remaining=dt;
       while(remaining>1e-7 && h.dash && f.alive){
         const step=Math.min(remaining,1/120);remaining-=step;
-        const slow=(f.freeze>0?.42:1)*oshiSongSlowMultiplier(f)*(f.hintaConcussion>0?HINTA.slowMultiplier:1)*conanKnifeSlowMultiplier(f)*spiderWebSlowMultiplier(f);
+        const slow=(f.freeze>0?.42:1)*oshiSongSlowMultiplier(f)*(f.hintaConcussion>0?HINTA.slowMultiplier:1)*timedCcSlowMultiplier(f);
         const advance=Math.min(d.left,HINTA.dashSpeed*slow*step);
         f.vx=d.dx*HINTA.dashSpeed;f.vy=d.dy*HINTA.dashSpeed;
         f.x+=d.dx*advance;f.y+=d.dy*advance;d.left-=advance;
@@ -3304,7 +3304,7 @@
             const nx=-d.dy*side,ny=d.dx*side;
             e.vx=nx*480;e.vy=ny*480;e.punchFlight=Math.max(e.punchFlight||0,.25);
             e.punchSource=null;e.punchWallPower=0;
-            e.hintaConcussion=Math.max(e.hintaConcussion||0,HINTA.concussion);
+            refreshCcTimer(e,"hintaConcussion",HINTA.concussion);
             spawnFloatingText(e.x,e.y-e.r-32,"뇌진탕 · 둔화 2초","#fde68a");
           }
           spawnFloatingText(f.x,f.y-f.r-40,"비켜!!!","#fdba74");
@@ -3706,7 +3706,7 @@
       if(d.hand.includes("fusion")&&!d.hand.includes("blueEyes")&&blues.length>=2&&blues.every(m=>(m.duelMonster.cast||0)<=0&&(m.duelMonster.channel||0)<=0)){consumeJusticeCard(f,"fusion");d.fusionDone=true;const chosen=blues.slice(0,3);spawnFloatingText(f.x,f.y-f.r-50,`융합 발동 · ${chosen.length}마리!`,"#a5f3fc");d.fusion={ids:chosen.map(m=>m.id),t:1.55,max:1.55,ownerVx:f.vx,ownerVy:f.vy};chosen.forEach(m=>{m.duelMonster.fusing=true;m.duelMonster.invuln=2;m.duelMonster.savedVx=m.vx;m.duelMonster.savedVy=m.vy;m.vx=0;m.vy=0;});d.justUsed=true;d.drawCd=9;playSound("magic",1.5);return;}
       if(d.hand.includes("blueEyes")){consumeJusticeCard(f,"blueEyes");spawnFloatingText(f.x,f.y-f.r-48,"나와라, 푸른 눈의 백룡!","#bfdbfe");summonJusticeMonster(f,"blueEyes");d.blueSummoned++;d.playCd=9;d.drawCd=9;d.justUsed=true;}
     }
-    function updateDuelMonster(f,dt){const m=f.duelMonster;if(!m)return;m.invuln=Math.max(0,m.invuln-dt);m.emerge=Math.max(0,(m.emerge||0)-dt);if(m.fusing){f.vx=0;f.vy=0;return;}if(m.kind==="obelisk"){f.hp=Math.max(0,f.hp-9*dt);if(f.hp<=0){f.alive=false;spawnBlast(f.x,f.y,85,"#1e3a8a");spawnParticles(f.x,f.y,"#60a5fa",24);log("오벨리스크의 거신병 · 신의 권능 소진","소환");return;}if(m.crusherCast>0){m.crusherCast-=dt;f.vx=0;f.vy=0;if(m.crusherCast<=0){const owner=fighterById(f.ownerId)||f;enemiesOf(f).forEach(e=>{if(Math.hypot(e.x-f.x,e.y-f.y)<=165+e.r){damage(e,30,f,"갓 핸드 크러셔");applyFreeze(e,2);spawnBlast(e.x,e.y,58,"#2563eb");}});spawnBlast(f.x,f.y,175,"#1d4ed8");playSound("explosion",1.6);screenShake=Math.max(screenShake,1);m.crusherCd=5.5;}return;}m.crusherCd-=dt;if(m.crusherCd<=0){m.crusherCast=1.15;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;spawnFloatingText(f.x,f.y-f.r-32,"갓 핸드 크러셔!","#93c5fd");playSound("charge",1.2);return;}}else if(m.channel>0){m.channel-=dt;f.vx=0;f.vy=0;if(m.channel<=0){f.vx=m.savedVx||0;f.vy=m.savedVy||0;}return;}m.breathCd-=dt;if(m.kind!=="obelisk"&&m.breathCd<=0){const near=nearestEnemy(f),target=near.enemy;m.breathCd=7.5;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;if(m.kind==="blueEyes"){m.cast=1.15;m.castA=target?Math.atan2(target.y-f.y,target.x-f.x):Math.atan2(f.vy,f.vx);spawnFloatingText(f.x,f.y-f.r-26,"버스트 스트림!","#bae6fd");playSound("beam",.8);}else{startUltimateBurst(fighterById(f.ownerId)||f,f);return;}}if(m.cast>0){m.cast-=dt;f.vx=0;f.vy=0;if(m.cast<=0){fireDuelBreath(f,14);m.channel=1.05;}}if(f.contactCd<=0){const near=nearestEnemy(f);if(near.enemy&&near.d<=f.r+near.enemy.r+3){damage(near.enemy,f.attack,f,`${f.name} 충돌`);f.contactCd=.8;}}}
+    function updateDuelMonster(f,dt){const m=f.duelMonster;if(!m)return;m.invuln=Math.max(0,m.invuln-dt);m.emerge=Math.max(0,(m.emerge||0)-dt);if(m.fusing){f.vx=0;f.vy=0;return;}if(m.kind==="obelisk"){f.hp=Math.max(0,f.hp-9*dt);if(f.hp<=0){f.alive=false;spawnBlast(f.x,f.y,85,"#1e3a8a");spawnParticles(f.x,f.y,"#60a5fa",24);log("오벨리스크의 거신병 · 신의 권능 소진","소환");return;}if(m.crusherCast>0){m.crusherCast-=dt;f.vx=0;f.vy=0;if(m.crusherCast<=0){const owner=fighterById(f.ownerId)||f;enemiesOf(f).forEach(e=>{if(Math.hypot(e.x-f.x,e.y-f.y)<=165+e.r){damage(e,30,f,"갓 핸드 크러셔");applyHeavySlow(e,2);spawnBlast(e.x,e.y,58,"#2563eb");}});spawnBlast(f.x,f.y,175,"#1d4ed8");playSound("explosion",1.6);screenShake=Math.max(screenShake,1);m.crusherCd=5.5;}return;}m.crusherCd-=dt;if(m.crusherCd<=0){m.crusherCast=1.15;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;spawnFloatingText(f.x,f.y-f.r-32,"갓 핸드 크러셔!","#93c5fd");playSound("charge",1.2);return;}}else if(m.channel>0){m.channel-=dt;f.vx=0;f.vy=0;if(m.channel<=0){f.vx=m.savedVx||0;f.vy=m.savedVy||0;}return;}m.breathCd-=dt;if(m.kind!=="obelisk"&&m.breathCd<=0){const near=nearestEnemy(f),target=near.enemy;m.breathCd=7.5;m.savedVx=f.vx;m.savedVy=f.vy;f.vx=0;f.vy=0;if(m.kind==="blueEyes"){m.cast=1.15;m.castA=target?Math.atan2(target.y-f.y,target.x-f.x):Math.atan2(f.vy,f.vx);spawnFloatingText(f.x,f.y-f.r-26,"버스트 스트림!","#bae6fd");playSound("beam",.8);}else{startUltimateBurst(fighterById(f.ownerId)||f,f);return;}}if(m.cast>0){m.cast-=dt;f.vx=0;f.vy=0;if(m.cast<=0){fireDuelBreath(f,14);m.channel=1.05;}}if(f.contactCd<=0){const near=nearestEnemy(f);if(near.enemy&&near.d<=f.r+near.enemy.r+3){damage(near.enemy,f.attack,f,`${f.name} 충돌`);f.contactCd=.8;}}}
     function fireDuelBreath(dragon,power){const owner=fighterById(dragon.ownerId)||dragon,a=dragon.duelMonster.castA??Math.atan2(dragon.vy,dragon.vx),kind=dragon.duelMonster.kind,range=kind==="ultimate"?230:kind==="twin"?215:190,width=kind==="ultimate"?30:kind==="twin"?27:23,hits=kind==="twin"?6:7;duelBreaths.push({kind:"stream",dragonId:dragon.id,ownerId:owner.id,x:dragon.x,y:dragon.y,a,range,width,life:1.05,maxLife:1.05,tickPower:Math.max(1,Math.round(power/hits)),maxHits:hits,hitCounts:new Map(),tickCd:0,color:"#60a5fa"});screenShake=Math.max(screenShake,.34);}
     function startUltimateBurst(owner,dragon){const m=dragon.duelMonster,near=nearestEnemy(dragon),base=near.enemy?Math.atan2(near.enemy.y-dragon.y,near.enemy.x-dragon.x):Math.atan2(m.savedVy||dragon.vy,m.savedVx||dragon.vx);if(Math.hypot(m.savedVx||0,m.savedVy||0)<1){const v=randomVelocity(dragon.baseSpeed||2.35);m.savedVx=v.vx;m.savedVy=v.vy;}m.channel=3.6;m.breathCd=7.5;dragon.vx=0;dragon.vy=0;duelBreaths.push({kind:"sweep",dragonId:dragon.id,ownerId:owner.id,base,x:dragon.x,y:dragon.y,range:275,life:3.6,maxLife:3.6,hitCounts:new Map(),tickCd:0,color:"#38bdf8"});spawnFloatingText(dragon.x,dragon.y-dragon.r-38,"얼티밋 버스트!","#7dd3fc");log(`<strong>${escapeHtml(owner.name)}</strong> 얼티밋 버스트!`,"공격");playSound("beam",1.7);screenShake=Math.max(screenShake,.75);}
     function updateDuelBreaths(dt){for(let i=duelBreaths.length-1;i>=0;i--){const b=duelBreaths[i];b.life-=dt;if(b.kind==="stream"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;b.tickCd-=dt;if(b.tickCd<=0){b.tickCd=.10;enemiesOf(dragon).forEach(e=>{const count=b.hitCounts.get(e.id)||0;if(count>=b.maxHits)return;const dx=e.x-b.x,dy=e.y-b.y,along=dx*Math.cos(b.a)+dy*Math.sin(b.a),side=Math.abs(-dx*Math.sin(b.a)+dy*Math.cos(b.a));if(along>=0&&along<=b.range+e.r&&side<=b.width/2+e.r){b.hitCounts.set(e.id,count+1);damage(e,b.tickPower,dragon,"버스트 스트림 다단");spawnHitFlash(e.x,e.y,"#7dd3fc",20);}});}}else if(b.kind==="sweep"){const dragon=fighterById(b.dragonId),owner=fighterById(b.ownerId);if(!dragon?.alive){duelBreaths.splice(i,1);continue;}b.x=dragon.x;b.y=dragon.y;const p=1-b.life/b.maxLife,swipe=p<.5?p*2:(1-p)*2;b.a=b.base-Math.PI/2+swipe*Math.PI;b.tickCd-=dt;if(b.tickCd<=0){b.tickCd=.11;enemiesOf(dragon).forEach(e=>{const count=b.hitCounts.get(e.id)||0;if(count>=6)return;const dx=e.x-b.x,dy=e.y-b.y,d=Math.hypot(dx,dy),da=Math.abs(Math.atan2(Math.sin(Math.atan2(dy,dx)-b.a),Math.cos(Math.atan2(dy,dx)-b.a)));if(d<=b.range+e.r&&da<.25){b.hitCounts.set(e.id,count+1);const dealt=damage(e,4,dragon,"얼티메이트 버스트 다단");if(dealt>0)spawnFloatingText(e.x,e.y-e.r-10-(count%3)*12,`얼티밋 -${dealt}`,"#7dd3fc");spawnHitFlash(e.x,e.y,"#38bdf8",26);}});}screenShake=Math.max(screenShake,.38);}else if(b.kind==="godRing"){const prev=b.r;b.r+=b.speed*dt;const owner=fighterById(b.ownerId);if(owner)enemiesOf(owner).forEach(e=>{if(b.hit.has(e.id))return;const d=Math.hypot(e.x-b.x,e.y-b.y);if(d+e.r>=prev&&d-e.r<=b.r){b.hit.add(e.id);damage(e,4,owner,"갓 핸드 임팩트");spawnBlast(e.x,e.y,42,"#60a5fa");}});}if(b.life<=0||(b.maxR!==undefined&&b.r>b.maxR))duelBreaths.splice(i,1);}}
@@ -4921,7 +4921,7 @@
       if (t.stones.includes("mind")) {
         t.mind -= dt;
         if (t.mind <= 0) {
-          enemiesOf(f).forEach(e => { if (!(e.tano?.hidden > 0)) { e.tanoStop = Math.max(e.tanoStop || 0, TANO.mindDuration); spawnFloatingText(e.x, e.y - 35, "정지", "#facc15"); } });
+          enemiesOf(f).forEach(e => { if (!(e.tano?.hidden > 0)) { applyStun(e, TANO.mindDuration); spawnFloatingText(e.x, e.y - 35, "정지", "#facc15"); } });
           t.mind = TANO.mindPeriod;
         }
       }
@@ -5591,6 +5591,7 @@
     }
 
       const patchNotes = [
+      "v126: CC 내부 구조를 성능 변화 없이 정리했습니다. 공용 행동정지 applyStun, 강둔화 applyHeavySlow, 시간형 CC 타이머 refreshCcTimer를 추가하고 타노 마인드·고난 둔기·거미남 벽속박·고난 흉기·거미남 웹·힌타 뇌진탕·오벨리스크 강둔화 호출을 공용 명칭으로 연결했습니다. 기존 tanoStop·freeze·캐릭터별 타이머 저장값과 지속시간·중첩·면역·넉백·피해·연출은 그대로 유지해 전투 성능은 변경하지 않았습니다.",
       "v125: 거미남 웹스윙 전투성을 개선했습니다. 웹스윙 부채꼴 이동 중 적과 몸으로 충돌해도 즉시 근접18+강넉백 공격이 발동하고, 벽까지 밀리면 기존 벽충돌12도 이어집니다. 140px보다 가까운 벽은 웹스윙 앵커로 사용하지 않으며 랜덤 웹도 먼 벽 지점을 우선 조준합니다. 벽 웹스윙 연쇄는 최대5회까지만 이어지고 5번째 시도는 적 방향을 우선 조준하며, 5회 모두 실패하면 웹스윙을 종료하고 8초 쿨타임으로 복귀합니다.",
       "v124: 거미남 웹스윙 이동을 수정했습니다. 먼 벽에 걸린 거미줄은 실제 현재 위치-앵커 거리를 스윙 반경으로 사용해 순간이동하지 않으며, 거리가 멀수록 회전각을 줄여 자연스럽게 이동합니다. 벽 앵커는 구석에서 72px 떨어진 지점으로 보정하고, 두 스윙 방향 중 경기장 안쪽으로 향하는 방향을 선택해 구석에서 비정상적으로 끼는 움직임을 줄였습니다.",
       "v123: 고난 체력을165→160으로 조정. 영화 신캐 '거미남' 추가(HP170·이속2.9). 8초마다 랜덤 거미줄을 발사해 적중 시 줄을 따라 접근해 근접18+강넉백, 벽충돌 시 추가12. 적 대신 벽에 맞으면 0.62초 부채꼴 웹스윙 뒤 다시 랜덤 거미줄을 발사하며 적중할 때까지 반복. 웹스윙 중이 아닐 때는 5초마다 웹슈터6연사(발당2·약넉백·0.9초 22% 둔화). 웹슈터 넉백으로 벽에 닿으면 1.6초 거미줄 속박, 즉시 웹스윙 쿨 초기화 후 속박 대상을 타게팅해 발사.",
@@ -7120,7 +7121,7 @@
         for(const e of enemiesOf(f)){if(!e.alive||e.tano?.hidden>0)continue;const h=spiderSegHit(x1,y1,x2,y2,e.x,e.y,e.r+5);if(h!==null&&h<best){best=h;hit=e;}}
         if(hit){
           const dealt=damage(hit,SPIDER.webDamage,f,"웹슈터");
-          if(hit.alive&&dealt>0&&!hasHarmfulImmunity(hit)){const d=Math.hypot(w.vx,w.vy)||1;hit.vx+=w.vx/d*SPIDER.webKnock;hit.vy+=w.vy/d*SPIDER.webKnock;hit.spiderWebSlow=Math.max(hit.spiderWebSlow||0,SPIDER.webSlowTime);hit.spiderPushWindow=Math.max(hit.spiderPushWindow||0,SPIDER.webPushWindow);hit.spiderPushSourceId=f.id;}
+          if(hit.alive&&dealt>0&&!hasHarmfulImmunity(hit)){const d=Math.hypot(w.vx,w.vy)||1;hit.vx+=w.vx/d*SPIDER.webKnock;hit.vy+=w.vy/d*SPIDER.webKnock;refreshCcTimer(hit,"spiderWebSlow",SPIDER.webSlowTime);hit.spiderPushWindow=Math.max(hit.spiderPushWindow||0,SPIDER.webPushWindow);hit.spiderPushSourceId=f.id;}
           if(!fastSimMode){spawnHitFlash(hit.x,hit.y,"#e2e8f0",55);spawnParticles(hit.x,hit.y,"#f8fafc",5);}s.webs.splice(i,1);continue;
         }
         w.x=x2;w.y=y2;w.life-=dt;if(w.life<=0||w.x<arena.x-10||w.x>arena.x2+10||w.y<arena.y-10||w.y>arena.y2+10)s.webs.splice(i,1);
@@ -7697,10 +7698,30 @@
       return cleared;
     }
 
-    function applyFreeze(target, duration) {
+    // v126 공용 CC 어댑터.
+    // 주의: 밸런스 보존을 위해 기존 저장 필드와 중첩/면역 규칙은 그대로 둔다.
+    // freeze는 역사적으로 "빙결"이라는 이름이지만 실제 효과는 이속 42%의 강둔화다.
+    // tanoStop은 역사적 이름을 유지하되 공용 행동정지(stun/stop) API를 통해 사용한다.
+    function applyHeavySlow(target, duration) {
       if (!target || !target.alive || hasHarmfulImmunity(target)) return false;
       target.freeze = Math.max(target.freeze || 0, duration);
       return true;
+    }
+    function applyFreeze(target, duration) { // 구형 캐릭터 호환용 별칭
+      return applyHeavySlow(target, duration);
+    }
+    function applyStun(target, duration) {
+      if (!target || !target.alive) return false;
+      target.tanoStop = Math.max(target.tanoStop || 0, duration);
+      return true;
+    }
+    function refreshCcTimer(target, stateKey, duration) {
+      if (!target || !target.alive) return false;
+      target[stateKey] = Math.max(target[stateKey] || 0, duration);
+      return true;
+    }
+    function timedCcSlowMultiplier(target) {
+      return conanKnifeSlowMultiplier(target) * spiderWebSlowMultiplier(target);
     }
 
     function applyJolt(target, duration = 4.0) {
@@ -9669,9 +9690,9 @@
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
       const oshiSlow = oshiSongSlowMultiplier(f) * (f.hintaConcussion > 0 ? HINTA.slowMultiplier : 1);
       const elsaIce = elsaAuraSlowMultiplier(f);
-      const conanSlow = conanKnifeSlowMultiplier(f) * spiderWebSlowMultiplier(f);
+      const timedCcSlow = timedCcSlowMultiplier(f);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
-      return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * oshiSlow * elsaIce * conanSlow;
+      return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * oshiSlow * elsaIce * timedCcSlow;
     }
 
     function useSkill(f, label) {
@@ -10417,7 +10438,7 @@
       f.spiderPushWindow=Math.max(0,(f.spiderPushWindow||0)-dt);
       f.spiderWallMark=Math.max(0,(f.spiderWallMark||0)-dt);
       f.spiderBind=Math.max(0,(f.spiderBind||0)-dt);
-      if(f.spiderBind>0){f.tanoStop=Math.max(f.tanoStop||0,f.spiderBind);f.vx=0;f.vy=0;}
+      if(f.spiderBind>0){applyStun(f,f.spiderBind);f.vx=0;f.vy=0;}
       if(f.conanKnifeSlow>0&&!fastSimMode&&Math.random()<dt*5)spawnParticles(f.x+rand(-f.r*.5,f.r*.5),f.y+rand(-f.r*.5,f.r*.5),"#7f1d1d",1);
       if(f.hinta?.dash && (f.tanoStop>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f)))endHintaDash(f);
       updateOshiSongDebuffs(f, dt);
