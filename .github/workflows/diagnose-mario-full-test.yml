@@ -1,0 +1,84 @@
+name: Diagnose plumber full test
+
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose-mario-full-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare browser diagnostic
+        run: |
+          node --version
+          which google-chrome || which google-chrome-stable || which chromium || true
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer-core@24 --no-audit --no-fund >/dev/null 2>&1
+          cat > /tmp/diagnose.cjs <<'JS'
+          const puppeteer = require('puppeteer-core');
+          const {execSync, spawn} = require('child_process');
+          const fs = require('fs');
+
+          function chromePath(){
+            for (const cmd of ['google-chrome','google-chrome-stable','chromium']) {
+              try { return execSync(`which ${cmd}`).toString().trim(); } catch {}
+            }
+            throw new Error('Chrome/Chromium not found');
+          }
+
+          async function runOne(ref, port){
+            execSync(`git show ${ref}:index.html > /tmp/index-${port}.html`, {stdio:'inherit', shell:'/bin/bash'});
+            fs.mkdirSync(`/tmp/site-${port}`, {recursive:true});
+            fs.copyFileSync(`/tmp/index-${port}.html`, `/tmp/site-${port}/index.html`);
+            const server=spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1'],{cwd:`/tmp/site-${port}`,stdio:'ignore'});
+            await new Promise(r=>setTimeout(r,500));
+            const browser=await puppeteer.launch({headless:true,executablePath:chromePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
+            const page=await browser.newPage();
+            const pageErrors=[];
+            page.on('pageerror',e=>pageErrors.push(String(e.stack||e)));
+            await page.goto(`http://127.0.0.1:${port}`,{waitUntil:'load',timeout:30000});
+            const hasMario=await page.evaluate(()=>typeof characterById==='function' && !!characterById('mario_plumber'));
+            if(!hasMario){ await browser.close(); server.kill(); return {ref,hasMario:false}; }
+            const results=await page.evaluate(async()=>{
+              const focus=characterById('mario_plumber');
+              const opponents=battleRosterCharacters().filter(c=>c.id!==focus.id && !c.simOnly);
+              const out=[];
+              const oldSound=soundEnabled, oldSpeed=speedMultiplier;
+              soundEnabled=false; fastSimMode=true; speedMultiplier=4;
+              for(const opp of opponents){
+                const realStart=performance.now();
+                try{
+                  const result=await simulateQuickPair([opp,focus],3,'');
+                  out.push({id:opp.id,name:opp.name,aWins:result.aWins,bWins:result.bWins,draws:result.drawCount,avgBattle:Number(result.avgTime),realMs:Math.round(performance.now()-realStart)});
+                }catch(e){
+                  out.push({id:opp.id,name:opp.name,error:String(e&&e.stack||e),realMs:Math.round(performance.now()-realStart)});
+                  break;
+                }
+              }
+              fastSimMode=false; soundEnabled=oldSound; speedMultiplier=oldSpeed;
+              return out;
+            });
+            await browser.close(); server.kill();
+            return {ref,hasMario:true,pageErrors,results};
+          }
+
+          (async()=>{
+            for(const [ref,port] of [['f5f7647b82030940c9b13edb145fbb6751974abf',8123],['HEAD',8124]]){
+              console.log(`===== ${ref} =====`);
+              try{ console.log(JSON.stringify(await runOne(ref,port),null,2)); }
+              catch(e){ console.error(e.stack||e); process.exitCode=1; }
+            }
+          })();
+          JS
+
+      - name: Run plumber diagnostic
+        run: node /tmp/diagnose.cjs
