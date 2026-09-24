@@ -15,6 +15,31 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Adjust duplicate anchors
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/apply_mario_v134.py')
+          s=p.read_text(encoding='utf-8')
+          old="""def one(old, new, label):
+    global s
+    n = s.count(old)
+    if n != 1:
+        raise SystemExit(f'{label}: expected 1 anchor, found {n}')
+    s = s.replace(old, new, 1)
+"""
+          new="""def one(old, new, label):
+    global s
+    n = s.count(old)
+    expected = 2 if label in {'Mario slow multiplier','newhello slow','movement slow'} else 1
+    if n != expected:
+        raise SystemExit(f'{label}: expected {expected} anchor(s), found {n}')
+    s = s.replace(old, new, expected)
+"""
+          if old not in s:
+              raise SystemExit('one() helper anchor missing')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
       - name: Apply patch
         run: |
           set +e
