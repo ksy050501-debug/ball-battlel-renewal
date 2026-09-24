@@ -1,0 +1,75 @@
+name: Patch victory-only average HP
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-victory-average-hp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch average remaining HP aggregation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          replacements = [
+              (
+                  '''        chosen.forEach(c => {
+          const fighter = fighters.find(f => !f.isSummon && f.baseId === c.id);
+          remainingHpTotals[c.id] += Math.max(0, fighter ? fighter.hp : 0);
+        });''',
+                  '''        if (winnerId !== "draw") {
+          const winner = fighters.find(f => !f.isSummon && f.baseId === winnerId);
+          remainingHpTotals[winnerId] += Math.max(0, winner ? winner.hp : 0);
+        }'''
+              ),
+              (
+                  '''        averageHp: Object.fromEntries(chosen.map(c => [
+          c.id,
+          count > 0 ? remainingHpTotals[c.id] / count : 0
+        ])),''',
+                  '''        averageHp: Object.fromEntries(chosen.map(c => {
+          const wins = score[c.id] || 0;
+          return [c.id, wins > 0 ? remainingHpTotals[c.id] / wins : 0];
+        })),'''
+              ),
+              (
+                  '''        const averageHp = {
+          [opp.id]: remainingHpTotals[opp.id] / total,
+          [focus.id]: remainingHpTotals[focus.id] / total
+        };''',
+                  '''        const averageHp = {
+          [opp.id]: aWins > 0 ? remainingHpTotals[opp.id] / aWins : 0,
+          [focus.id]: bWins > 0 ? remainingHpTotals[focus.id] / bWins : 0
+        };'''
+              ),
+          ]
+
+          for i, (old, new) in enumerate(replacements, 1):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'Patch target {i} expected exactly once, found {count}; aborting without modifying index.html')
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit patch and remove one-time workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/patch-victory-average-hp.yml
+          git add index.html
+          git diff --cached --check
+          git commit -m "Fix average HP to use winning battles only"
+          git push
