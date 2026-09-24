@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v141</title>
+  <title>볼배틀 리뉴얼 v142</title>
   <style>
     :root {
       --bg: #020617;
@@ -5596,6 +5596,7 @@
     }
 
       const patchNotes = [
+      "v142: 쿱하 등껍질 돌진은 돌진 1회 동안 같은 상대를 최대 1회만 타격하도록 변경했습니다. 등껍질 피해14·강넉백·벽충돌8·6초 지속·마지막3초 추적·종료 후3초 기절, HP240과 회전 불기둥 수치는 유지합니다.",
       "v141: 게임 신캐 쿱하 추가. HP240·일반보다 큰 반지름25·넉백 저항 없음. 11초 주기 등껍질 돌진은 6초간 이속×1.9, 충돌14+강넉백, 넉백 후 벽충돌8, 마지막3초 추적 후 제자리 정지·3초 기절. 9초 주기 회전 불기둥은 4.5초 동안 맵 중앙축을 회전하며 HP 단계에 따라 1~4개, 접촉6+화상1×4. 캡틴 방패11·병장 와이어15 유지.",
       "v132: 거미남 웹슈터의 제어력을 낮췄습니다. 웹슈터 넉백을 105→45로 줄이고 둔화를 22%→10%(0.9초), 벽충돌 속박을 1.6초→0.9초로 줄였습니다. 웹슈터 6연사·발당 피해2·넉백 판정0.22초·속박 성공 시 웹스윙 돌진18+강넉백·HP170·이속2.9는 유지합니다.",
       "v131: 경기 시작 직후 전투 루프가 멈추던 버그를 수정했습니다. v128 CC 명칭 정리 뒤 뉴헬로 병장의 특수 이동 계산에 옛 지역 변수 oshiSlow·elsaIce 참조가 남아 ReferenceError가 발생하던 문제를 현재 공용 둔화 계산 songAndConcussionSlow·coldAuraSlow로 연결했습니다. 기존 최애 노래·힌타 뇌진탕·엘팔아 냉기 둔화 수치와 병장 이동 성능은 변경하지 않았습니다.",
@@ -5848,7 +5849,7 @@
         koopa_king: {
           damage: "등껍질 충돌 14 + 강넉백 · 넉백 후 벽충돌 8 / 회전 불기둥 접촉 6 + 화상 1×4",
           tick: "등껍질 11초 주기·6초 지속·종료 후 3초 기절 / 불기둥 9초 주기·4.5초 지속",
-          tip: "등껍질은 마지막 3초 동안 적을 추적한다. 중앙 회전 불기둥은 HP 75% 초과 1개, 50~75% 2개, 25~50% 3개, 25% 이하 4개다. 넉백 저항은 없다."
+          tip: "등껍질은 돌진 1회 동안 같은 상대를 최대 1회만 타격하며, 마지막 3초 동안 적을 추적한다. 중앙 회전 불기둥은 HP 75% 초과 1개, 50~75% 2개, 25~50% 3개, 25% 이하 4개다. 넉백 저항은 없다."
         },
         dummy_unit: {
           damage: "없음",
@@ -7141,7 +7142,7 @@
     }
     function koopaShellContact(source,target){
       const k=source?.koopa;if(!k?.shellActive||!target?.alive||!areEnemies(source,target)||(k.hitCd[target.id]||0)>0)return false;
-      const dx=target.x-source.x,dy=target.y-source.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,KOOPA.shellDamage,source,"등껍질충돌");k.hitCd[target.id]=KOOPA.shellHitCd;
+      const dx=target.x-source.x,dy=target.y-source.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,KOOPA.shellDamage,source,"등껍질충돌");k.hitCd[target.id]=Math.max(.1,k.shellTime)+.25;
       if(dealt>0&&target.alive){target.vx=dx/d*KOOPA.shellKnock;target.vy=dy/d*KOOPA.shellKnock;target.punchFlight=Math.max(target.punchFlight||0,KOOPA.shellFlight);target.punchSource=null;target.punchWallPower=0;target.punchWallHits=0;target.koopaWallCrash={sourceId:source.id,t:KOOPA.shellWallWindow};koopaNormalizeShellSpeed(source);}
       if(!fastSimMode){spawnHitFlash(target.x,target.y,"#bef264",58);spawnParticles(target.x,target.y,"#84cc16",10);}
       return dealt>0;
