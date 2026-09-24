@@ -19,8 +19,6 @@ jobs:
 
       - name: Prepare browser diagnostic
         run: |
-          node --version
-          which google-chrome || which google-chrome-stable || which chromium || true
           npm init -y >/dev/null 2>&1
           npm install puppeteer-core@24 --no-audit --no-fund >/dev/null 2>&1
           cat > diagnose.cjs <<'JS'
@@ -35,49 +33,52 @@ jobs:
             throw new Error('Chrome/Chromium not found');
           }
 
-          async function runOne(ref, port){
-            execSync(`git show ${ref}:index.html > /tmp/index-${port}.html`, {stdio:'inherit', shell:'/bin/bash'});
+          (async()=>{
+            const port=8124;
             fs.mkdirSync(`/tmp/site-${port}`, {recursive:true});
-            fs.copyFileSync(`/tmp/index-${port}.html`, `/tmp/site-${port}/index.html`);
+            fs.copyFileSync('index.html', `/tmp/site-${port}/index.html`);
             const server=spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1'],{cwd:`/tmp/site-${port}`,stdio:'ignore'});
             await new Promise(r=>setTimeout(r,500));
             const browser=await puppeteer.launch({headless:true,executablePath:chromePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
             const page=await browser.newPage();
-            const pageErrors=[];
-            page.on('pageerror',e=>pageErrors.push(String(e.stack||e)));
+            page.on('pageerror',e=>console.error('PAGEERROR',String(e.stack||e)));
             await page.goto(`http://127.0.0.1:${port}`,{waitUntil:'load',timeout:30000});
-            const hasMario=await page.evaluate(()=>typeof characterById==='function' && !!characterById('mario_plumber'));
-            if(!hasMario){ await browser.close(); server.kill(); return {ref,hasMario:false}; }
-            const results=await page.evaluate(async()=>{
-              const focus=characterById('mario_plumber');
-              const opponents=battleRosterCharacters().filter(c=>c.id!==focus.id && !c.simOnly);
-              const out=[];
-              const oldSound=soundEnabled, oldSpeed=speedMultiplier;
-              soundEnabled=false; fastSimMode=true; speedMultiplier=4;
-              for(const opp of opponents){
-                const realStart=performance.now();
-                try{
-                  const result=await simulateQuickPair([opp,focus],3,'');
-                  out.push({id:opp.id,name:opp.name,aWins:result.aWins,bWins:result.bWins,draws:result.drawCount,avgBattle:Number(result.avgTime),realMs:Math.round(performance.now()-realStart)});
-                }catch(e){
-                  out.push({id:opp.id,name:opp.name,error:String(e&&e.stack||e),realMs:Math.round(performance.now()-realStart)});
-                  break;
-                }
-              }
-              fastSimMode=false; soundEnabled=oldSound; speedMultiplier=oldSpeed;
-              return out;
-            });
-            await browser.close(); server.kill();
-            return {ref,hasMario:true,pageErrors,results};
-          }
 
-          (async()=>{
-            for(const [ref,port] of [['f5f7647b82030940c9b13edb145fbb6751974abf',8123],['HEAD',8124]]){
-              console.log(`===== ${ref} =====`);
-              try{ console.log(JSON.stringify(await runOne(ref,port),null,2)); }
-              catch(e){ console.error(e.stack||e); process.exitCode=1; }
+            const opponents=await page.evaluate(()=>battleRosterCharacters().filter(c=>c.id!=='mario_plumber'&&!c.simOnly).map(c=>({id:c.id,name:c.name})));
+            await page.evaluate(()=>{
+              soundEnabled=false; fastSimMode=true; speedMultiplier=4;
+              window.__plumberDiag={maxFighters:0,maxParticles:0,maxShells:0,maxBananas:0,maxFireballs:0};
+              const originalUpdate=update;
+              update=function(dt){
+                const r=originalUpdate(dt);
+                const d=window.__plumberDiag;
+                d.maxFighters=Math.max(d.maxFighters,fighters.length);
+                d.maxParticles=Math.max(d.maxParticles,particles.length);
+                const mario=fighters.find(f=>f.alive&&!f.isSummon&&f.baseId==='mario_plumber');
+                if(mario?.mario){
+                  d.maxShells=Math.max(d.maxShells,mario.mario.shells?.length||0);
+                  d.maxBananas=Math.max(d.maxBananas,mario.mario.bananas?.length||0);
+                  d.maxFireballs=Math.max(d.maxFireballs,mario.mario.fireballs?.length||0);
+                }
+                return r;
+              };
+            });
+
+            let totalMs=0;
+            for(const opp of opponents){
+              const start=Date.now();
+              const result=await page.evaluate(async(id)=>{
+                window.__plumberDiag.maxFighters=0;window.__plumberDiag.maxParticles=0;window.__plumberDiag.maxShells=0;window.__plumberDiag.maxBananas=0;window.__plumberDiag.maxFireballs=0;
+                const focus=characterById('mario_plumber'), enemy=characterById(id);
+                const r=await simulateQuickPair([enemy,focus],30,'');
+                return {aWins:r.aWins,bWins:r.bWins,draws:r.drawCount,avgBattle:Number(r.avgTime),diag:{...window.__plumberDiag}};
+              },opp.id);
+              const ms=Date.now()-start; totalMs+=ms;
+              console.log(JSON.stringify({id:opp.id,name:opp.name,realMs:ms,...result}));
             }
-          })();
+            console.log('TOTAL_MS',totalMs);
+            await browser.close();server.kill();
+          })().catch(e=>{console.error(e.stack||e);process.exit(1)});
           JS
 
       - name: Run plumber diagnostic
