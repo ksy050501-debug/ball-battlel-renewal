@@ -1,0 +1,55 @@
+name: Profile Mario simulation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/diag-mario-profile.yml'
+
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build profile page
+        run: |
+          cat > /tmp/profile.js <<'JS'
+          setTimeout(async()=>{
+            const out=[];
+            const opp=characterById('jabami'), mario=characterById('mario_plumber');
+            const prev=beginFastSim('profile');
+            try{
+              for(let round=1;round<=30;round++){
+                setArenaSize(2);prepareBattleState();teamState=null;
+                const positions=spawnPositions(2);fighters=[opp,mario].map((c,i)=>makeFighter(c,positions[i],i));
+                let guard=0,maxShells=0,maxBananas=0,maxFireballs=0,maxParticles=0,maxFighters=0;
+                const started=performance.now();
+                while(running&&!ended&&battleTime<500&&guard<20000){
+                  update(0.033);guard++;
+                  const mf=fighters.find(f=>f.baseId==='mario_plumber'&&!f.isSummon);
+                  if(mf?.mario){maxShells=Math.max(maxShells,mf.mario.shells?.length||0);maxBananas=Math.max(maxBananas,mf.mario.bananas?.length||0);maxFireballs=Math.max(maxFireballs,mf.mario.fireballs?.length||0);}
+                  maxParticles=Math.max(maxParticles,particles.length);maxFighters=Math.max(maxFighters,fighters.length);
+                  if(guard%1200===0) await new Promise(r=>setTimeout(r,0));
+                }
+                out.push({round,battleTime:Number(battleTime.toFixed(1)),guard,ms:Math.round(performance.now()-started),winner:quickWinnerLabel([opp,mario]),maxShells,maxBananas,maxFireballs,maxParticles,maxFighters});
+              }
+            }catch(e){out.push({error:String(e&&e.stack||e)});}finally{endFastSim(prev);}
+            const pre=document.createElement('pre');pre.id='diagResult';pre.textContent=JSON.stringify(out);document.body.appendChild(pre);
+          },50);
+          JS
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8'); marker='    requestAnimationFrame(loop);'; diag=Path('/tmp/profile.js').read_text()
+          if marker not in s: raise SystemExit('marker missing')
+          Path('/tmp/profile.html').write_text(s.replace(marker,diag+'\n'+marker,1),encoding='utf-8')
+          PY
+      - name: Run profile
+        run: |
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --allow-file-access-from-files --virtual-time-budget=180000 --dump-dom file:///tmp/profile.html > /tmp/profile-dom.txt
+          python3 - <<'PY'
+          import re,html
+          s=open('/tmp/profile-dom.txt',encoding='utf-8').read();m=re.search(r'<pre id="diagResult">(.*?)</pre>',s,re.S)
+          if not m: raise SystemExit('profile result missing')
+          print('PROFILE_RESULT='+html.unescape(m.group(1)))
+          PY
