@@ -12,13 +12,57 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build diagnostic page
         run: |
+          cat > /tmp/diag.js <<'JS'
+          setTimeout(async()=>{
+            const out=[];
+            async function runOne(aId,bId){
+              const a=characterById(aId), b=characterById(bId);
+              const prev=beginFastSim('diag');
+              try{
+                setArenaSize(2);
+                prepareBattleState();
+                teamState=null;
+                const positions=spawnPositions(2);
+                fighters=[a,b].map((c,i)=>makeFighter(c,positions[i],i));
+                let guard=0;
+                while(running&&!ended&&battleTime<500&&guard<20000){
+                  update(0.033);
+                  guard++;
+                  if(guard%600===0) await new Promise(r=>setTimeout(r,0));
+                }
+                out.push({
+                  pair:aId+' vs '+bId,
+                  guard,
+                  battleTime,
+                  running,
+                  ended,
+                  winnerId:quickWinnerLabel([a,b]),
+                  alive:fighters.filter(f=>f.alive&&!f.isSummon).map(f=>({name:f.name,baseId:f.baseId,id:f.id,hp:f.hp,mario:!!f.mario,kart:!!f.mario?.kart,pipe:f.mario?.pipeTransit?.phase||null})),
+                  all:fighters.map(f=>({name:f.name,baseId:f.baseId,id:f.id,isSummon:!!f.isSummon,alive:f.alive,hp:f.hp,marioBlock:!!f.marioBlock}))
+                });
+              }catch(e){
+                out.push({pair:aId+' vs '+bId,error:String(e&&e.stack||e)});
+              }finally{
+                endFastSim(prev);
+              }
+            }
+            await runOne('spider_man','mario_plumber');
+            await runOne('logo_doctor','mario_plumber');
+            await runOne('captain','mario_plumber');
+            await runOne('spider_man','conan');
+            const pre=document.createElement('pre');
+            pre.id='diagResult';
+            pre.textContent=JSON.stringify(out);
+            document.body.appendChild(pre);
+          },50);
+          JS
           python3 - <<'PY'
           from pathlib import Path
-          import base64
           s=Path('index.html').read_text(encoding='utf-8')
           marker='    requestAnimationFrame(loop);'
-          diag=base64.b64decode('CiAgICBzZXRUaW1lb3V0KGFzeW5jKCk9PnsKICAgICAgY29uc3Qgb3V0PVtdOwogICAgICBhc3luYyBmdW5jdGlvbiBydW5PbmUoYUl kLGJJZCl7CiAgICAgICAgY29uc3QgYT1jaGFyYWN0ZXJCeUlkKGFJZCksYj1jaGFyYWN0ZXJCeUlkKGJJZCk7CiAgICAgICAgY29uc3QgcHJldj1iZWdpbkZhc3RTaW0oJ2RpYWcnKTsKICAgICAgICB0cnl7CiAgICAgICAgICBzZXRBcmVuYVNpemUoMik7cHJlcGFyZUJhdHRsZVN0YXRlKCk7dGVhbVN0YXRlPW51bGw7CiAgICAgICAgICBjb25zdCBwb3NpdGlvbnM9c3Bhd25Qb3NpdGlvbnMoMik7ZmlnaHRlcnM9W2EsYl0ubWFwKChjLGkpPT5tYWtlRmlnaHRlcihjLHBvc2l0aW9uc1tpXSxpKSk7CiAgICAgICAgICBsZXQgZ3VhcmQ9MDt3aGlsZShydW5uaW5nJiYhZW5kZWQmJmJhdHRsZVRpbWU8NTAwJiZndWFyZDwyMDAwMCl7dXBkYXRlKDAuMDMzKTtndWFyZCsrO2lmKGd1YXJkJTYwMD09PTApYXdhaXQgbmV3IFByb21pc2Uocj0+c2V0VGltZW91dChyLDApKTt9CiAgICAgICAgICBjb25zdCBhbGl2ZT1maWdodGVycy5maWx0ZXIoZj0+Zi5hbGl2ZSYmIWYuaXNTdW1tb24pLm1hcChmPT4oe25hbWU6Zi5uYW1lLGJhc2VJZDpmLmJhc2VJZCx pZDpmLmlkLGhwOmYuaHAsbWFyaW86ISFmLm1hcmlvLGthcnQ6ISFmLm1hcmlvPy5rYXJ0LHBpcGU6Zi5tYXJpbz8ucGlwZVRyYW5zaXQ/LnBoYXNlfHxudWxsfSkpOwogICAgICAgICAgb3V0LnB1c2goe3BhaXI6YUl kKycgdnMgJytiSWQsZ3VhcmQsYmF0dGxlVGltZSxydW5uaW5nLGVuZGVkLHdpbm5lcklkOnF1aWNrV2lubmVyTGFiZWwoW2EsYl0pLGFsaXZlLGFsbDpmaWdodGVycy5tYXAoZj0+KHtuYW1lOmYubmFtZSxiYXNlSWQ6Zi5iYXNlSWQsaWQ6Zi5pZCxpc1N1bW1vbjohIWYuaXNTdW1tb24sYWxpdmU6Zi5hbGl2ZSxocDp mLmhwLG1hcmlvQmxvY2s6ISFmLm1hcmlvQmxvY2t9KX0pKTsKICAgICAgICB9Y2F0Y2goZSl7b3V0LnB1c2goe3BhaXI6YUl kKycgdnMgJytiSWQsZXJyb3I6U3RyaW5nKGUmJmUuc3RhY2t8fGUpfSk7fWZpbmFsbHl7ZW5kRmFzdFNpbShwcmV2KTt9CiAgICAgIH0KICAgICAgdHJ5ewogICAgICAgIGF3YWl0IHJ1bk9uZSgnc3BpZGVyX21hbicsJ21hcmlvX3BsdW1iZXInKTsKICAgICAgICBhd2FpdCBydW5PbmUoJ2xvZ29fZG9jdG9yJywnbWFyaW9fcGx1bWJlcicpOwogICAgICAgIGF3YWl0IHJ1bk9uZSgnY2FwdGFpbicsJ21hcmlvX3BsdW1iZXInKTsKICAgICAgICBhd2FpdCBydW5PbmUoJ3NwaWRlcl9tYW4nLCdjb25hbicpOwogICAgICB9Y2F0Y2goZSl7b3V0LnB1c2goe2ZhdGFsOlN0cmluZyhlJiZlLnN0YWNrfHxlKX0pO30KICAgICAgY29uc3QgcHJlPWRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ3ByZScpO3ByZS5pZD0nZGlhZ1Jlc3VsdCc7cHJlLnRleHRDb250ZW50PUpTT04uc3RyaW5naWZ5KG91dCk7ZG9jdW1lbnQuYm9keS5hcHBlbmRDaGlsZChwcmUpO2RvY3VtZW50LmJvZHkuc2V0QXR0cmlidXRlKCdkYXRhLWRpYWctZG9uZScsJzEnKTsKICAgIH0sNTApOwo='.replace(/ /g,'')).decode()
-          if marker not in s: raise SystemExit('marker missing')
+          diag=Path('/tmp/diag.js').read_text(encoding='utf-8')
+          if marker not in s:
+              raise SystemExit('marker missing')
           s=s.replace(marker,diag+'\n'+marker,1)
           Path('/tmp/diag.html').write_text(s,encoding='utf-8')
           PY
@@ -28,7 +72,7 @@ jobs:
           test -n "$CHROME"
           "$CHROME" --headless=new --no-sandbox --disable-gpu --allow-file-access-from-files --virtual-time-budget=45000 --dump-dom file:///tmp/diag.html > /tmp/diag-dom.txt
           python3 - <<'PY'
-          import re,html
+          import re, html
           s=open('/tmp/diag-dom.txt',encoding='utf-8').read()
           m=re.search(r'<pre id="diagResult">(.*?)</pre>',s,re.S)
           if not m:
