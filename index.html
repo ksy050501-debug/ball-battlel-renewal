@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v132</title>
+  <title>볼배틀 리뉴얼 v133</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v132</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v133</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1201,7 +1201,7 @@
       };
     }
 
-    const roleLabels = ["전체", "영화", "애니"];
+    const roleLabels = ["전체", "영화", "애니", "게임"];
     let currentFilter = "전체";
     let battleMode = "solo";
     let teamA = [];
@@ -1246,6 +1246,8 @@
         skillName: "사신 · 사건 발생", condition: "반경130 안 초당 사신+5 · 직접 접촉+10 · 사신100 → 3종 사건 중 하나", desc: "고난 근처에 오래 머문 적에게 사신이 누적된다. 사신이 가득 차면 흉기 습격·차량 돌진·둔기 습격 중 하나의 사건에 휘말린다." },
       { id: "spider_man", name: "거미남", mark: "🕷", role: "영화", color: "#dc2626", hp: 170, attack: 0, speed: 2.9, range: 0,
         skillName: "웹슈터 · 웹스윙", condition: "5초마다 거미줄 6연사 · 웹슈터 넉백 중 벽충돌 시 속박→웹스윙 돌진", desc: "웹슈터 연사로 적을 밀어낸다. 웹슈터에 맞아 밀려나는 바로 그 순간 벽에 충돌하면 속박하고 즉시 타게팅 웹스윙으로 돌진한다." },
+      { id:"mario_plumber", name:"배관공", mark:"M", role:"게임", color:"#ef4444", hp:160, attack:8, speed:2.8, range:0,
+        skillName:"? 블록 · 랜덤 파워업", condition:"기본 상태 5초 후 ?블록 · 슈퍼버섯/파이어플라워/슈퍼스타 무작위 · 상대가 블록 파괴 가능", desc:"전장에 나타난 ?블록과 접촉해 무작위 파워업을 얻는다. 버섯·파이어 상태는 5칸 피격 보호막을 얻고, 강한 한 방일수록 보호막이 더 많이 깎인다. 보호막이 깨지면 특유의 깜빡임과 함께 작아진다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -5760,6 +5762,7 @@
         tip:"뉴헬로는 상대와 몸이 닿지 않아도 검 사거리(+8)에 들어오면 베기가 발동한다. 공격을 발동시킨 상대가 누구든, 그 순간 병장 중심의 더 큰 베기 원(+28) 안에 있는 모든 적이 같은 베기 피해와 출혈을 받는다. 와이어 강습 적중 시 즉시 재와이어하지만 한 사이클에서 총 3번까지만 연속 강습할 수 있고, 3번째 적중 뒤에는 7초 쿨타임이 적용된다. 중간 강습이 빗나가거나 끊기면 연속 횟수는 초기화된다. 출혈 폭발과 실제 몸 충돌 시 상대 접촉 반격은 기존대로 유지된다."};
       if (c.id === "riddle_lord") return {damage:"피엔드피레 0.4초마다3 + 화상2×3초 / 딱총나무 강화 0.4초마다4 + 화상3×3초 · 아바다 케다브라 4×5 / 강화 6×5",tick:"공유 쿨9초 · 첫 피엔드피레는 4초 뒤 · 이후 피엔드피레↔아바다 교대 · 피엔드피레4초 지속 · 아바다0.9초 다단 · 딱총나무16초 대기 후 등장·미획득 시25초 뒤 자동 습득·획득 시12초 강화",tip:"딱총나무 강화 중 피엔드피레 반경75→105, 아바다 케다브라는 거리와 조준을 무시하고 지정 대상에게 확정 적중한다. 첫 사망 때 호크룩스 7칸/7초 상태가 되며 이동·공격 불가. 적 접촉마다 1칸, 공격 피격마다 기본1칸＋피해10당 1칸 추가 감소. 피격 또는 접촉 1회마다 부활 HP도 70에서 10씩 감소한다. 생존하면 최대HP70·이속2.8로 남은 부활HP만큼 부활한다. 부활 후에도 원래 스킬과 지팡이를 그대로 사용한다. 지팡이는 획득 전까지 소멸하지 않고 등장 25초 뒤 자동 습득한다. 두 번째 부활은 없다."};
       if (c.id === "spider_man") return {damage:"웹슈터2×6 / 속박 연계 웹스윙 근접타격18",tick:"웹슈터5초마다6발(0.09초 간격) · 웹슈터 넉백 판정0.22초 · 그동안 벽충돌 시 속박0.9초→웹스윙 돌진",tip:"5초마다 웹슈터를 6연사한다. 각 탄은 피해2·약한 넉백·0.9초 10% 둔화를 준다. 웹슈터에 맞아 밀려나는 0.22초 안에 실제로 벽에 충돌한 경우에만 0.9초 속박되며, 예전에 맞은 뒤 한참 후 벽에 닿는 것은 속박되지 않는다. 속박 성공 시 해당 상대에게만 웹스윙 돌진을 사용해 근접타격18과 강한 넉백을 준다. 웹스윙 넉백으로 벽에 충돌해도 추가 피해는 없다. 자동·랜덤 웹스윙과 벽 부채꼴 연쇄 스윙은 없다."};
+      if (c.id === "mario_plumber") return {damage:"기본 충돌8 / 파이어볼9 / 슈퍼스타 접촉12",tick:"기본 상태 5초 후 ?블록 · 블록HP24 · 파워업 무작위 · 버섯/파이어 보호막5칸 · 피격 시 ceil(피해/10)칸 차감 · 파이어볼1.25초 · 스타4초",tip:"?블록은 실제 전장 오브젝트라 상대 공격으로 파괴할 수 있다. 배관공은 별도 블록 추적 AI 없이 평소 이동 중 블록에 닿으면 획득한다. 슈퍼버섯과 파이어플라워는 피해를 HP 대신 5칸 보호막으로 받으며 1~10 피해는1칸, 11~20은2칸처럼 10을 초과할 때마다 추가 차감된다. 보호막이 깨지는 공격까지는 HP에 들어가지 않고 0.8초간 깜빡이며 작아진다. 파이어볼은 벽을 한 번 반사한다. 슈퍼스타는 4초간 무적·가속·접촉 공격 상태가 된다. 파워업 중에는 새 ?블록이 나오지 않는다."};
       if (c.id === "conan") return {damage:"사건 3종 모두 명목 총 피해100 · 흉기70+출혈5×6 / 차량100 / 둔기100",tick:"반경130 안 초당 사신+5 · 직접 접촉 대상별1초마다+10 · 사신100에서 사건 발생 · 예고0.9초 · 사건 후 사신0",tip:"사신100이 되면 세 사건 중 하나가 동일 확률로 발생한다. 흉기 습격은 즉시70+출혈5×6회(총100)와 3.4초간 이속25% 감소, 차량 돌진은 피해100과 매우 강한 넉백, 둔기 습격은 피해100과 0.55초 기절을 준다. 세 사건 모두 0.9초 예고 후 대상에게 확정 적중하며, 사건 종료 후 사신은0으로 초기화된다."};
       if (c.id === "elsa") return {damage:"냉기 영역 초당6 / 빙결 중 냉기 영역9 / 빙결 상태 직접 접촉 파쇄30",tick:"냉기 영역 연속2초 체류마다 냉기+1 · 직접 접촉 대상별1초마다 냉기+1 · 냉기5중첩=5.5초 빙결 · 빙결 후2.5초 재빙결 면역",tip:"체력 비율에 따라 냉기 영역 반경이80→170으로 커지고 기본 이속은2.9→1.3으로 느려진다. 영역 안 적은 이속15% 감소와 1초마다 피해6을 받는다. 영역 안에서는 체류 게이지가 초당1초씩 차고, 영역 밖에서는 초당0.5초씩 감소한다. 따라서 잠깐 벗어나도 체류 누적이 즉시 0으로 초기화되지 않는다. 직접 접촉 냉기와 체류 냉기는 서로 독립적으로 적용된다. 냉기5에서 이동과 본체 스킬 사용이 막히는 5.5초 완전 빙결. 빙결 중에는 영역 지속피해가1.5배가 되며 얼음은 깨지지 않는다. 엘팔아가 직접 부딪히면 파쇄30·강넉백과 함께 즉시 해제된다. 이미 발사된 투사체·소환수 등 본체와 분리된 효과는 계속 진행된다."};
       if (c.id === "bald_cape") return {damage:"보통펀치28 + 맞은 상대 벽충돌16 / 가속충돌 8~17 / 연속 보통펀치8×8=64 / 진심펀치85",tick:"경기 시작부터 15초 · 이후 각 공격이 완전히 끝난 뒤 15초 · 보통45% / 연속35% / 진심20%",tip:"보통펀치는 벽 반사마다 기본 이동속도가 20%씩 상승하고, 5번째 반사 후 속도860으로 최근접 적을 계속 추적하며 돌진한다. 돌진 판정 반경도 넓어졌다. 연속 보통펀치는 완전히 멈춘 채 거리150·약130도 원뿔을 0.20초 간격 8타로 공격하며 매 타격마다 최근접 적 방향으로 다시 조준한다. 진심펀치는 최근접 적에게서 가장 먼 맵 구석으로 순간 이동한 뒤 반대편 모서리를 향해 약36도 붉은 부채꼴을 2.6초 차징하고 피해85를 준다. 차징 중에는 위치가 고정되어 넉백·강펀치·충돌로 밀려나지 않는다."};
@@ -5906,6 +5909,7 @@
         if (c.id === "elsa") initElsa(preview);
         if (c.id === "conan") initConan(preview);
         if (c.id === "spider_man") initSpiderMan(preview);
+        if (c.id === "mario_plumber") initMario(preview);
         if (c.id === "bald_cape") initBaldCape(preview);
         if (c.id === "hinta") preview.hinta = { pose: 0 };
         if (c.id === "riddle_lord") preview.riddle = { horcruxActive: false, elderBuff: 0 };
@@ -6369,6 +6373,7 @@
       if (c.id === "elsa") initElsa(fighter);
       if (c.id === "conan") initConan(fighter);
       if (c.id === "spider_man") initSpiderMan(fighter);
+      if (c.id === "mario_plumber") initMario(fighter);
       if (c.id === "bald_cape") initBaldCape(fighter);
       if (c.id === "riddle_lord") initRiddle(fighter);
       if (c.id === "hinta") initHinta(fighter);
@@ -7047,6 +7052,97 @@
       if(s.mode==="chase"&&s.chase){const target=fighters.find(e=>e.id===s.chase.targetId&&e.alive);if(!target){s.mode="idle";s.chase=null;return;}const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,contact=f.r+target.r+5;if(d<=contact)spiderFinishMelee(f,target);else{const step=Math.min(Math.max(0,d-contact),SPIDER.chaseSpeed*dt);f.x=clamp(f.x+dx/d*step,arena.x+f.r,arena.x2-f.r);f.y=clamp(f.y+dy/d*step,arena.y+f.r,arena.y2-f.r);f.vx=0;f.vy=0;if(d-step<=contact+.5)spiderFinishMelee(f,target);}}
       if(s.mode!=="idle")return;s.volleyCd-=dt;if(s.volleyLeft<=0&&s.volleyCd<=0){s.volleyLeft=SPIDER.volleyCount;s.volleyTimer=0;s.volleyCd=SPIDER.volleyCooldown;}if(s.volleyLeft>0){s.volleyTimer-=dt;while(s.volleyLeft>0&&s.volleyTimer<=0){spiderFireVolleyShot(f);s.volleyLeft--;s.volleyTimer+=SPIDER.volleyGap;}}
     }
+    const MARIO = {
+      blockDelay:5, blockHp:24, shieldMax:5, blinkTime:.8,
+      fireDamage:9, firePeriod:1.25, fireSpeed:320, fireLife:2.6,
+      starDuration:4, starSpeedMult:1.55, starDamage:12, starContactCd:.35
+    };
+    function initMario(f){
+      f.mario={power:"none",shield:0,blockId:null,nextBlock:MARIO.blockDelay,blink:0,fireCd:0,fireballs:[],starTime:0,starHits:{},baseR:f.r||20,baseSpeed:f.baseSpeed||f.speed||2.8};
+    }
+    function marioSetMotionSpeed(f,mult=1){
+      const m=f.mario;if(!m)return;const speed=m.baseSpeed*mult;f.speed=speed;f.baseSpeed=speed;
+      const mag=Math.hypot(f.vx,f.vy),a=mag>.01?Math.atan2(f.vy,f.vx):rand(0,Math.PI*2),v=speed*44;
+      f.vx=Math.cos(a)*v;f.vy=Math.sin(a)*v;
+    }
+    function marioResetPower(f,blink=false){
+      const m=f?.mario;if(!m)return;m.power="none";m.shield=0;m.starTime=0;m.fireCd=0;m.fireballs=[];m.starHits={};f.r=m.baseR;
+      marioSetMotionSpeed(f,1);if(blink)m.blink=Math.max(m.blink,MARIO.blinkTime);m.nextBlock=MARIO.blockDelay;
+    }
+    function marioSpawnBlock(f){
+      const m=f?.mario;if(!m||m.power!=="none"||m.blockId)return;
+      const r=16,x=rand(arena.x+r+8,arena.x2-r-8),y=rand(arena.y+r+8,arena.y2-r-8);
+      const spec={id:"mario_question_block",name:"? 블록",mark:"?",role:"오브젝트",color:"#fbbf24",hp:MARIO.blockHp,attack:0,speed:0,range:0,skillName:"파워업",condition:""};
+      const b=makeFighter(spec,{x,y},fighterSerial++,f.id,f.teamId||null);b.r=r;b.vx=0;b.vy=0;b.speed=0;b.baseSpeed=0;b.marioBlock={ownerId:f.id,anchorX:x,anchorY:y};b.isSummon=true;fighters.push(b);m.blockId=b.id;
+      spawnBlast(x,y,42,"#fbbf24");spawnFloatingText(x,y-r-12,"? 블록","#fde68a");
+    }
+    function marioApplyPower(f,kind){
+      const m=f.mario;m.blockId=null;m.nextBlock=MARIO.blockDelay;m.blink=0;m.fireballs=[];m.starHits={};
+      if(kind==="star"){
+        m.power="star";m.shield=0;m.starTime=MARIO.starDuration;f.r=m.baseR*1.08;marioSetMotionSpeed(f,MARIO.starSpeedMult);
+        spawnFloatingText(f.x,f.y-f.r-28,"슈퍼스타!","#fde047");spawnBlast(f.x,f.y,64,"#fde047");return;
+      }
+      m.power=kind;m.shield=MARIO.shieldMax;m.starTime=0;f.r=m.baseR*1.18;marioSetMotionSpeed(f,1);
+      if(kind==="fire"){m.fireCd=.25;spawnFloatingText(f.x,f.y-f.r-28,"파이어플라워!","#fb923c");spawnBlast(f.x,f.y,54,"#fb923c");}
+      else {spawnFloatingText(f.x,f.y-f.r-28,"슈퍼버섯!","#fca5a5");spawnBlast(f.x,f.y,54,"#ef4444");}
+    }
+    function marioCollectBlock(f,b){
+      if(!f?.mario||!b?.alive||!b.marioBlock)return;b.alive=false;const roll=Math.floor(Math.random()*3),kind=roll===0?"mushroom":roll===1?"fire":"star";marioApplyPower(f,kind);
+    }
+    function marioAbsorbDamage(f,amount,source,reason){
+      const m=f?.mario;if(!m||amount<=0)return null;
+      if(m.power==="star"||m.blink>0){if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-20,"무적","#fde047");return 0;}
+      if((m.power==="mushroom"||m.power==="fire")&&m.shield>0){
+        const cost=Math.max(1,Math.ceil(amount/10));m.shield=Math.max(0,m.shield-cost);
+        if(!fastSimMode){spawnHitFlash(f.x,f.y,m.power==="fire"?"#fb923c":"#fca5a5",38);spawnFloatingText(f.x,f.y-f.r-22,"보호막 -"+cost+" ("+m.shield+"/"+MARIO.shieldMax+")","#fef3c7");}
+        if(m.shield<=0){marioResetPower(f,true);spawnFloatingText(f.x,f.y-f.r-34,"파워다운!","#fca5a5");}
+        return amount;
+      }
+      return null;
+    }
+    function marioFire(f){
+      const m=f.mario,target=nearestEnemy(f).enemy;if(!target)return;const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1;
+      m.fireballs.push({x:f.x+dx/d*(f.r+7),y:f.y+dy/d*(f.r+7),vx:dx/d*MARIO.fireSpeed,vy:dy/d*MARIO.fireSpeed,r:6,life:MARIO.fireLife,bounces:1});
+      if(!fastSimMode)spawnParticles(f.x+dx/d*f.r,f.y+dy/d*f.r,"#fb923c",5);
+    }
+    function updateMarioFireballs(f,dt){
+      const m=f.mario;
+      for(let i=m.fireballs.length-1;i>=0;i--){const p=m.fireballs[i],ox=p.x,oy=p.y;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;let wall=false;
+        if(p.x-p.r<=arena.x||p.x+p.r>=arena.x2){p.x=clamp(p.x,arena.x+p.r,arena.x2-p.r);p.vx*=-1;wall=true;}
+        if(p.y-p.r<=arena.y||p.y+p.r>=arena.y2){p.y=clamp(p.y,arena.y+p.r,arena.y2-p.r);p.vy*=-1;wall=true;}
+        if(wall){if(p.bounces>0)p.bounces--;else{m.fireballs.splice(i,1);continue;}}
+        let hit=null,best=1;
+        for(const e of enemiesOf(f)){if(!e.alive||e.tano?.hidden>0)continue;const h=spiderSegHit(ox,oy,p.x,p.y,e.x,e.y,e.r+p.r);if(h!==null&&h<best){best=h;hit=e;}}
+        if(hit){damage(hit,MARIO.fireDamage,f,"파이어볼");if(!fastSimMode)spawnHitFlash(hit.x,hit.y,"#fb923c",45);m.fireballs.splice(i,1);continue;}
+        if(p.life<=0)m.fireballs.splice(i,1);
+      }
+    }
+    function updateMario(f,dt){
+      const m=f?.mario;if(!m||!f.alive)return;m.blink=Math.max(0,m.blink-dt);updateMarioFireballs(f,dt);
+      if(m.blockId){const b=fighterById(m.blockId);if(!b||!b.alive){m.blockId=null;if(m.power==="none")m.nextBlock=MARIO.blockDelay;}else if(m.power==="none"&&Math.hypot(f.x-b.x,f.y-b.y)<=f.r+b.r+3){marioCollectBlock(f,b);}}
+      if(m.power==="star"){
+        m.starTime-=dt;for(const id of Object.keys(m.starHits))m.starHits[id]=Math.max(0,m.starHits[id]-dt);
+        for(const e of enemiesOf(f)){if(!e.alive||Math.hypot(e.x-f.x,e.y-f.y)>f.r+e.r+3||(m.starHits[e.id]||0)>0)continue;const dx=e.x-f.x,dy=e.y-f.y,d=Math.hypot(dx,dy)||1;damage(e,MARIO.starDamage,f,"슈퍼스타");e.vx+=dx/d*220;e.vy+=dy/d*220;m.starHits[e.id]=MARIO.starContactCd;if(!fastSimMode)spawnHitFlash(e.x,e.y,"#fde047",58);}
+        if(m.starTime<=0)marioResetPower(f,false);return;
+      }
+      if(m.power==="fire"){m.fireCd-=dt;if(m.fireCd<=0){marioFire(f);m.fireCd+=MARIO.firePeriod;}return;}
+      if(m.power!=="none")return;
+      if(m.blink>0)return;m.nextBlock-=dt;if(m.nextBlock<=0)marioSpawnBlock(f);
+    }
+    function drawMarioBlock(f){
+      ctx.save();ctx.translate(f.x,f.y);ctx.fillStyle="#fbbf24";ctx.strokeStyle="#92400e";ctx.lineWidth=3;ctx.fillRect(-f.r,-f.r,f.r*2,f.r*2);ctx.strokeRect(-f.r,-f.r,f.r*2,f.r*2);ctx.fillStyle="#fff7ed";ctx.font="1000 22px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("?",0,1);ctx.restore();drawHealthBar(f);
+    }
+    function drawMarioCharacter(f){
+      const m=f.mario||{power:"none",shield:0,blink:0,fireballs:[]};if(!f.portraitOnly&&!fastSimMode){ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();for(const p of m.fireballs||[]){ctx.shadowColor="#fb923c";ctx.shadowBlur=12;ctx.fillStyle="#f97316";ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fde68a";ctx.beginPath();ctx.arc(p.x-2,p.y-2,p.r*.45,0,Math.PI*2);ctx.fill();}ctx.restore();}
+      const flicker=m.blink>0&&Math.floor(battleTime*18)%2===0;ctx.save();if(flicker)ctx.globalAlpha=.28;ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
+      if(m.power==="star"){ctx.shadowColor="#fde047";ctx.shadowBlur=24;ctx.fillStyle="#fef08a";ctx.beginPath();ctx.arc(0,0,21,0,Math.PI*2);ctx.fill();}
+      ctx.fillStyle=m.power==="fire"?"#fff7ed":"#ef4444";ctx.beginPath();ctx.arc(0,-5,14,0,Math.PI*2);ctx.fill();ctx.fillStyle="#dc2626";ctx.beginPath();ctx.arc(0,-13,15,Math.PI,0);ctx.fill();ctx.fillRect(-14,-13,28,5);
+      ctx.fillStyle="#fed7aa";ctx.beginPath();ctx.ellipse(0,-3,11,10,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#3f2a1d";ctx.beginPath();ctx.ellipse(0,2,8,3,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#111827";ctx.fillRect(-7,-5,3,3);ctx.fillRect(4,-5,3,3);
+      ctx.fillStyle=m.power==="fire"?"#ef4444":"#2563eb";ctx.beginPath();ctx.moveTo(-12,6);ctx.lineTo(-9,19);ctx.lineTo(9,19);ctx.lineTo(12,6);ctx.closePath();ctx.fill();ctx.fillStyle="#fbbf24";ctx.beginPath();ctx.arc(-6,9,1.8,0,Math.PI*2);ctx.arc(6,9,1.8,0,Math.PI*2);ctx.fill();ctx.restore();drawHealthBar(f);drawName(f);
+      if(!f.portraitOnly&&(m.power==="mushroom"||m.power==="fire")){const total=5,w=8,g=2,start=f.x-(total*w+(total-1)*g)/2;for(let i=0;i<total;i++){ctx.fillStyle=i<m.shield?(m.power==="fire"?"#fb923c":"#ef4444"):"#374151";ctx.fillRect(start+i*(w+g),f.y-f.r-15,w,5);}}
+      if(!f.portraitOnly&&m.power==="star")drawRing(f.x,f.y,f.r+6,"#fde047",3);
+    }
+
     function drawSpiderWebDecal(w){
       const alpha=clamp(w.t/w.max,0,1);ctx.save();ctx.globalAlpha=.25+.65*alpha;ctx.translate(w.x,w.y);ctx.strokeStyle="#f8fafc";ctx.lineWidth=1.4;
       for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*30,Math.sin(a)*30);ctx.stroke();}
@@ -8735,6 +8831,7 @@
       if ((target.duelMonster?.invuln || 0) > 0 || target.duelMonster?.fusing) { spawnFloatingText(target.x,target.y-target.r-22,"무적","#fde68a"); return 0; }
       if (tryHeroLeonGuardBlock(target, reason)) return 0;
       amount = songDebuffReducedIncomingDamage(target, amount, source);
+      if (target.mario) { const marioResult=marioAbsorbDamage(target,amount,source,reason); if (marioResult!==null) return marioResult; }
       if (target.iron) {
         const armor = absorbIronDamage(target, amount, source, reason);
         amount = armor.remaining;
@@ -8973,6 +9070,7 @@
       if (target.riddle?.horcruxActive) return damageRiddleHorcrux(target, amount, source, reason);
       if (tryHeroLeonGuardBlock(target, reason)) return 0;
       amount = songDebuffReducedIncomingDamage(target, amount, source);
+      if (target.mario) { const marioResult=marioAbsorbDamage(target,amount,source,reason); if (marioResult!==null) return marioResult; }
       if (target.iron) {
         const armor = absorbIronDamage(target, amount, source, reason);
         amount = armor.remaining;
@@ -10323,6 +10421,7 @@
 
     function updateFighter(f, dt) {
       if (!f.alive) return;
+      if (f.marioBlock) { f.x=f.marioBlock.anchorX; f.y=f.marioBlock.anchorY; f.vx=0; f.vy=0; return; }
       // 마인드 스톤 정지는 캐릭터별 조기 반환보다 먼저 감소시켜 영구 정지를 방지한다.
       f.stun = Math.max(0, (f.stun || 0) - dt);
       f.hardFreezeImmune = Math.max(0, (f.hardFreezeImmune || 0) - dt);
@@ -10372,6 +10471,7 @@
       if (f.elsa) updateElsa(f, dt);
       if (f.conan) updateConan(f, dt);
       if (f.spider) updateSpiderMan(f, dt);
+      if (f.mario) updateMario(f, dt);
       if (!f.alive) return;
       updateIron(f, dt);
       updateTano(f, dt);
@@ -13367,6 +13467,8 @@
       if (f.elsa) { drawElsaCharacter(f); return; }
       if (f.conan) { drawConanCharacter(f); return; }
       if (f.spider) { drawSpiderCharacter(f); return; }
+      if (f.marioBlock) { drawMarioBlock(f); return; }
+      if (f.mario) { drawMarioCharacter(f); return; }
       if (f.baldCape) { drawBaldCapeCharacter(f); return; }
       if (f.riddle) { drawRiddleCharacter(f); return; }
       if (f.hinta) { drawHintaCharacter(f); return; }
