@@ -1,0 +1,48 @@
+name: Apply Mario v135 patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-mario-v135.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply Mario v135 patch
+        run: |
+          python3 .github/apply_mario_v135.py
+      - name: Validate JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)
+          if not blocks:
+              raise SystemExit('no script block')
+          Path('/tmp/ballbattle.js').write_text('\n'.join(blocks),encoding='utf-8')
+          PY
+          node --check /tmp/ballbattle.js
+      - name: Verify Mario v135 markers
+        run: |
+          grep -q '볼배틀 리뉴얼 v135' index.html
+          grep -q 'firePeriod:1.75' index.html
+          grep -q 'fireBurnDamage:1' index.html
+          grep -q 'starReturn' index.html
+          grep -q 'pipeTransit' index.html
+          grep -q 'function drawFighterBody' index.html
+      - name: Commit patch and clean temporary files
+        run: |
+          rm -f .github/apply_mario_v135.py .github/workflows/apply-mario-v135.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html .github
+          git commit -m 'Refine plumber fire star pipe and kart modes'
+          git push origin HEAD:main
