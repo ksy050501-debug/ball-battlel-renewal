@@ -1,0 +1,42 @@
+name: Fix visible v142 title
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-visible-v142.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fix visible title
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='<h1 id="mainTitle">볼배틀 리뉴얼 v133</h1>'
+          new='<h1 id="mainTitle">볼배틀 리뉴얼 v142</h1>'
+          if s.count(old) != 1:
+              raise SystemExit(f'visible title marker count={s.count(old)}')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          grep -q '<title>볼배틀 리뉴얼 v142</title>' index.html
+          grep -q '<h1 id="mainTitle">볼배틀 리뉴얼 v142</h1>' index.html
+          ! grep -q '<h1 id="mainTitle">볼배틀 리뉴얼 v133</h1>' index.html
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/fix-visible-v142.yml
+          git add index.html
+          git diff --cached --check
+          git commit -m "Fix visible version label to v142"
+          git push origin HEAD:main
