@@ -13935,10 +13935,10 @@
 
         const winnerId = quickWinnerLabel(chosen);
         score[winnerId] = (score[winnerId] || 0) + 1;
-        chosen.forEach(c => {
-          const fighter = fighters.find(f => !f.isSummon && f.baseId === c.id);
-          remainingHpTotals[c.id] += Math.max(0, fighter ? fighter.hp : 0);
-        });
+        if (winnerId !== "draw") {
+          const winner = fighters.find(f => !f.isSummon && f.baseId === winnerId);
+          remainingHpTotals[winnerId] += Math.max(0, winner ? winner.hp : 0);
+        }
         totalTime += battleTime;
 
         if (count <= 10 || round % 10 === 0) {
@@ -13960,10 +13960,10 @@
         bWins: score[chosen[1].id] || 0,
         drawCount: score.draw || 0,
         remainingHpTotals,
-        averageHp: Object.fromEntries(chosen.map(c => [
-          c.id,
-          count > 0 ? remainingHpTotals[c.id] / count : 0
-        ])),
+        averageHp: Object.fromEntries(chosen.map(c => {
+          const wins = score[c.id] || 0;
+          return [c.id, wins > 0 ? remainingHpTotals[c.id] / wins : 0];
+        })),
         avgTime: count > 0 ? (totalTime / count).toFixed(1) : "0.0"
       };
     }
@@ -14096,8 +14096,8 @@
           total = 30; refined += 1;
         }
         const averageHp = {
-          [opp.id]: remainingHpTotals[opp.id] / total,
-          [focus.id]: remainingHpTotals[focus.id] / total
+          [opp.id]: aWins > 0 ? remainingHpTotals[opp.id] / aWins : 0,
+          [focus.id]: bWins > 0 ? remainingHpTotals[focus.id] / bWins : 0
         };
         const line = matchupLine(opp, focus, aWins, bWins, drawCount, averageHp);
         matchupHistory.push({ aId: opp.id, bId: focus.id, aWins, bWins, drawCount, count: total, averageHp, line, at: Date.now() });
