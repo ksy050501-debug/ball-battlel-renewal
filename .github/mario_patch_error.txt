@@ -1,1 +1,1 @@
-Mario slow multiplier: expected 1 anchor, found 2
+newhello slow: expected 2 anchor(s), found 1
