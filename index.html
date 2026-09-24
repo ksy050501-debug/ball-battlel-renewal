@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v136</title>
+  <title>볼배틀 리뉴얼 v137</title>
   <style>
     :root {
       --bg: #020617;
@@ -7221,9 +7221,9 @@
     }
     function updateMarioKartHazards(f,dt){
       const m=f.mario;
-      for(let i=m.bananas.length-1;i>=0;i--){const b=m.bananas[i];b.ownerGrace=Math.max(0,(b.ownerGrace||0)-dt);const candidates=fighters.filter(e=>e.alive&&!e.isSummon&&!e.marioBlock&&(e===f||areEnemies(f,e)));
+      for(let i=m.bananas.length-1;i>=0;i--){const b=m.bananas[i];if(!b){m.bananas.splice(i,1);continue;}b.ownerGrace=Math.max(0,(b.ownerGrace||0)-dt);const candidates=fighters.filter(e=>e.alive&&!e.isSummon&&!e.marioBlock&&(e===f||areEnemies(f,e)));
         const hit=candidates.find(e=>(e!==f||b.ownerGrace<=0)&&Math.hypot(e.x-b.x,e.y-b.y)<=e.r+b.r);if(hit){damage(hit,MARIO.bananaDamage,f,"바나나");marioApplySpin(hit,.9,MARIO.bananaSlow);if(!fastSimMode){spawnFloatingText(hit.x,hit.y-hit.r-26,"바나나!","#fde047");spawnParticles(hit.x,hit.y,"#fde047",10);}m.bananas.splice(i,1);}}
-      for(let i=m.shells.length-1;i>=0;i--){const sh=m.shells[i],ox=sh.x,oy=sh.y;sh.ownerGrace=Math.max(0,(sh.ownerGrace||0)-dt);
+      for(let i=m.shells.length-1;i>=0;i--){const sh=m.shells[i];if(!sh){m.shells.splice(i,1);continue;}const ox=sh.x,oy=sh.y;sh.ownerGrace=Math.max(0,(sh.ownerGrace||0)-dt);
         if(sh.kind==="red"){let target=fighterById(sh.targetId);if(!target||target.isSummon||target.marioBlock||!areEnemies(f,target)){target=marioKartTarget(f);if(target)sh.targetId=target.id;}if(target){const wanted=Math.atan2(target.y-sh.y,target.x-sh.x),cur=Math.atan2(sh.vy,sh.vx),delta=Math.atan2(Math.sin(wanted-cur),Math.cos(wanted-cur)),a=cur+clamp(delta,-MARIO.redTurn*dt,MARIO.redTurn*dt);sh.vx=Math.cos(a)*MARIO.redSpeed;sh.vy=Math.sin(a)*MARIO.redSpeed;}}
         sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;
         if(sh.x-sh.r<=arena.x||sh.x+sh.r>=arena.x2){sh.x=clamp(sh.x,arena.x+sh.r,arena.x2-sh.r);sh.vx*=-1;}
@@ -14300,9 +14300,6 @@
         while (running && !ended && battleTime < 500 && guard < 20000) {
           update(0.033);
           guard += 1;
-          if (guard % 600 === 0) {
-            await new Promise(resolve => setTimeout(resolve, 0));
-          }
         }
 
         const winnerId = quickWinnerLabel(chosen);
