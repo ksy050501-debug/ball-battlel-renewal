@@ -1,0 +1,46 @@
+name: Apply fast simulation fix v136
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-fast-sim-fix-v136.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply fast simulation fix
+        run: |
+          python3 .github/apply_fast_sim_fix_v136.py
+      - name: Validate JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)
+          if not blocks:
+              raise SystemExit('no script block')
+          Path('/tmp/ballbattle.js').write_text('\n'.join(blocks),encoding='utf-8')
+          PY
+          node --check /tmp/ballbattle.js
+      - name: Verify markers
+        run: |
+          grep -q '볼배틀 리뉴얼 v136' index.html
+          grep -q 'if (!fastSimMode) {' index.html
+          grep -q 'guard % 600 === 0' index.html
+          grep -q 'simulateQuickPair만 전투 상태를 갱신한다' index.html
+      - name: Commit patch and remove temporary files
+        run: |
+          rm -f .github/apply_fast_sim_fix_v136.py .github/workflows/apply-fast-sim-fix-v136.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html .github
+          git commit -m 'Fix fast simulation freezing during full tests'
+          git push origin HEAD:main
