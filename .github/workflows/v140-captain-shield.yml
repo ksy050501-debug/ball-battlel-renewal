@@ -1,0 +1,58 @@
+name: Apply v140 captain shield patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/v140-captain-shield.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch index
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          if '볼배틀 리뉴얼 v139' not in s:
+              raise SystemExit('v139 marker missing')
+          s=s.replace('볼배틀 리뉴얼 v139','볼배틀 리뉴얼 v140',1)
+          old='shieldDamage: 12'
+          new='shieldDamage: 11'
+          if s.count(old)!=1:
+              raise SystemExit(f'shieldDamage marker expected 1, found {s.count(old)}')
+          s=s.replace(old,new,1)
+          if 'dashDamage:15' not in s.replace(' ',''):
+              raise SystemExit('sergeant dashDamage 15 marker missing')
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Validate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          Path('/tmp/ball-battle.js').write_text('\n'.join(re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)),encoding='utf-8')
+          PY
+          node --check /tmp/ball-battle.js
+          grep -q '볼배틀 리뉴얼 v140' index.html
+          grep -q 'shieldDamage: 11' index.html
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/v140-captain-shield.yml
+          git add index.html
+          git diff --cached --check
+          git commit -m "Set captain shield damage to 11"
+          git push origin HEAD:main
