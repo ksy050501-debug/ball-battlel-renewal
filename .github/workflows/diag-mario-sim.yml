@@ -1,0 +1,58 @@
+name: Diagnose Mario simulation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/diag-mario-sim.yml'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build diagnostic page
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='    requestAnimationFrame(loop);'
+          diag=r'''
+    setTimeout(async()=>{
+      const out=[];
+      try{
+        const mario=characterById('mario_plumber');
+        const roster=battleRosterCharacters().filter(c=>c.id!=='mario_plumber');
+        for(const opp of roster){
+          const prev=beginFastSim('diag');
+          try{
+            const result=await simulateQuickPair([opp,mario],1,'diag');
+            out.push({opp:opp.id,time:Number(result.avgTime),a:result.aWins,b:result.bWins,d:result.drawCount});
+          }catch(e){
+            out.push({opp:opp.id,error:String(e&&e.stack||e)});
+          }finally{ endFastSim(prev); }
+        }
+      }catch(e){out.push({fatal:String(e&&e.stack||e)});}
+      const pre=document.createElement('pre');pre.id='diagResult';pre.textContent=JSON.stringify(out);document.body.appendChild(pre);
+      document.body.setAttribute('data-diag-done','1');
+    },50);
+'''
+          if marker not in s: raise SystemExit('marker missing')
+          s=s.replace(marker,diag+'\n'+marker,1)
+          Path('/tmp/diag.html').write_text(s,encoding='utf-8')
+          PY
+      - name: Run headless browser diagnostic
+        run: |
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          echo "Chrome: $CHROME"
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --allow-file-access-from-files --virtual-time-budget=45000 --dump-dom file:///tmp/diag.html > /tmp/diag-dom.txt
+          python3 - <<'PY'
+          import re,html
+          s=open('/tmp/diag-dom.txt',encoding='utf-8').read()
+          m=re.search(r'<pre id="diagResult">(.*?)</pre>',s,re.S)
+          if not m:
+              print(s[-4000:])
+              raise SystemExit('diagnostic result missing')
+          print('DIAG_RESULT='+html.unescape(m.group(1)))
+          PY
