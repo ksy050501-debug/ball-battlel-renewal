@@ -1,5 +1,6 @@
 name: Apply v143 Koopa balance
 
+# retry after patch-anchor fix
 on:
   push:
     paths:
