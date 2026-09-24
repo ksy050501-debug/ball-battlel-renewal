@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v134</title>
+  <title>볼배틀 리뉴얼 v135</title>
   <style>
     :root {
       --bg: #020617;
@@ -1247,7 +1247,7 @@
       { id: "spider_man", name: "거미남", mark: "🕷", role: "영화", color: "#dc2626", hp: 170, attack: 0, speed: 2.9, range: 0,
         skillName: "웹슈터 · 웹스윙", condition: "5초마다 거미줄 6연사 · 웹슈터 넉백 중 벽충돌 시 속박→웹스윙 돌진", desc: "웹슈터 연사로 적을 밀어낸다. 웹슈터에 맞아 밀려나는 바로 그 순간 벽에 충돌하면 속박하고 즉시 타게팅 웹스윙으로 돌진한다." },
       { id:"mario_plumber", name:"배관공", mark:"M", role:"게임", color:"#ef4444", hp:160, attack:8, speed:2.8, range:0,
-        skillName:"랜덤박스 · 배관공카트", condition:"5초마다 랜덤박스 · 15초 방치 시 슈퍼스탠스 직진 · 벽 50회 접촉 시 카트 모드", desc:"랜덤박스에서 슈퍼버섯·파이어플라워·슈퍼스타를 무작위로 얻는다. 변신 중에도 새 박스가 등장한다. 벽 접촉을 50회 쌓으면 초록 배관을 거쳐 배관공카트로 전환되어 바나나·초록등껍질·빨간등껍질을 사용한다." },
+        skillName:"랜덤박스 · 토관 · 배관공카트", condition:"랜덤박스 파워업 · 벽 50회마다 토관을 통해 기본↔카트 모드 전환", desc:"랜덤박스로 슈퍼·파이어·스타 상태를 오가며 싸운다. 벽 접촉 50회를 채우면 충돌한 벽의 초록 토관으로 느리게 들어가고, 무작위 벽의 토관에서 반대 모드로 나온다. 카트 모드에서는 바나나와 등껍질을 사용한다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -5762,7 +5762,7 @@
         tip:"뉴헬로는 상대와 몸이 닿지 않아도 검 사거리(+8)에 들어오면 베기가 발동한다. 공격을 발동시킨 상대가 누구든, 그 순간 병장 중심의 더 큰 베기 원(+28) 안에 있는 모든 적이 같은 베기 피해와 출혈을 받는다. 와이어 강습 적중 시 즉시 재와이어하지만 한 사이클에서 총 3번까지만 연속 강습할 수 있고, 3번째 적중 뒤에는 7초 쿨타임이 적용된다. 중간 강습이 빗나가거나 끊기면 연속 횟수는 초기화된다. 출혈 폭발과 실제 몸 충돌 시 상대 접촉 반격은 기존대로 유지된다."};
       if (c.id === "riddle_lord") return {damage:"피엔드피레 0.4초마다3 + 화상2×3초 / 딱총나무 강화 0.4초마다4 + 화상3×3초 · 아바다 케다브라 4×5 / 강화 6×5",tick:"공유 쿨9초 · 첫 피엔드피레는 4초 뒤 · 이후 피엔드피레↔아바다 교대 · 피엔드피레4초 지속 · 아바다0.9초 다단 · 딱총나무16초 대기 후 등장·미획득 시25초 뒤 자동 습득·획득 시12초 강화",tip:"딱총나무 강화 중 피엔드피레 반경75→105, 아바다 케다브라는 거리와 조준을 무시하고 지정 대상에게 확정 적중한다. 첫 사망 때 호크룩스 7칸/7초 상태가 되며 이동·공격 불가. 적 접촉마다 1칸, 공격 피격마다 기본1칸＋피해10당 1칸 추가 감소. 피격 또는 접촉 1회마다 부활 HP도 70에서 10씩 감소한다. 생존하면 최대HP70·이속2.8로 남은 부활HP만큼 부활한다. 부활 후에도 원래 스킬과 지팡이를 그대로 사용한다. 지팡이는 획득 전까지 소멸하지 않고 등장 25초 뒤 자동 습득한다. 두 번째 부활은 없다."};
       if (c.id === "spider_man") return {damage:"웹슈터2×6 / 속박 연계 웹스윙 근접타격18",tick:"웹슈터5초마다6발(0.09초 간격) · 웹슈터 넉백 판정0.22초 · 그동안 벽충돌 시 속박0.9초→웹스윙 돌진",tip:"5초마다 웹슈터를 6연사한다. 각 탄은 피해2·약한 넉백·0.9초 10% 둔화를 준다. 웹슈터에 맞아 밀려나는 0.22초 안에 실제로 벽에 충돌한 경우에만 0.9초 속박되며, 예전에 맞은 뒤 한참 후 벽에 닿는 것은 속박되지 않는다. 속박 성공 시 해당 상대에게만 웹스윙 돌진을 사용해 근접타격18과 강한 넉백을 준다. 웹스윙 넉백으로 벽에 충돌해도 추가 피해는 없다. 자동·랜덤 웹스윙과 벽 부채꼴 연쇄 스윙은 없다."};
-      if (c.id === "mario_plumber") return {damage:"랜덤박스 접촉5 / 슈퍼펀치10 / 파이어볼9+화상2×3 / 슈퍼스타 접촉12 / 카트충돌9 / 바나나4 / 초록등껍질24 / 빨간등껍질14",tick:"랜덤박스 5초 · 박스HP60 · 상대 2회 접촉 시 제거 · 15초 방치 시 슈퍼스탠스 직진 · 버섯/파이어 보호막5칸 · 파이어볼 벽2회 반사 · 스타6초 · 벽50회→배관공카트 · 카트 아이템3개·3.5초마다1개 사용",tip:"변신 상태에서도 랜덤박스는 계속 등장한다. 일반 랜덤박스는 공격으로도 피해를 받지만 파괴 연출 없이 사라지며, 상대가 몸으로 닿을 때마다 피해5를 받고 2번째 접촉에 제거된다. 이 피해는 배관공의 가한 피해로 기록된다. 기본 배관공이 박스를 15초 동안 못 먹으면 슈퍼스탠스로 박스를 향해 직진한다. 슈퍼버섯은 접촉 펀치와 넉백, 파이어플라워는 흰 모자·2회 벽반사·화상, 슈퍼스타는 6초 무적과 무지개 발광을 얻는다. 벽50회 후 카트 모드에서는 통과형 무지개 랜덤아이템에서 아이템3개를 얻고 자동 사용한다."};
+      if (c.id === "mario_plumber") return {damage:"랜덤박스 접촉5 / 슈퍼펀치10 / 파이어볼9+화상1×3(갱신형) / 슈퍼스타 접촉12 / 카트충돌9 / 바나나4 / 초록등껍질24 / 빨간등껍질14",tick:"랜덤박스5초 · 박스HP60 · 상대2회 접촉 제거 · 파이어볼1.75초·벽2회반사·5발마다 파워업1칸 소모 · 스타6초 후 직전 상태 복귀 · 벽50회마다 토관 전환 · 카트 아이템3개·3.5초마다1개 사용",tip:"파이어 화상은 피해1씩 3틱이며 같은 배관공의 파이어볼을 여러 번 맞아도 화상이 여러 줄로 중첩되지 않고 남은 지속시간만 새로 갱신된다. 파이어볼을 5발 발사할 때마다 파이어 상태 5칸 중 1칸이 소모된다. 스타는 획득 직전의 기본/슈퍼/파이어 상태와 남은 보호막을 기억했다가 6초 뒤 그대로 되돌아간다. 기본 또는 카트 모드에서 벽50회를 채우면 충돌한 벽에 초록 토관이 생기고 감속한 채 토관으로 들어간 뒤 무작위 벽 토관에서 반대 모드로 나온다. 카트 아이템 피격의 회전은 별도 이펙트가 아니라 캐릭터 몸 자체가 회전한다."};
       if (c.id === "conan") return {damage:"사건 3종 모두 명목 총 피해100 · 흉기70+출혈5×6 / 차량100 / 둔기100",tick:"반경130 안 초당 사신+5 · 직접 접촉 대상별1초마다+10 · 사신100에서 사건 발생 · 예고0.9초 · 사건 후 사신0",tip:"사신100이 되면 세 사건 중 하나가 동일 확률로 발생한다. 흉기 습격은 즉시70+출혈5×6회(총100)와 3.4초간 이속25% 감소, 차량 돌진은 피해100과 매우 강한 넉백, 둔기 습격은 피해100과 0.55초 기절을 준다. 세 사건 모두 0.9초 예고 후 대상에게 확정 적중하며, 사건 종료 후 사신은0으로 초기화된다."};
       if (c.id === "elsa") return {damage:"냉기 영역 초당6 / 빙결 중 냉기 영역9 / 빙결 상태 직접 접촉 파쇄30",tick:"냉기 영역 연속2초 체류마다 냉기+1 · 직접 접촉 대상별1초마다 냉기+1 · 냉기5중첩=5.5초 빙결 · 빙결 후2.5초 재빙결 면역",tip:"체력 비율에 따라 냉기 영역 반경이80→170으로 커지고 기본 이속은2.9→1.3으로 느려진다. 영역 안 적은 이속15% 감소와 1초마다 피해6을 받는다. 영역 안에서는 체류 게이지가 초당1초씩 차고, 영역 밖에서는 초당0.5초씩 감소한다. 따라서 잠깐 벗어나도 체류 누적이 즉시 0으로 초기화되지 않는다. 직접 접촉 냉기와 체류 냉기는 서로 독립적으로 적용된다. 냉기5에서 이동과 본체 스킬 사용이 막히는 5.5초 완전 빙결. 빙결 중에는 영역 지속피해가1.5배가 되며 얼음은 깨지지 않는다. 엘팔아가 직접 부딪히면 파쇄30·강넉백과 함께 즉시 해제된다. 이미 발사된 투사체·소환수 등 본체와 분리된 효과는 계속 진행된다."};
       if (c.id === "bald_cape") return {damage:"보통펀치28 + 맞은 상대 벽충돌16 / 가속충돌 8~17 / 연속 보통펀치8×8=64 / 진심펀치85",tick:"경기 시작부터 15초 · 이후 각 공격이 완전히 끝난 뒤 15초 · 보통45% / 연속35% / 진심20%",tip:"보통펀치는 벽 반사마다 기본 이동속도가 20%씩 상승하고, 5번째 반사 후 속도860으로 최근접 적을 계속 추적하며 돌진한다. 돌진 판정 반경도 넓어졌다. 연속 보통펀치는 완전히 멈춘 채 거리150·약130도 원뿔을 0.20초 간격 8타로 공격하며 매 타격마다 최근접 적 방향으로 다시 조준한다. 진심펀치는 최근접 적에게서 가장 먼 맵 구석으로 순간 이동한 뒤 반대편 모서리를 향해 약36도 붉은 부채꼴을 2.6초 차징하고 피해85를 준다. 차징 중에는 위치가 고정되어 넉백·강펀치·충돌로 밀려나지 않는다."};
@@ -7055,8 +7055,8 @@
     const MARIO = {
       blockDelay:5, blockHp:60, blockTouchDamage:5, blockTouchNeed:2, blockChaseDelay:15,
       shieldMax:5, blinkTime:.8,
-      fireDamage:9, firePeriod:1.25, fireSpeed:320, fireLife:3.2, fireBounces:2,
-      fireBurnDamage:2, fireBurnTicks:3, fireBurnTick:.6,
+      fireDamage:9, firePeriod:1.75, fireSpeed:320, fireLife:3.2, fireBounces:2,
+      fireBurnDamage:1, fireBurnTicks:3, fireBurnTick:.6, fireShotsPerShield:5,
       starDuration:6, starSpeedMult:1.55, starDamage:12, starContactCd:.35,
       superPunchDamage:10, superPunchKnock:260, superPunchCd:.70,
       kartWallNeed:50, kartSpeedMult:1.35, kartContactDamage:9, kartContactKnock:250, kartContactCd:.55,
@@ -7064,13 +7064,14 @@
       bananaDamage:4, bananaSlow:2.4, bananaSlowMult:.55, bananaR:9,
       greenDamage:24, greenSpeed:330, greenR:8,
       redDamage:14, redSpeed:290, redTurn:6.5, redR:8,
-      shellSpin:.9
+      shellSpin:.9,
+      pipeApproachMult:.42, pipeEnterDuration:.48, pipeTravelDuration:.52, pipeExitDuration:.48
     };
     function initMario(f){
       f.mario={
-        power:"none",shield:0,blockId:null,nextBlock:MARIO.blockDelay,blink:0,fireCd:0,fireballs:[],starTime:0,starHits:{},
+        power:"none",shield:0,blockId:null,nextBlock:MARIO.blockDelay,blink:0,fireCd:0,fireShots:0,fireballs:[],starTime:0,starHits:{},starReturn:null,
         baseR:f.r||20,baseSpeed:f.baseSpeed||f.speed||2.8,superStance:false,punchCd:0,wallContacts:0,
-        kart:false,pipeFx:0,kartContactCd:0,pickup:null,heldType:"",heldCount:0,itemUseCd:0,bananas:[],shells:[]
+        kart:false,pipeFx:0,pipeTransit:null,kartContactCd:0,pickup:null,heldType:"",heldCount:0,itemUseCd:0,bananas:[],shells:[]
       };
     }
     function marioSetMotionSpeed(f,mult=1){
@@ -7079,11 +7080,11 @@
       f.vx=Math.cos(a)*v;f.vy=Math.sin(a)*v;
     }
     function marioResetPower(f,blink=false){
-      const m=f?.mario;if(!m)return;m.power="none";m.shield=0;m.starTime=0;m.fireCd=0;m.fireballs=[];m.starHits={};m.superStance=false;f.r=m.baseR;
+      const m=f?.mario;if(!m)return;m.power="none";m.shield=0;m.starTime=0;m.starReturn=null;m.fireCd=0;m.fireShots=0;m.fireballs=[];m.starHits={};m.superStance=false;f.r=m.baseR;
       marioSetMotionSpeed(f,m.kart?MARIO.kartSpeedMult:1);if(blink)m.blink=Math.max(m.blink,MARIO.blinkTime);
     }
     function marioSpawnBlock(f){
-      const m=f?.mario;if(!m||m.kart||m.blockId)return;
+      const m=f?.mario;if(!m||m.kart||m.blockId||m.pipeTransit)return;
       const r=16,x=rand(arena.x+r+8,arena.x2-r-8),y=rand(arena.y+r+8,arena.y2-r-8);
       const spec={id:"mario_question_block",name:"랜덤박스",mark:"?",role:"오브젝트",color:"#fbbf24",hp:MARIO.blockHp,attack:0,speed:0,range:0,skillName:"랜덤 파워업",condition:""};
       const b=makeFighter(spec,{x,y},fighterSerial++,f.id,f.teamId||null);b.r=r;b.vx=0;b.vy=0;b.speed=0;b.baseSpeed=0;
@@ -7105,22 +7106,33 @@
       if(block.marioBlock.touches>=MARIO.blockTouchNeed)block.alive=false;
       return true;
     }
+    function marioRestoreStarState(f){
+      const m=f?.mario;if(!m)return;const back=m.starReturn||{power:"none",shield:0,fireCd:0,fireShots:0};
+      m.starReturn=null;m.starTime=0;m.starHits={};m.power=back.power||"none";m.shield=Math.max(0,back.shield||0);m.fireShots=back.fireShots||0;
+      if(m.power==="fire"){f.r=m.baseR*1.18;m.fireCd=Math.max(.05,back.fireCd||.25);}
+      else if(m.power==="mushroom"){f.r=m.baseR*1.18;m.fireCd=0;}
+      else{m.power="none";m.shield=0;m.fireCd=0;m.fireShots=0;f.r=m.baseR;}
+      marioSetMotionSpeed(f,1);
+      if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-30,m.power==="fire"?"파이어 상태 복귀":m.power==="mushroom"?"슈퍼 상태 복귀":"기본 상태 복귀","#fef3c7");
+    }
     function marioApplyPower(f,kind){
-      const m=f.mario;m.blink=0;m.fireballs=[];m.starHits={};m.superStance=false;
+      const m=f.mario;m.blink=0;m.starHits={};m.superStance=false;
       if(kind==="star"){
-        m.power="star";m.shield=0;m.starTime=MARIO.starDuration;f.r=m.baseR*1.08;marioSetMotionSpeed(f,MARIO.starSpeedMult);
+        if(m.power!=="star")m.starReturn={power:m.power,shield:m.shield,fireCd:m.fireCd,fireShots:m.fireShots||0};
+        m.power="star";m.starTime=MARIO.starDuration;f.r=m.baseR*1.08;marioSetMotionSpeed(f,MARIO.starSpeedMult);
         spawnFloatingText(f.x,f.y-f.r-28,"스타배관공!","#fde047");spawnBlast(f.x,f.y,64,"#fde047");return;
       }
-      m.power=kind;m.shield=MARIO.shieldMax;m.starTime=0;f.r=m.baseR*1.18;marioSetMotionSpeed(f,1);
+      m.starReturn=null;m.starTime=0;m.fireballs=[];m.fireShots=0;m.power=kind;m.shield=MARIO.shieldMax;f.r=m.baseR*1.18;marioSetMotionSpeed(f,1);
       if(kind==="fire"){m.fireCd=.25;spawnFloatingText(f.x,f.y-f.r-28,"파이어배관공!","#f8fafc");spawnBlast(f.x,f.y,54,"#fb923c");}
-      else {spawnFloatingText(f.x,f.y-f.r-28,"슈퍼배관공!","#fca5a5");spawnBlast(f.x,f.y,54,"#ef4444");}
+      else {m.fireCd=0;spawnFloatingText(f.x,f.y-f.r-28,"슈퍼배관공!","#fca5a5");spawnBlast(f.x,f.y,54,"#ef4444");}
     }
     function marioCollectBlock(f,b){
-      if(!f?.mario||f.mario.kart||!b?.alive||!b.marioBlock)return;b.alive=false;f.mario.blockId=null;f.mario.nextBlock=MARIO.blockDelay;
+      if(!f?.mario||f.mario.kart||f.mario.pipeTransit||!b?.alive||!b.marioBlock)return;b.alive=false;f.mario.blockId=null;f.mario.nextBlock=MARIO.blockDelay;
       const roll=Math.floor(Math.random()*3),kind=roll===0?"mushroom":roll===1?"fire":"star";marioApplyPower(f,kind);
     }
     function marioAbsorbDamage(f,amount,source,reason){
       const m=f?.mario;if(!m||amount<=0)return null;
+      if(m.pipeTransit&&m.pipeTransit.phase!=="approach")return 0;
       if(m.power==="star"||m.blink>0){if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-20,"무적","#fde047");return 0;}
       if((m.power==="mushroom"||m.power==="fire")&&m.shield>0){
         const cost=Math.max(1,Math.ceil(amount/10));m.shield=Math.max(0,m.shield-cost);
@@ -7131,9 +7143,23 @@
       return null;
     }
     function marioFire(f){
-      const m=f.mario,target=nearestEnemy(f).enemy;if(!target)return;const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1;
+      const m=f.mario,target=enemiesOf(f).filter(e=>e.alive&&!e.marioBlock).sort((a,b)=>dist(f,a)-dist(f,b))[0];if(!target)return false;
+      const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1;
       m.fireballs.push({x:f.x+dx/d*(f.r+7),y:f.y+dy/d*(f.r+7),vx:dx/d*MARIO.fireSpeed,vy:dy/d*MARIO.fireSpeed,r:6,life:MARIO.fireLife,bounces:MARIO.fireBounces});
-      if(!fastSimMode)spawnParticles(f.x+dx/d*f.r,f.y+dy/d*f.r,"#fb923c",5);
+      m.fireShots=(m.fireShots||0)+1;
+      if(m.fireShots>=MARIO.fireShotsPerShield){
+        m.fireShots=0;m.shield=Math.max(0,m.shield-1);
+        if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-34,"파이어 5발 · 지속칸 -1 ("+m.shield+"/"+MARIO.shieldMax+")","#fef3c7");
+        if(m.shield<=0){const live=m.fireballs.slice();marioResetPower(f,true);m.fireballs=live;if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-48,"파이어 소진!","#fca5a5");}
+      }
+      if(!fastSimMode)spawnParticles(f.x+dx/d*f.r,f.y+dy/d*f.r,"#fb923c",5);return true;
+    }
+    function marioRefreshBurn(hit,source){
+      if(!hit?.alive||hasHarmfulImmunity(hit))return;hit.burningTicks ||= [];
+      const duration=MARIO.fireBurnTick*MARIO.fireBurnTicks+.05;
+      const existing=hit.burningTicks.find(b=>b.kind==="marioFire"&&b.source===source);
+      if(existing){existing.t=duration;existing.power=MARIO.fireBurnDamage;existing.tick=MARIO.fireBurnTick;existing.ticksLeft=MARIO.fireBurnTicks;existing.next=Math.min(existing.next>0?existing.next:MARIO.fireBurnTick,MARIO.fireBurnTick);return;}
+      hit.burningTicks.push({kind:"marioFire",t:duration,next:MARIO.fireBurnTick,power:MARIO.fireBurnDamage,source,tick:MARIO.fireBurnTick,ticksLeft:MARIO.fireBurnTicks});
     }
     function updateMarioFireballs(f,dt){
       const m=f.mario;
@@ -7143,12 +7169,12 @@
         if(wall){if(p.bounces>0)p.bounces--;else{m.fireballs.splice(i,1);continue;}}
         let hit=null,best=1;
         for(const e of enemiesOf(f)){if(!e.alive||e.tano?.hidden>0||e.marioBlock)continue;const h=spiderSegHit(ox,oy,p.x,p.y,e.x,e.y,e.r+p.r);if(h!==null&&h<best){best=h;hit=e;}}
-        if(hit){const dealt=damage(hit,MARIO.fireDamage,f,"파이어볼");if(dealt>0&&hit.alive&&!hasHarmfulImmunity(hit)){hit.burningTicks ||= [];hit.burningTicks.push({t:MARIO.fireBurnTick*MARIO.fireBurnTicks+.05,next:MARIO.fireBurnTick,power:MARIO.fireBurnDamage,source:f,tick:MARIO.fireBurnTick,ticksLeft:MARIO.fireBurnTicks});}if(!fastSimMode)spawnHitFlash(hit.x,hit.y,"#fb923c",45);m.fireballs.splice(i,1);continue;}
+        if(hit){const dealt=damage(hit,MARIO.fireDamage,f,"파이어볼");if(dealt>0)marioRefreshBurn(hit,f);if(!fastSimMode)spawnHitFlash(hit.x,hit.y,"#fb923c",45);m.fireballs.splice(i,1);continue;}
         if(p.life<=0)m.fireballs.splice(i,1);
       }
     }
     function marioSuperPunchContact(f,target){
-      const m=f?.mario;if(!m||m.kart||m.power!=="mushroom"||m.punchCd>0||!target?.alive||!areEnemies(f,target))return false;
+      const m=f?.mario;if(!m||m.kart||m.pipeTransit||m.power!=="mushroom"||m.punchCd>0||!target?.alive||!areEnemies(f,target))return false;
       const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1;const dealt=damage(target,MARIO.superPunchDamage,f,"슈퍼펀치");
       if(dealt>0&&target.alive){target.vx+=dx/d*MARIO.superPunchKnock;target.vy+=dy/d*MARIO.superPunchKnock;}
       m.punchCd=MARIO.superPunchCd;if(!fastSimMode){spawnHitFlash(target.x,target.y,"#fca5a5",46);spawnFloatingText(target.x,target.y-target.r-28,"슈퍼펀치!","#fca5a5");}return true;
@@ -7161,9 +7187,7 @@
       return enemiesOf(f).find(e=>e.alive&&!e.marioBlock)||null;
     }
     function marioFarthestWallTarget(f){
-      const options=[
-        {wall:"left",d:f.x-arena.x},{wall:"right",d:arena.x2-f.x},{wall:"top",d:f.y-arena.y},{wall:"bottom",d:arena.y2-f.y}
-      ],mx=Math.max(...options.map(o=>o.d)),choices=options.filter(o=>Math.abs(o.d-mx)<1.5),pick=choices[Math.floor(Math.random()*choices.length)],pad=24;
+      const options=[{wall:"left",d:f.x-arena.x},{wall:"right",d:arena.x2-f.x},{wall:"top",d:f.y-arena.y},{wall:"bottom",d:arena.y2-f.y}],mx=Math.max(...options.map(o=>o.d)),choices=options.filter(o=>Math.abs(o.d-mx)<1.5),pick=choices[Math.floor(Math.random()*choices.length)],pad=24;
       if(pick.wall==="left")return {x:arena.x,y:rand(arena.y+pad,arena.y2-pad)};
       if(pick.wall==="right")return {x:arena.x2,y:rand(arena.y+pad,arena.y2-pad)};
       if(pick.wall==="top")return {x:rand(arena.x+pad,arena.x2-pad),y:arena.y};
@@ -7175,11 +7199,11 @@
       spawnFloatingText(f.x,f.y-f.r-38,marioItemName(m.heldType)+" ×"+m.heldCount,"#e9d5ff");
     }
     function marioSpawnKartPickup(f){
-      const m=f.mario;if(!m.kart||m.pickup)return;const r=14;m.pickup={x:rand(arena.x+r+8,arena.x2-r-8),y:rand(arena.y+r+8,arena.y2-r-8),r};m.nextBlock=MARIO.blockDelay;
+      const m=f.mario;if(!m.kart||m.pickup||m.pipeTransit)return;const r=14;m.pickup={x:rand(arena.x+r+8,arena.x2-r-8),y:rand(arena.y+r+8,arena.y2-r-8),r};m.nextBlock=MARIO.blockDelay;
       if(!fastSimMode)spawnFloatingText(m.pickup.x,m.pickup.y-r-10,"랜덤 아이템","#e9d5ff");
     }
     function marioUseKartItem(f){
-      const m=f.mario;if(!m.kart||m.heldCount<=0||!m.heldType)return false;const type=m.heldType;
+      const m=f.mario;if(!m.kart||m.pipeTransit||m.heldCount<=0||!m.heldType)return false;const type=m.heldType;
       if(type==="banana"){
         const mag=Math.hypot(f.vx,f.vy)||1,dx=f.vx/mag,dy=f.vy/mag;m.bananas.push({x:clamp(f.x-dx*(f.r+18),arena.x+MARIO.bananaR,arena.x2-MARIO.bananaR),y:clamp(f.y-dy*(f.r+18),arena.y+MARIO.bananaR,arena.y2-MARIO.bananaR),r:MARIO.bananaR,ownerGrace:.65});
       }else if(type==="green"){
@@ -7209,49 +7233,117 @@
         if(hit){const power=sh.kind==="green"?MARIO.greenDamage:MARIO.redDamage;damage(hit,power,f,sh.kind==="green"?"초록등껍질":"빨간등껍질");marioApplySpin(hit,MARIO.shellSpin,0);if(!fastSimMode){spawnHitFlash(hit.x,hit.y,sh.kind==="green"?"#22c55e":"#ef4444",58);spawnFloatingText(hit.x,hit.y-hit.r-28,sh.kind==="green"?"초록등껍질!":"빨간등껍질!",sh.kind==="green"?"#86efac":"#fca5a5");}m.shells.splice(i,1);}
       }
     }
-    function enterMarioKart(f){
-      const m=f?.mario;if(!m||m.kart)return;if(m.blockId){const b=fighterById(m.blockId);if(b)b.alive=false;}m.blockId=null;marioResetPower(f,false);m.kart=true;m.wallContacts=MARIO.kartWallNeed;m.pipeFx=1.25;m.pickup=null;m.nextBlock=MARIO.blockDelay;m.heldType="";m.heldCount=0;m.itemUseCd=0;m.bananas=[];m.shells=[];marioSetMotionSpeed(f,MARIO.kartSpeedMult);
-      spawnFloatingText(f.x,f.y-f.r-44,"초록 배관 → 배관공카트!","#4ade80");if(!fastSimMode){spawnParticles(f.x,f.y,"#22c55e",24);playSound("warp",1);}
+    function marioPipePoint(wall,coord){
+      const margin=54;
+      if(wall==="left")return {wall,x:arena.x,y:clamp(coord,arena.y+margin,arena.y2-margin)};
+      if(wall==="right")return {wall,x:arena.x2,y:clamp(coord,arena.y+margin,arena.y2-margin)};
+      if(wall==="top")return {wall,x:clamp(coord,arena.x+margin,arena.x2-margin),y:arena.y};
+      return {wall:"bottom",x:clamp(coord,arena.x+margin,arena.x2-margin),y:arena.y2};
     }
-    function marioWallContact(f){const m=f?.mario;if(!m||m.kart)return;m.wallContacts=Math.min(MARIO.kartWallNeed,m.wallContacts+1);if(m.wallContacts>=MARIO.kartWallNeed)enterMarioKart(f);}
+    function marioRandomPipe(entry){
+      const walls=["left","right","top","bottom"],wall=walls[Math.floor(Math.random()*walls.length)],margin=64;
+      let p=wall==="left"?{wall,x:arena.x,y:rand(arena.y+margin,arena.y2-margin)}:wall==="right"?{wall,x:arena.x2,y:rand(arena.y+margin,arena.y2-margin)}:wall==="top"?{wall,x:rand(arena.x+margin,arena.x2-margin),y:arena.y}:{wall,x:rand(arena.x+margin,arena.x2-margin),y:arena.y2};
+      if(entry&&p.wall===entry.wall&&Math.hypot(p.x-entry.x,p.y-entry.y)<arena.size*.22){if(p.wall==="left"||p.wall==="right")p.y=clamp(p.y+arena.size*.35,arena.y+margin,arena.y2-margin);else p.x=clamp(p.x+arena.size*.35,arena.x+margin,arena.x2-margin);}
+      return p;
+    }
+    function marioPipeApproachPoint(pipe,r){
+      const mouth=34,extra=r*.18;
+      if(pipe.wall==="left")return {x:arena.x+mouth+extra,y:pipe.y};if(pipe.wall==="right")return {x:arena.x2-mouth-extra,y:pipe.y};if(pipe.wall==="top")return {x:pipe.x,y:arena.y+mouth+extra};return {x:pipe.x,y:arena.y2-mouth-extra};
+    }
+    function marioPipeHiddenPoint(pipe,r){
+      if(pipe.wall==="left")return {x:arena.x-r*.9,y:pipe.y};if(pipe.wall==="right")return {x:arena.x2+r*.9,y:pipe.y};if(pipe.wall==="top")return {x:pipe.x,y:arena.y-r*.9};return {x:pipe.x,y:arena.y2+r*.9};
+    }
+    function marioPipeInward(pipe){return pipe.wall==="left"?{x:1,y:0}:pipe.wall==="right"?{x:-1,y:0}:pipe.wall==="top"?{x:0,y:1}:{x:0,y:-1};}
+    function marioClearKartKit(m){m.pickup=null;m.heldType="";m.heldCount=0;m.itemUseCd=0;m.bananas=[];m.shells=[];}
+    function marioSwitchPipeMode(f,toKart){
+      const m=f.mario;
+      if(m.blockId){const b=fighterById(m.blockId);if(b)b.alive=false;}m.blockId=null;
+      marioClearKartKit(m);m.kart=!!toKart;marioResetPower(f,false);m.kart=!!toKart;m.wallContacts=0;m.nextBlock=MARIO.blockDelay;m.superStance=false;
+      marioSetMotionSpeed(f,m.kart?MARIO.kartSpeedMult:1);
+    }
+    function startMarioPipeTransition(f,hit){
+      const m=f?.mario;if(!m||m.pipeTransit)return;const fallback=marioPipePoint("left",f.y),entry=hit?.wall?marioPipePoint(hit.wall,(hit.wall==="left"||hit.wall==="right")?hit.y:hit.x):fallback;
+      m.pipeTransit={phase:"approach",toKart:!m.kart,entry,exit:marioRandomPipe(entry),timer:0,phaseMax:0,visualScale:1,visualAlpha:1};m.wallContacts=MARIO.kartWallNeed;m.superStance=false;f.vx=0;f.vy=0;
+      if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-42,(m.kart?"기본":"카트")+" 모드 토관!","#4ade80");playSound("warp",.55);}
+    }
+    function marioWallContact(f,hit){const m=f?.mario;if(!m||m.pipeTransit)return;m.wallContacts=Math.min(MARIO.kartWallNeed,m.wallContacts+1);if(m.wallContacts>=MARIO.kartWallNeed)startMarioPipeTransition(f,hit);}
     function marioKartContact(f,target){
-      const m=f?.mario;if(!m?.kart||m.kartContactCd>0||!target?.alive||!areEnemies(f,target))return false;const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,MARIO.kartContactDamage,f,"카트충돌");if(dealt>0&&target.alive){target.vx+=dx/d*MARIO.kartContactKnock;target.vy+=dy/d*MARIO.kartContactKnock;}m.kartContactCd=MARIO.kartContactCd;if(!fastSimMode)spawnHitFlash(target.x,target.y,"#60a5fa",42);return true;
+      const m=f?.mario;if(!m?.kart||m.pipeTransit||m.kartContactCd>0||!target?.alive||!areEnemies(f,target))return false;const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,MARIO.kartContactDamage,f,"카트충돌");if(dealt>0&&target.alive){target.vx+=dx/d*MARIO.kartContactKnock;target.vy+=dy/d*MARIO.kartContactKnock;}m.kartContactCd=MARIO.kartContactCd;if(!fastSimMode)spawnHitFlash(target.x,target.y,"#60a5fa",42);return true;
+    }
+    function updateMarioPipeTransit(f,dt){
+      const m=f.mario,tr=m.pipeTransit;if(!tr)return false;
+      if(tr.phase==="approach"){
+        const target=marioPipeApproachPoint(tr.entry,f.r),dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,speed=m.baseSpeed*44*(m.kart?MARIO.kartSpeedMult:1)*MARIO.pipeApproachMult,step=Math.min(d,speed*dt);
+        f.x+=dx/d*step;f.y+=dy/d*step;f.vx=0;f.vy=0;
+        if(d<=2.5){tr.phase="enter";tr.timer=MARIO.pipeEnterDuration;tr.phaseMax=MARIO.pipeEnterDuration;tr.start={x:f.x,y:f.y};tr.end=marioPipeHiddenPoint(tr.entry,f.r);}
+        return true;
+      }
+      if(tr.phase==="enter"){
+        tr.timer=Math.max(0,tr.timer-dt);const p=clamp(1-tr.timer/tr.phaseMax,0,1);f.x=tr.start.x+(tr.end.x-tr.start.x)*p;f.y=tr.start.y+(tr.end.y-tr.start.y)*p;tr.visualScale=1-p*.72;tr.visualAlpha=1-p*.55;f.vx=0;f.vy=0;
+        if(tr.timer<=0){marioSwitchPipeMode(f,tr.toKart);tr.phase="hidden";tr.timer=MARIO.pipeTravelDuration;tr.phaseMax=MARIO.pipeTravelDuration;tr.visualScale=.28;tr.visualAlpha=0;f.x=-10000;f.y=-10000;if(!fastSimMode)playSound("warp",.8);}
+        return true;
+      }
+      if(tr.phase==="hidden"){
+        tr.timer=Math.max(0,tr.timer-dt);f.vx=0;f.vy=0;
+        if(tr.timer<=0){tr.phase="exit";tr.timer=MARIO.pipeExitDuration;tr.phaseMax=MARIO.pipeExitDuration;tr.start=marioPipeHiddenPoint(tr.exit,f.r);tr.end=marioPipeApproachPoint(tr.exit,f.r);f.x=tr.start.x;f.y=tr.start.y;tr.visualScale=.28;tr.visualAlpha=.45;}
+        return true;
+      }
+      if(tr.phase==="exit"){
+        tr.timer=Math.max(0,tr.timer-dt);const p=clamp(1-tr.timer/tr.phaseMax,0,1);f.x=tr.start.x+(tr.end.x-tr.start.x)*p;f.y=tr.start.y+(tr.end.y-tr.start.y)*p;tr.visualScale=.28+.72*p;tr.visualAlpha=.45+.55*p;f.vx=0;f.vy=0;
+        if(tr.timer<=0){const exit=tr.exit,inward=marioPipeInward(exit),speed=m.baseSpeed*44*(m.kart?MARIO.kartSpeedMult:1);f.x=tr.end.x;f.y=tr.end.y;f.vx=inward.x*speed;f.vy=inward.y*speed;m.pipeTransit=null;m.wallContacts=0;if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-40,m.kart?"배관공카트 출발!":"기본 배관공 복귀!","#86efac");playSound("warp",.9);}}
+        return true;
+      }
+      return false;
     }
     function updateMario(f,dt){
-      const m=f?.mario;if(!m||!f.alive)return;m.blink=Math.max(0,m.blink-dt);m.punchCd=Math.max(0,m.punchCd-dt);m.kartContactCd=Math.max(0,m.kartContactCd-dt);m.pipeFx=Math.max(0,m.pipeFx-dt);updateMarioFireballs(f,dt);
-      if(m.kart){m.superStance=false;updateMarioKartPickup(f,dt);updateMarioKartHazards(f,dt);return;}
+      const m=f?.mario;if(!m||!f.alive)return;m.blink=Math.max(0,m.blink-dt);m.punchCd=Math.max(0,m.punchCd-dt);m.kartContactCd=Math.max(0,m.kartContactCd-dt);updateMarioFireballs(f,dt);
+      if(m.pipeTransit){updateMarioPipeTransit(f,dt);return;}
+      if(m.kart){m.superStance=false;updateMarioKartPickup(f,dt);updateMarioKartHazards(f,dt);if(!fastSimMode&&Math.random()<dt*5){const mag=Math.hypot(f.vx,f.vy)||1;spawnParticles(f.x-f.vx/mag*(f.r+10),f.y-f.vy/mag*(f.r+10),"#cbd5e1",1);}return;}
       if(m.blockId){const b=fighterById(m.blockId);if(!b||!b.alive){m.blockId=null;m.superStance=false;m.nextBlock=MARIO.blockDelay;}else if(Math.hypot(f.x-b.x,f.y-b.y)<=f.r+b.r+3){marioCollectBlock(f,b);}else if(m.power==="none"&&(b.marioBlock?.age||0)>=MARIO.blockChaseDelay){m.superStance=true;const dx=b.x-f.x,dy=b.y-f.y,d=Math.hypot(dx,dy)||1,v=m.baseSpeed*44;f.vx=dx/d*v;f.vy=dy/d*v;}else m.superStance=false;
       }else{m.superStance=false;m.nextBlock=Math.max(0,m.nextBlock-dt);if(m.nextBlock<=0)marioSpawnBlock(f);}
       if(m.power==="star"){
         m.starTime-=dt;for(const id of Object.keys(m.starHits))m.starHits[id]=Math.max(0,m.starHits[id]-dt);
         for(const e of enemiesOf(f)){if(!e.alive||e.marioBlock||Math.hypot(e.x-f.x,e.y-f.y)>f.r+e.r+3||(m.starHits[e.id]||0)>0)continue;const dx=e.x-f.x,dy=e.y-f.y,d=Math.hypot(dx,dy)||1;damage(e,MARIO.starDamage,f,"슈퍼스타");e.vx+=dx/d*220;e.vy+=dy/d*220;m.starHits[e.id]=MARIO.starContactCd;if(!fastSimMode)spawnHitFlash(e.x,e.y,`hsl(${(battleTime*180)%360} 90% 65%)`,58);}
-        if(m.starTime<=0)marioResetPower(f,false);return;
+        if(m.starTime<=0)marioRestoreStarState(f);return;
       }
-      if(m.power==="fire"){m.fireCd-=dt;if(m.fireCd<=0){marioFire(f);m.fireCd+=MARIO.firePeriod;}}
+      if(m.power==="fire"){m.fireCd-=dt;if(m.fireCd<=0){const fired=marioFire(f);if(fired&&m.power==="fire")m.fireCd+=MARIO.firePeriod;else if(!fired)m.fireCd=.25;}}
     }
     function drawMarioBlock(f){
       ctx.save();ctx.translate(f.x,f.y);ctx.fillStyle="#fbbf24";ctx.strokeStyle="#92400e";ctx.lineWidth=3;ctx.fillRect(-f.r,-f.r,f.r*2,f.r*2);ctx.strokeRect(-f.r,-f.r,f.r*2,f.r*2);ctx.fillStyle="#fff7ed";ctx.font="1000 22px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("?",0,1);ctx.restore();drawHealthBar(f);
     }
-    function drawMarioSpinOverlay(f){
-      const t=f.marioSpinFx||0;if(t<=0||fastSimMode)return;ctx.save();ctx.translate(f.x,f.y);ctx.rotate(battleTime*12);ctx.globalAlpha=clamp(t/.9,.25,1);ctx.strokeStyle="#fde047";ctx.lineWidth=2.2;for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(0,0,f.r+7+i*5,i*1.7,i*1.7+1.15);ctx.stroke();}ctx.fillStyle="#fff7ae";for(let i=0;i<4;i++){const a=i*Math.PI/2,r=f.r+14;ctx.fillText("✦",Math.cos(a)*r,Math.sin(a)*r);}ctx.restore();
+    function drawMarioSpinOverlay(f){}
+    function drawMarioPipeAt(pipe,alpha=1){
+      if(!pipe||fastSimMode)return;const angle=pipe.wall==="left"?0:pipe.wall==="right"?Math.PI:pipe.wall==="top"?Math.PI/2:-Math.PI/2;
+      ctx.save();ctx.translate(pipe.x,pipe.y);ctx.rotate(angle);ctx.globalAlpha=alpha;ctx.shadowColor="#14532d";ctx.shadowBlur=10;ctx.fillStyle="#15803d";ctx.strokeStyle="#86efac";ctx.lineWidth=2;ctx.fillRect(0,-12,32,24);ctx.strokeRect(0,-12,32,24);ctx.fillStyle="#22c55e";ctx.beginPath();ctx.roundRect(27,-17,11,34,4);ctx.fill();ctx.stroke();ctx.fillStyle="rgba(255,255,255,.18)";ctx.fillRect(5,-8,5,16);ctx.restore();
     }
     function drawMarioCharacter(f){
-      const m=f.mario||{power:"none",shield:0,blink:0,fireballs:[],bananas:[],shells:[]};
+      const m=f.mario||{power:"none",shield:0,blink:0,fireballs:[],bananas:[],shells:[]},tr=m.pipeTransit;
       if(!f.portraitOnly&&!fastSimMode){ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();
         for(const p of m.fireballs||[]){ctx.shadowColor="#fb923c";ctx.shadowBlur=12;ctx.fillStyle="#f97316";ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fde68a";ctx.beginPath();ctx.arc(p.x-2,p.y-2,p.r*.45,0,Math.PI*2);ctx.fill();}
         for(const b of m.bananas||[]){ctx.fillStyle="#fde047";ctx.strokeStyle="#a16207";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(b.x-8,b.y-5);ctx.quadraticCurveTo(b.x,b.y+10,b.x+8,b.y-5);ctx.quadraticCurveTo(b.x,b.y+3,b.x-8,b.y-5);ctx.fill();ctx.stroke();}
         for(const sh of m.shells||[]){ctx.fillStyle=sh.kind==="green"?"#22c55e":"#ef4444";ctx.strokeStyle="#f8fafc";ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(sh.x,sh.y,sh.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle="#14532d";ctx.beginPath();ctx.arc(sh.x,sh.y,sh.r*.55,0,Math.PI*2);ctx.stroke();}
         if(m.pickup){const hue=(battleTime*150)%360;ctx.globalAlpha=.48;ctx.fillStyle=`hsl(${hue} 92% 67%)`;ctx.shadowColor=`hsl(${(hue+90)%360} 95% 70%)`;ctx.shadowBlur=22;ctx.beginPath();ctx.roundRect(m.pickup.x-m.pickup.r,m.pickup.y-m.pickup.r,m.pickup.r*2,m.pickup.r*2,6);ctx.fill();ctx.globalAlpha=.9;ctx.fillStyle="#fff";ctx.font="1000 18px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("?",m.pickup.x,m.pickup.y);}
+        if(tr){drawMarioPipeAt(tr.entry,tr.phase==="exit"?.34:1);if(tr.phase==="hidden"||tr.phase==="exit")drawMarioPipeAt(tr.exit,1);}
         ctx.restore();
       }
-      const flicker=m.blink>0&&Math.floor(battleTime*18)%2===0,rainbow=`hsl(${(battleTime*180)%360} 92% 64%)`;ctx.save();if(flicker)ctx.globalAlpha=.28;ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
-      if(m.pipeFx>0){const a=clamp(m.pipeFx/1.25,0,1);ctx.globalAlpha=.35+.55*a;ctx.fillStyle="#16a34a";ctx.strokeStyle="#86efac";ctx.lineWidth=2;ctx.fillRect(-24,-2,48,28);ctx.strokeRect(-24,-2,48,28);ctx.fillStyle="#22c55e";ctx.fillRect(-28,-8,56,10);ctx.strokeRect(-28,-8,56,10);ctx.globalAlpha=1;}
-      if(m.kart){ctx.fillStyle="#111827";ctx.beginPath();ctx.arc(-15,17,6,0,Math.PI*2);ctx.arc(15,17,6,0,Math.PI*2);ctx.fill();ctx.fillStyle="#2563eb";ctx.strokeStyle="#93c5fd";ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(-19,8,38,13,6);ctx.fill();ctx.stroke();ctx.fillStyle="#facc15";ctx.fillRect(-4,16,8,4);}
-      if(m.power==="star"){ctx.shadowColor=rainbow;ctx.shadowBlur=28;ctx.fillStyle=rainbow;ctx.globalAlpha=.42;ctx.beginPath();ctx.arc(0,0,22,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
+      if(tr?.phase==="hidden")return;
+      const flicker=m.blink>0&&Math.floor(battleTime*18)%2===0,rainbow=`hsl(${(battleTime*180)%360} 92% 64%)`,transitScale=tr?.visualScale||1,transitAlpha=tr?.visualAlpha??1;
+      ctx.save();if(flicker)ctx.globalAlpha=.28;ctx.globalAlpha*=transitAlpha;ctx.translate(f.x,f.y);ctx.scale(f.r/20*transitScale,f.r/20*transitScale);
+      if(m.kart){
+        const a=Math.atan2(f.vy||0,f.vx||1)+Math.PI/2;ctx.save();ctx.rotate(a);ctx.shadowColor="#0f172a";ctx.shadowBlur=6;
+        ctx.fillStyle="#111827";for(const [x,y] of [[-18,-8],[18,-8],[-19,13],[19,13]]){ctx.beginPath();ctx.roundRect(x-4,y-6,8,12,3);ctx.fill();}
+        ctx.fillStyle="#dc2626";ctx.strokeStyle="#fecaca";ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(-22,-12,44,31,8);ctx.fill();ctx.stroke();ctx.fillStyle="#ef4444";ctx.beginPath();ctx.roundRect(-16,-18,32,12,5);ctx.fill();ctx.stroke();
+        ctx.fillStyle="#2563eb";ctx.beginPath();ctx.roundRect(-14,4,28,15,5);ctx.fill();ctx.strokeStyle="#93c5fd";ctx.stroke();ctx.fillStyle="#facc15";ctx.fillRect(-7,-18,14,4);
+        ctx.strokeStyle="#111827";ctx.lineWidth=2.4;ctx.beginPath();ctx.arc(0,-1,6,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(0,-1);ctx.lineTo(0,5);ctx.stroke();
+        ctx.fillStyle="#475569";ctx.fillRect(-15,19,7,5);ctx.fillRect(8,19,7,5);ctx.restore();
+        ctx.translate(0,-7);ctx.scale(.78,.78);
+      }
+      if(m.power==="star"){ctx.shadowColor=rainbow;ctx.shadowBlur=28;ctx.fillStyle=rainbow;ctx.globalAlpha*=.42;ctx.beginPath();ctx.arc(0,0,22,0,Math.PI*2);ctx.fill();ctx.globalAlpha=transitAlpha*(flicker?.28:1);}
       ctx.fillStyle=m.power==="fire"?"#fff7ed":"#ef4444";ctx.beginPath();ctx.arc(0,-5,14,0,Math.PI*2);ctx.fill();ctx.fillStyle=m.power==="fire"?"#f8fafc":"#dc2626";ctx.beginPath();ctx.arc(0,-13,15,Math.PI,0);ctx.fill();ctx.fillRect(-14,-13,28,5);
       if(m.power==="fire"){ctx.fillStyle="#dc2626";ctx.font="900 8px system-ui";ctx.textAlign="center";ctx.fillText("M",0,-12);}
       ctx.fillStyle="#fed7aa";ctx.beginPath();ctx.ellipse(0,-3,11,10,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#3f2a1d";ctx.beginPath();ctx.ellipse(0,2,8,3,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#111827";ctx.fillRect(-7,-5,3,3);ctx.fillRect(4,-5,3,3);
-      ctx.fillStyle=m.power==="fire"?"#ef4444":"#2563eb";ctx.beginPath();ctx.moveTo(-12,6);ctx.lineTo(-9,19);ctx.lineTo(9,19);ctx.lineTo(12,6);ctx.closePath();ctx.fill();ctx.fillStyle="#fbbf24";ctx.beginPath();ctx.arc(-6,9,1.8,0,Math.PI*2);ctx.arc(6,9,1.8,0,Math.PI*2);ctx.fill();ctx.restore();drawHealthBar(f);drawName(f);
+      ctx.fillStyle=m.power==="fire"?"#ef4444":"#2563eb";ctx.beginPath();ctx.moveTo(-12,6);ctx.lineTo(-9,19);ctx.lineTo(9,19);ctx.lineTo(12,6);ctx.closePath();ctx.fill();ctx.fillStyle="#fbbf24";ctx.beginPath();ctx.arc(-6,9,1.8,0,Math.PI*2);ctx.arc(6,9,1.8,0,Math.PI*2);ctx.fill();ctx.restore();
+      if(!tr||tr.phase==="approach"){drawHealthBar(f);drawName(f);}
       if(!f.portraitOnly&&(m.power==="mushroom"||m.power==="fire")){const total=5,w=8,g=2,start=f.x-(total*w+(total-1)*g)/2;for(let i=0;i<total;i++){ctx.fillStyle=i<m.shield?(m.power==="fire"?"#f8fafc":"#ef4444"):"#374151";ctx.fillRect(start+i*(w+g),f.y-f.r-15,w,5);}}
       if(!f.portraitOnly&&m.power==="star")drawRing(f.x,f.y,f.r+6,rainbow,3);
       if(!f.portraitOnly&&m.kart&&m.heldCount>0){const col=m.heldType==="banana"?"#fde047":m.heldType==="green"?"#22c55e":"#ef4444";for(let i=0;i<m.heldCount;i++){const a=battleTime*2.4+i*Math.PI*2/m.heldCount,rr=f.r+15;ctx.fillStyle=col;ctx.strokeStyle="#f8fafc";ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(f.x+Math.cos(a)*rr,f.y+Math.sin(a)*rr,5,0,Math.PI*2);ctx.fill();ctx.stroke();}}
@@ -7271,19 +7363,28 @@
     function skillProgressInfo(f) {
       if(f.mario){
         const m=f.mario;
-        if(m.kart){
-          const held=m.heldCount>0, pickup=!!m.pickup, ratio=held?clamp(1-Math.max(0,m.itemUseCd)/MARIO.kartItemUsePeriod,0,1):pickup?1:clamp(1-Math.max(0,m.nextBlock)/MARIO.blockDelay,0,1);
-          const text=held?`배관공카트 · ${marioItemName(m.heldType)} ${m.heldCount}개 · 사용 ${Math.max(0,m.itemUseCd).toFixed(1)}초`:pickup?"배관공카트 · 랜덤 아이템 출현":`배관공카트 · 랜덤 아이템 ${Math.max(0,m.nextBlock).toFixed(1)}초`;
-          return {ratio,className:"skill-fill",text,extraTextHtml:`<div class="status-skill-label">벽 접촉 ${m.wallContacts}/${MARIO.kartWallNeed} · 카트 이속 ×${MARIO.kartSpeedMult.toFixed(2)} · 충돌${MARIO.kartContactDamage}+넉백</div><div class="status-skill-label">아이템 획득 시 3개 회전 · ${MARIO.kartItemUsePeriod.toFixed(1)}초마다 1개 자동 사용 · 보유 중 새 랜덤아이템은 소멸만</div>`};
+        if(m.pipeTransit){
+          const tr=m.pipeTransit,phase=tr.phase==="approach"?"토관으로 감속 이동":tr.phase==="enter"?"토관 진입":tr.phase==="hidden"?"토관 이동 중":"토관에서 등장",goal=tr.toKart?"카트 모드":"기본 모드";
+          const max=tr.phaseMax||1,ratio=tr.phase==="approach"?1:clamp(1-(tr.timer||0)/max,0,1);
+          return {ratio,className:"rage-fill",text:`${phase} · ${goal} 전환`,extraTextHtml:`<div class="status-skill-label">벽 접촉 50/50 · 초록 토관 이동</div><div class="status-skill-label">진입 후 무작위 벽 토관에서 ${goal}로 등장</div>`};
         }
-        const block=fighterById(m.blockId), boxReady=!!block, boxAge=block?.marioBlock?.age||0;
+        if(m.kart){
+          const held=m.heldCount>0,pickup=!!m.pickup,ratio=held?clamp(1-Math.max(0,m.itemUseCd)/MARIO.kartItemUsePeriod,0,1):pickup?1:clamp(1-Math.max(0,m.nextBlock)/MARIO.blockDelay,0,1);
+          const text=held?`배관공카트 · ${marioItemName(m.heldType)} ${m.heldCount}개 · 사용 ${Math.max(0,m.itemUseCd).toFixed(1)}초`:pickup?"배관공카트 · 랜덤 아이템 출현":`배관공카트 · 랜덤 아이템 ${Math.max(0,m.nextBlock).toFixed(1)}초`;
+          return {ratio,className:"skill-fill",text,extraTextHtml:`<div class="status-skill-label">벽 접촉 ${m.wallContacts}/${MARIO.kartWallNeed} · 50회 → 토관으로 기본 모드 복귀 · 카트 이속 ×${MARIO.kartSpeedMult.toFixed(2)}</div><div class="status-skill-label">아이템 획득 시 3개 회전 · ${MARIO.kartItemUsePeriod.toFixed(1)}초마다 1개 자동 사용</div>`};
+        }
+        const block=fighterById(m.blockId),boxReady=!!block,boxAge=block?.marioBlock?.age||0;
         const boxRatio=boxReady?clamp(boxAge/MARIO.blockChaseDelay,0,1):clamp(1-Math.max(0,m.nextBlock)/MARIO.blockDelay,0,1);
         const boxText=boxReady?`랜덤박스 출현 · 접촉 ${block.marioBlock?.touches||0}/${MARIO.blockTouchNeed} · HP ${Math.ceil(block.hp)}/${MARIO.blockHp}`:`랜덤박스 ${Math.max(0,m.nextBlock).toFixed(1)}초`;
         const extraBar=`<div class="bar" title="랜덤박스"><div class="bar-fill skill-fill" style="width:${boxRatio*100}%"></div></div>`;
-        if(m.power==="star")return {ratio:clamp(m.starTime/MARIO.starDuration,0,1),className:"rage-fill",text:`스타배관공 · ${Math.max(0,m.starTime).toFixed(1)}초`,extraBarsHtml:extraBar,extraTextHtml:`<div class="status-skill-label">${boxText}</div><div class="status-skill-label">벽 접촉 ${m.wallContacts}/${MARIO.kartWallNeed} · 스타 종료 전까지 무적·가속·접촉12</div>`};
+        if(m.power==="star"){
+          const back=m.starReturn?.power==="fire"?"파이어배관공":m.starReturn?.power==="mushroom"?"슈퍼배관공":"기본 배관공";
+          return {ratio:clamp(m.starTime/MARIO.starDuration,0,1),className:"rage-fill",text:`스타배관공 · ${Math.max(0,m.starTime).toFixed(1)}초`,extraBarsHtml:extraBar,extraTextHtml:`<div class="status-skill-label">${boxText}</div><div class="status-skill-label">종료 후 ${back} 복귀 · 벽 접촉 ${m.wallContacts}/${MARIO.kartWallNeed}</div>`};
+        }
         const state=m.power==="fire"?"파이어배관공":m.power==="mushroom"?"슈퍼배관공":"기본 배관공";
         const chase=m.superStance?" · 슈퍼스탠스 직진":boxReady&&m.power==="none"?` · 직진까지 ${Math.max(0,MARIO.blockChaseDelay-boxAge).toFixed(1)}초`:"";
-        return {ratio:boxRatio,className:m.superStance?"rage-fill":"skill-fill",text:`${state} · ${boxText}${chase}`,extraTextHtml:`<div class="status-skill-label">${m.power==="fire"||m.power==="mushroom"?`보호막 ${m.shield}/${MARIO.shieldMax} · `:""}벽 접촉 ${m.wallContacts}/${MARIO.kartWallNeed}</div><div class="status-skill-label">박스는 변신 중에도 등장 · 기본 상태에서 15초 방치 시 슈퍼스탠스 직진</div>`};
+        const fireInfo=m.power==="fire"?` · 발사 ${(m.fireShots||0)}/${MARIO.fireShotsPerShield}`:"";
+        return {ratio:boxRatio,className:m.superStance?"rage-fill":"skill-fill",text:`${state} · ${boxText}${chase}`,extraTextHtml:`<div class="status-skill-label">${m.power==="fire"||m.power==="mushroom"?`보호막 ${m.shield}/${MARIO.shieldMax}${fireInfo} · `:""}벽 접촉 ${m.wallContacts}/${MARIO.kartWallNeed} · 50회 → 토관 카트 전환</div><div class="status-skill-label">파이어 ${MARIO.firePeriod.toFixed(2)}초 간격 · 5발마다 1칸 소모 · 화상1×3 중첩 없이 갱신</div>`};
       }
       if(f.spider){const s=f.spider||{};const active=s.mode==="chase",firing=(s.volleyLeft||0)>0;return {ratio:active||firing?1:clamp(1-Math.max(0,s.volleyCd||0)/SPIDER.volleyCooldown,0,1),className:active?"rage-fill":"skill-fill",text:active?"웹스윙 · 적 추격":firing?("웹슈터 연사 · "+(SPIDER.volleyCount-(s.volleyLeft||0))+"/"+SPIDER.volleyCount):("웹슈터 "+Math.max(0,s.volleyCd||0).toFixed(1)+"초"),extraTextHtml:'<div class="status-skill-label">웹슈터 5초마다 6연사 · 발당2·약넉백·0.9초 10%둔화</div><div class="status-skill-label">웹슈터 넉백 중 벽에 충돌해야만 0.9초 속박 · 속박 성공 시 타게팅 웹스윙 돌진18+강넉백</div>'};}
       if(f.conan){
@@ -10796,6 +10897,7 @@
       if (updateCastPause(f, dt)) {
         return;
       }
+      if (f.mario?.pipeTransit) return;
 
       const slow = f.freeze > 0 ? 0.42 : 1;
       const gardenSlow = minaGardenSlowMultiplier(f);
@@ -10828,36 +10930,41 @@
 
     function bounceWalls(f) {
       let bounced = false;
+      let marioWall = null;
       if (f.x - f.r < arena.x) {
         oshiWallCollision(f, "left", f.y);
         f.x = arena.x + f.r;
         f.vx = Math.abs(f.vx);
         bounced = true;
+        if (!marioWall) marioWall = { wall:"left", x:arena.x, y:clamp(f.y,arena.y+54,arena.y2-54) };
       }
       if (f.x + f.r > arena.x2) {
         oshiWallCollision(f, "right", f.y);
         f.x = arena.x2 - f.r;
         f.vx = -Math.abs(f.vx);
         bounced = true;
+        if (!marioWall) marioWall = { wall:"right", x:arena.x2, y:clamp(f.y,arena.y+54,arena.y2-54) };
       }
       if (f.y - f.r < arena.y) {
         oshiWallCollision(f, "top", f.x);
         f.y = arena.y + f.r;
         f.vy = Math.abs(f.vy);
         bounced = true;
+        if (!marioWall) marioWall = { wall:"top", x:clamp(f.x,arena.x+54,arena.x2-54), y:arena.y };
       }
       if (f.y + f.r > arena.y2) {
         oshiWallCollision(f, "bottom", f.x);
         f.y = arena.y2 - f.r;
         f.vy = -Math.abs(f.vy);
         bounced = true;
+        if (!marioWall) marioWall = { wall:"bottom", x:clamp(f.x,arena.x+54,arena.x2-54), y:arena.y2 };
       }
       if (bounced) {
         jabamiHighCardWallBounce(f);
         const overSources = enemyOverchargeSources(f);
         const electricWall = overSources.length > 0;
         f.wallBounces += 1;
-        marioWallContact(f);
+        marioWallContact(f, marioWall);
         baldCapeWallBounce(f);
 
         if (electricWall) {
@@ -10909,10 +11016,10 @@
     function handleCircleCollisions(dt) {
       for (let i = 0; i < fighters.length; i++) {
         const a = fighters[i];
-        if (!a.alive || (a.dodoVoid || 0) > 0 || a.punchHold > 0 || a.logo?.jump?.phase === "flight") continue;
+        if (!a.alive || (a.dodoVoid || 0) > 0 || a.punchHold > 0 || a.logo?.jump?.phase === "flight" || (a.mario?.pipeTransit && a.mario.pipeTransit.phase!=="approach")) continue;
         for (let j = i + 1; j < fighters.length; j++) {
           const b = fighters[j];
-          if (!b.alive || (b.dodoVoid || 0) > 0 || b.punchHold > 0 || b.logo?.jump?.phase === "flight") continue;
+          if (!b.alive || (b.dodoVoid || 0) > 0 || b.punchHold > 0 || b.logo?.jump?.phase === "flight" || (b.mario?.pipeTransit && b.mario.pipeTransit.phase!=="approach")) continue;
 
           const dx = b.x - a.x;
           const dy = b.y - a.y;
@@ -13600,11 +13707,20 @@
       drawHealthBar(f);drawName(f);
       if(mode==="hulk")drawRing(f.x,f.y,f.r+7,"rgba(239,68,68,.62)",2);
     }
+    let suppressMarioSpinUi = false;
     function drawFighter(f) {
       drawConcussionSlow(f);
       drawPowerFist(f);
       drawIronSuit(f);
-      drawMarioSpinOverlay(f);
+      const marioSpin=(f.marioSpinFx||0)>0&&!fastSimMode&&!f.portraitOnly;
+      if(marioSpin){
+        const prev=suppressMarioSpinUi;suppressMarioSpinUi=true;
+        ctx.save();ctx.translate(f.x,f.y);ctx.rotate((MARIO.shellSpin-f.marioSpinFx)*28);ctx.translate(-f.x,-f.y);drawFighterBody(f);ctx.restore();
+        suppressMarioSpinUi=prev;drawHealthBar(f);drawName(f);return;
+      }
+      drawFighterBody(f);
+    }
+    function drawFighterBody(f) {
       if (f.duelMonster) { drawDuelMonster(f); return; }
       if (f.iron) { drawIronCharacter(f); return; }
       if (f.lisa) { drawLisaCharacter(f); return; }
@@ -13934,6 +14050,7 @@
     }
 
     function drawHealthBar(f) {
+      if (suppressMarioSpinUi) return;
       if (f.portraitOnly) return;
       if ((f.hardFreeze || 0) > 0) {
         ctx.save();
@@ -14043,6 +14160,7 @@
     }
 
     function drawName(f) {
+      if (suppressMarioSpinUi) return;
       if (f.portraitOnly) return;
       ctx.font = "800 12px system-ui";
       ctx.textAlign = "center";
