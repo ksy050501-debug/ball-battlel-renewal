@@ -14,29 +14,10 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
+          import base64
+          s=Path('index.html').read_text(encoding='utf-8')
           marker='    requestAnimationFrame(loop);'
-          diag=r'''
-    setTimeout(async()=>{
-      const out=[];
-      try{
-        const mario=characterById('mario_plumber');
-        const roster=battleRosterCharacters().filter(c=>c.id!=='mario_plumber');
-        for(const opp of roster){
-          const prev=beginFastSim('diag');
-          try{
-            const result=await simulateQuickPair([opp,mario],1,'diag');
-            out.push({opp:opp.id,time:Number(result.avgTime),a:result.aWins,b:result.bWins,d:result.drawCount});
-          }catch(e){
-            out.push({opp:opp.id,error:String(e&&e.stack||e)});
-          }finally{ endFastSim(prev); }
-        }
-      }catch(e){out.push({fatal:String(e&&e.stack||e)});}
-      const pre=document.createElement('pre');pre.id='diagResult';pre.textContent=JSON.stringify(out);document.body.appendChild(pre);
-      document.body.setAttribute('data-diag-done','1');
-    },50);
-'''
+          diag=base64.b64decode('CiAgICBzZXRUaW1lb3V0KGFzeW5jKCk9PnsKICAgICAgY29uc3Qgb3V0PVtdOwogICAgICB0cnl7CiAgICAgICAgY29uc3QgbWFyaW89Y2hhcmFjdGVyQnlJZCgnbWFyaW9fcGx1bWJlcicpOwogICAgICAgIGNvbnN0IHJvc3Rlcj1iYXR0bGVSb3N0ZXJDaGFyYWN0ZXJzKCkuZmlsdGVyKGM9PmMuaWQhPT0nbWFyaW9fcGx1bWJlcicpOwogICAgICAgIGZvcihjb25zdCBvcHAgb2Ygcm9zdGVyKXsKICAgICAgICAgIGNvbnN0IHByZXY9YmVnaW5GYXN0U2ltKCdkaWFnJyk7CiAgICAgICAgICB0cnl7CiAgICAgICAgICAgIGNvbnN0IHJlc3VsdD1hd2FpdCBzaW11bGF0ZVF1aWNrUGFpcihbb3BwLG1hcmlvXSwxLCdkaWFnJyk7CiAgICAgICAgICAgIG91dC5wdXNoKHtvcHA6b3BwLmlkLHRpbWU6TnVtYmVyKHJlc3VsdC5hdmdUaW1lKSxhOnJlc3VsdC5hV2lucyxiOnJlc3VsdC5iV2lucyxkOnJlc3VsdC5kcmF3Q291bnR9KTsKICAgICAgICAgIH1jYXRjaChlKXsKICAgICAgICAgICAgb3V0LnB1c2goe29wcDpvcHAuaWQsZXJyb3I6U3RyaW5nKGUmJmUuc3RhY2t8fGUpfSk7CiAgICAgICAgICB9ZmluYWxseXsgZW5kRmFzdFNpbShwcmV2KTsgfQogICAgICAgIH0KICAgICAgfWNhdGNoKGUpe291dC5wdXNoKHtmYXRhbDpTdHJpbmcoZSYmZS5zdGFja3x8ZSl9KTt9CiAgICAgIGNvbnN0IHByZT1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdwcmUnKTtwcmUuaWQ9J2RpYWdSZXN1bHQnO3ByZS50ZXh0Q29udGVudD1KU09OLnN0cmluZ2lmeShvdXQpO2RvY3VtZW50LmJvZHkuYXBwZW5kQ2hpbGQocHJlKTsKICAgICAgZG9jdW1lbnQuYm9keS5zZXRBdHRyaWJ1dGUoJ2RhdGEtZGlhZy1kb25lJywnMScpOwogICAgfSw1MCk7Cg==').decode()
           if marker not in s: raise SystemExit('marker missing')
           s=s.replace(marker,diag+'\n'+marker,1)
           Path('/tmp/diag.html').write_text(s,encoding='utf-8')
