@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v137</title>
+  <title>볼배틀 리뉴얼 v138</title>
   <style>
     :root {
       --bg: #020617;
@@ -1090,8 +1090,9 @@
         <button class="warn" id="fullMatrix30Btn">전체 테스트</button>
         <button class="ghost" id="quickSim100Btn">1대1 100전</button>
       </div>
-      <div class="button-row" style="width:min(700px,100%);grid-template-columns:1fr;">
+      <div class="button-row" style="width:min(700px,100%);">
         <button class="ghost" id="copyMatchupBtn">전적 복사</button>
+        <button class="danger" id="resetMatchupBtn">전적 리셋</button>
       </div>
       <p class="status" id="tipText">1인 전체 테스트는 선택한 1명을 나머지 전원과 각각 30전, 전체 테스트는 모든 조합을 각각 30전, 1대1 100전은 선택한 2명을 100전 시뮬레이션합니다.</p>
     </section>
@@ -14675,6 +14676,7 @@
     $("quickSim100Btn").addEventListener("click", runQuickSim100);
     $("fullMatrix30Btn").addEventListener("click", () => runFullMatchupMatrix(30));
     $("copyMatchupBtn").addEventListener("click", copyMatchupHistory);
+    $("resetMatchupBtn").addEventListener("click", resetMatchupHistory);
     $("patchModalClose").addEventListener("click", closePatchNotes);
     $("patchModal").addEventListener("click", e => {
       if (e.target.id === "patchModal") closePatchNotes();
