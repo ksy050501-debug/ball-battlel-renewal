@@ -1,0 +1,1 @@
+Mario slow multiplier: expected 1 anchor, found 2
