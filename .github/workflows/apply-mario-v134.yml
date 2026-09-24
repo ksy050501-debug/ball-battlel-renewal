@@ -16,7 +16,20 @@ jobs:
         with:
           fetch-depth: 0
       - name: Apply patch
-        run: python3 .github/apply_mario_v134.py
+        run: |
+          set +e
+          python3 .github/apply_mario_v134.py > /tmp/mario_patch.log 2>&1
+          code=$?
+          cat /tmp/mario_patch.log
+          if [ $code -ne 0 ]; then
+            cp /tmp/mario_patch.log .github/mario_patch_error.txt
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add .github/mario_patch_error.txt
+            git commit -m 'Record Mario patch diagnostic'
+            git push origin HEAD:main
+            exit $code
+          fi
       - name: Validate JavaScript syntax
         run: |
           python3 - <<'PY'
@@ -37,7 +50,7 @@ jobs:
           grep -q 'blockTouchNeed:2' index.html
       - name: Commit and clean temporary files
         run: |
-          rm -f .github/apply_mario_v134.py .github/workflows/apply-mario-v134.yml
+          rm -f .github/apply_mario_v134.py .github/workflows/apply-mario-v134.yml .github/mario_patch_error.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html .github
