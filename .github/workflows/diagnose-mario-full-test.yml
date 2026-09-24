@@ -23,7 +23,7 @@ jobs:
           which google-chrome || which google-chrome-stable || which chromium || true
           npm init -y >/dev/null 2>&1
           npm install puppeteer-core@24 --no-audit --no-fund >/dev/null 2>&1
-          cat > /tmp/diagnose.cjs <<'JS'
+          cat > diagnose.cjs <<'JS'
           const puppeteer = require('puppeteer-core');
           const {execSync, spawn} = require('child_process');
           const fs = require('fs');
@@ -81,4 +81,4 @@ jobs:
           JS
 
       - name: Run plumber diagnostic
-        run: node /tmp/diagnose.cjs
+        run: node diagnose.cjs
