@@ -1,0 +1,49 @@
+name: Apply Mario v134 patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-mario-v134.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply patch
+        run: python3 .github/apply_mario_v134.py
+      - name: Validate JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)
+          if not blocks:
+              raise SystemExit('no script block found')
+          Path('/tmp/ballbattle.js').write_text('\n'.join(blocks),encoding='utf-8')
+          PY
+          node --check /tmp/ballbattle.js
+      - name: Verify Mario markers
+        run: |
+          grep -q '볼배틀 리뉴얼 v134' index.html
+          grep -q '배관공카트' index.html
+          grep -q 'marioSpawnKartPickup' index.html
+          grep -q 'blockTouchNeed:2' index.html
+      - name: Commit and clean temporary files
+        run: |
+          rm -f .github/apply_mario_v134.py .github/workflows/apply-mario-v134.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html .github
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Expand plumber into box and kart modes'
+            git push origin HEAD:main
+          fi
