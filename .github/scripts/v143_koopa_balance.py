@@ -35,8 +35,8 @@ once('if(!fastSimMode){spawnHitFlash(target.x,target.y,"#bef264",58);spawnPartic
      'if(!fastSimMode){spawnHitFlash(target.x,target.y,"#bef264",58);spawnParticles(target.x,target.y,"#84cc16",10);}\n      koopaEndShell(source);\n      return dealt>0;',
      'shell collision recovery')
 
-once('if (tryHeroLeonGuardBlock(target, reason)) return 0;\n',
-     'if (tryHeroLeonGuardBlock(target, reason)) return 0;\n      if (target.koopa?.recovery > 0) amount *= 2;\n',
+once('function damage(target, amount, source, reason = "공격") {\n      if (!target || !target.alive || (target.dodoVoid || 0) > 0 || target.tano?.hidden > 0) return 0;',
+     'function damage(target, amount, source, reason = "공격") {\n      if (!target || !target.alive || (target.dodoVoid || 0) > 0 || target.tano?.hidden > 0) return 0;\n      if (target.koopa?.recovery > 0) amount *= 2;',
      'koopa vulnerability')
 
 once('if(k.recovery>0)return {ratio:clamp(k.recovery/KOOPA.recoveryStun,0,1),className:"rage-fill",text:`등껍질 후 기절 ${k.recovery.toFixed(1)}초`,extraTextHtml:`<div class="status-skill-label">불기둥 ${fire?`발동 중 · ${fireCount}개 · ${fire.life.toFixed(1)}초`:`${Math.max(0,k.fireCd).toFixed(1)}초 후`}</div>`};',
