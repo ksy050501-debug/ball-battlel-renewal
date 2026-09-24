@@ -8,6 +8,7 @@ on:
 jobs:
   diagnose:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - name: Build diagnostic page
@@ -15,45 +16,28 @@ jobs:
           cat > /tmp/diag.js <<'JS'
           setTimeout(async()=>{
             const out=[];
-            async function runOne(aId,bId){
-              const a=characterById(aId), b=characterById(bId);
-              const prev=beginFastSim('diag');
-              try{
-                setArenaSize(2);
-                prepareBattleState();
-                teamState=null;
-                const positions=spawnPositions(2);
-                fighters=[a,b].map((c,i)=>makeFighter(c,positions[i],i));
-                let guard=0;
-                while(running&&!ended&&battleTime<500&&guard<20000){
-                  update(0.033);
-                  guard++;
-                  if(guard%600===0) await new Promise(r=>setTimeout(r,0));
+            const mario=characterById('mario_plumber');
+            const opponents=battleRosterCharacters().filter(c=>c.id!==mario.id);
+            const prev=beginFastSim('diag-full30');
+            const totalStart=performance.now();
+            try{
+              for(let i=0;i<opponents.length;i++){
+                const opp=opponents[i];
+                const start=performance.now();
+                try{
+                  const r=await simulateQuickPair([opp,mario],30,'diag '+opp.id);
+                  out.push({i:i+1,opp:opp.id,ms:Math.round(performance.now()-start),avgTime:r.avgTime,a:r.aWins,b:r.bWins,d:r.drawCount,total:r.aWins+r.bWins+r.drawCount});
+                }catch(e){
+                  out.push({i:i+1,opp:opp.id,ms:Math.round(performance.now()-start),error:String(e&&e.stack||e)});
+                  break;
                 }
-                out.push({
-                  pair:aId+' vs '+bId,
-                  guard,
-                  battleTime,
-                  running,
-                  ended,
-                  winnerId:quickWinnerLabel([a,b]),
-                  alive:fighters.filter(f=>f.alive&&!f.isSummon).map(f=>({name:f.name,baseId:f.baseId,id:f.id,hp:f.hp,mario:!!f.mario,kart:!!f.mario?.kart,pipe:f.mario?.pipeTransit?.phase||null})),
-                  all:fighters.map(f=>({name:f.name,baseId:f.baseId,id:f.id,isSummon:!!f.isSummon,alive:f.alive,hp:f.hp,marioBlock:!!f.marioBlock}))
-                });
-              }catch(e){
-                out.push({pair:aId+' vs '+bId,error:String(e&&e.stack||e)});
-              }finally{
-                endFastSim(prev);
+                await new Promise(r=>setTimeout(r,0));
               }
+            }finally{
+              endFastSim(prev);
             }
-            await runOne('spider_man','mario_plumber');
-            await runOne('logo_doctor','mario_plumber');
-            await runOne('captain','mario_plumber');
-            await runOne('spider_man','conan');
-            const pre=document.createElement('pre');
-            pre.id='diagResult';
-            pre.textContent=JSON.stringify(out);
-            document.body.appendChild(pre);
+            out.push({done:true,totalMs:Math.round(performance.now()-totalStart),history:out.length});
+            const pre=document.createElement('pre');pre.id='diagResult';pre.textContent=JSON.stringify(out);document.body.appendChild(pre);
           },50);
           JS
           python3 - <<'PY'
@@ -61,22 +45,20 @@ jobs:
           s=Path('index.html').read_text(encoding='utf-8')
           marker='    requestAnimationFrame(loop);'
           diag=Path('/tmp/diag.js').read_text(encoding='utf-8')
-          if marker not in s:
-              raise SystemExit('marker missing')
-          s=s.replace(marker,diag+'\n'+marker,1)
-          Path('/tmp/diag.html').write_text(s,encoding='utf-8')
+          if marker not in s: raise SystemExit('marker missing')
+          Path('/tmp/diag.html').write_text(s.replace(marker,diag+'\n'+marker,1),encoding='utf-8')
           PY
-      - name: Run headless browser diagnostic
+      - name: Run full 30 benchmark
         run: |
           CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
           test -n "$CHROME"
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --allow-file-access-from-files --virtual-time-budget=45000 --dump-dom file:///tmp/diag.html > /tmp/diag-dom.txt
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --allow-file-access-from-files --virtual-time-budget=300000 --dump-dom file:///tmp/diag.html > /tmp/diag-dom.txt
           python3 - <<'PY'
           import re, html
           s=open('/tmp/diag-dom.txt',encoding='utf-8').read()
           m=re.search(r'<pre id="diagResult">(.*?)</pre>',s,re.S)
           if not m:
-              print(s[-4000:])
+              print(s[-5000:])
               raise SystemExit('diagnostic result missing')
           print('DIAG_RESULT='+html.unescape(m.group(1)))
           PY
