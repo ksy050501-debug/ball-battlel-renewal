@@ -18,49 +18,21 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-
+          import base64
           path = Path('index.html')
           text = path.read_text(encoding='utf-8')
-
-          replacements = [
-              (
-                  '''        chosen.forEach(c => {
-          const fighter = fighters.find(f => !f.isSummon && f.baseId === c.id);
-          remainingHpTotals[c.id] += Math.max(0, fighter ? fighter.hp : 0);
-        });''',
-                  '''        if (winnerId !== "draw") {
-          const winner = fighters.find(f => !f.isSummon && f.baseId === winnerId);
-          remainingHpTotals[winnerId] += Math.max(0, winner ? winner.hp : 0);
-        }'''
-              ),
-              (
-                  '''        averageHp: Object.fromEntries(chosen.map(c => [
-          c.id,
-          count > 0 ? remainingHpTotals[c.id] / count : 0
-        ])),''',
-                  '''        averageHp: Object.fromEntries(chosen.map(c => {
-          const wins = score[c.id] || 0;
-          return [c.id, wins > 0 ? remainingHpTotals[c.id] / wins : 0];
-        })),'''
-              ),
-              (
-                  '''        const averageHp = {
-          [opp.id]: remainingHpTotals[opp.id] / total,
-          [focus.id]: remainingHpTotals[focus.id] / total
-        };''',
-                  '''        const averageHp = {
-          [opp.id]: aWins > 0 ? remainingHpTotals[opp.id] / aWins : 0,
-          [focus.id]: bWins > 0 ? remainingHpTotals[focus.id] / bWins : 0
-        };'''
-              ),
+          encoded = [
+              ('ICAgICAgICBjaG9zZW4uZm9yRWFjaChjID0+IHsKICAgICAgICAgIGNvbnN0IGZpZ2h0ZXIgPSBmaWdodGVycy5maW5kKGYgPT4gIWYuaXNTdW1tb24gJiYgZi5iYXNlSWQgPT09IGMuaWQpOwogICAgICAgICAgcmVtYWluaW5nSHBUb3RhbHNbYy5pZF0gKz0gTWF0aC5tYXgoMCwgZmlnaHRlciA/IGZpZ2h0ZXIuaHAgOiAwKTsKICAgICAgICB9KTs=', 'ICAgICAgICBpZiAod2lubmVySWQgIT09ICJkcmF3IikgewogICAgICAgICAgY29uc3Qgd2lubmVyID0gZmlnaHRlcnMuZmluZChmID0+ICFmLmlzU3VtbW9uICYmIGYuYmFzZUlkID09PSB3aW5uZXJJZCk7CiAgICAgICAgICByZW1haW5pbmdIcFRvdGFsc1t3aW5uZXJJZF0gKz0gTWF0aC5tYXgoMCwgd2lubmVyID8gd2lubmVyLmhwIDogMCk7CiAgICAgICAgfQ=='),
+              ('ICAgICAgICBhdmVyYWdlSHA6IE9iamVjdC5mcm9tRW50cmllcyhjaG9zZW4ubWFwKGMgPT4gWwogICAgICAgICAgYy5pZCwKICAgICAgICAgIGNvdW50ID4gMCA/IHJlbWFpbmluZ0hwVG90YWxzW2MuaWRdIC8gY291bnQgOiAwCiAgICAgICAgXSkpLA==', 'ICAgICAgICBhdmVyYWdlSHA6IE9iamVjdC5mcm9tRW50cmllcyhjaG9zZW4ubWFwKGMgPT4gewogICAgICAgICAgY29uc3Qgd2lucyA9IHNjb3JlW2MuaWRdIHx8IDA7CiAgICAgICAgICByZXR1cm4gW2MuaWQsIHdpbnMgPiAwID8gcmVtYWluaW5nSHBUb3RhbHNbYy5pZF0gLyB3aW5zIDogMF07CiAgICAgICAgfSkpLA=='),
+              ('ICAgICAgICBjb25zdCBhdmVyYWdlSHAgPSB7CiAgICAgICAgICBbb3BwLmlkXTogcmVtYWluaW5nSHBUb3RhbHNbb3BwLmlkXSAvIHRvdGFsLAogICAgICAgICAgW2ZvY3VzLmlkXTogcmVtYWluaW5nSHBUb3RhbHNbZm9jdXMuaWRdIC8gdG90YWwKICAgICAgICB9Ow==', 'ICAgICAgICBjb25zdCBhdmVyYWdlSHAgPSB7CiAgICAgICAgICBbb3BwLmlkXTogYVdpbnMgPiAwID8gcmVtYWluaW5nSHBUb3RhbHNbb3BwLmlkXSAvIGFXaW5zIDogMCwKICAgICAgICAgIFtmb2N1cy5pZF06IGJXaW5zID4gMCA/IHJlbWFpbmluZ0hwVG90YWxzW2ZvY3VzLmlkXSAvIGJXaW5zIDogMAogICAgICAgIH07')
           ]
-
-          for i, (old, new) in enumerate(replacements, 1):
+          for i, (old64, new64) in enumerate(encoded, 1):
+              old = base64.b64decode(old64).decode('utf-8')
+              new = base64.b64decode(new64).decode('utf-8')
               count = text.count(old)
               if count != 1:
-                  raise SystemExit(f'Patch target {i} expected exactly once, found {count}; aborting without modifying index.html')
+                  raise SystemExit(f'Patch target {i} expected exactly once, found {count}; aborting')
               text = text.replace(old, new, 1)
-
           path.write_text(text, encoding='utf-8')
           PY
 
