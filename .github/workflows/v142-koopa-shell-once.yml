@@ -1,0 +1,114 @@
+name: Apply v142 Koopa shell once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/v142-koopa-shell-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch index
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          def once(old,new,label):
+              global s
+              n=s.count(old)
+              if n!=1:
+                  raise SystemExit(f'{label}: expected 1 marker, found {n}')
+              s=s.replace(old,new,1)
+
+          once('볼배틀 리뉴얼 v141','볼배틀 리뉴얼 v142','version')
+          once('k.hitCd[target.id]=KOOPA.shellHitCd;', 'k.hitCd[target.id]=Math.max(.1,k.shellTime)+.25;', 'shell same-target limiter')
+
+          note='      "v142: 쿱하 등껍질 돌진은 돌진 1회 동안 같은 상대를 최대 1회만 타격하도록 변경했습니다. 등껍질 피해14·강넉백·벽충돌8·6초 지속·마지막3초 추적·종료 후3초 기절, HP240과 회전 불기둥 수치는 유지합니다.",\n'
+          marker='      const patchNotes = [\n'
+          once(marker, marker+note, 'patch note')
+
+          # 피해량 안내에도 1회 제한을 표시한다.
+          s=s.replace('등껍질은 마지막 3초 동안 적을 추적한다.', '등껍질은 돌진 1회 동안 같은 상대를 최대 1회만 타격하며, 마지막 3초 동안 적을 추적한다.', 1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Validate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          Path('/tmp/ball-battle.js').write_text('\n'.join(re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)),encoding='utf-8')
+          for marker in ['볼배틀 리뉴얼 v142','k.hitCd[target.id]=Math.max(.1,k.shellTime)+.25;','v142: 쿱하 등껍질 돌진은 돌진 1회 동안 같은 상대를 최대 1회만 타격']:
+              if marker not in s:
+                  raise SystemExit('missing '+marker)
+          PY
+          node --check /tmp/ball-battle.js
+          git diff --check
+
+      - name: Browser smoke test
+        run: |
+          cat > /tmp/smoke.js <<'JS'
+          setTimeout(async()=>{
+            const out=[];let error='';
+            window.addEventListener('error',e=>{error+=(e.error&&e.error.stack)||e.message||String(e);});
+            const koopa=characterById('koopa_king');
+            const ids=['mario_plumber','tano','newhello_sergeant','spider_man'];
+            const prev=beginFastSim('koopa-v142-smoke');
+            try{
+              if(!koopa)throw new Error('koopa missing');
+              for(const id of ids){
+                const opp=characterById(id);
+                const r=await simulateQuickPair([opp,koopa],3,'smoke '+id);
+                out.push({id,total:r.aWins+r.bWins+r.drawCount});
+              }
+            }catch(e){error+='\n'+String(e&&e.stack||e);}
+            finally{endFastSim(prev);}
+            const pre=document.createElement('pre');pre.id='smokeResult';pre.textContent=JSON.stringify({out,error});document.body.appendChild(pre);window.requestAnimationFrame=()=>0;
+          },50);
+          JS
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          marker='    requestAnimationFrame(loop);'
+          diag=Path('/tmp/smoke.js').read_text()
+          if marker not in s: raise SystemExit('loop marker missing')
+          Path('/tmp/smoke.html').write_text(s.replace(marker,diag+'\n'+marker,1),encoding='utf-8')
+          PY
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --allow-file-access-from-files --virtual-time-budget=150000 --dump-dom file:///tmp/smoke.html > /tmp/smoke-dom.txt
+          python3 - <<'PY'
+          import re,html,json
+          s=open('/tmp/smoke-dom.txt',encoding='utf-8').read()
+          m=re.search(r'<pre id="smokeResult">(.*?)</pre>',s,re.S)
+          if not m: raise SystemExit('smoke result missing')
+          data=json.loads(html.unescape(m.group(1)))
+          print(data)
+          if data.get('error'): raise SystemExit(data['error'])
+          if len(data.get('out',[]))!=4 or any(x.get('total')!=3 for x in data['out']): raise SystemExit('incomplete smoke matches')
+          PY
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/v142-koopa-shell-once.yml
+          git add index.html
+          git diff --cached --check
+          git commit -m "Limit Koopa shell to one hit per target"
+          git push origin HEAD:main
