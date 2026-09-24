@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v138</title>
+  <title>볼배틀 리뉴얼 v139</title>
   <style>
     :root {
       --bg: #020617;
@@ -1615,7 +1615,7 @@
       spawnFloatingText(target.x,target.y-target.r-34,"헐크 스매시!",huge?"#4ade80":"#bbf7d0");playSound("explosion",huge?1.3:.55);screenShake=Math.max(screenShake,huge?.45:.16);
     }
 
-    const CAPTAIN = { throwPeriod: 6, rethrowDelay: 0.30, catchLock: 0.45, returnAfter: 20, shieldDamage: 10, heldReduction: 0.65, shieldCounter: 5, punchCounter: 13, counterCooldown: 0.75, shieldSpeed: 360, knock: 480, punchWindup: 0.10, punchFollow: 0.10 };
+    const CAPTAIN = { throwPeriod: 6, rethrowDelay: 0.30, catchLock: 0.45, returnAfter: 20, shieldDamage: 12, heldReduction: 0.65, shieldCounter: 5, punchCounter: 13, counterCooldown: 0.75, shieldSpeed: 360, knock: 480, punchWindup: 0.10, punchFollow: 0.10 };
     let captainShields = [];
 
 
@@ -1633,7 +1633,7 @@
     // 뉴헬로 병장: HP 차이 보정은 베기와 출혈 생성 시에만 적용한다.
     const NEWHELLO = { period:7, windup:.45, dashDuration:1, dashSpeed:650,
       contactCooldown:1.2, spinDuration:.45, triggerBonus:8, radiusBonus:28, normalDamage:8,
-      dashDamage:16, bleedDamage:1, bleedTicks:5, bleedDuration:5, maxChain:3, gapForCap:200, maxBonus:.6 };
+      dashDamage:15, bleedDamage:1, bleedTicks:5, bleedDuration:5, maxChain:3, gapForCap:200, maxBonus:.6 };
     function initNewhello(f) {
       f.newhello={cd:NEWHELLO.period, windup:0, dash:0, spin:0, spinFast:false,
         contactCd:0, anchors:[], angle:0, hits:new Set(), trail:[], mutualContactUntil:0, chainHits:0};
@@ -5758,7 +5758,7 @@
       if(c.id==="andrum")return {damage:"킥 음파 5/6/7 · 반경110/135/160 · WHIPLASH 킥3(현재 그루브와 같은 반경) · 피날레 크래시16/반경210",
         tick:"그루브0~300: 0~100 기본 / 101~200 몰입 / 201~300 광란 · 초당+10 · 피격 시 실제 피해×5 감소 · 솔로게이지0~100 · 실제 적중 킥마다+5 · 100에서 다음 마디 WHIPLASH",
         tip:"그루브는 더 이상 단계별 별도 진행도가 아니라 하나의 0~300 수치다. 피해7을 받으면 35, 피해10을 받으면 50이 즉시 빠지며 경계값 아래로 내려가면 그루브 단계도 곧바로 하락한다. 별도 WHIPLASH 게이지는 일반 킥이 적에게 실제 피해를 준 경우에만 5씩 오르고 솔로 중에는 충전되지 않는다. 100이 되면 다음 마디 첫 박에서 2마디 솔로를 시작하고 게이지를 0으로 소모한다."};
-      if(c.id==="newhello_sergeant")return {damage:"일반 광역 회전베기8 / 와이어 광역 강습16 + 출혈1×5회 · 재타격 시 남은 출혈 즉시 폭발 후 재적용 · HP 열세 보정 최대 ×1.6",
+      if(c.id==="newhello_sergeant")return {damage:"일반 광역 회전베기8 / 와이어 광역 강습15 + 출혈1×5회 · 재타격 시 남은 출혈 즉시 폭발 후 재적용 · HP 열세 보정 최대 ×1.6",
         tick:"검 발동 사거리: 몸 충돌보다 +8 · 광역 베기 범위: 몸 반경보다 +28 · 기동7초 · 준비0.45초 · 고속이동1초(초당650) · 와이어 강습 최대 3연속 · 일반 베기 재사용1.2초 · 출혈 약1초마다 5회",
         tip:"뉴헬로는 상대와 몸이 닿지 않아도 검 사거리(+8)에 들어오면 베기가 발동한다. 공격을 발동시킨 상대가 누구든, 그 순간 병장 중심의 더 큰 베기 원(+28) 안에 있는 모든 적이 같은 베기 피해와 출혈을 받는다. 와이어 강습 적중 시 즉시 재와이어하지만 한 사이클에서 총 3번까지만 연속 강습할 수 있고, 3번째 적중 뒤에는 7초 쿨타임이 적용된다. 중간 강습이 빗나가거나 끊기면 연속 횟수는 초기화된다. 출혈 폭발과 실제 몸 충돌 시 상대 접촉 반격은 기존대로 유지된다."};
       if (c.id === "riddle_lord") return {damage:"피엔드피레 0.4초마다3 + 화상2×3초 / 딱총나무 강화 0.4초마다4 + 화상3×3초 · 아바다 케다브라 4×5 / 강화 6×5",tick:"공유 쿨9초 · 첫 피엔드피레는 4초 뒤 · 이후 피엔드피레↔아바다 교대 · 피엔드피레4초 지속 · 아바다0.9초 다단 · 딱총나무16초 대기 후 등장·미획득 시25초 뒤 자동 습득·획득 시12초 강화",tip:"딱총나무 강화 중 피엔드피레 반경75→105, 아바다 케다브라는 거리와 조준을 무시하고 지정 대상에게 확정 적중한다. 첫 사망 때 호크룩스 7칸/7초 상태가 되며 이동·공격 불가. 적 접촉마다 1칸, 공격 피격마다 기본1칸＋피해10당 1칸 추가 감소. 피격 또는 접촉 1회마다 부활 HP도 70에서 10씩 감소한다. 생존하면 최대HP70·이속2.8로 남은 부활HP만큼 부활한다. 부활 후에도 원래 스킬과 지팡이를 그대로 사용한다. 지팡이는 획득 전까지 소멸하지 않고 등장 25초 뒤 자동 습득한다. 두 번째 부활은 없다."};
