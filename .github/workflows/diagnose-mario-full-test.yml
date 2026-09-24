@@ -1,4 +1,4 @@
-name: Diagnose plumber full test
+name: Apply plumber full-test crash fix
 
 on:
   push:
@@ -6,10 +6,10 @@ on:
       - '.github/workflows/diagnose-mario-full-test.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  diagnose:
+  patch-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -17,69 +17,102 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Prepare browser diagnostic
+      - name: Patch index
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          # v137
+          if '볼배틀 리뉴얼 v136' not in s:
+              raise SystemExit('v136 title marker missing')
+          s=s.replace('볼배틀 리뉴얼 v136','볼배틀 리뉴얼 v137')
+
+          # Revert the v136 regression: yielding every 600 simulation updates made long plumber tests much slower.
+          old='''          guard += 1;\n          if (guard % 600 === 0) {\n            await new Promise(resolve => setTimeout(resolve, 0));\n          }'''
+          new='''          guard += 1;'''
+          if s.count(old)!=1:
+              raise SystemExit(f'guard-yield marker expected 1, found {s.count(old)}')
+          s=s.replace(old,new,1)
+
+          # Kart hazards can be cleared/replaced by a mode transition while a backwards loop still owns the old index.
+          # Treat a missing slot as already removed instead of dereferencing it.
+          old='''      for(let i=m.bananas.length-1;i>=0;i--){const b=m.bananas[i];b.ownerGrace=Math.max(0,(b.ownerGrace||0)-dt);const candidates=fighters.filter(e=>e.alive&&!e.isSummon&&!e.marioBlock&&(e===f||areEnemies(f,e)));'''
+          new='''      for(let i=m.bananas.length-1;i>=0;i--){const b=m.bananas[i];if(!b){m.bananas.splice(i,1);continue;}b.ownerGrace=Math.max(0,(b.ownerGrace||0)-dt);const candidates=fighters.filter(e=>e.alive&&!e.isSummon&&!e.marioBlock&&(e===f||areEnemies(f,e)));'''
+          if s.count(old)!=1:
+              raise SystemExit(f'banana marker expected 1, found {s.count(old)}')
+          s=s.replace(old,new,1)
+
+          old='''      for(let i=m.shells.length-1;i>=0;i--){const sh=m.shells[i],ox=sh.x,oy=sh.y;sh.ownerGrace=Math.max(0,(sh.ownerGrace||0)-dt);'''
+          new='''      for(let i=m.shells.length-1;i>=0;i--){const sh=m.shells[i];if(!sh){m.shells.splice(i,1);continue;}const ox=sh.x,oy=sh.y;sh.ownerGrace=Math.max(0,(sh.ownerGrace||0)-dt);'''
+          if s.count(old)!=1:
+              raise SystemExit(f'shell marker expected 1, found {s.count(old)}')
+          s=s.replace(old,new,1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Validate JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)
+          Path('/tmp/ball-battle.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/ball-battle.js
+          grep -q '볼배틀 리뉴얼 v137' index.html
+
+      - name: Install browser harness
         run: |
           npm init -y >/dev/null 2>&1
           npm install puppeteer-core@24 --no-audit --no-fund >/dev/null 2>&1
-          cat > diagnose.cjs <<'JS'
-          const puppeteer = require('puppeteer-core');
-          const {execSync, spawn} = require('child_process');
-          const fs = require('fs');
 
-          function chromePath(){
-            for (const cmd of ['google-chrome','google-chrome-stable','chromium']) {
-              try { return execSync(`which ${cmd}`).toString().trim(); } catch {}
-            }
-            throw new Error('Chrome/Chromium not found');
-          }
-
+      - name: Verify plumber 30-match full-test pairs
+        run: |
+          cat > verify.cjs <<'JS'
+          const puppeteer=require('puppeteer-core');
+          const {execSync,spawn}=require('child_process');
+          const fs=require('fs');
+          const chrome=execSync('which google-chrome').toString().trim();
+          fs.mkdirSync('/tmp/ballsite',{recursive:true});
+          fs.copyFileSync('index.html','/tmp/ballsite/index.html');
+          const server=spawn('python3',['-m','http.server','8127','--bind','127.0.0.1'],{cwd:'/tmp/ballsite',stdio:'ignore'});
           (async()=>{
-            const port=8124;
-            fs.mkdirSync(`/tmp/site-${port}`, {recursive:true});
-            fs.copyFileSync('index.html', `/tmp/site-${port}/index.html`);
-            const server=spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1'],{cwd:`/tmp/site-${port}`,stdio:'ignore'});
-            await new Promise(r=>setTimeout(r,500));
-            const browser=await puppeteer.launch({headless:true,executablePath:chromePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
+            await new Promise(r=>setTimeout(r,400));
+            const browser=await puppeteer.launch({headless:true,executablePath:chrome,args:['--no-sandbox','--disable-dev-shm-usage']});
             const page=await browser.newPage();
-            page.on('pageerror',e=>console.error('PAGEERROR',String(e.stack||e)));
-            await page.goto(`http://127.0.0.1:${port}`,{waitUntil:'load',timeout:30000});
-
-            const opponents=await page.evaluate(()=>battleRosterCharacters().filter(c=>c.id!=='mario_plumber'&&!c.simOnly).map(c=>({id:c.id,name:c.name})));
-            await page.evaluate(()=>{
-              soundEnabled=false; fastSimMode=true; speedMultiplier=4;
-              window.__plumberDiag={maxFighters:0,maxParticles:0,maxShells:0,maxBananas:0,maxFireballs:0};
-              const originalUpdate=update;
-              update=function(dt){
-                const r=originalUpdate(dt);
-                const d=window.__plumberDiag;
-                d.maxFighters=Math.max(d.maxFighters,fighters.length);
-                d.maxParticles=Math.max(d.maxParticles,particles.length);
-                const mario=fighters.find(f=>f.alive&&!f.isSummon&&f.baseId==='mario_plumber');
-                if(mario?.mario){
-                  d.maxShells=Math.max(d.maxShells,mario.mario.shells?.length||0);
-                  d.maxBananas=Math.max(d.maxBananas,mario.mario.bananas?.length||0);
-                  d.maxFireballs=Math.max(d.maxFireballs,mario.mario.fireballs?.length||0);
-                }
-                return r;
-              };
+            const errors=[];page.on('pageerror',e=>errors.push(String(e.stack||e)));
+            await page.goto('http://127.0.0.1:8127',{waitUntil:'load'});
+            const result=await page.evaluate(async()=>{
+              const focus=characterById('mario_plumber');
+              const opponents=battleRosterCharacters().filter(c=>c.id!==focus.id&&!c.simOnly);
+              const out=[];soundEnabled=false;fastSimMode=true;speedMultiplier=4;
+              for(const opp of opponents){
+                const start=performance.now();
+                const r=await simulateQuickPair([opp,focus],30,'');
+                out.push({id:opp.id,name:opp.name,total:r.aWins+r.bWins+r.drawCount,ms:Math.round(performance.now()-start)});
+              }
+              fastSimMode=false;
+              return out;
             });
-
-            let totalMs=0;
-            for(const opp of opponents){
-              const start=Date.now();
-              const result=await page.evaluate(async(id)=>{
-                window.__plumberDiag.maxFighters=0;window.__plumberDiag.maxParticles=0;window.__plumberDiag.maxShells=0;window.__plumberDiag.maxBananas=0;window.__plumberDiag.maxFireballs=0;
-                const focus=characterById('mario_plumber'), enemy=characterById(id);
-                const r=await simulateQuickPair([enemy,focus],30,'');
-                return {aWins:r.aWins,bWins:r.bWins,draws:r.drawCount,avgBattle:Number(r.avgTime),diag:{...window.__plumberDiag}};
-              },opp.id);
-              const ms=Date.now()-start; totalMs+=ms;
-              console.log(JSON.stringify({id:opp.id,name:opp.name,realMs:ms,...result}));
-            }
-            console.log('TOTAL_MS',totalMs);
+            console.log(JSON.stringify(result));
+            if(errors.length) throw new Error('page errors: '+errors.join('\n'));
+            if(!result.length || result.some(x=>x.total!==30)) throw new Error('incomplete 30-match result');
+            console.log(`PASS: ${result.length} plumber matchups x 30 completed`);
             await browser.close();server.kill();
-          })().catch(e=>{console.error(e.stack||e);process.exit(1)});
+          })().catch(e=>{console.error(e.stack||e);server.kill();process.exit(1)});
           JS
+          node verify.cjs
 
-      - name: Run plumber diagnostic
-        run: node diagnose.cjs
+      - name: Commit fix and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/diagnose-mario-full-test.yml
+          git add index.html
+          git diff --cached --check
+          git commit -m "Fix plumber kart hazard crash in full tests"
+          git push origin HEAD:main
