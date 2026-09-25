@@ -1,0 +1,113 @@
+name: Apply v146 stack UI
+on:
+  push:
+    paths:
+      - '.github/workflows/v146-stack-ui.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          assert '<title>볼배틀 리뉴얼 v145</title>' in s
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v145</h1>' in s
+          s = s.replace('<title>볼배틀 리뉴얼 v145</title>', '<title>볼배틀 리뉴얼 v146</title>', 1)
+          s = s.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v145</h1>', '<h1 id="mainTitle">볼배틀 리뉴얼 v146</h1>', 1)
+
+          old = '''    function drawHealthStackBadges(f, barY) {
+      if (!f?.alive) return;
+      const badges = [];
+      const cold = Math.max(0, Math.min(ELSA.coldMax, Math.floor(f.elsaCold || 0)));
+      if (cold > 0) badges.push({ text: `❄ ${cold}/${ELSA.coldMax}`, fill: "rgba(14,116,144,.88)", stroke: "#bae6fd", color: "#f0f9ff" });
+      const conanMeter = conanMeterForTarget(f);
+      if (conanMeter > 0) badges.push({ text: `☠ ${Math.floor(conanMeter)}/${CONAN.maxMeter}`, fill: "rgba(127,29,29,.9)", stroke: "#fca5a5", color: "#fee2e2" });
+      if (f.jabami) {
+'''
+          new = '''    function drawHealthStackBadges(f, barY) {
+      if (!f?.alive) return;
+      const badges = [];
+      const cold = Math.max(0, Math.min(ELSA.coldMax, Math.floor(f.elsaCold || 0)));
+      const conanMeter = conanMeterForTarget(f);
+      const barW = f.role === "보스" ? 74 : 58;
+      const barX = f.x - barW / 2;
+      const visibleShieldMax = f.baseId === "wind_rio" ? (f.rioWindShieldMax || 0) : f.shieldMax;
+      const visibleShield = f.baseId === "wind_rio" ? (f.rioWindShield || 0) : f.shieldHp;
+
+      ctx.save();
+      if (conanMeter > 0) {
+        const shownStack = Math.max(1, Math.min(10, Math.ceil(conanMeter / 10)));
+        ctx.font = "900 11px system-ui";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(2,6,23,.88)";
+        ctx.fillStyle = "#ef4444";
+        ctx.strokeText(String(shownStack), f.x, barY - 9);
+        ctx.fillText(String(shownStack), f.x, barY - 9);
+      }
+      if (cold > 0) {
+        const coldY = barY + 17 + (visibleShieldMax > 0 && visibleShield > 0 ? 6 : 0);
+        ctx.font = "900 11px system-ui";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(2,6,23,.88)";
+        ctx.fillStyle = "#bae6fd";
+        const coldText = `❄️x${cold}`;
+        ctx.strokeText(coldText, barX, coldY);
+        ctx.fillText(coldText, barX, coldY);
+      }
+      ctx.restore();
+
+      if (f.jabami) {
+'''
+          assert old in s, 'stack badge header block not found'
+          s = s.replace(old, new, 1)
+
+          old_py = '        const py = barY - 8 - (rows - 1 - row) * rowH;'
+          new_py = '        const py = barY - (conanMeter > 0 ? 24 : 8) - (rows - 1 - row) * rowH;'
+          assert old_py in s, 'badge y line not found'
+          s = s.replace(old_py, new_py, 1)
+
+          marker = '      const patchNotes = [\n'
+          assert marker in s
+          note = '      "v146: 사신·냉기 스택 표기 UI만 정리. 고난의 사신 내부 누적 0~100과 발동 규칙은 그대로 유지하면서 체력바 위쪽 중앙에 빨간 숫자 1~10으로만 환산 표시. 냉기 내부 1~5중첩 규칙은 유지하고 체력바 왼쪽 아래에 ❄️xN 형식으로 표시. 전투 수치·판정 변경 없음.",\n'
+          s = s.replace(marker, marker + note, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Validate script syntax and intended UI-only changes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert '볼배틀 리뉴얼 v146' in s
+          assert 'const shownStack = Math.max(1, Math.min(10, Math.ceil(conanMeter / 10)));' in s
+          assert 'const coldText = `❄️x${cold}`;' in s
+          assert '☠ ${Math.floor(conanMeter)}/${CONAN.maxMeter}' not in s
+          assert '❄ ${cold}/${ELSA.coldMax}' not in s
+          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)
+          assert scripts
+          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+          git diff --check
+      - name: Commit patch and remove temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm .github/workflows/v146-stack-ui.yml
+          git add index.html .github/workflows/v146-stack-ui.yml
+          git commit -m 'v146: simplify death and cold stack UI'
+          git push
