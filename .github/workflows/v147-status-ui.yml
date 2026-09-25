@@ -14,136 +14,8 @@ jobs:
           fetch-depth: 0
       - name: Patch index.html
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          assert '<title>볼배틀 리뉴얼 v146</title>' in s
-          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v146</h1>' in s
-          s=s.replace('<title>볼배틀 리뉴얼 v146</title>','<title>볼배틀 리뉴얼 v147</title>',1)
-          s=s.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v146</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v147</h1>',1)
-
-          new_marks = r'''    function drawHealthStackBadges(f, barY) {
-      if (!f?.alive) return;
-      const barW = f.role === "보스" ? 74 : 58;
-      const barH = 7;
-      const barX = f.x - barW / 2;
-      const conanMeter = conanMeterForTarget(f);
-      const cold = Math.max(0, Math.min(ELSA.coldMax, Math.floor(f.elsaCold || 0)));
-      const chances = f.jabami ? Math.max(0, Math.floor(f.jabami.debtChances || 0)) : 0;
-
-      ctx.save();
-
-      // 사신은 내부 0~100 누적을 그대로 사용하고, 대상 체력바 바로 위에 얇은 빨간 진행선으로만 표시한다.
-      if (conanMeter > 0) {
-        const ratio = clamp(conanMeter / CONAN.maxMeter, 0, 1);
-        const sy = barY - 4;
-        ctx.fillStyle = "rgba(127,29,29,.34)";
-        roundRect(ctx, barX, sy, barW, 2, 1, true, false);
-        ctx.fillStyle = "#ef4444";
-        roundRect(ctx, barX, sy, barW * ratio, 2, 1, true, false);
-      }
-
-      // v144 방식: 빚 액수는 체력바 위 텍스트, 남은 빚 기회는 왼쪽 아래 빨간 다이아몬드.
-      if (f.jabami?.debt > 0) {
-        const debtY = barY - (conanMeter > 0 ? 12 : 8);
-        ctx.font = "900 12px system-ui";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "alphabetic";
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = "rgba(0,0,0,.78)";
-        ctx.fillStyle = "#f87171";
-        ctx.strokeText(`빚 ${Math.ceil(f.jabami.debt)}`, f.x, debtY);
-        ctx.fillText(`빚 ${Math.ceil(f.jabami.debt)}`, f.x, debtY);
-      }
-
-      if (chances > 0) {
-        const size = 5, gap = 5;
-        const start = barX + size / 2;
-        const dy = barY + barH + 8;
-        for (let i = 0; i < chances; i++) {
-          ctx.save();
-          ctx.translate(start + i * (size + gap), dy);
-          ctx.rotate(Math.PI / 4);
-          ctx.fillStyle = "#ef4444";
-          ctx.strokeStyle = "#fecaca";
-          ctx.lineWidth = .8;
-          ctx.fillRect(-size / 2, -size / 2, size, size);
-          ctx.strokeRect(-size / 2, -size / 2, size, size);
-          ctx.restore();
-        }
-      }
-
-      // 냉기는 체력바 오른쪽 아래에 간단히 표시. 빚 다이아가 길어질 때만 한 줄 아래로 피한다.
-      if (cold > 0) {
-        const coldY = barY + barH + 8 + (chances >= 4 ? 9 : 0);
-        ctx.font = "900 11px system-ui";
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "rgba(2,6,23,.88)";
-        ctx.fillStyle = "#bae6fd";
-        const coldText = `❄️x${cold}`;
-        ctx.strokeText(coldText, barX + barW, coldY);
-        ctx.fillText(coldText, barX + barW, coldY);
-      }
-
-      ctx.restore();
-    }
-
-    function drawHealthBar'''
-          s2,n=re.subn(r'    function drawHealthStackBadges\(f, barY\) \{[\s\S]*?\n    \}\n\n    function drawHealthBar',new_marks,s,count=1)
-          assert n==1, f'drawHealthStackBadges replacement count={n}'
-          s=s2
-
-          old_conan='''      if(f.conan){
-        let top=0,name="";for(const [id,s] of f.conan.targets){if((s.meter||0)>top){top=s.meter||0;const t=fighters.find(x=>x.id===id);name=t?.name||"";}}
-        const pending=f.conan.assaults.length>0;
-        return {ratio:clamp(top/CONAN.maxMeter,0,1),className:pending?"rage-fill":"skill-fill",
-          text:pending?"사건 발생 · 범인의 습격!":("사신 "+Math.floor(top)+"/"+CONAN.maxMeter+(name?" · "+name:"")),
-          extraTextHtml:'<div class="status-skill-label">반경130 안 초당 사신+5 · 범위 밖에서도 누적 유지</div><div class="status-skill-label">직접 접촉 +10(대상별1초) · 100에서 0.9초 예고 후 3종 사건 랜덤 · 명목 총 피해100 · 사건 후0</div>'};}
-'''
-          new_conan='''      if(f.conan){
-        const pending=f.conan.assaults.length>0;
-        return {ratio:pending?1:0,className:pending?"rage-fill":"skill-fill",
-          text:pending?"사건 발생 · 범인의 습격!":"사신 중첩 · 대상 상태창에 표시",
-          extraTextHtml:'<div class="status-skill-label">반경130 안 초당 사신+5 · 범위 밖에서도 누적 유지</div><div class="status-skill-label">직접 접촉 +10(대상별1초) · 100에서 0.9초 예고 후 3종 사건 랜덤 · 명목 총 피해100 · 사건 후0</div>'};}
-'''
-          assert old_conan in s, 'Conan status source block not found'
-          s=s.replace(old_conan,new_conan,1)
-
-          status_anchor='''      const statusClass = f.alive ? (current ? " current" : "") : " dead";
-      const skill = skillProgressInfo(f);
-'''
-          status_insert='''      const statusClass = f.alive ? (current ? " current" : "") : " dead";
-      const conanTargetMeter = f.alive ? conanMeterForTarget(f) : 0;
-      const conanTargetHtml = conanTargetMeter > 0
-        ? `<div class="status-skill-label" style="color:#ef4444;font-weight:1000;">사신 ${Math.floor(conanTargetMeter)}/${CONAN.maxMeter}</div>`
-        : "";
-      const skill = skillProgressInfo(f);
-'''
-          assert status_anchor in s, 'status anchor not found'
-          s=s.replace(status_anchor,status_insert,1)
-
-          return_anchor='''          ${shieldHtml}
-          ${skillHtml}
-'''
-          return_insert='''          ${shieldHtml}
-          ${conanTargetHtml}
-          ${skillHtml}
-'''
-          assert return_anchor in s, 'status return anchor not found'
-          s=s.replace(return_anchor,return_insert,1)
-
-          marker='      const patchNotes = [\n'
-          assert marker in s
-          note='      "v147: 상태 UI 재정리. 사신은 기존 0~100 누적/발동 규칙을 그대로 유지하고 대상 체력바 바로 위에 얇은 빨간 진행선으로 표시하며, 현재 사신 수치는 고난이 아니라 실제 중첩 대상의 상태창에 빨간색 사신 N/100으로 표시. 냉기는 체력바 오른쪽 아래 ❄️xN, 쟈바미 빚 기회는 v144의 왼쪽 아래 빨간 다이아몬드로 복구. 정의의 아군 카드 N 텍스트 배지를 제거해 v144처럼 실제 손패 카드 그래픽만 사용. 전투 수치·판정 변경 없음.",\n'
-          s=s.replace(marker,marker+note,1)
-
-          p.write_text(s,encoding='utf-8')
-          PY
+          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCmltcG9ydCByZQoKcD1QYXRoKCdpbmRleC5odG1sJykKcz1wLnJlYWRfdGV4dChlbmNvZGluZz0ndXRmLTgnKQphc3NlcnQgJzx0aXRsZT7rs7zrsLDti4Ag66as64m07Ja8IHYxNDY8L3RpdGxlPicgaW4gcwphc3NlcnQgJzxoMSBpZD0ibWFpblRpdGxlIj7rs7zrsLDti4Ag66as64m07Ja8IHYxNDY8L2gxPicgaW4gcwpzPXMucmVwbGFjZSgnPHRpdGxlPuuzvOuwsO2LgCDrpqzribTslrwgdjE0NjwvdGl0bGU+JywnPHRpdGxlPuuzvOuwsO2LgCDrpqzribTslrwgdjE0NzwvdGl0bGU+JywxKQpzPXMucmVwbGFjZSgnPGgxIGlkPSJtYWluVGl0bGUiPuuzvOuwsO2LgCDrpqzribTslrwgdjE0NjwvaDE+JywnPGgxIGlkPSJtYWluVGl0bGUiPuuzvOuwsO2LgCDrpqzribTslrwgdjE0NzwvaDE+JywxKQoKbmV3X21hcmtzID0gcicnJyAgICBmdW5jdGlvbiBkcmF3SGVhbHRoU3RhY2tCYWRnZXMoZiwgYmFyWSkgewogICAgICBpZiAoIWY/LmFsaXZlKSByZXR1cm47CiAgICAgIGNvbnN0IGJhclcgPSBmLnJvbGUgPT09ICLrs7TsiqQiID8gNzQgOiA1ODsKICAgICAgY29uc3QgYmFySCA9IDc7CiAgICAgIGNvbnN0IGJhclggPSBmLnggLSBiYXJXIC8gMjsKICAgICAgY29uc3QgY29uYW5NZXRlciA9IGNvbmFuTWV0ZXJGb3JUYXJnZXQoZik7CiAgICAgIGNvbnN0IGNvbGQgPSBNYXRoLm1heCgwLCBNYXRoLm1pbihFTFNBLmNvbGRNYXgsIE1hdGguZmxvb3IoZi5lbHNhQ29sZCB8fCAwKSkpOwogICAgICBjb25zdCBjaGFuY2VzID0gZi5qYWJhbWkgPyBNYXRoLm1heCgwLCBNYXRoLmZsb29yKGYuamFiYW1pLmRlYnRDaGFuY2VzIHx8IDApKSA6IDA7CgogICAgICBjdHguc2F2ZSgpOwogICAgICBpZiAoY29uYW5NZXRlciA+IDApIHsKICAgICAgICBjb25zdCByYXRpbyA9IGNsYW1wKGNvbmFuTWV0ZXIgLyBDT05BTi5tYXhNZXRlciwgMCwgMSk7CiAgICAgICAgY29uc3Qgc3kgPSBiYXJZIC0gNDsKICAgICAgICBjdHguZmlsbFN0eWxlID0gInJnYmEoMTI3LDI5LDI5LC4zNCkiOwogICAgICAgIHJvdW5kUmVjdChjdHgsIGJhclgsIHN5LCBiYXJXLCAyLCAxLCB0cnVlLCBmYWxzZSk7CiAgICAgICAgY3R4LmZpbGxTdHlsZSA9ICIjZWY0NDQ0IjsKICAgICAgICByb3VuZFJlY3QoY3R4LCBiYXJYLCBzeSwgYmFyVyAqIHJhdGlvLCAyLCAxLCB0cnVlLCBmYWxzZSk7CiAgICAgIH0KCiAgICAgIGlmIChmLmphYmFtaT8uZGVidCA+IDApIHsKICAgICAgICBjb25zdCBkZWJ0WSA9IGJhclkgLSAoY29uYW5NZXRlciA+IDAgPyAxMiA6IDgpOwogICAgICAgIGN0eC5mb250ID0gIjkwMCAxMnB4IHN5c3RlbS11aSI7CiAgICAgICAgY3R4LnRleHRBbGlnbiA9ICJjZW50ZXIiOwogICAgICAgIGN0eC50ZXh0QmFzZWxpbmUgPSAiYWxwaGFiZXRpYyI7CiAgICAgICAgY3R4LmxpbmVXaWR0aCA9IDQ7CiAgICAgICAgY3R4LnN0cm9rZVN0eWxlID0gInJnYmEoMCwwLDAsLjc4KSI7CiAgICAgICAgY3R4LmZpbGxTdHlsZSA9ICIjZjg3MTcxIjsKICAgICAgICBjdHguc3Ryb2tlVGV4dChg67maICR7TWF0aC5jZWlsKGYuamFiYW1pLmRlYnQpfWAsIGYueCwgZGVidFkpOwogICAgICAgIGN0eC5maWxsVGV4dChg67maICR7TWF0aC5jZWlsKGYuamFiYW1pLmRlYnQpfWAsIGYueCwgZGVidFkpOwogICAgICB9CgogICAgICBpZiAoY2hhbmNlcyA+IDApIHsKICAgICAgICBjb25zdCBzaXplID0gNSwgZ2FwID0gNTsKICAgICAgICBjb25zdCBzdGFydCA9IGJhclggKyBzaXplIC8gMjsKICAgICAgICBjb25zdCBkeSA9IGJhclkgKyBiYXJIICsgODsKICAgICAgICBmb3IgKGxldCBpID0gMDsgaSA8IGNoYW5jZXM7IGkrKykgewogICAgICAgICAgY3R4LnNhdmUoKTsKICAgICAgICAgIGN0eC50cmFuc2xhdGUoc3RhcnQgKyBpICogKHNpemUgKyBnYXApLCBkeSk7CiAgICAgICAgICBjdHgucm90YXRlKE1hdGguUEkgLyA0KTsKICAgICAgICAgIGN0eC5maWxsU3R5bGUgPSAiI2VmNDQ0NCI7CiAgICAgICAgICBjdHguc3Ryb2tlU3R5bGUgPSAiI2ZlY2FjYSI7CiAgICAgICAgICBjdHgubGluZVdpZHRoID0gLjg7CiAgICAgICAgICBjdHguZmlsbFJlY3QoLXNpemUgLyAyLCAtc2l6ZSAvIDIsIHNpemUsIHNpemUpOwogICAgICAgICAgY3R4LnN0cm9rZVJlY3QoLXNpemUgLyAyLCAtc2l6ZSAvIDIsIHNpemUsIHNpemUpOwogICAgICAgICAgY3R4LnJlc3RvcmUoKTsKICAgICAgICB9CiAgICAgIH0KCiAgICAgIGlmIChjb2xkID4gMCkgewogICAgICAgIGNvbnN0IGNvbGRZID0gYmFyWSArIGJhckggKyA4ICsgKGNoYW5jZXMgPj0gNCA/IDkgOiAwKTsKICAgICAgICBjdHguZm9udCA9ICI5MDAgMTFweCBzeXN0ZW0tdWkiOwogICAgICAgIGN0eC50ZXh0QWxpZ24gPSAicmlnaHQiOwogICAgICAgIGN0eC50ZXh0QmFzZWxpbmUgPSAibWlkZGxlIjsKICAgICAgICBjdHgubGluZVdpZHRoID0gMzsKICAgICAgICBjdHguc3Ryb2tlU3R5bGUgPSAicmdiYSgyLDYsMjMsLjg4KSI7CiAgICAgICAgY3R4LmZpbGxTdHlsZSA9ICIjYmFlNmZkIjsKICAgICAgICBjb25zdCBjb2xkVGV4dCA9IGDinYTvuI94JHtjb2xkfWA7CiAgICAgICAgY3R4LnN0cm9rZVRleHQoY29sZFRleHQsIGJhclggKyBiYXJXLCBjb2xkWSk7CiAgICAgICAgY3R4LmZpbGxUZXh0KGNvbGRUZXh0LCBiYXJYICsgYmFyVywgY29sZFkpOwogICAgICB9CiAgICAgIGN0eC5yZXN0b3JlKCk7CiAgICB9CgogICAgZnVuY3Rpb24gZHJhd0hlYWx0aEJhcicnJwpzMixuPXJlLnN1Ym4ocicgICAgZnVuY3Rpb24gZHJhd0hlYWx0aFN0YWNrQmFkZ2VzXChmLCBiYXJZXCkgXHtbXHNcU10qP1xuICAgIFx9XG5cbiAgICBmdW5jdGlvbiBkcmF3SGVhbHRoQmFyJyxuZXdfbWFya3Mscyxjb3VudD0xKQphc3NlcnQgbj09MSwgZidkcmF3SGVhbHRoU3RhY2tCYWRnZXMgcmVwbGFjZW1lbnQgY291bnQ9e259JwpzPXMyCgpvbGRfY29uYW49JycnICAgICAgaWYoZi5jb25hbil7CiAgICAgICAgbGV0IHRvcD0wLG5hbWU9IiI7Zm9yKGNvbnN0IFtpZCxzXSBvZiBmLmNvbmFuLnRhcmdldHMpe2lmKChzLm1ldGVyfHwwKT50b3Ape3RvcD1zLm1ldGVyfHwwO2NvbnN0IHQ9ZmlnaHRlcnMuZmluZCh4PT54LmlkPT09aWQpO25hbWU9dD8ubmFtZXx8IiI7fX0KICAgICAgICBjb25zdCBwZW5kaW5nPWYuY29uYW4uYXNzYXVsdHMubGVuZ3RoPjA7CiAgICAgICAgcmV0dXJuIHtyYXRpbzpjbGFtcCh0b3AvQ09OQU4ubWF4TWV0ZXIsMCwxKSxjbGFzc05hbWU6cGVuZGluZz8icmFnZS1maWxsIjoic2tpbGwtZmlsbCIsCiAgICAgICAgICB0ZXh0OnBlbmRpbmc/IuyCrOqxtCDrsJzsg50gwrcg67KU7J247J2YIOyKteqyqSEiOigi7IKs7IugICIrTWF0aC5mbG9vcih0b3ApKyIvIitDT05BTi5tYXhNZXRlcisobmFtZT8iIMK3ICIrbmFtZToiIikpLAogICAgICAgICAgZXh0cmFUZXh0SHRtbDonPGRpdiBjbGFzcz0ic3RhdHVzLXNraWxsLWxhYmVsIj7rsJjqsr0xMzAg7JWIIOy0iOuLuSDsgqzsi6ArNSDCtyDrspTsnIQg67CW7JeQ7ISc64+EIOuIhOyggSDsnKDsp4A8L2Rpdj48ZGl2IGNsYXNzPSJzdGF0dXMtc2tpbGwtbGFiZWwiPuyngeygkSDsoJHstIkgKzEwKOuMgOyDgeuzhDHstIgpIMK3IDEwMOyXkOyEnCAwLjnstIgg7JiI6rOgIO2bhCAz7KKFIOyCrOqxtCDrnpzrjaQgwrcg66qF66qpIOy0nSDtlLztlbQxMDAgwrcg7IKs6rG0IO2bhDA8L2Rpdj4nfTt9CicnJwpuZXdfY29uYW49JycnICAgICAgaWYoZi5jb25hbil7CiAgICAgICAgY29uc3QgcGVuZGluZz1mLmNvbmFuLmFzc2F1bHRzLmxlbmd0aD4wOwogICAgICAgIHJldHVybiB7cmF0aW86cGVuZGluZz8xOjAsY2xhc3NOYW1lOnBlbmRpbmc/InJhZ2UtZmlsbCI6InNraWxsLWZpbGwiLAogICAgICAgICAgdGV4dDpwZW5kaW5nPyLsgqzqsbQg67Cc7IOdIMK3IOuylOyduOydmCDsirXqsqkhIjoi7IKs7IugIOykkeyyqSDCtyDrjIDsg4Eg7IOB7YOc7LC97JeQIO2RnOyLnCIsCiAgICAgICAgICBleHRyYVRleHRIdG1sOic8ZGl2IGNsYXNzPSJzdGF0dXMtc2tpbGwtbGFiZWwiPuuwmOqyvTEzMCDslYgg7LSI64u5IOyCrOyLoCs1IMK3IOuylOychCDrsJbsl5DshJzrj4Qg64iE7KCBIOycoOyngDwvZGl2PjxkaXYgY2xhc3M9InN0YXR1cy1za2lsbC1sYWJlbCI+7KeB7KCRIOygkey0iSArMTAo64yA7IOB67OEMey0iCkgwrcgMTAw7JeQ7IScIDAuOey0iCDsmIjqs6Ag7ZuEIDPsooUg7IKs6rG0IOuenOuNpCDCtyDrqoXrqqkg7LSdIO2UvO2VtDEwMCDCtyDsgqzqsbQg7ZuEMDwvZGl2Pid9O30KJycnCmFzc2VydCBvbGRfY29uYW4gaW4gcwpzPXMucmVwbGFjZShvbGRfY29uYW4sbmV3X2NvbmFuLDEpCgpzdGF0dXNfYW5jaG9yPScnJyAgICAgIGNvbnN0IHN0YXR1c0NsYXNzID0gZi5hbGl2ZSA/IChjdXJyZW50ID8gIiBjdXJyZW50IiA6ICIiKSA6ICIgZGVhZCI7CiAgICAgIGNvbnN0IHNraWxsID0gc2tpbGxQcm9ncmVzc0luZm8oZik7CicnJwpzdGF0dXNfaW5zZXJ0PScnJyAgICAgIGNvbnN0IHN0YXR1c0NsYXNzID0gZi5hbGl2ZSA/IChjdXJyZW50ID8gIiBjdXJyZW50IiA6ICIiKSA6ICIgZGVhZCI7CiAgICAgIGNvbnN0IGNvbmFuVGFyZ2V0TWV0ZXIgPSBmLmFsaXZlID8gY29uYW5NZXRlckZvclRhcmdldChmKSA6IDA7CiAgICAgIGNvbnN0IGNvbmFuVGFyZ2V0SHRtbCA9IGNvbmFuVGFyZ2V0TWV0ZXIgPiAwCiAgICAgICAgPyBgPGRpdiBjbGFzcz0ic3RhdHVzLXNraWxsLWxhYmVsIiBzdHlsZT0iY29sb3I6I2VmNDQ0NDtmb250LXdlaWdodDoxMDAwOyI+7IKs7IugICR7TWF0aC5mbG9vcihjb25hblRhcmdldE1ldGVyKX0vJHtDT05BTi5tYXhNZXRlcn08L2Rpdj5gCiAgICAgICAgOiAiIjsKICAgICAgY29uc3Qgc2tpbGwgPSBza2lsbFByb2dyZXNzSW5mbyhmKTsKJycnCmFzc2VydCBzdGF0dXNfYW5jaG9yIGluIHMKcz1zLnJlcGxhY2Uoc3RhdHVzX2FuY2hvcixzdGF0dXNfaW5zZXJ0LDEpCgpyZXR1cm5fYW5jaG9yPScnJyAgICAgICAgICAke3NoaWVsZEh0bWx9CiAgICAgICAgICAke3NraWxsSHRtbH0KJycnCnJldHVybl9pbnNlcnQ9JycnICAgICAgICAgICR7c2hpZWxkSHRtbH0KICAgICAgICAgICR7Y29uYW5UYXJnZXRIdG1sfQogICAgICAgICAgJHtza2lsbEh0bWx9CicnJwphc3NlcnQgcmV0dXJuX2FuY2hvciBpbiBzCnM9cy5yZXBsYWNlKHJldHVybl9hbmNob3IscmV0dXJuX2luc2VydCwxKQoKbWFya2VyPScgICAgICBjb25zdCBwYXRjaE5vdGVzID0gW1xuJwphc3NlcnQgbWFya2VyIGluIHMKbm90ZT0nICAgICAgInYxNDc6IOyDge2DnCBVSSDsnqzsoJXrpqwuIOyCrOyLoOydgCDquLDsobQgMH4xMDAg64iE7KCBL+uwnOuPmSDqt5zsuZnsnYQg6re464yA66GcIOycoOyngO2VmOqzoCDrjIDsg4Eg7LK066Cl67CUIOuwlOuhnCDsnITsl5Ag7JaH7J2AIOu5qOqwhCDsp4TtlonshKDsnLzroZwg7ZGc7Iuc7ZWY66mwLCDtmITsnqwg7IKs7IugIOyImOy5mOuKlCDqs6DrgpzsnbQg7JWE64uI6528IOyLpOygnCDspJHssqkg64yA7IOB7J2YIOyDge2DnOywveyXkCDruajqsITsg4kg7IKs7IugIE4vMTAw7Jy866GcIO2RnOyLnC4g64OJ6riw64qUIOyytOugpeuwlCDsmKTrpbjsqr0g7JWE656YIOKdhO+4j3hOLCDsn4jrsJTrr7gg67maIOq4sO2ajOuKlCB2MTQ07J2YIOyZvOyqvSDslYTrnpgg67mo6rCEIOuLpOydtOyVhOuqrOuTnOuhnCDrs7XqtawuIOygleydmOydmCDslYTqtbAg7Lm065OcIE4g7YWN7Iqk7Yq4IOuwsOyngOulvCDsoJzqsbDtlbQgdjE0NOyymOufvCDsi6TsoJwg7IaQ7YyoIOy5tOuTnCDqt7jrnpjtlL3rp4wg7IKs7JqpLiDsoITtiKwg7IiY7LmYwrftjJDsoJUg67OA6rK9IOyXhuydjC4iLFxuJwpzPXMucmVwbGFjZShtYXJrZXIsbWFya2VyK25vdGUsMSkKcC53cml0ZV90ZXh0KHMsZW5jb2Rpbmc9J3V0Zi04JykK' | base64 -d > /tmp/patch_v147.py
+          python3 /tmp/patch_v147.py
       - name: Validate UI-only patch
         run: |
           python3 - <<'PY'
@@ -152,8 +24,8 @@ jobs:
           s=Path('index.html').read_text(encoding='utf-8')
           assert '볼배틀 리뉴얼 v147' in s
           assert 'barW * ratio, 2' in s
-          assert '사신 ${Math.floor(conanTargetMeter)}/${CONAN.maxMeter}' in s
-          assert 'const coldText = `❄️x${cold}`;' in s
+          assert 'conanTargetHtml' in s
+          assert '❄️x${cold}' in s
           assert 'ctx.rotate(Math.PI / 4);' in s
           assert 'text: `카드 ${f.duelist.hand.length}`' not in s
           scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)
