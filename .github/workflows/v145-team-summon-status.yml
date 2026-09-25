@@ -1,0 +1,57 @@
+name: Apply v145 team summon status
+
+on:
+  push:
+    paths:
+      - '.github/workflows/v145-team-summon-status.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply patch
+        run: python .github/scripts/v145_team_summon_status.py
+
+      - name: Validate JavaScript
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          start=s.find('<script>')
+          end=s.rfind('</script>')
+          if start < 0 or end <= start:
+              raise SystemExit('script block missing')
+          Path('/tmp/ballbattle-v145.js').write_text(s[start+8:end], encoding='utf-8')
+          PY
+          node --check /tmp/ballbattle-v145.js
+          git diff --check
+
+      - name: Verify markers
+        shell: bash
+        run: |
+          grep -q '볼배틀 리뉴얼 v145' index.html
+          grep -q 'id="shuffleTeamBtn"' index.html
+          grep -q 'function combatStatOwner' index.html
+          grep -q 'creditCombatDamage(source, actualDamage)' index.html
+          grep -q 'function clearDefeatedFighterStatusStacks' index.html
+          grep -q 'function drawHealthStackBadges' index.html
+          grep -q '카드 ${f.duelist.hand.length}' index.html
+          ! grep -q 'const sa=a.baseId==="justice_ally"?justiceSummonBattleStats' index.html
+
+      - name: Commit patch and cleanup
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git rm .github/scripts/v145_team_summon_status.py .github/workflows/v145-team-summon-status.yml
+          git commit -m 'v145: fix summon stats and status UI'
+          git push origin main
