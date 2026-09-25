@@ -1,0 +1,132 @@
+name: v148 bugfix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v148-bugfix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch index.html
+        shell: bash
+        run: |
+          cat > /tmp/patch_v148.py <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old_title = '<title>볼배틀 리뉴얼 v147</title>'
+          old_h1 = '<h1 id="mainTitle">볼배틀 리뉴얼 v147</h1>'
+          assert old_title in s, 'v147 title not found'
+          assert old_h1 in s, 'v147 visible title not found'
+          s = s.replace(old_title, '<title>볼배틀 리뉴얼 v148</title>', 1)
+          s = s.replace(old_h1, '<h1 id="mainTitle">볼배틀 리뉴얼 v148</h1>', 1)
+
+          patch_marker = '      const patchNotes = [\n'
+          assert patch_marker in s, 'patch notes marker not found'
+          patch_note = '      "v148: 버그 수정. 타노의 타임스톤 쿨타임을 피격 경직·완전 빙결 등 캐릭터 행동 조기 종료와 분리해 전투가 진행되는 동안 정상 감소하도록 수정. 사망 경로와 무관하게 냉기·완전빙결 등 잔여 상태를 최종 사망 시 중앙 정리하도록 보강. 팀전에서 앤드럼의 드럼 공격 판정이 오디오 컨텍스트 실행 상태 때문에 멈추지 않도록 분리하여 교대 등장 후 피해량이 0으로 고정되는 문제를 수정. 전투 피해 수치 자체는 변경 없음.",\n'
+          s = s.replace(patch_marker, patch_marker + patch_note, 1)
+
+          update_tano_marker = '    function updateTano(f, dt) {\n'
+          assert s.count(update_tano_marker) == 1, 'updateTano marker count mismatch'
+          helper = '''    function tickTanoTimeClock(f, dt) {
+      const t = f?.tano;
+      if (!t || !f.alive) return;
+      if (t.stones.includes("time") && !t.snapped) {
+        t.timeCd = Math.max(0, (t.timeCd || 0) - dt);
+      } else if (!t.stones.includes("time")) {
+        t.timeCd = 0;
+      }
+    }
+'''
+          s = s.replace(update_tano_marker, helper + update_tano_marker, 1)
+
+          old_tano_clock = '''      if (t.stones.includes("time") && !t.snapped) {
+        t.timeCd = Math.max(0, (t.timeCd || 0) - dt);
+        if (t.timeCd <= 0) {
+          triggerTanoTimeStone(f);
+          t.timeCd = TANO.timePeriod;
+        }
+      } else if (!t.stones.includes("time")) {
+        t.timeCd = 0;
+      }
+'''
+          new_tano_clock = '''      if (t.stones.includes("time") && !t.snapped && t.timeCd <= 0) {
+        triggerTanoTimeStone(f);
+        t.timeCd = TANO.timePeriod;
+      }
+'''
+          assert old_tano_clock in s, 'old Tano time clock block not found'
+          s = s.replace(old_tano_clock, new_tano_clock, 1)
+
+          old_update_start = '''    function updateFighter(f, dt) {
+      if (!f.alive) return;
+      if (f.marioBlock)'''
+          new_update_start = '''    function updateFighter(f, dt) {
+      if (!f.alive) return;
+      // 타임스톤 시계는 빙결/경직/펀치 등 행동 조기 반환과 독립적으로 흐른다.
+      tickTanoTimeClock(f, dt);
+      if (f.marioBlock)'''
+          assert old_update_start in s, 'updateFighter start not found'
+          s = s.replace(old_update_start, new_update_start, 1)
+
+          old_andrum_ready = '''    function andrumRhythmReady() {
+      if(fastSimMode || !soundEnabled)return true;
+      ensureAudio();
+      return !!audioCtx && audioCtx.state==="running";
+    }
+'''
+          new_andrum_ready = '''    function andrumRhythmReady() {
+      if(fastSimMode || !soundEnabled)return true;
+      ensureAudio();
+      // 팀전 교대 등 사용자 제스처 밖에서 AudioContext가 suspended여도 전투 판정은 멈추지 않는다.
+      if(battleMode==="team")return true;
+      return !!audioCtx && audioCtx.state==="running";
+    }
+'''
+          assert old_andrum_ready in s, 'Andrum rhythm gate not found'
+          s = s.replace(old_andrum_ready, new_andrum_ready, 1)
+
+          old_update_tail = '''        fighters.filter(f=>f.isSummon&&!f.alive&&f.duelMonster).forEach(archiveJusticeSummonStats);
+        fighters = fighters.filter(f => f.alive || !f.isSummon);
+        checkEnd();
+'''
+          new_update_tail = '''        // 특수 사망 경로도 포함해 최종 사망자의 냉기/빙결 등 잔여 상태를 매 프레임 중앙 정리한다.
+        fighters.filter(f=>!f.alive).forEach(clearDefeatedFighterStatusStacks);
+        fighters.filter(f=>f.isSummon&&!f.alive&&f.duelMonster).forEach(archiveJusticeSummonStats);
+        fighters = fighters.filter(f => f.alive || !f.isSummon);
+        checkEnd();
+'''
+          assert old_update_tail in s, 'update loop tail not found'
+          s = s.replace(old_update_tail, new_update_tail, 1)
+
+          assert '<title>볼배틀 리뉴얼 v148</title>' in s
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v148</h1>' in s
+          assert 'function tickTanoTimeClock(f, dt)' in s
+          assert 'tickTanoTimeClock(f, dt);' in s
+          assert 'if(battleMode==="team")return true;' in s
+          assert 'fighters.filter(f=>!f.alive).forEach(clearDefeatedFighterStatusStacks);' in s
+          p.write_text(s, encoding='utf-8')
+          PY
+          python /tmp/patch_v148.py
+
+      - name: Commit patch and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/v148-bugfix.yml
+          git add index.html .github/workflows/v148-bugfix.yml
+          git commit -m "v148: fix Tano timer, death stacks, and Andrum team rhythm"
+          git push
