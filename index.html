@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v146</title>
+  <title>볼배틀 리뉴얼 v147</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v146</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v147</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -5597,6 +5597,7 @@
     }
 
       const patchNotes = [
+      "v147: 상태 UI 재정리. 사신은 기존 0~100 누적/발동 규칙을 그대로 유지하고 대상 체력바 바로 위에 얇은 빨간 진행선으로 표시하며, 현재 사신 수치는 고난이 아니라 실제 중첩 대상의 상태창에 빨간색 사신 N/100으로 표시. 냉기는 체력바 오른쪽 아래 ❄️xN, 쟈바미 빚 기회는 v144의 왼쪽 아래 빨간 다이아몬드로 복구. 정의의 아군 카드 N 텍스트 배지를 제거해 v144처럼 실제 손패 카드 그래픽만 사용. 전투 수치·판정 변경 없음.",
       "v146: 사신·냉기 스택 표기 UI만 정리. 사신 내부 누적 0~100과 발동 규칙은 그대로 유지하면서 체력바 위쪽 중앙에 빨간 숫자 1~10으로만 환산 표시. 냉기 내부 1~5중첩 규칙은 유지하고 체력바 왼쪽 아래에 ❄️xN 형식으로 표시. 전투 수치·판정 변경 없음.",
       "v145: 팀전 각 팀 내부 출전순서 섞기 버튼 추가. 소환수가 준 피해와 처치를 소환 주인의 전투분석 피해/처치에 즉시 귀속하며, 소환수가 받은 피해는 공격자의 피해에만 반영되고 주인의 피격에는 합산하지 않음. 캐릭터 최종 사망 시 냉기·사신·빚기회·손패 등 잔여 상태표시를 정리하고, 체력바 주변 냉기/사신/빚기회/카드 수를 겹치지 않는 배지형 UI로 재배치. 전투 수치와 판정은 변경 없음.",
       "v144: 쿱하 상성 폭 조정. 등껍질 충돌 후 3초 기절은 유지하되 기절 중 받는 피해 2배를 제거. 회전 불기둥은 한 번의 소환 동안 각 기둥마다 같은 상대를 최대 1회만 적중하도록 변경하여, 4개일 경우 각 기둥 1회씩 최대 4회 적중. 불기둥 20초 주기와 나머지 수치는 유지.",
@@ -7531,10 +7532,9 @@
       }
       if(f.spider){const s=f.spider||{};const active=s.mode==="chase",firing=(s.volleyLeft||0)>0;return {ratio:active||firing?1:clamp(1-Math.max(0,s.volleyCd||0)/SPIDER.volleyCooldown,0,1),className:active?"rage-fill":"skill-fill",text:active?"웹스윙 · 적 추격":firing?("웹슈터 연사 · "+(SPIDER.volleyCount-(s.volleyLeft||0))+"/"+SPIDER.volleyCount):("웹슈터 "+Math.max(0,s.volleyCd||0).toFixed(1)+"초"),extraTextHtml:'<div class="status-skill-label">웹슈터 5초마다 6연사 · 발당2·약넉백·0.9초 10%둔화</div><div class="status-skill-label">웹슈터 넉백 중 벽에 충돌해야만 0.9초 속박 · 속박 성공 시 타게팅 웹스윙 돌진18+강넉백</div>'};}
       if(f.conan){
-        let top=0,name="";for(const [id,s] of f.conan.targets){if((s.meter||0)>top){top=s.meter||0;const t=fighters.find(x=>x.id===id);name=t?.name||"";}}
         const pending=f.conan.assaults.length>0;
-        return {ratio:clamp(top/CONAN.maxMeter,0,1),className:pending?"rage-fill":"skill-fill",
-          text:pending?"사건 발생 · 범인의 습격!":("사신 "+Math.floor(top)+"/"+CONAN.maxMeter+(name?" · "+name:"")),
+        return {ratio:pending?1:0,className:pending?"rage-fill":"skill-fill",
+          text:pending?"사건 발생 · 범인의 습격!":"사신 중첩 · 대상 상태창에 표시",
           extraTextHtml:'<div class="status-skill-label">반경130 안 초당 사신+5 · 범위 밖에서도 누적 유지</div><div class="status-skill-label">직접 접촉 +10(대상별1초) · 100에서 0.9초 예고 후 3종 사건 랜덤 · 명목 총 피해100 · 사건 후0</div>'};}
       if(f.elsa){const e=f.elsa,radius=elsaAuraRadius(f),spd=elsaBaseMoveSpeed(f),lost=1-elsaHpRatio(f);
         return {ratio:clamp(lost,0,1),className:"skill-fill",
@@ -7784,6 +7784,10 @@
         <div class="bar"><div class="bar-fill shield-fill" style="width:${shieldRatio * 100}%"></div></div>
       ` : "";
       const statusClass = f.alive ? (current ? " current" : "") : " dead";
+      const conanTargetMeter = f.alive ? conanMeterForTarget(f) : 0;
+      const conanTargetHtml = conanTargetMeter > 0
+        ? `<div class="status-skill-label" style="color:#ef4444;font-weight:1000;">사신 ${Math.floor(conanTargetMeter)}/${CONAN.maxMeter}</div>`
+        : "";
       const skill = skillProgressInfo(f);
       const skillHtml = skill ? `
         <div class="bar"><div class="bar-fill ${skill.className}" style="width:${skill.ratio * 100}%"></div></div>
@@ -7804,6 +7808,7 @@
             <div class="bar-fill hp-damage-fill" style="left:${hpView.actualRatio * 100}%; width:${hpView.pendingRatio * 100}%"></div>
           </div>
           ${shieldHtml}
+          ${conanTargetHtml}
           ${skillHtml}
         </div>
       `;
@@ -14235,73 +14240,63 @@
 
     function drawHealthStackBadges(f, barY) {
       if (!f?.alive) return;
-      const badges = [];
-      const cold = Math.max(0, Math.min(ELSA.coldMax, Math.floor(f.elsaCold || 0)));
-      const conanMeter = conanMeterForTarget(f);
       const barW = f.role === "보스" ? 74 : 58;
+      const barH = 7;
       const barX = f.x - barW / 2;
-      const visibleShieldMax = f.baseId === "wind_rio" ? (f.rioWindShieldMax || 0) : f.shieldMax;
-      const visibleShield = f.baseId === "wind_rio" ? (f.rioWindShield || 0) : f.shieldHp;
+      const conanMeter = conanMeterForTarget(f);
+      const cold = Math.max(0, Math.min(ELSA.coldMax, Math.floor(f.elsaCold || 0)));
+      const chances = f.jabami ? Math.max(0, Math.floor(f.jabami.debtChances || 0)) : 0;
 
       ctx.save();
       if (conanMeter > 0) {
-        const shownStack = Math.max(1, Math.min(10, Math.ceil(conanMeter / 10)));
-        ctx.font = "900 11px system-ui";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "rgba(2,6,23,.88)";
+        const ratio = clamp(conanMeter / CONAN.maxMeter, 0, 1);
+        const sy = barY - 4;
+        ctx.fillStyle = "rgba(127,29,29,.34)";
+        roundRect(ctx, barX, sy, barW, 2, 1, true, false);
         ctx.fillStyle = "#ef4444";
-        ctx.strokeText(String(shownStack), f.x, barY - 9);
-        ctx.fillText(String(shownStack), f.x, barY - 9);
+        roundRect(ctx, barX, sy, barW * ratio, 2, 1, true, false);
       }
+
+      if (f.jabami?.debt > 0) {
+        const debtY = barY - (conanMeter > 0 ? 12 : 8);
+        ctx.font = "900 12px system-ui";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "alphabetic";
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "rgba(0,0,0,.78)";
+        ctx.fillStyle = "#f87171";
+        ctx.strokeText(`빚 ${Math.ceil(f.jabami.debt)}`, f.x, debtY);
+        ctx.fillText(`빚 ${Math.ceil(f.jabami.debt)}`, f.x, debtY);
+      }
+
+      if (chances > 0) {
+        const size = 5, gap = 5;
+        const start = barX + size / 2;
+        const dy = barY + barH + 8;
+        for (let i = 0; i < chances; i++) {
+          ctx.save();
+          ctx.translate(start + i * (size + gap), dy);
+          ctx.rotate(Math.PI / 4);
+          ctx.fillStyle = "#ef4444";
+          ctx.strokeStyle = "#fecaca";
+          ctx.lineWidth = .8;
+          ctx.fillRect(-size / 2, -size / 2, size, size);
+          ctx.strokeRect(-size / 2, -size / 2, size, size);
+          ctx.restore();
+        }
+      }
+
       if (cold > 0) {
-        const coldY = barY + 17 + (visibleShieldMax > 0 && visibleShield > 0 ? 6 : 0);
+        const coldY = barY + barH + 8 + (chances >= 4 ? 9 : 0);
         ctx.font = "900 11px system-ui";
-        ctx.textAlign = "left";
+        ctx.textAlign = "right";
         ctx.textBaseline = "middle";
         ctx.lineWidth = 3;
         ctx.strokeStyle = "rgba(2,6,23,.88)";
         ctx.fillStyle = "#bae6fd";
         const coldText = `❄️x${cold}`;
-        ctx.strokeText(coldText, barX, coldY);
-        ctx.fillText(coldText, barX, coldY);
-      }
-      ctx.restore();
-
-      if (f.jabami) {
-        const debt = Math.max(0, Math.ceil(f.jabami.debt || 0));
-        const chances = Math.max(0, Math.floor(f.jabami.debtChances || 0));
-        if (debt > 0) badges.push({ text: `빚 ${debt}`, fill: "rgba(127,29,29,.9)", stroke: "#f87171", color: "#fee2e2" });
-        if (chances > 0) badges.push({ text: `◆ 빚기회 ${chances}`, fill: "rgba(69,10,10,.9)", stroke: "#fecaca", color: "#fecaca" });
-      }
-      if (f.duelist?.equipped && Array.isArray(f.duelist.hand) && f.duelist.hand.length > 0) {
-        badges.push({ text: `카드 ${f.duelist.hand.length}`, fill: "rgba(30,58,138,.9)", stroke: "#bfdbfe", color: "#eff6ff" });
-      }
-      if (!badges.length) return;
-
-      const perRow = 2, gap = 4, rowH = 14;
-      const rows = Math.ceil(badges.length / perRow);
-      ctx.save();
-      ctx.font = "800 9px system-ui";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      for (let row = 0; row < rows; row++) {
-        const items = badges.slice(row * perRow, row * perRow + perRow);
-        const widths = items.map(b => Math.ceil(ctx.measureText(b.text).width) + 10);
-        const totalW = widths.reduce((sum, v) => sum + v, 0) + gap * Math.max(0, items.length - 1);
-        let px = f.x - totalW / 2;
-        const py = barY - (conanMeter > 0 ? 24 : 8) - (rows - 1 - row) * rowH;
-        items.forEach((b, i) => {
-          const bw = widths[i], bh = 11;
-          ctx.fillStyle = b.fill;
-          ctx.strokeStyle = b.stroke;
-          ctx.lineWidth = 1;
-          roundRect(ctx, px, py - bh / 2, bw, bh, 5, true, true);
-          ctx.fillStyle = b.color;
-          ctx.fillText(b.text, px + bw / 2, py + .5);
-          px += bw + gap;
-        });
+        ctx.strokeText(coldText, barX + barW, coldY);
+        ctx.fillText(coldText, barX + barW, coldY);
       }
       ctx.restore();
     }
