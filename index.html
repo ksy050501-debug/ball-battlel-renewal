@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v147</title>
+  <title>볼배틀 리뉴얼 v148</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v147</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v148</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1930,6 +1930,8 @@
     function andrumRhythmReady() {
       if(fastSimMode || !soundEnabled)return true;
       ensureAudio();
+      // Team replacements can happen outside a user gesture; combat timing must not depend on AudioContext state.
+      if(battleMode==="team")return true;
       return !!audioCtx && audioCtx.state==="running";
     }
 
@@ -4901,20 +4903,24 @@
         log(escapeHtml(f.name) + " 핑거플립! 적 전체 최대 체력 50% 고정 피해", "스킬");
       }
     }
+    function tickTanoTimeClock(f, dt) {
+      const t = f?.tano;
+      if (!t || !f.alive) return;
+      if (t.stones.includes("time") && !t.snapped) {
+        t.timeCd = Math.max(0, (t.timeCd || 0) - dt);
+      } else if (!t.stones.includes("time")) {
+        t.timeCd = 0;
+      }
+    }
     function updateTano(f, dt) {
       const t = f.tano;
       if (!t) return;
       t.snapFx=Math.max(0,(t.snapFx||0)-dt);
       t.history.push({ time: battleTime, x: f.x, y: f.y, hp: f.hp });
       while (t.history.length > 1 && t.history[1].time < battleTime - 10) t.history.shift();
-      if (t.stones.includes("time") && !t.snapped) {
-        t.timeCd = Math.max(0, (t.timeCd || 0) - dt);
-        if (t.timeCd <= 0) {
-          triggerTanoTimeStone(f);
-          t.timeCd = TANO.timePeriod;
-        }
-      } else if (!t.stones.includes("time")) {
-        t.timeCd = 0;
+      if (t.stones.includes("time") && !t.snapped && t.timeCd <= 0) {
+        triggerTanoTimeStone(f);
+        t.timeCd = TANO.timePeriod;
       }
       const wasHidden = t.hidden > 0;
       t.hidden = Math.max(0, t.hidden - dt);
@@ -5597,6 +5603,7 @@
     }
 
       const patchNotes = [
+      "v148: 버그 수정. 타노의 타임스톤 쿨타임을 피격 경직·완전 빙결 등 캐릭터 행동 조기 종료와 분리해 전투가 진행되는 동안 정상 감소하도록 수정. 사망 경로와 무관하게 냉기·완전빙결 등 잔여 상태를 최종 사망 시 중앙 정리하도록 보강. 팀전에서 앤드럼의 드럼 공격 판정이 오디오 컨텍스트 실행 상태 때문에 멈추지 않도록 분리하여 교대 등장 후 피해량이 0으로 고정되는 문제를 수정. 전투 피해 수치 자체는 변경 없음.",
       "v147: 상태 UI 재정리. 사신은 기존 0~100 누적/발동 규칙을 그대로 유지하고 대상 체력바 바로 위에 얇은 빨간 진행선으로 표시하며, 현재 사신 수치는 고난이 아니라 실제 중첩 대상의 상태창에 빨간색 사신 N/100으로 표시. 냉기는 체력바 오른쪽 아래 ❄️xN, 쟈바미 빚 기회는 v144의 왼쪽 아래 빨간 다이아몬드로 복구. 정의의 아군 카드 N 텍스트 배지를 제거해 v144처럼 실제 손패 카드 그래픽만 사용. 전투 수치·판정 변경 없음.",
       "v146: 사신·냉기 스택 표기 UI만 정리. 사신 내부 누적 0~100과 발동 규칙은 그대로 유지하면서 체력바 위쪽 중앙에 빨간 숫자 1~10으로만 환산 표시. 냉기 내부 1~5중첩 규칙은 유지하고 체력바 왼쪽 아래에 ❄️xN 형식으로 표시. 전투 수치·판정 변경 없음.",
       "v145: 팀전 각 팀 내부 출전순서 섞기 버튼 추가. 소환수가 준 피해와 처치를 소환 주인의 전투분석 피해/처치에 즉시 귀속하며, 소환수가 받은 피해는 공격자의 피해에만 반영되고 주인의 피격에는 합산하지 않음. 캐릭터 최종 사망 시 냉기·사신·빚기회·손패 등 잔여 상태표시를 정리하고, 체력바 주변 냉기/사신/빚기회/카드 수를 겹치지 않는 배지형 UI로 재배치. 전투 수치와 판정은 변경 없음.",
@@ -10843,6 +10850,8 @@
 
     function updateFighter(f, dt) {
       if (!f.alive) return;
+      // Time Stone cooldown must keep ticking through action-level early returns such as freeze/knockback.
+      tickTanoTimeClock(f, dt);
       if (f.marioBlock) { f.marioBlock.age=(f.marioBlock.age||0)+dt; f.contactCd=Math.max(0,(f.contactCd||0)-dt); f.x=f.marioBlock.anchorX; f.y=f.marioBlock.anchorY; f.vx=0; f.vy=0; return; }
       // 마인드 스톤 정지는 캐릭터별 조기 반환보다 먼저 감소시켜 영구 정지를 방지한다.
       f.stun = Math.max(0, (f.stun || 0) - dt);
@@ -12162,6 +12171,8 @@
         updatePylons(sub);
         updateParticles(sub);
 
+        // Central dead-state cleanup also covers special death paths that do not call triggerDeathEffect directly.
+        fighters.filter(f=>!f.alive).forEach(clearDefeatedFighterStatusStacks);
         fighters.filter(f=>f.isSummon&&!f.alive&&f.duelMonster).forEach(archiveJusticeSummonStats);
         fighters = fighters.filter(f => f.alive || !f.isSummon);
         checkEnd();
