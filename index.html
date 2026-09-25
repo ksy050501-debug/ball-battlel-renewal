@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v144</title>
+  <title>볼배틀 리뉴얼 v145</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v144</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v145</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1106,6 +1106,7 @@
       <div class="side-list" id="selectedList"></div>
       <div class="button-row">
         <button class="ghost" id="clearSelectionBtn">선택 해제</button>
+        <button class="ghost" id="shuffleTeamBtn" style="display:none;">팀 순서 섞기</button>
         <button class="danger" id="selectAllBtn">전원 참가</button>
       </div>
 
@@ -2164,7 +2165,7 @@
       }
       triggerDeathEffect(target);
       if (source && source.alive && !target.isSummon) {
-        source.kills = (source.kills || 0) + 1;
+        creditCombatKill(source);
         log(`<strong>${escapeHtml(source.name)}</strong>의 ${reason}! <strong>${escapeHtml(target.name)}</strong> 탈락`);
       } else {
         log(`<strong>${escapeHtml(target.name)}</strong> 호크룩스 소멸`, "탈락");
@@ -4060,7 +4061,7 @@
       target.damageTaken = (target.damageTaken || 0) + value;
       target.hitsTaken += 1; target.hitsTakenSkill += 1;
       if (source && source.alive && source !== target) {
-        source.damageDealt = (source.damageDealt || 0) + value;
+        creditCombatDamage(source, value);
         source.hitsDealt += 1; source.hitsDealtSkill += 1;
       }
       spawnParticles(target.x, target.y, color, 6); spawnHitFlash(target.x, target.y, color, 26);
@@ -4162,7 +4163,7 @@
       f.shieldHp -= absorbed;
       f.damageTaken = (f.damageTaken || 0) + absorbed;
       f.hitsTaken++; f.hitsTakenSkill++;
-      if (source && source !== f) { source.damageDealt = (source.damageDealt || 0) + absorbed; source.hitsDealt++; source.hitsDealtSkill++; }
+      if (source && source !== f) { creditCombatDamage(source, absorbed); source.hitsDealt++; source.hitsDealtSkill++; }
       spawnFloatingText(f.x, f.y - f.r - 24, "슈트 -" + absorbed, "#7dd3fc");
       if (i.suit === "mark42" && i.fragmentCd <= 0) {
         i.fragmentCd = 0.2;
@@ -5596,6 +5597,7 @@
     }
 
       const patchNotes = [
+      "v145: 팀전 각 팀 내부 출전순서 섞기 버튼 추가. 소환수가 준 피해와 처치를 소환 주인의 전투분석 피해/처치에 즉시 귀속하며, 소환수가 받은 피해는 공격자의 피해에만 반영되고 주인의 피격에는 합산하지 않음. 캐릭터 최종 사망 시 냉기·사신·빚기회·손패 등 잔여 상태표시를 정리하고, 체력바 주변 냉기/사신/빚기회/카드 수를 겹치지 않는 배지형 UI로 재배치. 전투 수치와 판정은 변경 없음.",
       "v144: 쿱하 상성 폭 조정. 등껍질 충돌 후 3초 기절은 유지하되 기절 중 받는 피해 2배를 제거. 회전 불기둥은 한 번의 소환 동안 각 기둥마다 같은 상대를 최대 1회만 적중하도록 변경하여, 4개일 경우 각 기둥 1회씩 최대 4회 적중. 불기둥 20초 주기와 나머지 수치는 유지.",
       "v143: 쿱하 밸런스 조정. 등껍질 돌진이 상대와 충돌하면 즉시 종료되고 3초 기절하며, 그 기절 동안 받는 피해가 2배가 됨. 회전 불기둥 쿨타임 9초→20초. 그 외 쿱하 수치와 기술 구조는 유지.",
       "v142: 쿱하 등껍질 돌진은 돌진 1회 동안 같은 상대를 최대 1회만 타격하도록 변경했습니다. 등껍질 피해14·강넉백·벽충돌8·6초 지속·마지막3초 추적·종료 후3초 기절, HP240과 회전 불기둥 수치는 유지합니다.",
@@ -6039,6 +6041,23 @@
       $("selectionTitle").textContent = battleMode === "team" ? "팀전 대기열" : "선택된 참가자";
       $("clearSelectionBtn").textContent = battleMode === "team" ? "팀 초기화" : "선택 해제";
       $("selectAllBtn").textContent = battleMode === "team" ? "자동 편성" : "전원 참가";
+      const shuffleTeamBtn = $("shuffleTeamBtn");
+      if (shuffleTeamBtn) shuffleTeamBtn.style.display = battleMode === "team" ? "" : "none";
+    }
+
+    function shuffleTeamArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    function shuffleTeamOrders() {
+      if (battleMode !== "team") return;
+      shuffleTeamArray(teamA);
+      shuffleTeamArray(teamB);
+      renderSelectedList();
+      showOverlay("팀 순서 섞기", "A팀과 B팀의 내부 출전 순서를 각각 섞었습니다.");
     }
 
     function renderSelectedList() {
@@ -9094,6 +9113,23 @@
       if (!fastSimMode) cinematicFreeze = Math.max(cinematicFreeze, duration);
     }
 
+    function clearDefeatedFighterStatusStacks(target) {
+      if (!target) return;
+      target.elsaCold = 0;
+      target.hardFreeze = 0;
+      target.hardFreezeImmune = 0;
+      if (target.jabami) {
+        target.jabami.debt = 0;
+        target.jabami.debtChances = 0;
+      }
+      if (target.duelist && Array.isArray(target.duelist.hand)) target.duelist.hand.length = 0;
+      for (const source of fighters) {
+        if (source?.elsa?.targets instanceof Map) source.elsa.targets.delete(target.id);
+        if (source?.conan?.targets instanceof Map) source.conan.targets.delete(target.id);
+        if (Array.isArray(source?.conan?.assaults)) source.conan.assaults = source.conan.assaults.filter(a => a.targetId !== target.id);
+      }
+    }
+
     function clearDefeatedFighterArtifacts(target) {
       if (!target) return;
       if (target.lisa) target.lisa.waves.length = 0;
@@ -9107,6 +9143,7 @@
     }
 
     function triggerDeathEffect(target) {
+      clearDefeatedFighterStatusStacks(target);
       clearDefeatedFighterArtifacts(target);
       if(target.snapDustDeath){target.snapDustDeath=false;if(fastSimMode)return;cinematicFreeze=Math.max(cinematicFreeze,.28);deathEffects.push({x:target.x,y:target.y,r:target.r,color:target.color,mark:target.mark,name:target.name,life:3.6,maxLife:3.6,burst:false,dust:true});return;}
       if (fastSimMode) {
@@ -9178,6 +9215,27 @@
         ctx.fillStyle = "#fecaca"; ctx.font = "800 10px system-ui"; ctx.fillText("HP 0", 0, e.r + 23);
         ctx.restore();
       });
+    }
+
+    function combatStatOwner(source) {
+      if (!source) return null;
+      if (source.isSummon && source.ownerId) {
+        const owner = fighterById(source.ownerId);
+        if (owner && !owner.isSummon) return owner;
+      }
+      return source;
+    }
+
+    function creditCombatDamage(source, amount) {
+      const credit = combatStatOwner(source);
+      if (!credit || !(amount > 0)) return;
+      credit.damageDealt = (credit.damageDealt || 0) + amount;
+    }
+
+    function creditCombatKill(source) {
+      const credit = combatStatOwner(source);
+      if (!credit) return;
+      credit.kills = (credit.kills || 0) + 1;
     }
 
     function damage(target, amount, source, reason = "공격") {
@@ -9364,7 +9422,7 @@
       lisaOnDamage(target, actualDamage);
       if (actualDamage > 0 && target.baseId === "prism_iris" && reason !== "성유리영역") lightIrisGlassCell(target);
       
-      if (source && source.alive && source !== target) source.damageDealt = (source.damageDealt || 0) + actualDamage;
+      if (source && source.alive && source !== target) creditCombatDamage(source, actualDamage);
       heroLeonOnDamaged(target, source, reason);
 
       if (target.baseId === "steel_moro" && (target.moroGrowthHealPending || 0) > 0) {
@@ -9399,7 +9457,7 @@
         if (advanceLogoFormOnLethal(target)) return final;
         if (keepBaroAliveOnFatal(target)) return final;
         if (target.baseId === "dummy_unit") {
-          if (source && source.alive && source !== target) source.kills = (source.kills || 0) + 1;
+          if (source && source.alive && source !== target) creditCombatKill(source);
           reviveDummyUnit(target);
           return final;
         }
@@ -9409,7 +9467,7 @@
         if(target.duelist)clearJusticeSummons(target);
         triggerDeathEffect(target);
         if (source && source.alive && !target.isSummon) {
-          source.kills += 1;
+          creditCombatKill(source);
           log(`<strong>${escapeHtml(source.name)}</strong>의 ${reason}! <strong>${escapeHtml(target.name)}</strong> 탈락`);
         } else if (!target.isSummon) {
           log(`<strong>${escapeHtml(target.name)}</strong> 탈락`);
@@ -9468,7 +9526,7 @@
       lisaOnDamage(target, actualBodyDamage);
       if (actualBodyDamage > 0 && target.baseId === "prism_iris" && reason !== "성유리영역") lightIrisGlassCell(target);
       
-      if (source && source.alive && source !== target) source.damageDealt = (source.damageDealt || 0) + actualBodyDamage;
+      if (source && source.alive && source !== target) creditCombatDamage(source, actualBodyDamage);
       heroLeonOnDamaged(target, source, reason);
       target.hitsTaken += 1;
       target.hitsTakenSkill += 1;
@@ -9485,7 +9543,7 @@
         if (advanceLogoFormOnLethal(target)) return final;
         if (keepBaroAliveOnFatal(target)) return final;
         if (target.baseId === "dummy_unit") {
-          if (source && source.alive && source !== target) source.kills = (source.kills || 0) + 1;
+          if (source && source.alive && source !== target) creditCombatKill(source);
           reviveDummyUnit(target);
           return final;
         }
@@ -9495,7 +9553,7 @@
         if(target.duelist)clearJusticeSummons(target);
         triggerDeathEffect(target);
         if (source && source.alive && !target.isSummon) {
-          source.kills += 1;
+          creditCombatKill(source);
           log(`<strong>${escapeHtml(source.name)}</strong>의 ${reason}! <strong>${escapeHtml(target.name)}</strong> 탈락`);
         } else if (!target.isSummon) {
           log(`<strong>${escapeHtml(target.name)}</strong> 탈락`);
@@ -12003,19 +12061,12 @@
       if (!modal || !body || !fighters.length) return;
       const rows = fighters
         .filter(f => !f.isSummon)
-        .sort((a, b) => {
-          const sa=a.baseId==="justice_ally"?justiceSummonBattleStats(a):{damage:0,kills:0};
-          const sb=b.baseId==="justice_ally"?justiceSummonBattleStats(b):{damage:0,kills:0};
-          return ((b.damageDealt||0)+sb.damage)-((a.damageDealt||0)+sa.damage);
-        });
+        .sort((a, b) => (b.damageDealt || 0) - (a.damageDealt || 0));
 
-      const combined=new Map(rows.map(f=>{
-        const summon=f.baseId==="justice_ally"?justiceSummonBattleStats(f):{damage:0,kills:0};
-        return [f.id,{
-          damage:(f.damageDealt||0)+summon.damage,
-          kills:(f.kills||0)+summon.kills
-        }];
-      }));
+      const combined = new Map(rows.map(f => [f.id, {
+        damage: f.damageDealt || 0,
+        kills: f.kills || 0
+      }]));
       const maxDamage=Math.max(1,...rows.map(f=>combined.get(f.id).damage));
       const maxKills=Math.max(1,...rows.map(f=>combined.get(f.id).kills));
 
@@ -14181,9 +14232,54 @@
       ctx.restore();
     }
 
+    function drawHealthStackBadges(f, barY) {
+      if (!f?.alive) return;
+      const badges = [];
+      const cold = Math.max(0, Math.min(ELSA.coldMax, Math.floor(f.elsaCold || 0)));
+      if (cold > 0) badges.push({ text: `❄ ${cold}/${ELSA.coldMax}`, fill: "rgba(14,116,144,.88)", stroke: "#bae6fd", color: "#f0f9ff" });
+      const conanMeter = conanMeterForTarget(f);
+      if (conanMeter > 0) badges.push({ text: `☠ ${Math.floor(conanMeter)}/${CONAN.maxMeter}`, fill: "rgba(127,29,29,.9)", stroke: "#fca5a5", color: "#fee2e2" });
+      if (f.jabami) {
+        const debt = Math.max(0, Math.ceil(f.jabami.debt || 0));
+        const chances = Math.max(0, Math.floor(f.jabami.debtChances || 0));
+        if (debt > 0) badges.push({ text: `빚 ${debt}`, fill: "rgba(127,29,29,.9)", stroke: "#f87171", color: "#fee2e2" });
+        if (chances > 0) badges.push({ text: `◆ 빚기회 ${chances}`, fill: "rgba(69,10,10,.9)", stroke: "#fecaca", color: "#fecaca" });
+      }
+      if (f.duelist?.equipped && Array.isArray(f.duelist.hand) && f.duelist.hand.length > 0) {
+        badges.push({ text: `카드 ${f.duelist.hand.length}`, fill: "rgba(30,58,138,.9)", stroke: "#bfdbfe", color: "#eff6ff" });
+      }
+      if (!badges.length) return;
+
+      const perRow = 2, gap = 4, rowH = 14;
+      const rows = Math.ceil(badges.length / perRow);
+      ctx.save();
+      ctx.font = "800 9px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (let row = 0; row < rows; row++) {
+        const items = badges.slice(row * perRow, row * perRow + perRow);
+        const widths = items.map(b => Math.ceil(ctx.measureText(b.text).width) + 10);
+        const totalW = widths.reduce((sum, v) => sum + v, 0) + gap * Math.max(0, items.length - 1);
+        let px = f.x - totalW / 2;
+        const py = barY - 8 - (rows - 1 - row) * rowH;
+        items.forEach((b, i) => {
+          const bw = widths[i], bh = 11;
+          ctx.fillStyle = b.fill;
+          ctx.strokeStyle = b.stroke;
+          ctx.lineWidth = 1;
+          roundRect(ctx, px, py - bh / 2, bw, bh, 5, true, true);
+          ctx.fillStyle = b.color;
+          ctx.fillText(b.text, px + bw / 2, py + .5);
+          px += bw + gap;
+        });
+      }
+      ctx.restore();
+    }
+
     function drawHealthBar(f) {
       if (suppressMarioSpinUi) return;
       if (f.portraitOnly) return;
+      if (!f.alive) return;
       if ((f.hardFreeze || 0) > 0) {
         ctx.save();
         ctx.globalAlpha=.34;ctx.fillStyle="#bae6fd";ctx.strokeStyle="#e0f2fe";ctx.lineWidth=3;
@@ -14198,25 +14294,6 @@
       const y = f.y - f.r - 24;
       const ratio = Math.max(0, f.hp / f.maxHp);
 
-      if ((f.elsaCold || 0) > 0) {
-        ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="left";ctx.textBaseline="middle";
-        ctx.fillStyle="#bae6fd";ctx.strokeStyle="rgba(2,6,23,.85)";ctx.lineWidth=3;
-        const snow="❄".repeat(Math.min(ELSA.coldMax,f.elsaCold||0));
-        ctx.strokeText(snow,x,y+h+10);ctx.fillText(snow,x,y+h+10);ctx.restore();
-      }
-
-      const conanMeter=conanMeterForTarget(f);
-      if(conanMeter>0){
-        ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="right";ctx.textBaseline="middle";
-        ctx.strokeStyle="rgba(2,6,23,.9)";ctx.lineWidth=3;ctx.fillStyle="#f87171";
-        const label="☠ "+Math.floor(conanMeter)+"/"+CONAN.maxMeter;
-        ctx.strokeText(label,x+w,y+h+10);ctx.fillText(label,x+w,y+h+10);ctx.restore();
-      }
-
-      if (f.jabami?.debt > 0) {
-        ctx.font="900 12px system-ui";ctx.textAlign="center";ctx.textBaseline="alphabetic";ctx.lineWidth=4;ctx.strokeStyle="rgba(0,0,0,.78)";ctx.fillStyle="#f87171";
-        ctx.strokeText(`빚 ${Math.ceil(f.jabami.debt)}`,x+w/2,y-8);ctx.fillText(`빚 ${Math.ceil(f.jabami.debt)}`,x+w/2,y-8);
-      }
       if (f.jabami?.phase === "play" && f.jabami.game === "highcard") {
         const countdown=`${Math.max(0,f.jabami.timer).toFixed(1)}초`;
         ctx.font="900 12px system-ui";ctx.textAlign="left";ctx.textBaseline="middle";ctx.lineWidth=4;ctx.strokeStyle="rgba(0,0,0,.82)";ctx.fillStyle="#ef4444";
@@ -14254,27 +14331,7 @@
       ctx.lineWidth = 1;
       roundRect(ctx, x, y, w, h, 4, false, true);
 
-      if (f.jabami) {
-        const chances=Math.max(0,Math.floor(f.jabami.debtChances||0));
-        if(chances>0){
-          const size=5,gap=5;
-          const start=x+size/2;
-          const dy=y+h+8;
-          ctx.save();
-          for(let i=0;i<chances;i++){
-            ctx.save();
-            ctx.translate(start+i*(size+gap),dy);
-            ctx.rotate(Math.PI/4);
-            ctx.fillStyle="#ef4444";
-            ctx.strokeStyle="#fecaca";
-            ctx.lineWidth=.8;
-            ctx.fillRect(-size/2,-size/2,size,size);
-            ctx.strokeRect(-size/2,-size/2,size,size);
-            ctx.restore();
-          }
-          ctx.restore();
-        }
-      }
+      drawHealthStackBadges(f, y);
 
       const visibleShieldMax = f.baseId === "wind_rio" ? (f.rioWindShieldMax || 0) : f.shieldMax;
       const visibleShield = f.baseId === "wind_rio" ? (f.rioWindShield || 0) : f.shieldHp;
@@ -14761,6 +14818,7 @@
       }
       renderAll();
     });
+    $("shuffleTeamBtn").addEventListener("click", shuffleTeamOrders);
     $("selectAllBtn").addEventListener("click", () => {
       if (battleMode === "team") {
         teamA = [];
