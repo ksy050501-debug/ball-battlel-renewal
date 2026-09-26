@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v162</title>
+  <title>볼배틀 리뉴얼 v163</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v162</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v163</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1252,6 +1252,8 @@
         skillName:"랜덤박스 · 토관 · 배관공카트", condition:"랜덤박스 파워업 · 벽 50회마다 토관을 통해 기본↔카트 모드 전환", desc:"랜덤박스로 슈퍼·파이어·스타 상태를 오가며 싸운다. 벽 접촉 50회를 채우면 충돌한 벽의 초록 토관으로 느리게 들어가고, 무작위 벽의 토관에서 반대 모드로 나온다. 카트 모드에서는 바나나와 등껍질을 사용한다." },
       { id:"koopa_king", name:"쿱하", mark:"K", role:"게임", color:"#65a30d", hp:190, attack:0, speed:2.35, range:0,
         skillName:"등껍질 돌진 · 회전 불기둥", condition:"등껍질 11초 주기 · 불기둥 20초 주기 · 저체력일수록 불기둥 1→3개", desc:"거대한 몸집의 마왕형 캐릭터. 등껍질 돌진은 시작부터 최근접 적을 계속 추적하며, 기본 이동속도의 0.35배로 매우 느리게 출발한 뒤 첫 2초 동안 1.3배까지 빠르게 가속하고 이후 4초 동안 최대 2.5배까지 가속한다. 상대와 충돌하면 즉시 돌진을 끝내고 제자리에서 1초 기절한다. 맵 중앙을 축으로 회전하는 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개이며 각 불기둥은 같은 상대를 1회만 적중한다." },
+      { id:"coyote_d", name:"코요테드", mark:"☣", role:"게임", color:"#8b5a2b", hp:170, attack:0, speed:2.9, range:0,
+        skillName:"독방구 · 뒤로 넘기기", condition:"이동 경로에 3초 독방구 · 접촉 시 8피해 후 상대를 뒤로 넘김", desc:"신지도를 모티브로 한 교란형 캐릭터. 이동한 자리에 잠시 독방구 흔적을 남겨 적에게 지속 피해를 주고, 직접 부딪히면 피해를 준 뒤 자신의 진행방향 뒤쪽으로 상대를 넘겨 위치를 흐트러뜨린다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -3470,6 +3472,69 @@
     }
 
 
+    const COYOTE = {
+      trailLife:3, trailEvery:.18, trailRadius:24, trailDamage:1, trailTick:.5,
+      contactDamage:8, contactCooldown:1, flipGap:10
+    };
+    let coyoteTrails = [];
+    function initCoyote(f){
+      f.coyote={trailCd:0,contactCd:new Map(),dirX:1,dirY:0};
+    }
+    function updateCoyote(f,dt){
+      if(!f.coyote)return;
+      const c=f.coyote;
+      for(const [id,cd] of c.contactCd){const n=cd-dt;if(n<=0)c.contactCd.delete(id);else c.contactCd.set(id,n);}
+      const sp=Math.hypot(f.vx,f.vy);
+      if(sp>.5){c.dirX=f.vx/sp;c.dirY=f.vy/sp;}
+      if(!f.alive)return;
+      c.trailCd-=dt;
+      while(c.trailCd<=0){
+        coyoteTrails.push({owner:f,x:f.x,y:f.y,life:COYOTE.trailLife});
+        c.trailCd+=COYOTE.trailEvery;
+      }
+    }
+    function updateCoyoteTrails(dt){
+      coyoteTrails.forEach(t=>t.life-=dt);
+      coyoteTrails=coyoteTrails.filter(t=>t.life>0);
+      fighters.forEach(target=>{
+        target.coyotePoisonCd=Math.max(0,(target.coyotePoisonCd||0)-dt);
+        if(!target.alive||target.coyotePoisonCd>0)return;
+        const hit=coyoteTrails.find(t=>t.owner&&t.owner!==target&&areEnemies(t.owner,target)&&Math.hypot(target.x-t.x,target.y-t.y)<=COYOTE.trailRadius+target.r);
+        if(!hit)return;
+        const dealt=damage(target,COYOTE.trailDamage,hit.owner,"독방구");
+        if(dealt>0){target.coyotePoisonCd=COYOTE.trailTick;if(!fastSimMode)spawnParticles(target.x,target.y,"#84cc16",3);}
+      });
+    }
+    function coyoteContact(f,target){
+      if(!f?.coyote||!f.alive||!target?.alive||!areEnemies(f,target))return false;
+      if(target.duelMonster||target.marioBlock)return false;
+      const key=target.id;
+      if((f.coyote.contactCd.get(key)||0)>0)return false;
+      f.coyote.contactCd.set(key,COYOTE.contactCooldown);
+      const dealt=damage(target,COYOTE.contactDamage,f,"코요테드 넘기기");
+      if(dealt<=0||!target.alive)return false;
+      const dx=f.coyote.dirX||1,dy=f.coyote.dirY||0;
+      const gap=f.r+target.r+COYOTE.flipGap;
+      target.x=clamp(f.x-dx*gap,arena.x+target.r,arena.x2-target.r);
+      target.y=clamp(f.y-dy*gap,arena.y+target.r,arena.y2-target.r);
+      // 강펀치·파워스톤·기타 강제이동과의 충돌 버그를 막기 위해 대상 vx/vy와 예약 타격 상태는 건드리지 않는다.
+      if(!fastSimMode){spawnHitFlash(target.x,target.y,"#bef264",42);spawnFloatingText(target.x,target.y-target.r-24,"뒤로 넘기기!","#d9f99d");}
+      return true;
+    }
+    function drawCoyoteTrails(){
+      if(fastSimMode)return;
+      coyoteTrails.forEach(t=>{const a=Math.max(0,Math.min(.30,t.life/COYOTE.trailLife*.30));ctx.save();ctx.globalAlpha=a;ctx.fillStyle="#65a30d";ctx.beginPath();ctx.arc(t.x,t.y,COYOTE.trailRadius,0,Math.PI*2);ctx.fill();ctx.globalAlpha=a*.75;ctx.fillStyle="#bef264";ctx.beginPath();ctx.arc(t.x-6,t.y-4,5,0,Math.PI*2);ctx.arc(t.x+7,t.y+3,4,0,Math.PI*2);ctx.fill();ctx.restore();});
+    }
+    function drawCoyoteCharacter(f){
+      ctx.save();ctx.translate(f.x,f.y);
+      ctx.fillStyle="#8b5a2b";ctx.strokeStyle="#3f2a16";ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,0,f.r,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle="#6b4423";ctx.beginPath();ctx.moveTo(-12,-12);ctx.lineTo(-7,-28);ctx.lineTo(-1,-11);ctx.fill();ctx.beginPath();ctx.moveTo(12,-12);ctx.lineTo(7,-28);ctx.lineTo(1,-11);ctx.fill();
+      ctx.fillStyle="#d6b07a";ctx.beginPath();ctx.ellipse(8,5,13,8,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#111827";ctx.beginPath();ctx.arc(18,4,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-5,-4,2.5,0,Math.PI*2);ctx.fill();
+      ctx.restore();if(!f.portraitOnly){drawHealthBar(f);drawName(f);}
+    }
+
     function initCaptain(f) {
       f.captain = { hasShield: true, throwCd: CAPTAIN.throwPeriod, rethrow: 0, counterCd: 0 };
     }
@@ -5603,6 +5668,7 @@
     }
 
       const patchNotes = [
+      "v163: 신캐 코요테드 추가. HP170·이속2.9. 이동 경로에 3초간 남는 독방구 흔적을 생성하며 범위 안 적은 0.5초마다 피해1을 받는다. 상대 본체와 접촉하면 대상별 1초 쿨로 피해8을 준 뒤 코요테드의 진행방향 뒤쪽으로 넘긴다. 넘기기는 상대의 속도·강펀치/파워스톤 등 예약 타격·강제이동 상태를 지우지 않고 위치만 재배치해 접촉 공격 상호작용을 보존한다.",
       "v162: 쿱하 등껍질 충돌 피해를 16→15로 조정. HP190·벽충돌8·불기둥6+화상1×4·돌진 주기/가속/추적/충돌 즉시 종료 후1초 기절 및 v160 0속도 고착 방지 수정은 유지.",
       "v161: 쿱하 소폭 화력 버프. 등껍질 충돌 피해만 14→16으로 상향. HP190·벽충돌8·불기둥6+화상1×4·등껍질 주기/가속/추적/충돌 즉시 종료 후1초 기절 및 v160 공용 0속도 고착 방지 수정은 그대로 유지.",
       "v160: 캡틴전에서 확인된 비의도적 이동속도 0 고착 버그 대응. 모든 캐릭터가 기절·빙결·속박·시전·강제이동 등 의도된 정지 상태가 아닌데 속도0에 고착되면 기본 이동속도로 자동 복구하는 공용 안전장치를 추가. v154의 쿱하 포함 모든 전투 수치와 능력 구조는 유지.",
@@ -6415,6 +6481,7 @@
       if (c.id === "iron_mask") initIron(fighter);
       if (c.id === "lisa") initLisa(fighter);
       if (c.id === "captain") initCaptain(fighter);
+      if (c.id === "coyote_d") initCoyote(fighter);
       if (c.id === "jabami") initJabami(fighter);
       if (c.id === "justice_ally") initJusticeAlly(fighter);
       if (c.id === "oshi") initOshi(fighter);
@@ -6436,6 +6503,7 @@
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       ironObjects = [];
       captainShields = [];
+      coyoteTrails = [];
       duelBreaths = [];
       projectiles = [];
       particles = [];
@@ -6538,6 +6606,7 @@
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       ironObjects = [];
       captainShields = [];
+      coyoteTrails = [];
       duelBreaths = [];
       running = false;
       paused = false;
@@ -10945,6 +11014,7 @@
       updateIron(f, dt);
       updateTano(f, dt);
       updateCaptain(f, dt);
+      updateCoyote(f, dt);
       updateJabami(f, dt);
       updateJusticeAlly(f, dt);
       if (!f.alive) return;
@@ -11360,6 +11430,8 @@
               // 프리즘 돌진은 첫 적 충돌에서 종료되며, 시작점/충돌지점 장판 효과는 함께 발동할 수 있다.
               if (a.baseId === "prism_iris") applyIrisPrismChargeContact(a, b);
               if (b.baseId === "prism_iris") applyIrisPrismChargeContact(b, a);
+              coyoteContact(a, b);
+              coyoteContact(b, a);
 
               // 모로는 이제 캐릭터 충돌이 아니라 벽 충돌만 방패 조건에 포함된다.
 
@@ -12200,6 +12272,7 @@
         updateProjectiles(sub);
         updateIronObjects(sub);
         updateCaptainShields(sub);
+        updateCoyoteTrails(sub);
         updateHintaBalls(sub);
         updateDuelBreaths(sub);
         updateZones(sub);
@@ -12869,6 +12942,7 @@
       drawTanoStones();
       drawIronObjects();
       drawCaptainShields();
+      drawCoyoteTrails();
       drawHintaBalls();
       drawRiddleEffects();
       drawLisaWaves();
@@ -13960,6 +14034,7 @@
       if (f.lisa) { drawLisaCharacter(f); return; }
       if (f.oshi) { drawOshiCharacter(f); return; }
       if (f.newhello) { drawNewhelloCharacter(f); return; }
+      if (f.coyote) { drawCoyoteCharacter(f); return; }
       if (f.andrum) { drawAndrumCharacter(f); return; }
       if (f.elsa) { drawElsaCharacter(f); return; }
       if (f.conan) { drawConanCharacter(f); return; }
