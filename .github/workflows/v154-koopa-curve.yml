@@ -1,4 +1,4 @@
-name: v154 Koopa two-stage acceleration
+name: v154 Koopa acceleration curve
 on:
   push:
     branches: [main]
@@ -15,60 +15,8 @@ jobs:
       - name: Patch
         shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          assert '<title>볼배틀 리뉴얼 v153</title>' in s
-          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v153</h1>' in s
-          s=s.replace('<title>볼배틀 리뉴얼 v153</title>','<title>볼배틀 리뉴얼 v154</title>',1)
-          s=s.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v153</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v154</h1>',1)
-
-          marker='      const patchNotes = [\n'
-          assert marker in s
-          note='      "v154: 쿱하 등껍질 가속곡선 조정. 시작 0.35배는 유지하되 첫 2초 동안 0.35→1.3배로 빠르게 가속하고, 이후 4초 동안 1.3→2.5배로 가속. 상시 추적·HP190·충돌 후 1초 기절·불기둥 1/2/3개 및 피해/주기는 유지.",\n'
-          s=s.replace(marker,marker+note,1)
-
-          old='bodyR:25, shellPeriod:11, shellDuration:6, shellStartMult:.35, shellSpeedMult:2.5, shellTurn:5.0,'
-          new='bodyR:25, shellPeriod:11, shellDuration:6, shellStartMult:.35, shellMidMult:1.3, shellMidTime:2, shellSpeedMult:2.5, shellTurn:5.0,'
-          assert old in s
-          s=s.replace(old,new,1)
-
-          old_func='''    function koopaShellSpeed(f){
-      const k=f.koopa,p=clamp(1-(k.shellTime/KOOPA.shellDuration),0,1);
-      return k.baseSpeed*44*(KOOPA.shellStartMult+(KOOPA.shellSpeedMult-KOOPA.shellStartMult)*p);
-    }'''
-          new_func='''    function koopaShellSpeed(f){
-      const k=f.koopa,elapsed=clamp(KOOPA.shellDuration-k.shellTime,0,KOOPA.shellDuration);
-      let mult;
-      if(elapsed<=KOOPA.shellMidTime){
-        const p=KOOPA.shellMidTime>0?elapsed/KOOPA.shellMidTime:1;
-        mult=KOOPA.shellStartMult+(KOOPA.shellMidMult-KOOPA.shellStartMult)*p;
-      }else{
-        const tail=Math.max(.001,KOOPA.shellDuration-KOOPA.shellMidTime),p=clamp((elapsed-KOOPA.shellMidTime)/tail,0,1);
-        mult=KOOPA.shellMidMult+(KOOPA.shellSpeedMult-KOOPA.shellMidMult)*p;
-      }
-      return k.baseSpeed*44*mult;
-    }'''
-          assert old_func in s
-          s=s.replace(old_func,new_func,1)
-
-          old_desc='등껍질 돌진은 시작부터 최근접 적을 계속 추적하며, 기본 이동속도의 0.35배로 매우 느리게 출발해 6초 동안 선형으로 가속하여 종료 직전 최대 2.5배 속도에 도달한다.'
-          new_desc='등껍질 돌진은 시작부터 최근접 적을 계속 추적하며, 기본 이동속도의 0.35배로 매우 느리게 출발한 뒤 첫 2초 동안 1.3배까지 빠르게 가속하고 이후 4초 동안 최대 2.5배까지 가속한다.'
-          assert old_desc in s
-          s=s.replace(old_desc,new_desc,1)
-
-          old_tip='시작은 기본 이동속도의 0.35배이고 시간이 지나면서 최대 2.5배까지 가속하며, 충돌 후 1초 기절한다.'
-          new_tip='시작은 기본 이동속도의 0.35배이고 첫 2초 동안 1.3배까지, 이후 4초 동안 최대 2.5배까지 가속하며, 충돌 후 1초 기절한다.'
-          assert old_tip in s
-          s=s.replace(old_tip,new_tip,1)
-
-          p.write_text(s,encoding='utf-8')
-          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)
-          assert scripts
-          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
-          PY
+          echo 'CmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aAppbXBvcnQgcmUKcD1QYXRoKCJpbmRleC5odG1sIikKcz1wLnJlYWRfdGV4dChlbmNvZGluZz0idXRmLTgiKQoKYXNzZXJ0ICc8dGl0bGU+67O867Cw7YuAIOumrOuJtOyWvCB2MTUzPC90aXRsZT4nIGluIHMKYXNzZXJ0ICc8aDEgaWQ9Im1haW5UaXRsZSI+67O867Cw7YuAIOumrOuJtOyWvCB2MTUzPC9oMT4nIGluIHMKcz1zLnJlcGxhY2UoJzx0aXRsZT7rs7zrsLDti4Ag66as64m07Ja8IHYxNTM8L3RpdGxlPicsJzx0aXRsZT7rs7zrsLDti4Ag66as64m07Ja8IHYxNTQ8L3RpdGxlPicsMSkKcz1zLnJlcGxhY2UoJzxoMSBpZD0ibWFpblRpdGxlIj7rs7zrsLDti4Ag66as64m07Ja8IHYxNTM8L2gxPicsJzxoMSBpZD0ibWFpblRpdGxlIj7rs7zrsLDti4Ag66as64m07Ja8IHYxNTQ8L2gxPicsMSkKCm1hcmtlcj0nICAgICAgY29uc3QgcGF0Y2hOb3RlcyA9IFtcbicKYXNzZXJ0IG1hcmtlciBpbiBzCm5vdGU9JyAgICAgICJ2MTU0OiDsv7HtlZgg65Ox6ruN7KeIIOqwgOyGjeqzoeyEoCDsobDsoJUuIOyLnOyekSAwLjM167Cw64qUIOycoOyngO2VmOuQmCDssqsgMuy0iCDrj5nslYggMC4zNeKGkjEuM+uwsOuhnCDruaDrpbTqsowg6rCA7IaN7ZWY6rOgLCDsnbTtm4QgNOy0iCDrj5nslYggMS4z4oaSMi4167Cw66GcIOqwgOyGjS4g7IOB7IucIOy2lOyggcK3SFAxOTDCt+y2qeuPjCDtm4QgMey0iCDquLDsoIjCt+u2iOq4sOuRpSAxLzIvM+qwnCDrsI8g7ZS87ZW0L+yjvOq4sOuKlCDsnKDsp4AuIixcbicKcz1zLnJlcGxhY2UobWFya2VyLCBtYXJrZXIrbm90ZSwgMSkKCm9sZD0nYm9keVI6MjUsIHNoZWxsUGVyaW9kOjExLCBzaGVsbER1cmF0aW9uOjYsIHNoZWxsU3RhcnRNdWx0Oi4zNSwgc2hlbGxTcGVlZE11bHQ6Mi41LCBzaGVsbFR1cm46NS4wLCcKbmV3PSdib2R5UjoyNSwgc2hlbGxQZXJpb2Q6MTEsIHNoZWxsRHVyYXRpb246Niwgc2hlbGxTdGFydE11bHQ6LjM1LCBzaGVsbE1pZE11bHQ6MS4zLCBzaGVsbE1pZFRpbWU6Miwgc2hlbGxTcGVlZE11bHQ6Mi41LCBzaGVsbFR1cm46NS4wLCcKYXNzZXJ0IG9sZCBpbiBzCnM9cy5yZXBsYWNlKG9sZCxuZXcsMSkKCm9sZF9mdW5jPScnJyAgICBmdW5jdGlvbiBrb29wYVNoZWxsU3BlZWQoZil7CiAgICAgIGNvbnN0IGs9Zi5rb29wYSxwPWNsYW1wKDEtKGsuc2hlbGxUaW1lL0tPT1BBLnNoZWxsRHVyYXRpb24pLDAsMSk7CiAgICAgIHJldHVybiBrLmJhc2VTcGVlZCo0NCooS09PUEEuc2hlbGxTdGFydE11bHQrKEtPT1BBLnNoZWxsU3BlZWRNdWx0LUtPT1BBLnNoZWxsU3RhcnRNdWx0KSpwKTsKICAgIH0nJycKbmV3X2Z1bmM9JycnICAgIGZ1bmN0aW9uIGtvb3BhU2hlbGxTcGVlZChmKXsKICAgICAgY29uc3Qgaz1mLmtvb3BhLGVsYXBzZWQ9Y2xhbXAoS09PUEEuc2hlbGxEdXJhdGlvbi1rLnNoZWxsVGltZSwwLEtPT1BBLnNoZWxsRHVyYXRpb24pOwogICAgICBsZXQgbXVsdDsKICAgICAgaWYoZWxhcHNlZDw9S09PUEEuc2hlbGxNaWRUaW1lKXsKICAgICAgICBjb25zdCBwPUtPT1BBLnNoZWxsTWlkVGltZT4wP2VsYXBzZWQvS09PUEEuc2hlbGxNaWRUaW1lOjE7CiAgICAgICAgbXVsdD1LT09QQS5zaGVsbFN0YXJ0TXVsdCsoS09PUEEuc2hlbGxNaWRNdWx0LUtPT1BBLnNoZWxsU3RhcnRNdWx0KSpwOwogICAgICB9ZWxzZXsKICAgICAgICBjb25zdCB0YWlsPU1hdGgubWF4KC4wMDEsS09PUEEuc2hlbGxEdXJhdGlvbi1LT09QQS5zaGVsbE1pZFRpbWUpLHA9Y2xhbXAoKGVsYXBzZWQtS09PUEEuc2hlbGxNaWRUaW1lKS90YWlsLDAsMSk7CiAgICAgICAgbXVsdD1LT09QQS5zaGVsbE1pZE11bHQrKEtPT1BBLnNoZWxsU3BlZWRNdWx0LUtPT1BBLnNoZWxsTWlkTXVsdCkqcDsKICAgICAgfQogICAgICByZXR1cm4gay5iYXNlU3BlZWQqNDQqbXVsdDsKICAgIH0nJycKYXNzZXJ0IG9sZF9mdW5jIGluIHMKcz1zLnJlcGxhY2Uob2xkX2Z1bmMsbmV3X2Z1bmMsMSkKCm9sZF9kZXNjPSfrk7Hqu43sp4gg64+M7KeE7J2AIOyLnOyekeu2gO2EsCDstZzqt7zsoJEg7KCB7J2EIOqzhOyGjSDstpTsoIHtlZjrqbAsIOq4sOuzuCDsnbTrj5nsho3rj4TsnZggMC4zNeuwsOuhnCDrp6TsmrAg64qQ66as6rKMIOy2nOuwnO2VtCDsoJDsoJAg67mo65287KC4IOy1nOuMgCAyLjXrsLAg7IaN64+E7JeQIOuPhOuLrO2VnOuLpC4nCm5ld19kZXNjPSfrk7Hqu43sp4gg64+M7KeE7J2AIOyLnOyekeu2gO2EsCDstZzqt7zsoJEg7KCB7J2EIOqzhOyGjSDstpTsoIHtlZjrqbAsIOq4sOuzuCDsnbTrj5nsho3rj4TsnZggMC4zNeuwsOuhnCDrp6TsmrAg64qQ66as6rKMIOy2nOuwnO2VnCDrkqQg7LKrIDLstIgg64+Z7JWIIDEuM+uwsOq5jOyngCDruaDrpbTqsowg6rCA7IaN7ZWY6rOgIOydtO2bhCA07LSIIOuPmeyViCDstZzrjIAgMi4167Cw6rmM7KeAIOqwgOyGje2VnOuLpC4nCmFzc2VydCBvbGRfZGVzYyBpbiBzCnM9cy5yZXBsYWNlKG9sZF9kZXNjLG5ld19kZXNjLDEpCgpvbGRfdGlwPSfsi5zsnpHsnYAg6riw67O4IOydtOuPmeyGjeuPhOydmCAwLjM167Cw7J2066mwIOyLnOqwhOydtCDsp4DrgqDsiJjroZ0g7LWc64yAIDIuNeuwsOq5jOyngCDqsIDsho3tlZjqs6AsIOy2qeuPjCDtm4QgMey0iCDquLDsoIjtlZzri6QuJwpuZXdfdGlwPSfsi5zsnpHsnYAg6riw67O4IOydtOuPmeyGjeuPhOydmCAwLjM167Cw7J2066mwIOyyqyAy7LSIIOuPmeyViCAxLjPrsLDquYzsp4AsIOydtO2bhCA07LSIIOuPmeyViCDstZzrjIAgMi4167Cw6rmM7KeAIOqwgOyGje2VmOqzoCwg7Lap64+MIO2bhCAx7LSIIOq4sOygiO2VnOuLpC4nCmFzc2VydCBvbGRfdGlwIGluIHMKcz1zLnJlcGxhY2Uob2xkX3RpcCxuZXdfdGlwLDEpCgpwLndyaXRlX3RleHQocyxlbmNvZGluZz0idXRmLTgiKQpzY3JpcHRzPXJlLmZpbmRhbGwocic8c2NyaXB0W14+XSo+KFtcc1xTXSo/KTwvc2NyaXB0PicscykKYXNzZXJ0IHNjcmlwdHMKUGF0aCgiL3RtcC9jaGVjay5qcyIpLndyaXRlX3RleHQoIlxuIi5qb2luKHNjcmlwdHMpLGVuY29kaW5nPSJ1dGYtOCIpCg==' | base64 -d > /tmp/patch.py
+          python3 /tmp/patch.py
           node --check /tmp/check.js
           git diff --check
           grep -q 'shellMidMult:1.3, shellMidTime:2' index.html
