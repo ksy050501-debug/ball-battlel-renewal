@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v155</title>
+  <title>볼배틀 리뉴얼 v156</title>
   <style>
     :root {
       --bg: #020617;
@@ -1250,8 +1250,8 @@
         skillName: "웹슈터 · 웹스윙", condition: "5초마다 거미줄 6연사 · 웹슈터 넉백 중 벽충돌 시 속박→웹스윙 돌진", desc: "웹슈터 연사로 적을 밀어낸다. 웹슈터에 맞아 밀려나는 바로 그 순간 벽에 충돌하면 속박하고 즉시 타게팅 웹스윙으로 돌진한다." },
       { id:"mario_plumber", name:"배관공", mark:"M", role:"게임", color:"#ef4444", hp:160, attack:8, speed:2.8, range:0,
         skillName:"랜덤박스 · 토관 · 배관공카트", condition:"랜덤박스 파워업 · 벽 50회마다 토관을 통해 기본↔카트 모드 전환", desc:"랜덤박스로 슈퍼·파이어·스타 상태를 오가며 싸운다. 벽 접촉 50회를 채우면 충돌한 벽의 초록 토관으로 느리게 들어가고, 무작위 벽의 토관에서 반대 모드로 나온다. 카트 모드에서는 바나나와 등껍질을 사용한다." },
-      { id:"koopa_king", name:"쿱하", mark:"K", role:"게임", color:"#65a30d", hp:220, attack:0, speed:2.35, range:0,
-        skillName:"등껍질 돌진 · 회전 불기둥", condition:"등껍질 11초 주기 · 불기둥 20초 주기 · 저체력일수록 불기둥 1→3개", desc:"거대한 몸집의 마왕형 캐릭터. 등껍질 돌진은 시작부터 최근접 적을 계속 추적하며, 기본 이동속도의 0.35배로 매우 느리게 출발한 뒤 첫 2초 동안 1.3배까지 빠르게 가속하고 이후 4초 동안 최대 2.5배까지 가속한다. 상대와 충돌하면 즉시 돌진을 끝내고 제자리에서 1초 기절한다. 맵 중앙을 축으로 회전하는 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개이며 각 불기둥은 같은 상대를 1회만 적중한다." },
+      { id:"koopa_king", name:"쿱하", mark:"K", role:"게임", color:"#65a30d", hp:190, attack:0, speed:2.35, range:0,
+        skillName:"등껍질 돌진 · 회전 불기둥", condition:"등껍질 11초 주기 · 불기둥 20초 주기 · 저체력일수록 불기둥 1→3개", desc:"거대한 몸집의 마왕형 캐릭터. 등껍질 돌진은 시작부터 최근접 적을 계속 추적하며, 기본 이동속도의 0.35배로 매우 느리게 출발한 뒤 첫 2초 동안 1.3배까지 빠르게 가속하고 이후 4초 동안 최대 2.5배까지 가속한다. 상대와 충돌해도 돌진은 끝나지 않고 6초 동안 계속되며, 같은 대상은 돌진 1회당 최대 1회만 피해를 받는다. 6초가 모두 끝난 뒤 제자리에서 1초 기절한다. 맵 중앙을 축으로 회전하는 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개이며 각 불기둥은 같은 상대를 1회만 적중한다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -5603,6 +5603,7 @@
     }
 
       const patchNotes = [
+      "v156: 쿱하를 v154 수치 기반으로 복원(HP220→190, 등껍질13→14, 벽충돌7→8, 불기둥5→6). 등껍질은 적·소환수와 충돌해도 즉시 종료되지 않고 6초를 끝까지 유지하며 같은 대상은 돌진 1회당 최대 1회만 피해를 받고, 6초 종료 후 1초 기절한다. 불기둥 66%/33% 단계와 나머지 가속·추적 구조는 유지. 별도 버그 수정으로 모든 캐릭터가 의도된 정지 상태가 아닌데 속도0에 고착되면 기본 이동속도로 공용 복구하도록 안전장치를 추가.",
       "v155: 쿱하 고유 메커니즘 직접 밸런스 조정. HP 190→220. 등껍질 충돌 피해14→13, 넉백 후 벽충돌8→7, 회전 불기둥 접촉6→5. 화상1×4는 정수 최소 단위라 유지. 소수점 피해·전역 보정 없이 실제 능력 수치만 변경했으며 등껍질 주기·가속·추적·기절과 불기둥 주기·개수·지속시간은 유지.",
       "v154: 쿱하 등껍질 가속곡선 조정. 시작 0.35배는 유지하되 첫 2초 동안 0.35→1.3배로 빠르게 가속하고, 이후 4초 동안 1.3→2.5배로 가속. 상시 추적·HP190·충돌 후 1초 기절·불기둥 1/2/3개 및 피해/주기는 유지.",
       "v153: 쿱하 등껍질 가속감 조정. 상시 추적·6초 지속·충돌 후 1초 기절은 유지하고, 돌진 시작 속도를 기본 이동속도의 0.35배로 크게 낮춘 뒤 6초 동안 점진 가속하여 종료 직전 최대 2.5배에 도달하도록 변경. 불기둥 1/2/3개 및 나머지 전투 수치는 유지.",
@@ -5867,9 +5868,9 @@
           tip: "시골소년은 피해를 줄이고, 성장 후 검격이 강화된다."
         },
         koopa_king: {
-          damage: "등껍질 충돌 13 + 강넉백 · 넉백 후 벽충돌 7 / 회전 불기둥 접촉 5 + 화상 1×4",
-          tick: "등껍질 11초 주기·6초 지속·상시 추적·점진 가속·충돌 시 즉시 종료 후 1초 기절 / 불기둥 20초 주기·4.5초 지속",
-          tip: "등껍질은 돌진 1회 동안 같은 상대를 최대 1회만 타격하며 6초 내내 최근접 적을 추적한다. 시작은 기본 이동속도의 0.35배이며 첫 2초 동안 1.3배까지, 이후 4초 동안 최대 2.5배까지 가속하고, 충돌 후 1초 기절한다. 중앙 회전 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개이며 각 기둥마다 같은 상대를 1회만 적중한다. 따라서 최대 3회 적중할 수 있다. 넉백 저항은 없다."
+          damage: "등껍질 충돌 14 + 강넉백 · 넉백 후 벽충돌 8 / 회전 불기둥 접촉 6 + 화상 1×4",
+          tick: "등껍질 11초 주기·6초 지속·상시 추적·점진 가속·충돌해도 지속·6초 종료 후 1초 기절 / 불기둥 20초 주기·4.5초 지속",
+          tip: "등껍질은 충돌해도 종료되지 않고 6초 내내 최근접 적을 추적한다. 돌진 1회 동안 같은 상대는 최대 1회만 타격한다. 시작은 기본 이동속도의 0.35배이며 첫 2초 동안 1.3배까지, 이후 4초 동안 최대 2.5배까지 가속하고, 6초가 모두 끝난 뒤 1초 기절한다. 중앙 회전 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개이며 각 기둥마다 같은 상대를 1회만 적중한다. 따라서 최대 3회 적중할 수 있다. 넉백 저항은 없다."
         },
         dummy_unit: {
           damage: "없음",
@@ -7104,8 +7105,8 @@
 
     const KOOPA = {
       bodyR:25, shellPeriod:11, shellDuration:6, shellStartMult:.35, shellMidMult:1.3, shellMidTime:2, shellSpeedMult:2.5, shellTurn:5.0,
-      shellDamage:13, shellKnock:720, shellFlight:.65, shellHitCd:.55, shellWallDamage:7, shellWallWindow:.72, recoveryStun:1,
-      firePeriod:20, fireDuration:4.5, fireDamage:5, fireBurnDamage:1, fireBurnTicks:4, fireBurnTick:.6,
+      shellDamage:14, shellKnock:720, shellFlight:.65, shellHitCd:.55, shellWallDamage:8, shellWallWindow:.72, recoveryStun:1,
+      firePeriod:20, fireDuration:4.5, fireDamage:6, fireBurnDamage:1, fireBurnTicks:4, fireBurnTick:.6,
       fireHitCd:.55, fireTurn:Math.PI*105/180, fireWidth:12
     };
     function initKoopa(f){
@@ -7192,7 +7193,6 @@
       const dx=target.x-source.x,dy=target.y-source.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,KOOPA.shellDamage,source,"등껍질충돌");k.hitCd[target.id]=Math.max(.1,k.shellTime)+.25;
       if(dealt>0&&target.alive){target.vx=dx/d*KOOPA.shellKnock;target.vy=dy/d*KOOPA.shellKnock;target.punchFlight=Math.max(target.punchFlight||0,KOOPA.shellFlight);target.punchSource=null;target.punchWallPower=0;target.punchWallHits=0;target.koopaWallCrash={sourceId:source.id,t:KOOPA.shellWallWindow};}
       if(!fastSimMode){spawnHitFlash(target.x,target.y,"#bef264",58);spawnParticles(target.x,target.y,"#84cc16",10);}
-      koopaEndShell(source);
       return dealt>0;
     }
     function koopaWallCrash(f){
@@ -7525,7 +7525,7 @@
       if(f.koopa){
         const k=f.koopa,fire=k.fire,fireCount=koopaFireCount(f);
         if(k.recovery>0)return {ratio:clamp(k.recovery/KOOPA.recoveryStun,0,1),className:"rage-fill",text:`등껍질 후 기절 ${k.recovery.toFixed(1)}초`,extraTextHtml:`<div class="status-skill-label">불기둥 ${fire?`발동 중 · ${fireCount}개 · ${fire.life.toFixed(1)}초`:`${Math.max(0,k.fireCd).toFixed(1)}초 후`}</div>`};
-        if(k.shellActive)return {ratio:clamp(k.shellTime/KOOPA.shellDuration,0,1),className:"skill-fill",text:`등껍질 돌진 ${k.shellTime.toFixed(1)}초${k.shellTime<=KOOPA.shellTrackAt?" · 추적 중":""}`,extraTextHtml:`<div class="status-skill-label">충돌 시 즉시 3초 기절 · 불기둥 ${fire?`${fireCount}개 발동 중`:`${Math.max(0,k.fireCd).toFixed(1)}초 후`}</div>`};
+        if(k.shellActive)return {ratio:clamp(k.shellTime/KOOPA.shellDuration,0,1),className:"skill-fill",text:`등껍질 돌진 ${k.shellTime.toFixed(1)}초${k.shellTime<=KOOPA.shellTrackAt?" · 추적 중":""}`,extraTextHtml:`<div class="status-skill-label">충돌해도 지속 · 종료 후 ${KOOPA.recoveryStun}초 기절 · 불기둥 ${fire?`${fireCount}개 발동 중`:`${Math.max(0,k.fireCd).toFixed(1)}초 후`}</div>`};
         return {ratio:clamp(1-Math.max(0,k.shellCd)/KOOPA.shellPeriod,0,1),className:"skill-fill",text:`등껍질 ${Math.max(0,k.shellCd).toFixed(1)}초`,extraTextHtml:`<div class="status-skill-label">불기둥 ${fire?`${fireCount}개 · ${fire.life.toFixed(1)}초`:`${Math.max(0,k.fireCd).toFixed(1)}초`} · 현재 HP 단계 ${fireCount}개</div>`};
       }
       if(f.mario){
@@ -10140,6 +10140,22 @@
       return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * timedCcSlow;
     }
 
+    // 의도된 정지 상태가 아닌데 속도가 0으로 고착되면 공용으로 이동을 복구한다.
+    function ensureFreeVelocity(f) {
+      if (!f?.alive || Math.hypot(f.vx, f.vy) >= 0.5) return;
+      if ((f.stun || 0) > 0 || (f.hardFreeze || 0) > 0 || (f.bindStun || 0) > 0
+          || (f.joltStop || 0) > 0 || (f.vampSuppressed || 0) > 0
+          || (f.punchHold || 0) > 0 || (f.punchFlight || 0) > 0 || isCasting(f)
+          || f.mario?.pipeTransit || f.marioBlock
+          || (f.iron?.dash || 0) > 0 || (f.duelMonster?.channel || 0) > 0
+          || (f.duelMonster?.cast || 0) > 0 || f.duelMonster?.fusing
+          || (f.toriMeteorWalk || 0) > 0 || (f.rioStormRush || 0) > 0
+          || f.baldCape?.dash > 0 || f.baldCape?.serious?.timer > 0 || f.baldCape?.combo
+          || f.koopa?.shellActive || f.hinta?.dash || f.logo?.jump) return;
+      const v = randomVelocity(f.baseSpeed || f.speed || 2.35);
+      f.vx = v.vx; f.vy = v.vy;
+    }
+
     function useSkill(f, label) {
       if (!f.alive) return;
       const sourceName = `<strong>${escapeHtml(f.name)}</strong>`;
@@ -11108,6 +11124,7 @@
       }
 
       if (f.stun > 0) return;
+      ensureFreeVelocity(f);
       if (updateCastPause(f, dt)) {
         return;
       }
