@@ -1,0 +1,67 @@
+name: v154 Koopa acceleration curve
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/v154-koopa-curve.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          assert '<title>볼배틀 리뉴얼 v153</title>' in s
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v153</h1>' in s
+          s=s.replace('<title>볼배틀 리뉴얼 v153</title>','<title>볼배틀 리뉴얼 v154</title>',1)
+          s=s.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v153</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v154</h1>',1)
+
+          old='''    function koopaShellSpeed(f){
+      const k=f.koopa,p=clamp(1-(k.shellTime/KOOPA.shellDuration),0,1);
+      return k.baseSpeed*44*(KOOPA.shellStartMult+(KOOPA.shellSpeedMult-KOOPA.shellStartMult)*p);
+    }'''
+          new='''    function koopaShellSpeed(f){
+      const k=f.koopa,elapsed=clamp(KOOPA.shellDuration-k.shellTime,0,KOOPA.shellDuration);
+      const mult=elapsed<=2
+        ? KOOPA.shellStartMult+(1.3-KOOPA.shellStartMult)*(elapsed/2)
+        : 1.3+(KOOPA.shellSpeedMult-1.3)*((elapsed-2)/4);
+      return k.baseSpeed*44*mult;
+    }'''
+          assert old in s
+          s=s.replace(old,new,1)
+
+          marker='      const patchNotes = [\n'
+          assert marker in s
+          note='      "v154: 쿱하 등껍질 가속곡선 조정. 시작 0.35배는 유지하고 첫 2초 동안 1.3배까지 빠르게 가속, 이후 4초 동안 2.5배까지 추가 가속. 상시 추적·기절 1초·HP 190·불기둥 1/2/3개 및 피해/주기는 유지.",\n'
+          s=s.replace(marker,marker+note,1)
+
+          s=s.replace('시작은 기본 이동속도의 0.35배이며 시간이 지날수록 최대 2.5배까지 가속하고', '시작은 기본 이동속도의 0.35배이며 첫 2초에 1.3배, 이후 4초에 최대 2.5배까지 가속하고',1)
+          s=s.replace('시작 속도 0.35배→종료 직전 2.5배', '시작 0.35배→2초 1.3배→종료 직전 2.5배',1)
+
+          p.write_text(s,encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)
+          assert scripts
+          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+          git diff --check
+          grep -q '볼배틀 리뉴얼 v154' index.html
+          grep -q 'elapsed<=2' index.html
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm .github/workflows/v154-koopa-curve.yml
+          git add index.html .github/workflows/v154-koopa-curve.yml
+          git commit -m 'v154: reshape Koopa shell acceleration'
+          git push
