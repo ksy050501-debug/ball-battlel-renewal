@@ -1,0 +1,69 @@
+name: One-shot v161 Koopa damage patch
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/patch-v161.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch index.html
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          # Version only: v160 -> v161 wherever the current visible/version labels appear.
+          if '볼배틀 리뉴얼 v160' not in s:
+              raise SystemExit('v160 version label not found')
+          s = s.replace('볼배틀 리뉴얼 v160', '볼배틀 리뉴얼 v161')
+
+          # Koopa shell contact damage only: 14 -> 16.
+          old = 'shellDamage:14, shellKnock:720, shellFlight:.65, shellHitCd:.55, shellWallDamage:8, shellWallWindow:.72, recoveryStun:1,'
+          new = 'shellDamage:16, shellKnock:720, shellFlight:.65, shellHitCd:.55, shellWallDamage:8, shellWallWindow:.72, recoveryStun:1,'
+          if s.count(old) != 1:
+              raise SystemExit(f'expected one Koopa damage constant, found {s.count(old)}')
+          s = s.replace(old, new, 1)
+
+          # Update Koopa damage display text only.
+          old_text = '등껍질 충돌 14 + 강넉백 · 넉백 후 벽충돌 8 / 회전 불기둥 접촉 6 + 화상 1×4'
+          new_text = '등껍질 충돌 16 + 강넉백 · 넉백 후 벽충돌 8 / 회전 불기둥 접촉 6 + 화상 1×4'
+          if s.count(old_text) != 1:
+              raise SystemExit(f'expected one Koopa damage display, found {s.count(old_text)}')
+          s = s.replace(old_text, new_text, 1)
+
+          # Add patch note. No other combat values are changed.
+          marker = '      const patchNotes = [\n'
+          if marker not in s:
+              raise SystemExit('patch note marker not found')
+          note = '      "v161: 쿱하 소폭 화력 버프. 등껍질 충돌 피해만 14→16으로 상향. HP190·벽충돌8·불기둥6+화상1×4·등껍질 주기/가속/추적/충돌 즉시 종료 후1초 기절 및 v160 공용 0속도 고착 방지 수정은 그대로 유지.",\n'
+          s = s.replace(marker, marker + note, 1)
+
+          p.write_text(s, encoding='utf-8')
+
+          # Sanity checks.
+          assert '볼배틀 리뉴얼 v161' in s
+          assert 'shellDamage:16, shellKnock:720' in s
+          assert 'shellWallDamage:8' in s
+          assert 'fireDamage:6' in s
+          assert 'hp:190, attack:0, speed:2.35' in s
+          PY
+          git diff --check
+      - name: Commit patch and remove workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/patch-v161.yml
+          git add index.html
+          git commit -m 'Buff Koopa shell damage to 16 v161'
+          git push
