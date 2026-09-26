@@ -1,14 +1,10 @@
-name: Apply v151 Koopa matchup compression
-
+name: v151 Koopa matchup compression
 on:
   push:
     branches: [main]
-    paths:
-      - '.github/workflows/v151-koopa-compress.yml'
-
+    paths: ['.github/workflows/v151-koopa-compress.yml']
 permissions:
   contents: write
-
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -16,130 +12,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-      - name: Patch index.html
-        shell: bash
+      - name: Patch
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-
-          assert '<title>볼배틀 리뉴얼 v150</title>' in s
-          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v150</h1>' in s
-          s=s.replace('<title>볼배틀 리뉴얼 v150</title>','<title>볼배틀 리뉴얼 v151</title>',1)
-          s=s.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v150</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v151</h1>',1)
-
-          marker='      const patchNotes = [\n'
-          assert marker in s
-          note='      "v151: 쿱하 상성 폭 압축 실험. HP 190 유지. 등껍질 충돌 후 자가 기절 3초→1초. 등껍질은 6초 내내 최근접 적을 추적하며, 시작 속도는 평상 이동속도 수준에서 시작해 기존 최대 돌진속도까지 점진 가속. 회전 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개로 변경해 최대 3개. 피해량·주기·지속시간은 유지.",\n'
-          s=s.replace(marker,marker+note,1)
-
-          old_const='''    const KOOPA = {
-      bodyR:25, shellPeriod:11, shellDuration:6, shellTrackAt:3, shellSpeedMult:1.9, shellTurn:5.0,
-      shellDamage:14, shellKnock:720, shellFlight:.65, shellHitCd:.55, shellWallDamage:8, shellWallWindow:.72, recoveryStun:3,
-      firePeriod:20, fireDuration:4.5, fireDamage:6, fireBurnDamage:1, fireBurnTicks:4, fireBurnTick:.6,
-      fireHitCd:.55, fireTurn:Math.PI*105/180, fireWidth:12
-    };'''
-          new_const='''    const KOOPA = {
-      bodyR:25, shellPeriod:11, shellDuration:6, shellSpeedMult:1.9, shellTurn:5.0,
-      shellDamage:14, shellKnock:720, shellFlight:.65, shellHitCd:.55, shellWallDamage:8, shellWallWindow:.72, recoveryStun:1,
-      firePeriod:20, fireDuration:4.5, fireDamage:6, fireBurnDamage:1, fireBurnTicks:4, fireBurnTick:.6,
-      fireHitCd:.55, fireTurn:Math.PI*105/180, fireWidth:12
-    };'''
-          assert old_const in s
-          s=s.replace(old_const,new_const,1)
-
-          old_count='    function koopaFireCount(f){const q=f.maxHp>0?f.hp/f.maxHp:1;return q>.75?1:q>.50?2:q>.25?3:4;}'
-          new_count='    function koopaFireCount(f){const q=f.maxHp>0?f.hp/f.maxHp:1;return q>2/3?1:q>1/3?2:3;}'
-          assert old_count in s
-          s=s.replace(old_count,new_count,1)
-
-          old_start='''      const mag=Math.hypot(f.vx,f.vy)||1,a=mag>.01?Math.atan2(f.vy,f.vx):rand(0,Math.PI*2),v=k.baseSpeed*44*KOOPA.shellSpeedMult;
-      f.vx=Math.cos(a)*v;f.vy=Math.sin(a)*v;'''
-          new_start='''      const mag=Math.hypot(f.vx,f.vy)||1,a=mag>.01?Math.atan2(f.vy,f.vx):rand(0,Math.PI*2),v=k.baseSpeed*44;
-      f.vx=Math.cos(a)*v;f.vy=Math.sin(a)*v;'''
-          assert old_start in s
-          s=s.replace(old_start,new_start,1)
-
-          old_end='''      k.shellActive=false;k.shellTime=0;k.recovery=KOOPA.recoveryStun;f.vx=0;f.vy=0;applyStun(f,KOOPA.recoveryStun);
-      if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-34,"기절 3초","#fde68a");spawnBlast(f.x,f.y,48,"#84cc16");}
-    }
-    function koopaNormalizeShellSpeed(f){
-      const k=f.koopa,v=k.baseSpeed*44*KOOPA.shellSpeedMult,mag=Math.hypot(f.vx,f.vy)||1,a=mag>.01?Math.atan2(f.vy,f.vx):rand(0,Math.PI*2);
-      f.vx=Math.cos(a)*v;f.vy=Math.sin(a)*v;
-    }
-    function koopaTrackShell(f,dt){
-      const k=f.koopa,target=nearestEnemy(f).enemy;if(!target){koopaNormalizeShellSpeed(f);return;}
-      const wanted=Math.atan2(target.y-f.y,target.x-f.x),cur=Math.atan2(f.vy,f.vx),delta=Math.atan2(Math.sin(wanted-cur),Math.cos(wanted-cur));
-      const a=cur+clamp(delta,-KOOPA.shellTurn*dt,KOOPA.shellTurn*dt),v=k.baseSpeed*44*KOOPA.shellSpeedMult;
-      f.vx=Math.cos(a)*v;f.vy=Math.sin(a)*v;
-    }'''
-          new_end='''      k.shellActive=false;k.shellTime=0;k.recovery=KOOPA.recoveryStun;f.vx=0;f.vy=0;applyStun(f,KOOPA.recoveryStun);
-      if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-34,`기절 ${KOOPA.recoveryStun}초`,"#fde68a");spawnBlast(f.x,f.y,48,"#84cc16");}
-    }
-    function koopaShellSpeed(f){
-      const k=f.koopa,p=clamp(1-(k.shellTime/KOOPA.shellDuration),0,1);
-      return k.baseSpeed*44*(1+(KOOPA.shellSpeedMult-1)*p);
-    }
-    function koopaTrackShell(f,dt){
-      const k=f.koopa,target=nearestEnemy(f).enemy,v=koopaShellSpeed(f),mag=Math.hypot(f.vx,f.vy)||1,cur=mag>.01?Math.atan2(f.vy,f.vx):rand(0,Math.PI*2);
-      if(!target){f.vx=Math.cos(cur)*v;f.vy=Math.sin(cur)*v;return;}
-      const wanted=Math.atan2(target.y-f.y,target.x-f.x),delta=Math.atan2(Math.sin(wanted-cur),Math.cos(wanted-cur));
-      const a=cur+clamp(delta,-KOOPA.shellTurn*dt,KOOPA.shellTurn*dt);
-      f.vx=Math.cos(a)*v;f.vy=Math.sin(a)*v;
-    }'''
-          assert old_end in s
-          s=s.replace(old_end,new_end,1)
-
-          old_update='if(k.shellActive){k.shellTime=Math.max(0,k.shellTime-dt);if(k.shellTime<=0){koopaEndShell(f);return;}if(k.shellTime<=KOOPA.shellTrackAt)koopaTrackShell(f,dt);else koopaNormalizeShellSpeed(f);}'
-          new_update='if(k.shellActive){k.shellTime=Math.max(0,k.shellTime-dt);if(k.shellTime<=0){koopaEndShell(f);return;}koopaTrackShell(f,dt);}'
-          assert old_update in s
-          s=s.replace(old_update,new_update,1)
-
-          old_char='''      { id:"koopa_king", name:"쿱하", mark:"K", role:"게임", color:"#65a30d", hp:190, attack:0, speed:2.35, range:0,
-        skillName:"등껍질 돌진 · 회전 불기둥", condition:"등껍질 11초 주기 · 불기둥 20초 주기 · 저체력일수록 불기둥 1→4개", desc:"거대한 몸집의 마왕형 캐릭터. 등껍질 돌진으로 적을 강하게 날리고 벽충돌 피해를 만들며, 마지막 3초에는 상대를 추적한다. 상대와 충돌하면 즉시 돌진을 끝내고 제자리에서 3초 기절한다. 맵 중앙을 축으로 회전하는 불기둥은 체력이 낮을수록 늘어나며, 각 불기둥은 같은 상대를 1회만 적중한다." },'''
-          new_char='''      { id:"koopa_king", name:"쿱하", mark:"K", role:"게임", color:"#65a30d", hp:190, attack:0, speed:2.35, range:0,
-        skillName:"등껍질 돌진 · 회전 불기둥", condition:"등껍질 11초 주기 · 불기둥 20초 주기 · 저체력일수록 불기둥 1→3개", desc:"거대한 몸집의 마왕형 캐릭터. 등껍질 돌진은 시작부터 최근접 적을 계속 추적하며, 평상 이동속도 수준에서 출발해 점점 빨라져 기존 최대 돌진속도에 도달한다. 상대와 충돌하면 즉시 돌진을 끝내고 제자리에서 1초 기절한다. 맵 중앙을 축으로 회전하는 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개이며 각 불기둥은 같은 상대를 1회만 적중한다." },'''
-          assert old_char in s
-          s=s.replace(old_char,new_char,1)
-
-          old_tick='tick: "등껍질 11초 주기·6초 지속·충돌 시 즉시 종료 후 3초 기절 / 불기둥 20초 주기·4.5초 지속",'
-          new_tick='tick: "등껍질 11초 주기·6초 지속·상시 추적·점진 가속·충돌 시 즉시 종료 후 1초 기절 / 불기둥 20초 주기·4.5초 지속",'
-          assert old_tick in s
-          s=s.replace(old_tick,new_tick,1)
-
-          old_tip='tip: "등껍질은 돌진 1회 동안 같은 상대를 최대 1회만 타격하며, 마지막 3초 동안 적을 추적한다. 충돌 후 3초 기절은 유지된다. 중앙 회전 불기둥은 HP 75% 초과 1개, 50~75% 2개, 25~50% 3개, 25% 이하 4개이며 각 기둥마다 같은 상대를 1회만 적중한다. 따라서 4개일 때 같은 상대에게 최대 4회 적중할 수 있다. 넉백 저항은 없다."'
-          new_tip='tip: "등껍질은 돌진 1회 동안 같은 상대를 최대 1회만 타격하며 6초 내내 최근접 적을 추적한다. 시작은 평상 이동속도 수준이고 시간이 지날수록 기존 최대 돌진속도까지 가속하며, 충돌 후 1초 기절한다. 중앙 회전 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개이며 각 기둥마다 같은 상대를 1회만 적중한다. 따라서 최대 3회 적중할 수 있다. 넉백 저항은 없다."'
-          assert old_tip in s
-          s=s.replace(old_tip,new_tip,1)
-
-          p.write_text(s,encoding='utf-8')
-          PY
-
-      - name: Validate
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          s=Path('index.html').read_text(encoding='utf-8')
-          assert '<title>볼배틀 리뉴얼 v151</title>' in s
-          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v151</h1>' in s
-          assert 'recoveryStun:1' in s
-          assert 'return q>2/3?1:q>1/3?2:3;' in s
-          assert 'function koopaShellSpeed(f)' in s
-          assert 'koopaTrackShell(f,dt);' in s
-          assert 'shellTrackAt' not in s
-          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)
-          assert scripts
-          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
-          PY
+          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCmltcG9ydCByZQoKcD1QYXRoKCJpbmRleC5odG1sIikKcz1wLnJlYWRfdGV4dChlbmNvZGluZz0idXRmLTgiKQoKYXNzZXJ0ICc8dGl0bGU+67O867Cw7YuAIOumrOuJtOyWvCB2MTUwPC90aXRsZT4nIGluIHMKYXNzZXJ0ICc8aDEgaWQ9Im1haW5UaXRsZSI+67O867Cw7YuAIOumrOuJtOyWvCB2MTUwPC9oMT4nIGluIHMKcz1zLnJlcGxhY2UoJzx0aXRsZT7rs7zrsLDti4Ag66as64m07Ja8IHYxNTA8L3RpdGxlPicsJzx0aXRsZT7rs7zrsLDti4Ag66as64m07Ja8IHYxNTE8L3RpdGxlPicsMSkKcz1zLnJlcGxhY2UoJzxoMSBpZD0ibWFpblRpdGxlIj7rs7zrsLDti4Ag66as64m07Ja8IHYxNTA8L2gxPicsJzxoMSBpZD0ibWFpblRpdGxlIj7rs7zrsLDti4Ag66as64m07Ja8IHYxNTE8L2gxPicsMSkKCm1hcmtlcj0nICAgICAgY29uc3QgcGF0Y2hOb3RlcyA9IFtcbicKYXNzZXJ0IG1hcmtlciBpbiBzCm5vdGU9JyAgICAgICJ2MTUxOiDsv7HtlZgg7IOB7ISxIO2PrSDslZXstpUg7Iuk7ZeYLiBIUCAxOTAg7Jyg7KeALiDrk7Hqu43sp4gg7Lap64+MIO2bhCDsnpDqsIAg6riw7KCIIDPstIjihpIx7LSILiDrk7Hqu43sp4jsnYAgNuy0iCDrgrTrgrQg7LWc6re87KCRIOyggeydhCDstpTsoIHtlZjrqbAsIOyLnOyekSDsho3rj4TripQg7Y+J7IOBIOydtOuPmeyGjeuPhCDsiJjspIDsl5DshJwg7Iuc7J6R7ZW0IOq4sOyhtCDstZzrjIAg64+M7KeE7IaN64+E6rmM7KeAIOygkOynhCDqsIDsho0uIO2ajOyghCDrtojquLDrkaXsnYAgSFAgNjYlIOy0iOqzvCAx6rCcLCAzM342NiUgMuqwnCwgMzMlIOydtO2VmCAz6rCc66GcIOuzgOqyve2VtCDstZzrjIAgM+qwnC4g7ZS87ZW065+Jwrfso7zquLDCt+yngOyGjeyLnOqwhOydgCDsnKDsp4AuIixcbicKcz1zLnJlcGxhY2UobWFya2VyLG1hcmtlcitub3RlLDEpCgpvbGRfY29uc3QgPSAnJycgICAgY29uc3QgS09PUEEgPSB7CiAgICAgIGJvZHlSOjI1LCBzaGVsbFBlcmlvZDoxMSwgc2hlbGxEdXJhdGlvbjo2LCBzaGVsbFRyYWNrQXQ6Mywgc2hlbGxTcGVlZE11bHQ6MS45LCBzaGVsbFR1cm46NS4wLAogICAgICBzaGVsbERhbWFnZToxNCwgc2hlbGxLbm9jazo3MjAsIHNoZWxsRmxpZ2h0Oi42NSwgc2hlbGxIaXRDZDouNTUsIHNoZWxsV2FsbERhbWFnZTo4LCBzaGVsbFdhbGxXaW5kb3c6LjcyLCByZWNvdmVyeVN0dW46MywKICAgICAgZmlyZVBlcmlvZDoyMCwgZmlyZUR1cmF0aW9uOjQuNSwgZmlyZURhbWFnZTo2LCBmaXJlQnVybkRhbWFnZToxLCBmaXJlQnVyblRpY2tzOjQsIGZpcmVCdXJuVGljazouNiwKICAgICAgZmlyZUhpdENkOi41NSwgZmlyZVR1cm46TWF0aC5QSSoxMDUvMTgwLCBmaXJlV2lkdGg6MTIKICAgIH07JycnCm5ld19jb25zdCA9ICcnJyAgICBjb25zdCBLT09QQSA9IHsKICAgICAgYm9keVI6MjUsIHNoZWxsUGVyaW9kOjExLCBzaGVsbER1cmF0aW9uOjYsIHNoZWxsU3BlZWRNdWx0OjEuOSwgc2hlbGxUdXJuOjUuMCwKICAgICAgc2hlbGxEYW1hZ2U6MTQsIHNoZWxsS25vY2s6NzIwLCBzaGVsbEZsaWdodDouNjUsIHNoZWxsSGl0Q2Q6LjU1LCBzaGVsbFdhbGxEYW1hZ2U6OCwgc2hlbGxXYWxsV2luZG93Oi43MiwgcmVjb3ZlcnlTdHVuOjEsCiAgICAgIGZpcmVQZXJpb2Q6MjAsIGZpcmVEdXJhdGlvbjo0LjUsIGZpcmVEYW1hZ2U6NiwgZmlyZUJ1cm5EYW1hZ2U6MSwgZmlyZUJ1cm5UaWNrczo0LCBmaXJlQnVyblRpY2s6LjYsCiAgICAgIGZpcmVIaXRDZDouNTUsIGZpcmVUdXJuOk1hdGguUEkqMTA1LzE4MCwgZmlyZVdpZHRoOjEyCiAgICB9OycnJwphc3NlcnQgb2xkX2NvbnN0IGluIHMKcz1zLnJlcGxhY2Uob2xkX2NvbnN0LG5ld19jb25zdCwxKQoKb2xkPScgICAgZnVuY3Rpb24ga29vcGFGaXJlQ291bnQoZil7Y29uc3QgcT1mLm1heEhwPjA/Zi5ocC9mLm1heEhwOjE7cmV0dXJuIHE+Ljc1PzE6cT4uNTA/MjpxPi4yNT8zOjQ7fScKbmV3PScgICAgZnVuY3Rpb24ga29vcGFGaXJlQ291bnQoZil7Y29uc3QgcT1mLm1heEhwPjA/Zi5ocC9mLm1heEhwOjE7cmV0dXJuIHE+Mi8zPzE6cT4xLzM/MjozO30nCmFzc2VydCBvbGQgaW4gcwpzPXMucmVwbGFjZShvbGQsbmV3LDEpCgpvbGRfc3RhcnQ9JycnICAgICAgY29uc3QgbWFnPU1hdGguaHlwb3QoZi52eCxmLnZ5KXx8MSxhPW1hZz4uMDE/TWF0aC5hdGFuMihmLnZ5LGYudngpOnJhbmQoMCxNYXRoLlBJKjIpLHY9ay5iYXNlU3BlZWQqNDQqS09PUEEuc2hlbGxTcGVlZE11bHQ7CiAgICAgIGYudng9TWF0aC5jb3MoYSkqdjtmLnZ5PU1hdGguc2luKGEpKnY7JycnCm5ld19zdGFydD0nJycgICAgICBjb25zdCBtYWc9TWF0aC5oeXBvdChmLnZ4LGYudnkpfHwxLGE9bWFnPi4wMT9NYXRoLmF0YW4yKGYudnksZi52eCk6cmFuZCgwLE1hdGguUEkqMiksdj1rLmJhc2VTcGVlZCo0NDsKICAgICAgZi52eD1NYXRoLmNvcyhhKSp2O2Yudnk9TWF0aC5zaW4oYSkqdjsnJycKYXNzZXJ0IG9sZF9zdGFydCBpbiBzCnM9cy5yZXBsYWNlKG9sZF9zdGFydCxuZXdfc3RhcnQsMSkKCm9sZF9ibG9jaz0nJycgICAgICBrLnNoZWxsQWN0aXZlPWZhbHNlO2suc2hlbGxUaW1lPTA7ay5yZWNvdmVyeT1LT09QQS5yZWNvdmVyeVN0dW47Zi52eD0wO2Yudnk9MDthcHBseVN0dW4oZixLT09QQS5yZWNvdmVyeVN0dW4pOwogICAgICBpZighZmFzdFNpbU1vZGUpe3NwYXduRmxvYXRpbmdUZXh0KGYueCxmLnktZi5yLTM0LCLquLDsoIggM+y0iCIsIiNmZGU2OGEiKTtzcGF3bkJsYXN0KGYueCxmLnksNDgsIiM4NGNjMTYiKTt9CiAgICB9CiAgICBmdW5jdGlvbiBrb29wYU5vcm1hbGl6ZVNoZWxsU3BlZWQoZil7CiAgICAgIGNvbnN0IGs9Zi5rb29wYSx2PWsuYmFzZVNwZWVkKjQ0KktPT1BBLnNoZWxsU3BlZWRNdWx0LG1hZz1NYXRoLmh5cG90KGYudngsZi52eSl8fDEsYT1tYWc+LjAxP01hdGguYXRhbjIoZi52eSxmLnZ4KTpyYW5kKDAsTWF0aC5QSSoyKTsKICAgICAgZi52eD1NYXRoLmNvcyhhKSp2O2Yudnk9TWF0aC5zaW4oYSkqdjsKICAgIH0KICAgIGZ1bmN0aW9uIGtvb3BhVHJhY2tTaGVsbChmLGR0KXsKICAgICAgY29uc3Qgaz1mLmtvb3BhLHRhcmdldD1uZWFyZXN0RW5lbXkoZikuZW5lbXk7aWYoIXRhcmdldCl7a29vcGFOb3JtYWxpemVTaGVsbFNwZWVkKGYpO3JldHVybjt9CiAgICAgIGNvbnN0IHdhbnRlZD1NYXRoLmF0YW4yKHRhcmdldC55LWYueSx0YXJnZXQueC1mLngpLGN1cj1NYXRoLmF0YW4yKGYudnksZi52eCksZGVsdGE9TWF0aC5hdGFuMihNYXRoLnNpbih3YW50ZWQtY3VyKSxNYXRoLmNvcyh3YW50ZWQtY3VyKSk7CiAgICAgIGNvbnN0IGE9Y3VyK2NsYW1wKGRlbHRhLC1LT09QQS5zaGVsbFR1cm4qZHQsS09PUEEuc2hlbGxUdXJuKmR0KSx2PWsuYmFzZVNwZWVkKjQ0KktPT1BBLnNoZWxsU3BlZWRNdWx0OwogICAgICBmLnZ4PU1hdGguY29zKGEpKnY7Zi52eT1NYXRoLnNpbihhKSp2OwogICAgfScnJwpuZXdfYmxvY2s9JycnICAgICAgay5zaGVsbEFjdGl2ZT1mYWxzZTtrLnNoZWxsVGltZT0wO2sucmVjb3Zlcnk9S09PUEEucmVjb3ZlcnlTdHVuO2Yudng9MDtmLnZ5PTA7YXBwbHlTdHVuKGYsS09PUEEucmVjb3ZlcnlTdHVuKTsKICAgICAgaWYoIWZhc3RTaW1Nb2RlKXtzcGF3bkZsb2F0aW5nVGV4dChmLngsZi55LWYuci0zNCxg6riw7KCIICR7S09PUEEucmVjb3ZlcnlTdHVufey0iGAsIiNmZGU2OGEiKTtzcGF3bkJsYXN0KGYueCxmLnksNDgsIiM4NGNjMTYiKTt9CiAgICB9CiAgICBmdW5jdGlvbiBrb29wYVNoZWxsU3BlZWQoZil7CiAgICAgIGNvbnN0IGs9Zi5rb29wYSxwPWNsYW1wKDEtKGsuc2hlbGxUaW1lL0tPT1BBLnNoZWxsRHVyYXRpb24pLDAsMSk7CiAgICAgIHJldHVybiBrLmJhc2VTcGVlZCo0NCooMSsoS09PUEEuc2hlbGxTcGVlZE11bHQtMSkqcCk7CiAgICB9CiAgICBmdW5jdGlvbiBrb29wYVRyYWNrU2hlbGwoZixkdCl7CiAgICAgIGNvbnN0IGs9Zi5rb29wYSx0YXJnZXQ9bmVhcmVzdEVuZW15KGYpLmVuZW15LHY9a29vcGFTaGVsbFNwZWVkKGYpLG1hZz1NYXRoLmh5cG90KGYudngsZi52eSl8fDEsY3VyPW1hZz4uMDE/TWF0aC5hdGFuMihmLnZ5LGYudngpOnJhbmQoMCxNYXRoLlBJKjIpOwogICAgICBpZighdGFyZ2V0KXtmLnZ4PU1hdGguY29zKGN1cikqdjtmLnZ5PU1hdGguc2luKGN1cikqdjtyZXR1cm47fQogICAgICBjb25zdCB3YW50ZWQ9TWF0aC5hdGFuMih0YXJnZXQueS1mLnksdGFyZ2V0LngtZi54KSxkZWx0YT1NYXRoLmF0YW4yKE1hdGguc2luKHdhbnRlZC1jdXIpLE1hdGguY29zKHdhbnRlZC1jdXIpKTsKICAgICAgY29uc3QgYT1jdXIrY2xhbXAoZGVsdGEsLUtPT1BBLnNoZWxsVHVybipkdCxLT09QQS5zaGVsbFR1cm4qZHQpOwogICAgICBmLnZ4PU1hdGguY29zKGEpKnY7Zi52eT1NYXRoLnNpbihhKSp2OwogICAgfScnJwphc3NlcnQgb2xkX2Jsb2NrIGluIHMKcz1zLnJlcGxhY2Uob2xkX2Jsb2NrLG5ld19ibG9jaywxKQoKb2xkPSdpZihrLnNoZWxsQWN0aXZlKXtrLnNoZWxsVGltZT1NYXRoLm1heCgwLGsuc2hlbGxUaW1lLWR0KTtpZihrLnNoZWxsVGltZTw9MCl7a29vcGFFbmRTaGVsbChmKTtyZXR1cm47fWlmKGsuc2hlbGxUaW1lPD1LT09QQS5zaGVsbFRyYWNrQXQpa29vcGFUcmFja1NoZWxsKGYsZHQpO2Vsc2Uga29vcGFOb3JtYWxpemVTaGVsbFNwZWVkKGYpO30nCm5ldz0naWYoay5zaGVsbEFjdGl2ZSl7ay5zaGVsbFRpbWU9TWF0aC5tYXgoMCxrLnNoZWxsVGltZS1kdCk7aWYoay5zaGVsbFRpbWU8PTApe2tvb3BhRW5kU2hlbGwoZik7cmV0dXJuO31rb29wYVRyYWNrU2hlbGwoZixkdCk7fScKYXNzZXJ0IG9sZCBpbiBzCnM9cy5yZXBsYWNlKG9sZCxuZXcsMSkKCm9sZF9jaGFyPScnJyAgICAgIHsgaWQ6Imtvb3BhX2tpbmciLCBuYW1lOiLsv7HtlZgiLCBtYXJrOiJLIiwgcm9sZToi6rKM7J6EIiwgY29sb3I6IiM2NWEzMGQiLCBocDoxOTAsIGF0dGFjazowLCBzcGVlZDoyLjM1LCByYW5nZTowLAogICAgICAgIHNraWxsTmFtZToi65Ox6ruN7KeIIOuPjOynhCDCtyDtmozsoIQg67aI6riw65GlIiwgY29uZGl0aW9uOiLrk7Hqu43sp4ggMTHstIgg7KO86riwIMK3IOu2iOq4sOuRpSAyMOy0iCDso7zquLAgwrcg7KCA7LK066Cl7J287IiY66GdIOu2iOq4sOuRpSAx4oaSNOqwnCIsIGRlc2M6IuqxsOuMgO2VnCDrqrjsp5HsnZgg66eI7JmV7ZiVIOy6kOumre2EsC4g65Ox6ruN7KeIIOuPjOynhOycvOuhnCDsoIHsnYQg6rCV7ZWY6rKMIOuCoOumrOqzoCDrsr3stqnrj4wg7ZS87ZW066W8IOunjOuTpOupsCwg66eI7KeA66eJIDPstIjsl5DripQg7IOB64yA66W8IOy2lOygge2VnOuLpC4g7IOB64yA7JmAIOy2qeuPjO2VmOuptCDsponsi5wg64+M7KeE7J2EIOuBneuCtOqzoCDsoJzsnpDrpqzsl5DshJwgM+y0iCDquLDsoIjtlZzri6QuIOuntSDspJHslZnsnYQg7LaV7Jy866GcIO2ajOyghO2VmOuKlCDrtojquLDrkaXsnYAg7LK066Cl7J20IOuCruydhOyImOuhnSDripjslrTrgpjrqbAsIOqwgSDrtojquLDrkaXsnYAg6rCZ7J2AIOyDgeuMgOulvCAx7ZqM66eMIOyggeykke2VnOuLpC4iIH0sJycnCm5ld19jaGFyPScnJyAgICAgIHsgaWQ6Imtvb3BhX2tpbmciLCBuYW1lOiLsv7HtlZgiLCBtYXJrOiJLIiwgcm9sZToi6rKM7J6EIiwgY29sb3I6IiM2NWEzMGQiLCBocDoxOTAsIGF0dGFjazowLCBzcGVlZDoyLjM1LCByYW5nZTowLAogICAgICAgIHNraWxsTmFtZToi65Ox6ruN7KeIIOuPjOynhCDCtyDtmozsoIQg67aI6riw65GlIiwgY29uZGl0aW9uOiLrk7Hqu43sp4ggMTHstIgg7KO86riwIMK3IOu2iOq4sOuRpSAyMOy0iCDso7zquLAgwrcg7KCA7LK066Cl7J287IiY66GdIOu2iOq4sOuRpSAx4oaSM+qwnCIsIGRlc2M6IuqxsOuMgO2VnCDrqrjsp5HsnZgg66eI7JmV7ZiVIOy6kOumre2EsC4g65Ox6ruN7KeIIOuPjOynhOydgCDsi5zsnpHrtoDthLAg7LWc6re87KCRIOyggeydhCDqs4Tsho0g7LaU7KCB7ZWY66mwLCDtj4nsg4Eg7J2064+Z7IaN64+EIOyImOykgOyXkOyEnCDstpzrsJztlbQg7KCQ7KCQIOu5qOudvOyguCDquLDsobQg7LWc64yAIOuPjOynhOyGjeuPhOyXkCDrj4Tri6ztlZzri6QuIOyDgeuMgOyZgCDstqnrj4ztlZjrqbQg7KaJ7IucIOuPjOynhOydhCDrgZ3rgrTqs6Ag7KCc7J6Q66as7JeQ7IScIDHstIgg6riw7KCI7ZWc64ukLiDrp7Ug7KSR7JWZ7J2EIOy2leycvOuhnCDtmozsoITtlZjripQg67aI6riw65Gl7J2AIEhQIDY2JSDstIjqs7wgMeqwnCwgMzN+NjYlIDLqsJwsIDMzJSDsnbTtlZggM+qwnOydtOupsCDqsIEg67aI6riw65Gl7J2AIOqwmeydgCDsg4HrjIDrpbwgMe2ajOunjCDsoIHspJHtlZzri6QuIiB9LCcnJwphc3NlcnQgb2xkX2NoYXIgaW4gcwpzPXMucmVwbGFjZShvbGRfY2hhcixuZXdfY2hhciwxKQoKb2xkPSd0aWNrOiAi65Ox6ruN7KeIIDEx7LSIIOyjvOq4sMK3Nuy0iCDsp4Dsho3Ct+y2qeuPjCDsi5wg7KaJ7IucIOyiheujjCDtm4QgM+y0iCDquLDsoIggLyDrtojquLDrkaUgMjDstIgg7KO86riwwrc0LjXstIgg7KeA7IaNIiwnCm5ldz0ndGljazogIuuTseq7jeyniCAxMey0iCDso7zquLDCtzbstIgg7KeA7IaNwrfsg4Hsi5wg7LaU7KCBwrfsoJDsp4Qg6rCA7IaNwrfstqnrj4wg7IucIOymieyLnCDsooXro4wg7ZuEIDHstIgg6riw7KCIIC8g67aI6riw65GlIDIw7LSIIOyjvOq4sMK3NC417LSIIOyngOyGjSIsJwphc3NlcnQgb2xkIGluIHMKcz1zLnJlcGxhY2Uob2xkLG5ldywxKQoKb2xkPSd0aXA6ICLrk7Hqu43sp4jsnYAg64+M7KeEIDHtmowg64+Z7JWIIOqwmeydgCDsg4HrjIDrpbwg7LWc64yAIDHtmozrp4wg7YOA6rKp7ZWY66mwLCDrp4jsp4Drp4kgM+y0iCDrj5nslYgg7KCB7J2EIOy2lOygge2VnOuLpC4g7Lap64+MIO2bhCAz7LSIIOq4sOygiOydgCDsnKDsp4DrkJzri6QuIOykkeyVmSDtmozsoIQg67aI6riw65Gl7J2AIEhQIDc1JSDstIjqs7wgMeqwnCwgNTB+NzUlIDLqsJwsIDI1fjUwJSAz6rCcLCAyNSUg7J207ZWYIDTqsJzsnbTrqbAg6rCBIOq4sOuRpeuniOuLpCDqsJnsnYAg7IOB64yA66W8IDHtmozrp4wg7KCB7KSR7ZWc64ukLiDrlLDrnbzshJwgNOqwnOydvCDrlYwg6rCZ7J2AIOyDgeuMgOyXkOqyjCDstZzrjIAgNO2ajCDsoIHspJHtlaAg7IiYIOyeiOuLpC4g64SJ67CxIOyggO2VreydgCDsl4bri6QuIicKbmV3PSd0aXA6ICLrk7Hqu43sp4jsnYAg64+M7KeEIDHtmowg64+Z7JWIIOqwmeydgCDsg4HrjIDrpbwg7LWc64yAIDHtmozrp4wg7YOA6rKp7ZWY66mwIDbstIgg64K064K0IOy1nOq3vOygkSDsoIHsnYQg7LaU7KCB7ZWc64ukLiDsi5zsnpHsnYAg7Y+J7IOBIOydtOuPmeyGjeuPhCDsiJjspIDsnbTqs6Ag7Iuc6rCE7J20IOyngOuCoOyImOuhnSDquLDsobQg7LWc64yAIOuPjOynhOyGjeuPhOq5jOyngCDqsIDsho3tlZjrqbAsIOy2qeuPjCDtm4QgMey0iCDquLDsoIjtlZzri6QuIOykkeyVmSDtmozsoIQg67aI6riw65Gl7J2AIEhQIDY2JSDstIjqs7wgMeqwnCwgMzN+NjYlIDLqsJwsIDMzJSDsnbTtlZggM+qwnOydtOupsCDqsIEg6riw65Gl66eI64ukIOqwmeydgCDsg4HrjIDrpbwgMe2ajOunjCDsoIHspJHtlZzri6QuIOuUsOudvOyEnCDstZzrjIAgM+2ajCDsoIHspJHtlaAg7IiYIOyeiOuLpC4g64SJ67CxIOyggO2VreydgCDsl4bri6QuIicKYXNzZXJ0IG9sZCBpbiBzCnM9cy5yZXBsYWNlKG9sZCxuZXcsMSkKCnAud3JpdGVfdGV4dChzLGVuY29kaW5nPSJ1dGYtOCIpCnNjcmlwdHM9cmUuZmluZGFsbChyJzxzY3JpcHRbXj5dKj4oW1xzXFNdKj8pPC9zY3JpcHQ+JyxzKQphc3NlcnQgc2NyaXB0cwpQYXRoKCIvdG1wL2NoZWNrLmpzIikud3JpdGVfdGV4dCgiXG4iLmpvaW4oc2NyaXB0cyksZW5jb2Rpbmc9InV0Zi04IikK' | base64 -d > /tmp/patch_v151.py
+          python3 /tmp/patch_v151.py
           node --check /tmp/check.js
           git diff --check
-
-      - name: Commit and remove workflow
-        shell: bash
+      - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
