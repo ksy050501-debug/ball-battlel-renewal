@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v164</title>
+  <title>볼배틀 리뉴얼 v165</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v164</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v165</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1253,7 +1253,7 @@
       { id:"koopa_king", name:"쿱하", mark:"K", role:"게임", color:"#65a30d", hp:190, attack:0, speed:2.35, range:0,
         skillName:"등껍질 돌진 · 회전 불기둥", condition:"등껍질 11초 주기 · 불기둥 20초 주기 · 저체력일수록 불기둥 1→3개", desc:"거대한 몸집의 마왕형 캐릭터. 등껍질 돌진은 시작부터 최근접 적을 계속 추적하며, 기본 이동속도의 0.35배로 매우 느리게 출발한 뒤 첫 2초 동안 1.3배까지 빠르게 가속하고 이후 4초 동안 최대 2.5배까지 가속한다. 상대와 충돌하면 즉시 돌진을 끝내고 제자리에서 1초 기절한다. 맵 중앙을 축으로 회전하는 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개이며 각 불기둥은 같은 상대를 1회만 적중한다." },
       { id:"coyote_d", name:"코요테드", mark:"☣", role:"게임", color:"#8b5a2b", hp:170, attack:0, speed:2.9, range:0,
-        skillName:"독방구 · 뒤로 넘기기", condition:"이동 경로에 3초 독방구 · 접촉 시 8피해 후 0.42초에 걸쳐 뒤로 넘김", desc:"신지도를 모티브로 한 교란형 캐릭터. 이동한 자리에 잠시 독방구 흔적을 남겨 적에게 지속 피해를 주고, 직접 부딪히면 피해를 준 뒤 상대를 자신의 몸 위로 넘겨 진행방향 뒤쪽에 착지시킨다." },
+        skillName:"독방구 · 뒤로 넘기기", condition:"이동 경로에 3초 독방구 · 접촉8+넘기기 · 30초 리안드리 · 90초 라일라이", desc:"신지도를 모티브로 한 교란형 캐릭터. 이동 경로에 독방구를 남기고 접촉한 적을 몸 뒤로 넘긴다. 30초에는 리안드리를 얻어 독에서 벗어난 뒤에도 3틱이 이어지고, 90초에는 라일라이를 얻어 독이 지속되는 적의 이동속도를 20% 낮춘다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -3474,15 +3474,24 @@
 
     const COYOTE = {
       trailLife:3, trailEvery:.18, trailRadius:24, trailDamage:1, trailTick:.5,
-      contactDamage:8, contactCooldown:1, flingDuration:.42, flingGap:10
+      contactDamage:8, contactCooldown:1, flingDuration:.42, flingGap:10,
+      liandryAt:30, liandryTicks:3, rylaiAt:90, rylaiSlowMult:.8
     };
     let coyoteTrails = [];
     function initCoyote(f){
-      f.coyote={trailCd:0,contactCd:new Map(),dirX:1,dirY:0};
+      f.coyote={trailCd:0,contactCd:new Map(),dirX:1,dirY:0,liandry:false,rylai:false};
     }
     function updateCoyote(f,dt){
       if(!f.coyote)return;
       const c=f.coyote;
+      if(!c.liandry&&battleTime>=COYOTE.liandryAt){
+        c.liandry=true;
+        if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-36,"리안드리 획득!","#f97316");spawnBlast(f.x,f.y,48,"#f97316");}
+      }
+      if(!c.rylai&&battleTime>=COYOTE.rylaiAt){
+        c.rylai=true;
+        if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-36,"라일라이 획득!","#60a5fa");spawnBlast(f.x,f.y,52,"#60a5fa");}
+      }
       for(const [id,cd] of c.contactCd){const n=cd-dt;if(n<=0)c.contactCd.delete(id);else c.contactCd.set(id,n);}
       const sp=Math.hypot(f.vx,f.vy);
       if(sp>.5){c.dirX=f.vx/sp;c.dirY=f.vy/sp;}
@@ -3493,16 +3502,39 @@
         c.trailCd+=COYOTE.trailEvery;
       }
     }
+    function coyotePoisonSlowMultiplier(f){
+      const p=f?.coyotePoison;if(!p)return 1;
+      const source=fighterById(p.sourceId);
+      return source?.coyote?.rylai?COYOTE.rylaiSlowMult:1;
+    }
     function updateCoyoteTrails(dt){
       coyoteTrails.forEach(t=>t.life-=dt);
       coyoteTrails=coyoteTrails.filter(t=>t.life>0);
       fighters.forEach(target=>{
         target.coyotePoisonCd=Math.max(0,(target.coyotePoisonCd||0)-dt);
-        if(!target.alive||target.coyotePoisonCd>0)return;
+        if(!target.alive){target.coyotePoison=null;return;}
         const hit=coyoteTrails.find(t=>t.owner&&t.owner!==target&&areEnemies(t.owner,target)&&Math.hypot(target.x-t.x,target.y-t.y)<=COYOTE.trailRadius+target.r);
-        if(!hit)return;
-        const dealt=damage(target,COYOTE.trailDamage,hit.owner,"독방구");
-        if(dealt>0){target.coyotePoisonCd=COYOTE.trailTick;if(!fastSimMode)spawnParticles(target.x,target.y,"#84cc16",3);}
+        if(hit){
+          const owner=hit.owner;
+          if(owner?.coyote?.liandry){
+            target.coyotePoison={sourceId:owner.id,ticksLeft:COYOTE.liandryTicks,next:COYOTE.trailTick};
+          }
+          if(target.coyotePoisonCd<=0){
+            const dealt=damage(target,COYOTE.trailDamage,owner,"독방구");
+            if(dealt>0){target.coyotePoisonCd=COYOTE.trailTick;if(!fastSimMode)spawnParticles(target.x,target.y,"#84cc16",3);}
+          }
+          return;
+        }
+        const poison=target.coyotePoison;if(!poison)return;
+        const source=fighterById(poison.sourceId);
+        if(!source?.coyote?.liandry||poison.ticksLeft<=0){target.coyotePoison=null;return;}
+        poison.next-=dt;
+        while(poison.next<=0&&poison.ticksLeft>0&&target.alive){
+          const dealt=damage(target,COYOTE.trailDamage,source,"리안드리 잔류독");
+          poison.ticksLeft-=1;poison.next+=COYOTE.trailTick;
+          if(dealt>0&&!fastSimMode)spawnParticles(target.x,target.y,"#f97316",3);
+        }
+        if(poison.ticksLeft<=0)target.coyotePoison=null;
       });
     }
     function coyoteContact(f,target){
@@ -5680,6 +5712,7 @@
     }
 
       const patchNotes = [
+      "v165: 코요테드 성장 아이템 추가. 전투 30초에 리안드리를 획득해 독방구 영역을 벗어난 적에게 기존 피해1을 0.5초 간격으로 3틱 더 지속한다. 90초에는 라일라이를 획득해 독방구 안 또는 리안드리 잔류독이 지속 중인 적의 이동속도를 20% 감소시킨다. 기본 독 피해1·접촉8·HP170·0.42초 넘기기는 유지.",
       "v164: 코요테드 뒤로 넘기기를 순간 좌표이동에서 0.42초짜리 실제 플링으로 변경. 접촉 지점에서 코요테드 몸 위를 지나 진행방향 뒤쪽에 착지하며 비행 중 재충돌은 막되 강펀치·파워스톤 등 예약 공격과 vx/vy 상태는 지우지 않는다. 스타배관공 등 무적 상태가 연속 피해 판정을 받을 때 무적 텍스트가 겹쳐 쌓이지 않도록 표시를 0.65초 간격으로 제한.",
       "v163: 신캐 코요테드 추가. HP170·이속2.9. 이동 경로에 3초간 남는 독방구 흔적을 생성하며 범위 안 적은 0.5초마다 피해1을 받는다. 상대 본체와 접촉하면 대상별 1초 쿨로 피해8을 준 뒤 코요테드의 진행방향 뒤쪽으로 넘긴다. 넘기기는 상대의 속도·강펀치/파워스톤 등 예약 타격·강제이동 상태를 지우지 않고 위치만 재배치해 접촉 공격 상호작용을 보존한다.",
       "v162: 쿱하 등껍질 충돌 피해를 16→15로 조정. HP190·벽충돌8·불기둥6+화상1×4·돌진 주기/가속/추적/충돌 즉시 종료 후1초 기절 및 v160 0속도 고착 방지 수정은 유지.",
@@ -10220,8 +10253,9 @@
       const coldAuraSlow = coldAuraSlowMultiplier(f);
       const timedCcSlow = timedCcSlowMultiplier(f);
       const marioItemSlow = (f.marioItemSlow || 0) > 0 ? MARIO.bananaSlowMult : 1;
+      const coyotePoisonSlow = coyotePoisonSlowMultiplier(f);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
-      return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * timedCcSlow;
+      return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * timedCcSlow * coyotePoisonSlow;
     }
 
     // 의도된 정지 상태가 아닌데 속도가 0으로 고착되면 공용으로 이동을 복구한다.
@@ -11222,6 +11256,7 @@
       const coldAuraSlow = coldAuraSlowMultiplier(f);
       const timedCcSlow = timedCcSlowMultiplier(f);
       const marioItemSlow = (f.marioItemSlow || 0) > 0 ? MARIO.bananaSlowMult : 1;
+      const coyotePoisonSlow = coyotePoisonSlowMultiplier(f);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
 
       if ((f.joltStop || 0) > 0) {
@@ -11230,12 +11265,12 @@
         return;
       }
 
-      if (f.newhello && moveNewhello(f, dt, slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow)) return;
+      if (f.newhello && moveNewhello(f, dt, slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * coyotePoisonSlow)) return;
       if (f.hinta && moveHintaDash(f, dt)) return;
       if (f.logo && moveLogoJump(f, dt)) return;
       recoverOwnMoveSpeed(f, dt);
-      f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * dt;
-      f.y += f.vy * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * dt;
+      f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * coyotePoisonSlow * dt;
+      f.y += f.vy * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * coyotePoisonSlow * dt;
 
       bounceWalls(f);
       // 뉴헬로는 몸 충돌보다 넓은 검 사거리 안에 적이 들어오면 일반 광역베기를 발동한다.
