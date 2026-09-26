@@ -1,0 +1,84 @@
+name: v154 Koopa two-stage acceleration
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/v154-koopa-curve.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          assert '<title>볼배틀 리뉴얼 v153</title>' in s
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v153</h1>' in s
+          s=s.replace('<title>볼배틀 리뉴얼 v153</title>','<title>볼배틀 리뉴얼 v154</title>',1)
+          s=s.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v153</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v154</h1>',1)
+
+          marker='      const patchNotes = [\n'
+          assert marker in s
+          note='      "v154: 쿱하 등껍질 가속곡선 조정. 시작 0.35배는 유지하되 첫 2초 동안 0.35→1.3배로 빠르게 가속하고, 이후 4초 동안 1.3→2.5배로 가속. 상시 추적·HP190·충돌 후 1초 기절·불기둥 1/2/3개 및 피해/주기는 유지.",\n'
+          s=s.replace(marker,marker+note,1)
+
+          old='bodyR:25, shellPeriod:11, shellDuration:6, shellStartMult:.35, shellSpeedMult:2.5, shellTurn:5.0,'
+          new='bodyR:25, shellPeriod:11, shellDuration:6, shellStartMult:.35, shellMidMult:1.3, shellMidTime:2, shellSpeedMult:2.5, shellTurn:5.0,'
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old_func='''    function koopaShellSpeed(f){
+      const k=f.koopa,p=clamp(1-(k.shellTime/KOOPA.shellDuration),0,1);
+      return k.baseSpeed*44*(KOOPA.shellStartMult+(KOOPA.shellSpeedMult-KOOPA.shellStartMult)*p);
+    }'''
+          new_func='''    function koopaShellSpeed(f){
+      const k=f.koopa,elapsed=clamp(KOOPA.shellDuration-k.shellTime,0,KOOPA.shellDuration);
+      let mult;
+      if(elapsed<=KOOPA.shellMidTime){
+        const p=KOOPA.shellMidTime>0?elapsed/KOOPA.shellMidTime:1;
+        mult=KOOPA.shellStartMult+(KOOPA.shellMidMult-KOOPA.shellStartMult)*p;
+      }else{
+        const tail=Math.max(.001,KOOPA.shellDuration-KOOPA.shellMidTime),p=clamp((elapsed-KOOPA.shellMidTime)/tail,0,1);
+        mult=KOOPA.shellMidMult+(KOOPA.shellSpeedMult-KOOPA.shellMidMult)*p;
+      }
+      return k.baseSpeed*44*mult;
+    }'''
+          assert old_func in s
+          s=s.replace(old_func,new_func,1)
+
+          old_desc='등껍질 돌진은 시작부터 최근접 적을 계속 추적하며, 기본 이동속도의 0.35배로 매우 느리게 출발해 6초 동안 선형으로 가속하여 종료 직전 최대 2.5배 속도에 도달한다.'
+          new_desc='등껍질 돌진은 시작부터 최근접 적을 계속 추적하며, 기본 이동속도의 0.35배로 매우 느리게 출발한 뒤 첫 2초 동안 1.3배까지 빠르게 가속하고 이후 4초 동안 최대 2.5배까지 가속한다.'
+          assert old_desc in s
+          s=s.replace(old_desc,new_desc,1)
+
+          old_tip='시작은 기본 이동속도의 0.35배이고 시간이 지나면서 최대 2.5배까지 가속하며, 충돌 후 1초 기절한다.'
+          new_tip='시작은 기본 이동속도의 0.35배이고 첫 2초 동안 1.3배까지, 이후 4초 동안 최대 2.5배까지 가속하며, 충돌 후 1초 기절한다.'
+          assert old_tip in s
+          s=s.replace(old_tip,new_tip,1)
+
+          p.write_text(s,encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)
+          assert scripts
+          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+          git diff --check
+          grep -q 'shellMidMult:1.3, shellMidTime:2' index.html
+          grep -q '볼배틀 리뉴얼 v154' index.html
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm .github/workflows/v154-koopa-curve.yml
+          git add index.html .github/workflows/v154-koopa-curve.yml
+          git commit -m 'v154: tune Koopa acceleration curve'
+          git push
