@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v163</title>
+  <title>볼배틀 리뉴얼 v164</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v163</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v164</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1253,7 +1253,7 @@
       { id:"koopa_king", name:"쿱하", mark:"K", role:"게임", color:"#65a30d", hp:190, attack:0, speed:2.35, range:0,
         skillName:"등껍질 돌진 · 회전 불기둥", condition:"등껍질 11초 주기 · 불기둥 20초 주기 · 저체력일수록 불기둥 1→3개", desc:"거대한 몸집의 마왕형 캐릭터. 등껍질 돌진은 시작부터 최근접 적을 계속 추적하며, 기본 이동속도의 0.35배로 매우 느리게 출발한 뒤 첫 2초 동안 1.3배까지 빠르게 가속하고 이후 4초 동안 최대 2.5배까지 가속한다. 상대와 충돌하면 즉시 돌진을 끝내고 제자리에서 1초 기절한다. 맵 중앙을 축으로 회전하는 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개이며 각 불기둥은 같은 상대를 1회만 적중한다." },
       { id:"coyote_d", name:"코요테드", mark:"☣", role:"게임", color:"#8b5a2b", hp:170, attack:0, speed:2.9, range:0,
-        skillName:"독방구 · 뒤로 넘기기", condition:"이동 경로에 3초 독방구 · 접촉 시 8피해 후 상대를 뒤로 넘김", desc:"신지도를 모티브로 한 교란형 캐릭터. 이동한 자리에 잠시 독방구 흔적을 남겨 적에게 지속 피해를 주고, 직접 부딪히면 피해를 준 뒤 자신의 진행방향 뒤쪽으로 상대를 넘겨 위치를 흐트러뜨린다." },
+        skillName:"독방구 · 뒤로 넘기기", condition:"이동 경로에 3초 독방구 · 접촉 시 8피해 후 0.42초에 걸쳐 뒤로 넘김", desc:"신지도를 모티브로 한 교란형 캐릭터. 이동한 자리에 잠시 독방구 흔적을 남겨 적에게 지속 피해를 주고, 직접 부딪히면 피해를 준 뒤 상대를 자신의 몸 위로 넘겨 진행방향 뒤쪽에 착지시킨다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -3474,7 +3474,7 @@
 
     const COYOTE = {
       trailLife:3, trailEvery:.18, trailRadius:24, trailDamage:1, trailTick:.5,
-      contactDamage:8, contactCooldown:1, flipGap:10
+      contactDamage:8, contactCooldown:1, flingDuration:.42, flingGap:10
     };
     let coyoteTrails = [];
     function initCoyote(f){
@@ -3507,19 +3507,31 @@
     }
     function coyoteContact(f,target){
       if(!f?.coyote||!f.alive||!target?.alive||!areEnemies(f,target))return false;
-      if(target.duelMonster||target.marioBlock)return false;
+      if(target.duelMonster||target.marioBlock||target.coyoteFling)return false;
       const key=target.id;
       if((f.coyote.contactCd.get(key)||0)>0)return false;
       f.coyote.contactCd.set(key,COYOTE.contactCooldown);
       const dealt=damage(target,COYOTE.contactDamage,f,"코요테드 넘기기");
       if(dealt<=0||!target.alive)return false;
       const dx=f.coyote.dirX||1,dy=f.coyote.dirY||0;
-      const gap=f.r+target.r+COYOTE.flipGap;
-      target.x=clamp(f.x-dx*gap,arena.x+target.r,arena.x2-target.r);
-      target.y=clamp(f.y-dy*gap,arena.y+target.r,arena.y2-target.r);
-      // 강펀치·파워스톤·기타 강제이동과의 충돌 버그를 막기 위해 대상 vx/vy와 예약 타격 상태는 건드리지 않는다.
+      const gap=f.r+target.r+COYOTE.flingGap;
+      const endX=clamp(f.x-dx*gap,arena.x+target.r,arena.x2-target.r);
+      const endY=clamp(f.y-dy*gap,arena.y+target.r,arena.y2-target.r);
+      target.coyoteFling={sourceId:f.id,t:0,duration:COYOTE.flingDuration,startX:target.x,startY:target.y,overX:f.x,overY:f.y,endX,endY};
+      // 예약 공격과 vx/vy는 지우지 않고, 플링 동안 위치만 제어한다.
       if(!fastSimMode){spawnHitFlash(target.x,target.y,"#bef264",42);spawnFloatingText(target.x,target.y-target.r-24,"뒤로 넘기기!","#d9f99d");}
       return true;
+    }
+    function updateCoyoteFlings(dt){
+      fighters.forEach(target=>{
+        const q=target.coyoteFling;if(!q)return;
+        if(!target.alive){target.coyoteFling=null;return;}
+        q.t=Math.min(q.duration,q.t+dt);
+        const p=clamp(q.t/Math.max(.001,q.duration),0,1),u=1-p;
+        target.x=u*u*q.startX+2*u*p*q.overX+p*p*q.endX;
+        target.y=u*u*q.startY+2*u*p*q.overY+p*p*q.endY;
+        if(q.t>=q.duration){target.x=q.endX;target.y=q.endY;target.coyoteFling=null;if(!fastSimMode)spawnParticles(target.x,target.y,"#d9f99d",6);}
+      });
     }
     function drawCoyoteTrails(){
       if(fastSimMode)return;
@@ -5668,6 +5680,7 @@
     }
 
       const patchNotes = [
+      "v164: 코요테드 뒤로 넘기기를 순간 좌표이동에서 0.42초짜리 실제 플링으로 변경. 접촉 지점에서 코요테드 몸 위를 지나 진행방향 뒤쪽에 착지하며 비행 중 재충돌은 막되 강펀치·파워스톤 등 예약 공격과 vx/vy 상태는 지우지 않는다. 스타배관공 등 무적 상태가 연속 피해 판정을 받을 때 무적 텍스트가 겹쳐 쌓이지 않도록 표시를 0.65초 간격으로 제한.",
       "v163: 신캐 코요테드 추가. HP170·이속2.9. 이동 경로에 3초간 남는 독방구 흔적을 생성하며 범위 안 적은 0.5초마다 피해1을 받는다. 상대 본체와 접촉하면 대상별 1초 쿨로 피해8을 준 뒤 코요테드의 진행방향 뒤쪽으로 넘긴다. 넘기기는 상대의 속도·강펀치/파워스톤 등 예약 타격·강제이동 상태를 지우지 않고 위치만 재배치해 접촉 공격 상호작용을 보존한다.",
       "v162: 쿱하 등껍질 충돌 피해를 16→15로 조정. HP190·벽충돌8·불기둥6+화상1×4·돌진 주기/가속/추적/충돌 즉시 종료 후1초 기절 및 v160 0속도 고착 방지 수정은 유지.",
       "v161: 쿱하 소폭 화력 버프. 등껍질 충돌 피해만 14→16으로 상향. HP190·벽충돌8·불기둥6+화상1×4·등껍질 주기/가속/추적/충돌 즉시 종료 후1초 기절 및 v160 공용 0속도 고착 방지 수정은 그대로 유지.",
@@ -7301,7 +7314,7 @@
     };
     function initMario(f){
       f.mario={
-        power:"none",shield:0,blockId:null,nextBlock:MARIO.blockDelay,blink:0,fireCd:0,fireShots:0,fireballs:[],starTime:0,starHits:{},starReturn:null,
+        power:"none",shield:0,blockId:null,nextBlock:MARIO.blockDelay,blink:0,invulTextCd:0,fireCd:0,fireShots:0,fireballs:[],starTime:0,starHits:{},starReturn:null,
         baseR:f.r||20,baseSpeed:f.baseSpeed||f.speed||2.8,superStance:false,punchCd:0,wallContacts:0,
         kart:false,pipeFx:0,pipeTransit:null,kartContactCd:0,pickup:null,heldType:"",heldCount:0,itemUseCd:0,bananas:[],shells:[]
       };
@@ -7365,7 +7378,7 @@
     function marioAbsorbDamage(f,amount,source,reason){
       const m=f?.mario;if(!m||amount<=0)return null;
       if(m.pipeTransit&&m.pipeTransit.phase!=="approach")return 0;
-      if(m.power==="star"||m.blink>0){if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-20,"무적","#fde047");return 0;}
+      if(m.power==="star"||m.blink>0){if(!fastSimMode&&(m.invulTextCd||0)<=0){spawnFloatingText(f.x,f.y-f.r-20,"무적","#fde047");m.invulTextCd=.65;}return 0;}
       if((m.power==="mushroom"||m.power==="fire")&&m.shield>0){
         const cost=Math.max(1,Math.ceil(amount/10));m.shield=Math.max(0,m.shield-cost);
         if(!fastSimMode){spawnHitFlash(f.x,f.y,m.power==="fire"?"#fb923c":"#fca5a5",38);spawnFloatingText(f.x,f.y-f.r-22,"보호막 -"+cost+" ("+m.shield+"/"+MARIO.shieldMax+")","#fef3c7");}
@@ -7528,7 +7541,7 @@
       return false;
     }
     function updateMario(f,dt){
-      const m=f?.mario;if(!m||!f.alive)return;m.blink=Math.max(0,m.blink-dt);m.punchCd=Math.max(0,m.punchCd-dt);m.kartContactCd=Math.max(0,m.kartContactCd-dt);updateMarioFireballs(f,dt);
+      const m=f?.mario;if(!m||!f.alive)return;m.blink=Math.max(0,m.blink-dt);m.invulTextCd=Math.max(0,(m.invulTextCd||0)-dt);m.punchCd=Math.max(0,m.punchCd-dt);m.kartContactCd=Math.max(0,m.kartContactCd-dt);updateMarioFireballs(f,dt);
       if(m.pipeTransit){updateMarioPipeTransit(f,dt);return;}
       if(m.kart){m.superStance=false;updateMarioKartPickup(f,dt);updateMarioKartHazards(f,dt);if(!fastSimMode&&Math.random()<dt*5){const mag=Math.hypot(f.vx,f.vy)||1;spawnParticles(f.x-f.vx/mag*(f.r+10),f.y-f.vy/mag*(f.r+10),"#cbd5e1",1);}return;}
       if(m.blockId){const b=fighterById(m.blockId);if(!b||!b.alive){m.blockId=null;m.superStance=false;m.nextBlock=MARIO.blockDelay;}else if(Math.hypot(f.x-b.x,f.y-b.y)<=f.r+b.r+3){marioCollectBlock(f,b);}else if(m.power==="none"&&(b.marioBlock?.age||0)>=MARIO.blockChaseDelay){m.superStance=true;const dx=b.x-f.x,dy=b.y-f.y,d=Math.hypot(dx,dy)||1,v=m.baseSpeed*44;f.vx=dx/d*v;f.vy=dy/d*v;}else m.superStance=false;
@@ -11320,10 +11333,10 @@
     function handleCircleCollisions(dt) {
       for (let i = 0; i < fighters.length; i++) {
         const a = fighters[i];
-        if (!a.alive || (a.dodoVoid || 0) > 0 || a.punchHold > 0 || a.logo?.jump?.phase === "flight" || (a.mario?.pipeTransit && a.mario.pipeTransit.phase!=="approach")) continue;
+        if (!a.alive || (a.dodoVoid || 0) > 0 || a.punchHold > 0 || a.coyoteFling || a.logo?.jump?.phase === "flight" || (a.mario?.pipeTransit && a.mario.pipeTransit.phase!=="approach")) continue;
         for (let j = i + 1; j < fighters.length; j++) {
           const b = fighters[j];
-          if (!b.alive || (b.dodoVoid || 0) > 0 || b.punchHold > 0 || b.logo?.jump?.phase === "flight" || (b.mario?.pipeTransit && b.mario.pipeTransit.phase!=="approach")) continue;
+          if (!b.alive || (b.dodoVoid || 0) > 0 || b.punchHold > 0 || b.coyoteFling || b.logo?.jump?.phase === "flight" || (b.mario?.pipeTransit && b.mario.pipeTransit.phase!=="approach")) continue;
 
           const dx = b.x - a.x;
           const dy = b.y - a.y;
@@ -12268,6 +12281,7 @@
         battleTime += sub;
 
         fighters.forEach(f => updateFighter(f, sub));
+        updateCoyoteFlings(sub);
         handleCircleCollisions(sub);
         updateProjectiles(sub);
         updateIronObjects(sub);
