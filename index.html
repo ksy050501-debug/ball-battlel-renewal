@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v151</title>
+  <title>볼배틀 리뉴얼 v152</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v151</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v152</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -5603,6 +5603,7 @@
     }
 
       const patchNotes = [
+      "v152: v151 쿱하 등껍질 상시추적 변경 후 남아 있던 삭제 함수 호출을 제거해 등껍질 충돌 시 전투 루프가 멈추는 런타임 버그 수정. 전투 수치 변경 없음.",
       "v151: 쿱하 상성 폭 압축 실험. HP 190 유지. 등껍질 충돌 후 자가 기절 3초→1초. 등껍질은 6초 내내 최근접 적을 추적하며, 시작 속도는 평상 이동속도 수준에서 시작해 기존 최대 돌진속도까지 점진 가속. 회전 불기둥은 HP 66% 초과 1개, 33~66% 2개, 33% 이하 3개로 변경해 최대 3개. 피해량·주기·지속시간은 유지.",
       "v150: 쿱하 테스트 조정. HP 200→190. 등껍질·불기둥·쿨타임·피해 등 나머지 전투 수치는 그대로 유지.",
       "v149: 쿱하 체력 240→200. 최근 테스트에서 과도하게 높은 종합 승률과 긴 전투 시간을 함께 줄이기 위한 단일 수치 조정이며, 등껍질·불기둥·기절·쿨타임 등 나머지 전투 구조는 유지.",
@@ -7178,7 +7179,7 @@
     function koopaShellContact(source,target){
       const k=source?.koopa;if(!k?.shellActive||!target?.alive||!areEnemies(source,target)||(k.hitCd[target.id]||0)>0)return false;
       const dx=target.x-source.x,dy=target.y-source.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,KOOPA.shellDamage,source,"등껍질충돌");k.hitCd[target.id]=Math.max(.1,k.shellTime)+.25;
-      if(dealt>0&&target.alive){target.vx=dx/d*KOOPA.shellKnock;target.vy=dy/d*KOOPA.shellKnock;target.punchFlight=Math.max(target.punchFlight||0,KOOPA.shellFlight);target.punchSource=null;target.punchWallPower=0;target.punchWallHits=0;target.koopaWallCrash={sourceId:source.id,t:KOOPA.shellWallWindow};koopaNormalizeShellSpeed(source);}
+      if(dealt>0&&target.alive){target.vx=dx/d*KOOPA.shellKnock;target.vy=dy/d*KOOPA.shellKnock;target.punchFlight=Math.max(target.punchFlight||0,KOOPA.shellFlight);target.punchSource=null;target.punchWallPower=0;target.punchWallHits=0;target.koopaWallCrash={sourceId:source.id,t:KOOPA.shellWallWindow};}
       if(!fastSimMode){spawnHitFlash(target.x,target.y,"#bef264",58);spawnParticles(target.x,target.y,"#84cc16",10);}
       koopaEndShell(source);
       return dealt>0;
