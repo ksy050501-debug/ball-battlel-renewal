@@ -1,0 +1,46 @@
+name: v150 Koopa HP 190
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/v150-koopa190.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          assert '<title>볼배틀 리뉴얼 v149</title>' in s
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v149</h1>' in s
+          old='{ id:"koopa_king", name:"쿱하", mark:"K", role:"게임", color:"#65a30d", hp:200, attack:0, speed:2.35, range:0,'
+          new='{ id:"koopa_king", name:"쿱하", mark:"K", role:"게임", color:"#65a30d", hp:190, attack:0, speed:2.35, range:0,'
+          assert s.count(old)==1
+          s=s.replace('<title>볼배틀 리뉴얼 v149</title>','<title>볼배틀 리뉴얼 v150</title>',1)
+          s=s.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v149</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v150</h1>',1)
+          s=s.replace(old,new,1)
+          marker='      const patchNotes = [\n'
+          assert marker in s
+          s=s.replace(marker,marker+'      "v150: 쿱하 테스트 조정. HP 200→190. 등껍질·불기둥·쿨타임·피해 등 나머지 전투 수치는 그대로 유지.",\n',1)
+          p.write_text(s,encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)
+          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+          git diff --check
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm .github/workflows/v150-koopa190.yml
+          git add index.html .github/workflows/v150-koopa190.yml
+          git commit -m 'v150: reduce Koopa HP to 190'
+          git push
