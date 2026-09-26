@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v154</title>
+  <title>볼배틀 리뉴얼 v160</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v154</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v160</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -5603,6 +5603,7 @@
     }
 
       const patchNotes = [
+      "v160: 캡틴전에서 확인된 비의도적 이동속도 0 고착 버그 대응. 모든 캐릭터가 기절·빙결·속박·시전·강제이동 등 의도된 정지 상태가 아닌데 속도0에 고착되면 기본 이동속도로 자동 복구하는 공용 안전장치를 추가. v154의 쿱하 포함 모든 전투 수치와 능력 구조는 유지.",
       "v154: 쿱하 등껍질 가속곡선 조정. 시작 0.35배는 유지하되 첫 2초 동안 0.35→1.3배로 빠르게 가속하고, 이후 4초 동안 1.3→2.5배로 가속. 상시 추적·HP190·충돌 후 1초 기절·불기둥 1/2/3개 및 피해/주기는 유지.",
       "v153: 쿱하 등껍질 가속감 조정. 상시 추적·6초 지속·충돌 후 1초 기절은 유지하고, 돌진 시작 속도를 기본 이동속도의 0.35배로 크게 낮춘 뒤 6초 동안 점진 가속하여 종료 직전 최대 2.5배에 도달하도록 변경. 불기둥 1/2/3개 및 나머지 전투 수치는 유지.",
       "v152: v151 쿱하 등껍질 상시추적 변경 후 남아 있던 삭제 함수 호출을 제거해 등껍질 충돌 시 전투 루프가 멈추는 런타임 버그 수정. 전투 수치 변경 없음.",
@@ -10139,6 +10140,22 @@
       return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * timedCcSlow;
     }
 
+    // 의도된 정지 상태가 아닌데 속도가 0으로 고착되면 공용으로 이동을 복구한다.
+    function ensureFreeVelocity(f) {
+      if (!f?.alive || Math.hypot(f.vx, f.vy) >= 0.5) return;
+      if ((f.stun || 0) > 0 || (f.hardFreeze || 0) > 0 || (f.bindStun || 0) > 0
+          || (f.joltStop || 0) > 0 || (f.vampSuppressed || 0) > 0
+          || (f.punchHold || 0) > 0 || (f.punchFlight || 0) > 0 || isCasting(f)
+          || f.mario?.pipeTransit || f.marioBlock
+          || (f.iron?.dash || 0) > 0 || (f.duelMonster?.channel || 0) > 0
+          || (f.duelMonster?.cast || 0) > 0 || f.duelMonster?.fusing
+          || (f.toriMeteorWalk || 0) > 0 || (f.rioStormRush || 0) > 0
+          || f.baldCape?.dash > 0 || f.baldCape?.serious?.timer > 0 || f.baldCape?.combo
+          || f.koopa?.shellActive || f.hinta?.dash || f.logo?.jump) return;
+      const v = randomVelocity(f.baseSpeed || f.speed || 2.35);
+      f.vx = v.vx; f.vy = v.vy;
+    }
+
     function useSkill(f, label) {
       if (!f.alive) return;
       const sourceName = `<strong>${escapeHtml(f.name)}</strong>`;
@@ -11107,6 +11124,7 @@
       }
 
       if (f.stun > 0) return;
+      ensureFreeVelocity(f);
       if (updateCastPause(f, dt)) {
         return;
       }
