@@ -1,0 +1,48 @@
+name: One-shot v162 Koopa damage patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-v162.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          def one(old,new,label):
+              global s
+              c=s.count(old)
+              if c!=1:
+                  raise SystemExit(f'{label}: expected 1, got {c}')
+              s=s.replace(old,new,1)
+          one('<title>볼배틀 리뉴얼 v161</title>','<title>볼배틀 리뉴얼 v162</title>','title')
+          one('<h1 id="mainTitle">볼배틀 리뉴얼 v161</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v162</h1>','main title')
+          one('shellDamage:16, shellKnock:720, shellFlight:.65, shellHitCd:.55, shellWallDamage:8, shellWallWindow:.72, recoveryStun:1,','shellDamage:15, shellKnock:720, shellFlight:.65, shellHitCd:.55, shellWallDamage:8, shellWallWindow:.72, recoveryStun:1,','shell damage')
+          s=s.replace('등껍질 충돌 16 + 강넉백 · 넉백 후 벽충돌 8 / 회전 불기둥 접촉 6 + 화상 1×4','등껍질 충돌 15 + 강넉백 · 넉백 후 벽충돌 8 / 회전 불기둥 접촉 6 + 화상 1×4')
+          marker='      const patchNotes = [\n'
+          if marker not in s:
+              raise SystemExit('patch note marker missing')
+          note='      "v162: 쿱하 등껍질 충돌 피해를 16→15로 조정. HP190·벽충돌8·불기둥6+화상1×4·돌진 주기/가속/추적/충돌 즉시 종료 후1초 기절 및 v160 0속도 고착 방지 수정은 유지.",\n'
+          s=s.replace(marker,marker+note,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch and remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm .github/workflows/patch-v162.yml
+          git commit -m "Tune Koopa shell damage to 15 v162"
+          git push
