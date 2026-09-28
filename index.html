@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v165</title>
+  <title>볼배틀 리뉴얼 v166</title>
   <style>
     :root {
       --bg: #020617;
@@ -1010,7 +1010,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v165</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v166</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -5712,6 +5712,7 @@
     }
 
       const patchNotes = [
+      "v166: 배관공이 바나나·등껍질에 맞아 회전할 때 이미 발사되거나 설치된 바나나껍질·거북이 등껍질·파이어볼·아이템 상자가 배관공을 중심으로 함께 회전하던 렌더링 버그를 수정했습니다. 설치물 좌표와 전투 판정은 그대로 유지됩니다.",
       "v165: 코요테드 성장 아이템 추가. 전투 30초에 리안드리를 획득해 독방구 영역을 벗어난 적에게 기존 피해1을 0.5초 간격으로 3틱 더 지속한다. 90초에는 라일라이를 획득해 독방구 안 또는 리안드리 잔류독이 지속 중인 적의 이동속도를 20% 감소시킨다. 기본 독 피해1·접촉8·HP170·0.42초 넘기기는 유지.",
       "v164: 코요테드 뒤로 넘기기를 순간 좌표이동에서 0.42초짜리 실제 플링으로 변경. 접촉 지점에서 코요테드 몸 위를 지나 진행방향 뒤쪽에 착지하며 비행 중 재충돌은 막되 강펀치·파워스톤 등 예약 공격과 vx/vy 상태는 지우지 않는다. 스타배관공 등 무적 상태가 연속 피해 판정을 받을 때 무적 텍스트가 겹쳐 쌓이지 않도록 표시를 0.65초 간격으로 제한.",
       "v163: 신캐 코요테드 추가. HP170·이속2.9. 이동 경로에 3초간 남는 독방구 흔적을 생성하며 범위 안 적은 0.5초마다 피해1을 받는다. 상대 본체와 접촉하면 대상별 1초 쿨로 피해8을 준 뒤 코요테드의 진행방향 뒤쪽으로 넘긴다. 넘기기는 상대의 속도·강펀치/파워스톤 등 예약 타격·강제이동 상태를 지우지 않고 위치만 재배치해 접촉 공격 상호작용을 보존한다.",
@@ -7594,7 +7595,7 @@
       if(!pipe||fastSimMode)return;const angle=pipe.wall==="left"?0:pipe.wall==="right"?Math.PI:pipe.wall==="top"?Math.PI/2:-Math.PI/2;
       ctx.save();ctx.translate(pipe.x,pipe.y);ctx.rotate(angle);ctx.globalAlpha=alpha;ctx.shadowColor="#14532d";ctx.shadowBlur=10;ctx.fillStyle="#15803d";ctx.strokeStyle="#86efac";ctx.lineWidth=2;ctx.fillRect(0,-12,32,24);ctx.strokeRect(0,-12,32,24);ctx.fillStyle="#22c55e";ctx.beginPath();ctx.roundRect(27,-17,11,34,4);ctx.fill();ctx.stroke();ctx.fillStyle="rgba(255,255,255,.18)";ctx.fillRect(5,-8,5,16);ctx.restore();
     }
-    function drawMarioCharacter(f){
+    function drawMarioWorldObjects(f){
       const m=f.mario||{power:"none",shield:0,blink:0,fireballs:[],bananas:[],shells:[]},tr=m.pipeTransit;
       if(!f.portraitOnly&&!fastSimMode){ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();
         for(const p of m.fireballs||[]){ctx.shadowColor="#fb923c";ctx.shadowBlur=12;ctx.fillStyle="#f97316";ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fde68a";ctx.beginPath();ctx.arc(p.x-2,p.y-2,p.r*.45,0,Math.PI*2);ctx.fill();}
@@ -7604,6 +7605,10 @@
         if(tr){drawMarioPipeAt(tr.entry,tr.phase==="exit"?.34:1);if(tr.phase==="hidden"||tr.phase==="exit")drawMarioPipeAt(tr.exit,1);}
         ctx.restore();
       }
+    }
+    function drawMarioCharacter(f,skipWorldObjects=false){
+      const m=f.mario||{power:"none",shield:0,blink:0,fireballs:[],bananas:[],shells:[]},tr=m.pipeTransit;
+      if(!skipWorldObjects)drawMarioWorldObjects(f);
       if(tr?.phase==="hidden")return;
       const flicker=m.blink>0&&Math.floor(battleTime*18)%2===0,rainbow=`hsl(${(battleTime*180)%360} 92% 64%)`,transitScale=tr?.visualScale||1,transitAlpha=tr?.visualAlpha??1;
       ctx.save();if(flicker)ctx.globalAlpha=.28;ctx.globalAlpha*=transitAlpha;ctx.translate(f.x,f.y);ctx.scale(f.r/20*transitScale,f.r/20*transitScale);
@@ -14072,7 +14077,11 @@
       const marioSpin=(f.marioSpinFx||0)>0&&!fastSimMode&&!f.portraitOnly;
       if(marioSpin){
         const prev=suppressMarioSpinUi;suppressMarioSpinUi=true;
-        ctx.save();ctx.translate(f.x,f.y);ctx.rotate((MARIO.shellSpin-f.marioSpinFx)*28);ctx.translate(-f.x,-f.y);drawFighterBody(f);ctx.restore();
+        // 배관공이 회전해도 이미 발사·설치된 월드 오브젝트는 본체 좌표계에 끌려가지 않는다.
+        if(f.mario)drawMarioWorldObjects(f);
+        ctx.save();ctx.translate(f.x,f.y);ctx.rotate((MARIO.shellSpin-f.marioSpinFx)*28);ctx.translate(-f.x,-f.y);
+        if(f.mario)drawMarioCharacter(f,true);else drawFighterBody(f);
+        ctx.restore();
         suppressMarioSpinUi=prev;drawHealthBar(f);drawName(f);return;
       }
       drawFighterBody(f);
