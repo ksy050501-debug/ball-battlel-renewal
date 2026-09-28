@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v169</title>
+  <title>볼배틀 리뉴얼 v170</title>
   <style>
     :root {
       --bg: #020617;
@@ -1016,7 +1016,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v169</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v170</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1416,14 +1416,16 @@
       spawnBlast(f.x, f.y, 90, "#fb7185");
     }
     function lisaGuitarVoice(freq,duration,volume,startOffset=0,bend=1){
-      if(!audioCtx)return;const now=audioCtx.currentTime+startOffset,osc=audioCtx.createOscillator(),harm=audioCtx.createOscillator(),mix=audioCtx.createGain(),drive=audioCtx.createWaveShaper(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();
-      const curve=new Float32Array(256);for(let i=0;i<256;i++){const x=i*2/255-1;curve[i]=(1+18)*x/(1+18*Math.abs(x));}drive.curve=curve;drive.oversample='4x';osc.type='sawtooth';harm.type='square';osc.frequency.setValueAtTime(Math.max(30,freq),now);harm.frequency.setValueAtTime(Math.max(30,freq*2.003),now);if(bend!==1){osc.frequency.exponentialRampToValueAtTime(Math.max(30,freq*bend),now+duration*.72);harm.frequency.exponentialRampToValueAtTime(Math.max(30,freq*2.003*bend),now+duration*.72);}mix.gain.value=.64;filter.type='lowpass';filter.frequency.setValueAtTime(3600,now);filter.Q.value=1.2;gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume*masterVolume),now+.008);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume*.7*masterVolume),now+duration*.18);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);osc.connect(mix);harm.connect(mix);mix.connect(drive);drive.connect(filter);filter.connect(gain);gain.connect(audioCtx.destination);osc.start(now);harm.start(now);osc.stop(now+duration+.03);harm.stop(now+duration+.03);
+      if(!audioCtx)return;const now=audioCtx.currentTime+startOffset,osc=audioCtx.createOscillator(),warm=audioCtx.createOscillator(),oscGain=audioCtx.createGain(),warmGain=audioCtx.createGain(),drive=audioCtx.createWaveShaper(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();
+      const curve=new Float32Array(256);for(let i=0;i<256;i++){const x=i*2/255-1;curve[i]=6.5*x/(1+5.5*Math.abs(x));}drive.curve=curve;drive.oversample='4x';osc.type='sawtooth';warm.type='triangle';osc.frequency.setValueAtTime(Math.max(30,freq),now);warm.frequency.setValueAtTime(Math.max(30,freq*2.001),now);if(bend!==1){osc.frequency.exponentialRampToValueAtTime(Math.max(30,freq*bend),now+duration*.78);warm.frequency.exponentialRampToValueAtTime(Math.max(30,freq*2.001*bend),now+duration*.78);}oscGain.gain.value=.72;warmGain.gain.value=.11;filter.type='lowpass';filter.frequency.setValueAtTime(2550,now);filter.frequency.exponentialRampToValueAtTime(1850,now+duration);filter.Q.value=.72;gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume*masterVolume),now+.012);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume*.52*masterVolume),now+duration*.24);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);osc.connect(oscGain);warm.connect(warmGain);oscGain.connect(drive);warmGain.connect(drive);drive.connect(filter);filter.connect(gain);gain.connect(audioCtx.destination);osc.start(now);warm.start(now);osc.stop(now+duration+.03);warm.stop(now+duration+.03);
     }
     function lisaPowerChord(f){
-      if(fastSimMode||!soundEnabled||!canPlaySound("lisaChord",.12))return;ensureAudio();const rage=f.lisa.mode==="rage",roots=[82.41,98,110,73.42],root=roots[(f.lisa.riff++)%roots.length];
-      noise(.018,rage?.045:.028,0,5200,"highpass");
-      lisaGuitarVoice(root,rage?.58:.42,rage?.055:.043,0,.985);lisaGuitarVoice(root*1.5,rage?.52:.38,rage?.043:.034,.024,.99);lisaGuitarVoice(root*2,rage?.48:.34,rage?.038:.029,.048,.985);
-      if(rage){const scale=[2,2.245,2.52,2.996,3.364,3.996,3.364,2.996];const shift=(f.lisa.riff*2)%scale.length;for(let i=0;i<8;i++){const ratio=scale[(i+shift)%scale.length],start=.075+i*.043;lisaGuitarVoice(root*ratio,.19,.026,start,i%3===2?1.11:1.025);}lisaGuitarVoice(root*4,.38,.032,.39,1.18);noise(.31,.038,.08,3100,"bandpass");}
+      if(fastSimMode||!soundEnabled||!canPlaySound("lisaChord",.12))return;ensureAudio();const rage=f.lisa.mode==="rage",roots=[82.41,98,110,73.42],riff=f.lisa.riff++,root=roots[riff%roots.length];
+      noise(.009,rage?.007:.009,0,4300,"highpass");
+      if(!rage){lisaGuitarVoice(root,.36,.031,0,.99);lisaGuitarVoice(root*1.5,.31,.022,.035,.995);lisaGuitarVoice(root*2,.27,.016,.07,.99);return;}
+      lisaGuitarVoice(root,.31,.025,0,.99);lisaGuitarVoice(root*1.5,.26,.016,.04,.995);
+      const phrases=[[2,2.245,2.52,2.996],[2.52,2.245,2,2.52],[2,2.52,2.996,3.364]],phrase=phrases[riff%phrases.length];
+      for(let i=0;i<phrase.length;i++){const last=i===phrase.length-1;lisaGuitarVoice(root*phrase[i],last?.27:.22,last?.021:.018,.095+i*.09,last?1.075:1.012);}
     }
 
     function lisaConeTouches(f, e, angle) {
@@ -5685,6 +5687,7 @@
     }
 
       const patchNotes = [
+      "v170: 리사의 기타 사운드를 저왜곡·저노이즈 중심으로 다시 믹싱했습니다. 일반 파워코드는 따뜻한 저역 중심으로 정리하고, 폭주 솔로는 겹쳐 울리던 음을 줄여 4음 프레이즈와 여유 있는 간격으로 선율이 또렷하게 들리도록 변경했습니다. 피해량·범위·주기·판정은 유지됩니다.",
       "v169: 고난의 사신 반경130 경계와 내부 음영은 유지하되 사신 범위 텍스트를 제거했습니다. 리사의 파워코드 사운드를 디스토션·파워코드 기반 전자기타 톤으로 재구성하고, 폭주 상태에서는 펜타토닉 고음 솔로·피치벤드·빠른 피킹 레이어와 번개형 현 궤적·음표·추가 파동 연출을 사용합니다. 피해량·범위·주기·판정은 유지됩니다.",
       "v168: 고난의 사신 반경130 범위를 선명한 경계·내부 음영으로 표시했습니다. 전투장 어두운색/하얀색 선택과 전체 화면 버튼을 추가했습니다. 엘팔아·고난·거미남·배관공·쿱하·코요테드를 얼굴~흉상 중심으로 재구성하고 도감도 같은 그림을 사용합니다. 쿱하 등껍질 돌진 잔상과 쿠파형 외형을 개선하고 불기둥 전용 게이지, 배관공 벽 접촉50 게이지, 코요테드 리안드리·라일라이 상태를 상태창에 추가했습니다. 코요테드 독구름을 반투명 구름으로, 리안드리 잔류독을 붉은색으로, 라일라이 둔화를 빙결형 연출로 구분했습니다. 전투 수치와 판정은 유지됩니다.",
       "v167: 엘팔아·고난·거미남·배관공·쿱하·코요테드의 인게임/초상화 Canvas 외형을 전면 개선했습니다. 엘팔아 냉기영역·빙결 결정, 고난 사신 스택·범인 3종, 거미남 웹슈터, 배관공 랜덤박스·파워업·토관·카트·바나나·등껍질, 쿱하 등껍질 돌진·회전 불기둥, 코요테드 대머리 마스크 외형·독안개 연출을 강화했으며 전투 수치와 판정은 유지됩니다.",
