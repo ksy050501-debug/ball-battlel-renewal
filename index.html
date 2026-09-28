@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v168</title>
+  <title>볼배틀 리뉴얼 v169</title>
   <style>
     :root {
       --bg: #020617;
@@ -1016,7 +1016,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v168</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v169</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1415,13 +1415,15 @@
       lisaSay(f, "끝까지 불태워 버려!!!");
       spawnBlast(f.x, f.y, 90, "#fb7185");
     }
-    function lisaPowerChord(f) {
-      if(fastSimMode||!soundEnabled||!canPlaySound("lisaChord",.12))return;
-      const rage=f.lisa.mode==="rage",roots=[82.41,98,110,73.42],root=roots[(f.lisa.riff++)%roots.length],dur=rage ? .52 : .38;
-      noise(.025,.028,0,4200,"highpass");
-      [1,1.5,2].forEach((ratio,n)=>{const hz=root*ratio;tone(hz,dur,"sawtooth",rage ? .034 : .026,n*.006,hz*.965);tone(hz*2,dur*.62,"square",rage ? .012 : .008,n*.006,hz*1.92);});
-      tone(root/2,dur*.9,"triangle",rage ? .05 : .03,0,root*.47);noise(rage ? .20 : .11,rage ? .055 : .028,.03,1350,"bandpass");
-      if(rage){tone(root*3,.32,"sawtooth",.018,.18,root*2.72);noise(.24,.065,.2,2600,"bandpass");}
+    function lisaGuitarVoice(freq,duration,volume,startOffset=0,bend=1){
+      if(!audioCtx)return;const now=audioCtx.currentTime+startOffset,osc=audioCtx.createOscillator(),harm=audioCtx.createOscillator(),mix=audioCtx.createGain(),drive=audioCtx.createWaveShaper(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();
+      const curve=new Float32Array(256);for(let i=0;i<256;i++){const x=i*2/255-1;curve[i]=(1+18)*x/(1+18*Math.abs(x));}drive.curve=curve;drive.oversample='4x';osc.type='sawtooth';harm.type='square';osc.frequency.setValueAtTime(Math.max(30,freq),now);harm.frequency.setValueAtTime(Math.max(30,freq*2.003),now);if(bend!==1){osc.frequency.exponentialRampToValueAtTime(Math.max(30,freq*bend),now+duration*.72);harm.frequency.exponentialRampToValueAtTime(Math.max(30,freq*2.003*bend),now+duration*.72);}mix.gain.value=.64;filter.type='lowpass';filter.frequency.setValueAtTime(3600,now);filter.Q.value=1.2;gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume*masterVolume),now+.008);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume*.7*masterVolume),now+duration*.18);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);osc.connect(mix);harm.connect(mix);mix.connect(drive);drive.connect(filter);filter.connect(gain);gain.connect(audioCtx.destination);osc.start(now);harm.start(now);osc.stop(now+duration+.03);harm.stop(now+duration+.03);
+    }
+    function lisaPowerChord(f){
+      if(fastSimMode||!soundEnabled||!canPlaySound("lisaChord",.12))return;ensureAudio();const rage=f.lisa.mode==="rage",roots=[82.41,98,110,73.42],root=roots[(f.lisa.riff++)%roots.length];
+      noise(.018,rage?.045:.028,0,5200,"highpass");
+      lisaGuitarVoice(root,rage?.58:.42,rage?.055:.043,0,.985);lisaGuitarVoice(root*1.5,rage?.52:.38,rage?.043:.034,.024,.99);lisaGuitarVoice(root*2,rage?.48:.34,rage?.038:.029,.048,.985);
+      if(rage){const scale=[2,2.245,2.52,2.996,3.364,3.996,3.364,2.996];const shift=(f.lisa.riff*2)%scale.length;for(let i=0;i<8;i++){const ratio=scale[(i+shift)%scale.length],start=.075+i*.043;lisaGuitarVoice(root*ratio,.19,.026,start,i%3===2?1.11:1.025);}lisaGuitarVoice(root*4,.38,.032,.39,1.18);noise(.31,.038,.08,3100,"bandpass");}
     }
 
     function lisaConeTouches(f, e, angle) {
@@ -1466,16 +1468,12 @@
       l.attack -= dt;
       if (l.attack <= 0) { lisaAttack(f); l.attack = l.mode === "rage" ? LISA.ragePeriod : LISA.period; }
     }
-    function drawLisaWaves() {
-      fighters.forEach(f=>f.lisa?.waves.forEach(w=>{
-        const progress=1-w.life/.4,radius=w.range*(.12+progress*.88),alpha=clamp(w.life/.4,0,1),rgb=w.rage?"251,113,133":"244,114,182";
-        ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();ctx.translate(w.x,w.y);ctx.rotate(w.angle);ctx.globalCompositeOperation="lighter";
-        const grad=ctx.createRadialGradient(0,0,4,0,0,radius);grad.addColorStop(0,"rgba("+rgb+","+(.28*alpha)+")");grad.addColorStop(.62,"rgba("+rgb+","+(.13*alpha)+")");grad.addColorStop(1,"rgba("+rgb+",0)");ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,radius,-LISA.halfAngle,LISA.halfAngle);ctx.closePath();ctx.fill();
-        ctx.shadowColor=w.rage?"#fb7185":"#f472b6";ctx.shadowBlur=w.rage?24:16;ctx.lineCap="round";
-        for(let n=0;n<5;n++){const rr=Math.max(4,radius-n*14);ctx.globalAlpha=alpha*(.9-n*.1);ctx.strokeStyle=n%2?"#fbcfe8":(w.rage?"#fb7185":"#f472b6");ctx.lineWidth=(w.rage?5:3.2)-n*.35;ctx.beginPath();const seg=18;for(let i=0;i<=seg;i++){const a=-LISA.halfAngle+i/seg*(LISA.halfAngle*2),jitter=Math.sin(i*2.8+battleTime*24+n)*((w.rage?5:3)*(1-i/seg*.25)),x=Math.cos(a)*(rr+jitter),y=Math.sin(a)*(rr+jitter);if(!i)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}
-        for(let i=0;i<14;i++){const a=-LISA.halfAngle+(i/13)*LISA.halfAngle*2,rr=radius*(.45+.5*((i*7)%13)/13);ctx.globalAlpha=alpha*.7;ctx.fillStyle=i%3?"#f9a8d4":"#fff1f2";ctx.beginPath();ctx.arc(Math.cos(a)*rr,Math.sin(a)*rr,1.2+(i%3),0,Math.PI*2);ctx.fill();}
-        ctx.restore();
-      }));
+    function drawLisaWaves(){
+      fighters.forEach(f=>f.lisa?.waves.forEach(w=>{const progress=1-w.life/.4,radius=w.range*(.12+progress*.88),alpha=clamp(w.life/.4,0,1),rgb=w.rage?"251,113,133":"244,114,182";ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();ctx.translate(w.x,w.y);ctx.rotate(w.angle);ctx.globalCompositeOperation="lighter";const grad=ctx.createRadialGradient(0,0,4,0,0,radius);grad.addColorStop(0,"rgba("+rgb+","+(.3*alpha)+")");grad.addColorStop(.6,"rgba("+rgb+","+(.14*alpha)+")");grad.addColorStop(1,"rgba("+rgb+",0)");ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,radius,-LISA.halfAngle,LISA.halfAngle);ctx.closePath();ctx.fill();ctx.shadowColor=w.rage?"#fb7185":"#f472b6";ctx.shadowBlur=w.rage?28:16;ctx.lineCap="round";
+        for(let n=0;n<(w.rage?7:5);n++){const rr=Math.max(4,radius-n*(w.rage?11:14));ctx.globalAlpha=alpha*(.94-n*.09);ctx.strokeStyle=n%2?"#fbcfe8":(w.rage?"#fb7185":"#f472b6");ctx.lineWidth=(w.rage?5.5:3.2)-n*.36;ctx.beginPath();const seg=20;for(let i=0;i<=seg;i++){const a=-LISA.halfAngle+i/seg*(LISA.halfAngle*2),jitter=Math.sin(i*2.8+battleTime*(w.rage?34:24)+n)*((w.rage?7:3)*(1-i/seg*.25)),x=Math.cos(a)*(rr+jitter),y=Math.sin(a)*(rr+jitter);if(!i)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}
+        for(let i=0;i<(w.rage?24:14);i++){const a=-LISA.halfAngle+(i/Math.max(1,(w.rage?23:13)))*LISA.halfAngle*2,rr=radius*(.38+.58*((i*7)%17)/17);ctx.globalAlpha=alpha*(w.rage?.88:.7);ctx.fillStyle=i%4===0?"#fff":i%3?"#f9a8d4":"#fde68a";ctx.beginPath();ctx.arc(Math.cos(a)*rr,Math.sin(a)*rr,1.3+(i%4),0,Math.PI*2);ctx.fill();}
+        if(w.rage){ctx.shadowColor='#fef08a';ctx.shadowBlur=18;for(let i=0;i<9;i++){const a=-LISA.halfAngle+(i/8)*LISA.halfAngle*2,rr=radius*(.38+.055*i),side=(i%2?1:-1)*7;ctx.globalAlpha=alpha*(.65+.25*Math.sin(battleTime*28+i));ctx.strokeStyle=i%3===0?'#fef08a':'#fff1f2';ctx.lineWidth=i%3===0?3:1.8;ctx.beginPath();ctx.moveTo(18,side);ctx.lineTo(Math.cos(a)*rr*.42,Math.sin(a)*rr*.42+side);ctx.lineTo(Math.cos(a)*rr*.72,Math.sin(a)*rr*.72-side);ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);ctx.stroke();}for(let i=0;i<6;i++){const a=-.62+i*.25+battleTime*.15,rr=radius*(.55+.06*(i%3)),x=Math.cos(a)*rr,y=Math.sin(a)*rr;ctx.save();ctx.translate(x,y);ctx.rotate(-w.angle*.3+i*.35);ctx.globalAlpha=alpha*.9;ctx.fillStyle=i%2?'#fff':'#fde68a';ctx.font='900 '+(13+i%3*3)+'px system-ui';ctx.fillText(i%2?'♪':'♫',0,0);ctx.restore();}}
+        ctx.restore();}));
     }
 
     function drawLisaCharacter(f) {
@@ -3041,7 +3039,7 @@
     }
     function drawConanCharacter(f){
       const cc=f.conan||{targets:new Map(),assaults:[],pulse:0};
-      if(!f.portraitOnly&&!fastSimMode){const pulse=.5+.5*Math.sin(battleTime*3);ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();const g=ctx.createRadialGradient(f.x,f.y,CONAN.radius*.45,f.x,f.y,CONAN.radius);g.addColorStop(0,'rgba(127,29,29,0)');g.addColorStop(.78,'rgba(127,29,29,.035)');g.addColorStop(1,'rgba(239,68,68,.12)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(f.x,f.y,CONAN.radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(248,113,113,'+(.58+pulse*.18)+')';ctx.shadowColor='#ef4444';ctx.shadowBlur=7;ctx.lineWidth=2.4;ctx.setLineDash([9,6]);ctx.lineDashOffset=-battleTime*13;ctx.beginPath();ctx.arc(f.x,f.y,CONAN.radius,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='rgba(254,202,202,.85)';ctx.font='900 10px system-ui';ctx.textAlign='center';ctx.fillText('사신 범위',f.x,f.y-CONAN.radius-7);ctx.restore();for(const a of cc.assaults){const target=fighters.find(x=>x.id===a.targetId);if(target?.alive)drawConanAssault(a,target);}}
+      if(!f.portraitOnly&&!fastSimMode){const pulse=.5+.5*Math.sin(battleTime*3);ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();const g=ctx.createRadialGradient(f.x,f.y,CONAN.radius*.45,f.x,f.y,CONAN.radius);g.addColorStop(0,'rgba(127,29,29,0)');g.addColorStop(.78,'rgba(127,29,29,.035)');g.addColorStop(1,'rgba(239,68,68,.12)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(f.x,f.y,CONAN.radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(248,113,113,'+(.58+pulse*.18)+')';ctx.shadowColor='#ef4444';ctx.shadowBlur=7;ctx.lineWidth=2.4;ctx.setLineDash([9,6]);ctx.lineDashOffset=-battleTime*13;ctx.beginPath();ctx.arc(f.x,f.y,CONAN.radius,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore();for(const a of cc.assaults){const target=fighters.find(x=>x.id===a.targetId);if(target?.alive)drawConanAssault(a,target);}}
       ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
       ctx.fillStyle='#1d4ed8';ctx.strokeStyle='#172554';ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(-17,18);ctx.quadraticCurveTo(-15,5,-9,2);ctx.lineTo(0,7);ctx.lineTo(9,2);ctx.quadraticCurveTo(15,5,17,18);ctx.closePath();ctx.fill();ctx.stroke();
       ctx.fillStyle='#f8fafc';ctx.beginPath();ctx.moveTo(-8,3);ctx.lineTo(0,12);ctx.lineTo(8,3);ctx.closePath();ctx.fill();ctx.fillStyle='#dc2626';ctx.beginPath();ctx.moveTo(-5,7);ctx.lineTo(0,4);ctx.lineTo(5,7);ctx.lineTo(2,11);ctx.lineTo(-2,11);ctx.closePath();ctx.fill();
@@ -5687,6 +5685,7 @@
     }
 
       const patchNotes = [
+      "v169: 고난의 사신 반경130 경계와 내부 음영은 유지하되 사신 범위 텍스트를 제거했습니다. 리사의 파워코드 사운드를 디스토션·파워코드 기반 전자기타 톤으로 재구성하고, 폭주 상태에서는 펜타토닉 고음 솔로·피치벤드·빠른 피킹 레이어와 번개형 현 궤적·음표·추가 파동 연출을 사용합니다. 피해량·범위·주기·판정은 유지됩니다.",
       "v168: 고난의 사신 반경130 범위를 선명한 경계·내부 음영으로 표시했습니다. 전투장 어두운색/하얀색 선택과 전체 화면 버튼을 추가했습니다. 엘팔아·고난·거미남·배관공·쿱하·코요테드를 얼굴~흉상 중심으로 재구성하고 도감도 같은 그림을 사용합니다. 쿱하 등껍질 돌진 잔상과 쿠파형 외형을 개선하고 불기둥 전용 게이지, 배관공 벽 접촉50 게이지, 코요테드 리안드리·라일라이 상태를 상태창에 추가했습니다. 코요테드 독구름을 반투명 구름으로, 리안드리 잔류독을 붉은색으로, 라일라이 둔화를 빙결형 연출로 구분했습니다. 전투 수치와 판정은 유지됩니다.",
       "v167: 엘팔아·고난·거미남·배관공·쿱하·코요테드의 인게임/초상화 Canvas 외형을 전면 개선했습니다. 엘팔아 냉기영역·빙결 결정, 고난 사신 스택·범인 3종, 거미남 웹슈터, 배관공 랜덤박스·파워업·토관·카트·바나나·등껍질, 쿱하 등껍질 돌진·회전 불기둥, 코요테드 대머리 마스크 외형·독안개 연출을 강화했으며 전투 수치와 판정은 유지됩니다.",
       "v166: 배관공이 바나나·등껍질에 맞아 회전할 때 이미 발사되거나 설치된 바나나껍질·거북이 등껍질·파이어볼·아이템 상자가 배관공을 중심으로 함께 회전하던 렌더링 버그를 수정했습니다. 설치물 좌표와 전투 판정은 그대로 유지됩니다.",
