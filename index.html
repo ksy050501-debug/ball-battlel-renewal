@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v170</title>
+  <title>볼배틀 리뉴얼 v171</title>
   <style>
     :root {
       --bg: #020617;
@@ -1016,7 +1016,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v170</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v171</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1379,7 +1379,7 @@
 
     const LISA = { patience: 40, idleDelay: 5, idleGain: 2, duration: 14, rageDuration: 4, rageRange: 190, period: 1.25, ragePeriod: 0.55, power: 8, ragePower: 9, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
     function initLisa(f) {
-      f.lisa = { mode: "lady", patience: 0, idle: 0, rock: 0, walls: 0, attack: 0, riff: 0, waves: [], speech: "", speechTime: 0 };
+      f.lisa = { mode: "lady", patience: 0, idle: 0, rock: 0, walls: 0, attack: 0, riff: 0, waves: [], speech: "", speechTime: 0, soloNodes: [], soloScheduled: false, soloToken: 0 };
     }
     function lisaSay(f, text) {
       if (fastSimMode) return;
@@ -1414,18 +1414,42 @@
       lisaVelocity(f, LISA.speed * 1.6);
       lisaSay(f, "끝까지 불태워 버려!!!");
       spawnBlast(f.x, f.y, 90, "#fb7185");
+      playLisaRageSolo(f);
+    }
+    const LISA_RAGE_SOLO = [
+      {t:0.00,midi:76,dur:.13,gain:.82,accent:true},{t:.11,midi:79,dur:.13,gain:.78,pick:false},{t:.22,midi:81,dur:.13,gain:.80,pick:false},{t:.33,midi:83,dur:.13,gain:.82,pick:false},{t:.44,midi:86,dur:.13,gain:.85},{t:.55,midi:88,dur:.13,gain:.88,pick:false},{t:.66,midi:91,dur:.14,gain:.91},{t:.78,midi:93,dur:.18,gain:.95,pick:false},
+      {t:.94,midi:91,dur:.30,gain:1,bend:2,vibrato:true,accent:true},
+      {t:1.27,midi:88,dur:.12,gain:.86},{t:1.38,midi:86,dur:.12,gain:.82,pick:false},{t:1.49,midi:83,dur:.12,gain:.84,pick:false},{t:1.60,midi:81,dur:.12,gain:.80,pick:false},{t:1.71,midi:88,dur:.15,gain:.94,accent:true},{t:1.84,midi:83,dur:.14,gain:.82},
+      {t:1.98,midi:76,dur:.10,gain:.79},{t:2.07,midi:79,dur:.10,gain:.78,pick:false},{t:2.16,midi:81,dur:.10,gain:.80,pick:false},{t:2.25,midi:83,dur:.10,gain:.83},{t:2.34,midi:86,dur:.10,gain:.86,pick:false},{t:2.43,midi:88,dur:.16,gain:.94,accent:true},
+      {t:2.60,midi:83,from:79,dur:.18,gain:.86,accent:true},{t:2.77,midi:86,dur:.32,gain:.98,bend:2,vibrato:true},
+      {t:3.10,midi:88,dur:.11,gain:.89},{t:3.20,midi:86,dur:.11,gain:.82,pick:false},{t:3.30,midi:83,dur:.11,gain:.81,pick:false},{t:3.40,midi:81,dur:.11,gain:.80},{t:3.50,midi:83,dur:.13,gain:.88,accent:true},
+      {t:3.62,midi:86,dur:.37,gain:1,bend:2,vibrato:true,accent:true}
+    ];
+    function lisaMidiHz(midi){return 440*Math.pow(2,(midi-69)/12);}
+    function lisaTrackSoloNode(owner,node,source=false){if(!owner?.lisa||!node)return node;owner.lisa.soloNodes.push({node,source});return node;}
+    function stopLisaRageSolo(f){
+      const l=f?.lisa;if(!l)return;(l.soloNodes||[]).forEach(entry=>{const node=entry?.node||entry;try{if(entry?.source)node.stop();}catch(e){}try{node.disconnect();}catch(e){}});l.soloNodes=[];l.soloScheduled=false;l.soloToken=(l.soloToken||0)+1;
+    }
+    function lisaSoloBus(owner){
+      const input=lisaTrackSoloNode(owner,audioCtx.createGain()),pre=lisaTrackSoloNode(owner,audioCtx.createGain()),drive=lisaTrackSoloNode(owner,audioCtx.createWaveShaper()),high=lisaTrackSoloNode(owner,audioCtx.createBiquadFilter()),presence=lisaTrackSoloNode(owner,audioCtx.createBiquadFilter()),low=lisaTrackSoloNode(owner,audioCtx.createBiquadFilter()),comp=lisaTrackSoloNode(owner,audioCtx.createDynamicsCompressor()),dry=lisaTrackSoloNode(owner,audioCtx.createGain()),delay=lisaTrackSoloNode(owner,audioCtx.createDelay(.2)),wet=lisaTrackSoloNode(owner,audioCtx.createGain()),feedback=lisaTrackSoloNode(owner,audioCtx.createGain());
+      const curve=new Float32Array(512);for(let i=0;i<curve.length;i++){const x=i*2/(curve.length-1)-1;curve[i]=(1+7)*x/(1+7*Math.abs(x));}pre.gain.value=.56;drive.curve=curve;drive.oversample='4x';high.type='highpass';high.frequency.value=105;presence.type='peaking';presence.frequency.value=2100;presence.Q.value=.85;presence.gain.value=3.8;low.type='lowpass';low.frequency.value=3900;low.Q.value=.72;comp.threshold.value=-20;comp.knee.value=16;comp.ratio.value=4.2;comp.attack.value=.004;comp.release.value=.1;dry.gain.value=.42*masterVolume;delay.delayTime.value=.088;wet.gain.value=.065*masterVolume;feedback.gain.value=.055;
+      input.connect(pre);pre.connect(drive);drive.connect(high);high.connect(presence);presence.connect(low);low.connect(comp);comp.connect(dry);dry.connect(audioCtx.destination);comp.connect(delay);delay.connect(wet);wet.connect(audioCtx.destination);delay.connect(feedback);feedback.connect(delay);return input;
+    }
+    function lisaLeadNote(note,baseTime,owner,input){
+      if(!audioCtx||!owner?.lisa||!input)return;const when=baseTime+note.t,end=when+note.dur,slideEnd=Math.min(end,when+.042),human=Math.sin(note.midi*12.9898+note.t*78.233)*2,fromHz=lisaMidiHz(note.from??note.midi),toHz=lisaMidiHz(note.midi),accent=note.accent?1.12:1,level=.027*note.gain*accent;
+      const env=lisaTrackSoloNode(owner,audioCtx.createGain());env.gain.setValueAtTime(.0001,when);env.gain.exponentialRampToValueAtTime(Math.max(.0002,level),when+(note.accent?.004:.006));env.gain.exponentialRampToValueAtTime(Math.max(.0002,level*.68),Math.min(end-.018,when+.035));env.gain.setValueAtTime(Math.max(.0002,level*.60),Math.max(when+.04,end-.04));env.gain.exponentialRampToValueAtTime(.0001,end);env.connect(input);
+      [{type:'triangle',gain:.46,detune:-4},{type:'triangle',gain:.34,detune:4},{type:'sawtooth',gain:.10,detune:0}].forEach(part=>{const osc=lisaTrackSoloNode(owner,audioCtx.createOscillator(),true),g=lisaTrackSoloNode(owner,audioCtx.createGain());osc.type=part.type;g.gain.value=part.gain;osc.frequency.setValueAtTime(fromHz,when);if(note.from!=null)osc.frequency.exponentialRampToValueAtTime(toHz,slideEnd);else osc.frequency.setValueAtTime(toHz,when);osc.detune.setValueAtTime(part.detune+human,when);if(note.bend)osc.detune.linearRampToValueAtTime(part.detune+human+note.bend*100,Math.max(when+.06,end-.035));if(note.vibrato){const lfo=lisaTrackSoloNode(owner,audioCtx.createOscillator(),true),depth=lisaTrackSoloNode(owner,audioCtx.createGain()),vStart=when+note.dur*.48;lfo.type='sine';lfo.frequency.value=6.8;depth.gain.setValueAtTime(0,when);depth.gain.setValueAtTime(0,vStart);depth.gain.linearRampToValueAtTime(16,vStart+.045);lfo.connect(depth);depth.connect(osc.detune);lfo.start(when);lfo.stop(end+.025);}osc.connect(g);g.connect(env);osc.start(when);osc.stop(end+.025);});
+      if(note.pick!==false){const length=Math.max(1,Math.floor(audioCtx.sampleRate*.015)),buffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate),data=buffer.getChannelData(0),pickVar=.94+.06*Math.sin(note.t*91+note.midi);let seed=(note.midi*1009+Math.round(note.t*1000)*9176)|0;for(let i=0;i<length;i++){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;data[i]=(((seed>>>0)/4294967295)*2-1)*Math.pow(1-i/length,3);}const src=lisaTrackSoloNode(owner,audioCtx.createBufferSource(),true),hp=lisaTrackSoloNode(owner,audioCtx.createBiquadFilter()),bp=lisaTrackSoloNode(owner,audioCtx.createBiquadFilter()),pg=lisaTrackSoloNode(owner,audioCtx.createGain());src.buffer=buffer;hp.type='highpass';hp.frequency.value=1100;bp.type='bandpass';bp.frequency.value=2500;bp.Q.value=.75;pg.gain.setValueAtTime(.0001,when);pg.gain.linearRampToValueAtTime(.0085*accent*pickVar,when+.002);pg.gain.exponentialRampToValueAtTime(.0001,when+.015);src.connect(hp);hp.connect(bp);bp.connect(pg);pg.connect(input);src.start(when);src.stop(when+.018);}
+    }
+    function playLisaRageSolo(f){
+      if(fastSimMode||!soundEnabled||!f?.alive||!f.lisa)return;ensureAudio();if(!audioCtx)return;stopLisaRageSolo(f);f.lisa.soloScheduled=true;const input=lisaSoloBus(f),startTime=audioCtx.currentTime+.035;LISA_RAGE_SOLO.forEach(note=>lisaLeadNote(note,startTime,f,input));
     }
     function lisaGuitarVoice(freq,duration,volume,startOffset=0,bend=1){
       if(!audioCtx)return;const now=audioCtx.currentTime+startOffset,osc=audioCtx.createOscillator(),warm=audioCtx.createOscillator(),oscGain=audioCtx.createGain(),warmGain=audioCtx.createGain(),drive=audioCtx.createWaveShaper(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();
       const curve=new Float32Array(256);for(let i=0;i<256;i++){const x=i*2/255-1;curve[i]=6.5*x/(1+5.5*Math.abs(x));}drive.curve=curve;drive.oversample='4x';osc.type='sawtooth';warm.type='triangle';osc.frequency.setValueAtTime(Math.max(30,freq),now);warm.frequency.setValueAtTime(Math.max(30,freq*2.001),now);if(bend!==1){osc.frequency.exponentialRampToValueAtTime(Math.max(30,freq*bend),now+duration*.78);warm.frequency.exponentialRampToValueAtTime(Math.max(30,freq*2.001*bend),now+duration*.78);}oscGain.gain.value=.72;warmGain.gain.value=.11;filter.type='lowpass';filter.frequency.setValueAtTime(2550,now);filter.frequency.exponentialRampToValueAtTime(1850,now+duration);filter.Q.value=.72;gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume*masterVolume),now+.012);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume*.52*masterVolume),now+duration*.24);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);osc.connect(oscGain);warm.connect(warmGain);oscGain.connect(drive);warmGain.connect(drive);drive.connect(filter);filter.connect(gain);gain.connect(audioCtx.destination);osc.start(now);warm.start(now);osc.stop(now+duration+.03);warm.stop(now+duration+.03);
     }
     function lisaPowerChord(f){
-      if(fastSimMode||!soundEnabled||!canPlaySound("lisaChord",.12))return;ensureAudio();const rage=f.lisa.mode==="rage",roots=[82.41,98,110,73.42],riff=f.lisa.riff++,root=roots[riff%roots.length];
-      noise(.009,rage?.007:.009,0,4300,"highpass");
-      if(!rage){lisaGuitarVoice(root,.36,.031,0,.99);lisaGuitarVoice(root*1.5,.31,.022,.035,.995);lisaGuitarVoice(root*2,.27,.016,.07,.99);return;}
-      lisaGuitarVoice(root,.31,.025,0,.99);lisaGuitarVoice(root*1.5,.26,.016,.04,.995);
-      const phrases=[[2,2.245,2.52,2.996],[2.52,2.245,2,2.52],[2,2.52,2.996,3.364]],phrase=phrases[riff%phrases.length];
-      for(let i=0;i<phrase.length;i++){const last=i===phrase.length-1;lisaGuitarVoice(root*phrase[i],last?.27:.22,last?.021:.018,.095+i*.09,last?1.075:1.012);}
+      if(fastSimMode||!soundEnabled||!f?.lisa||f.lisa.mode==="rage"||!canPlaySound("lisaChord",.12))return;ensureAudio();const roots=[82.41,98,110,73.42],root=roots[(f.lisa.riff++)%roots.length];noise(.009,.009,0,4300,"highpass");lisaGuitarVoice(root,.36,.031,0,.99);lisaGuitarVoice(root*1.5,.31,.022,.035,.995);lisaGuitarVoice(root*2,.27,.016,.07,.99);
     }
 
     function lisaConeTouches(f, e, angle) {
@@ -1460,6 +1484,7 @@
       }
       l.rock = Math.max(0, l.rock - dt * 100 / LISA.duration);
       if (l.rock <= 0) {
+        stopLisaRageSolo(f);
         l.mode = "lady"; l.patience = 0; l.idle = 0; l.walls = 0; l.attack = 0;
         lisaVelocity(f, LISA.speed);
         lisaSay(f, "완.전.연.소!!!!");
@@ -5112,6 +5137,7 @@
 
     function setSoundEnabled(on) {
       soundEnabled = on;
+      if (!on) fighters.forEach(f => { if (f.lisa) stopLisaRageSolo(f); });
       if (!on && "speechSynthesis" in window) window.speechSynthesis.cancel();
       if (soundEnabled) {
         ensureAudio();
@@ -5687,6 +5713,7 @@
     }
 
       const patchNotes = [
+      "v171: 리사의 일반 록 파워코드와 폭주 리드 기타 오디오 연출을 개선했습니다. 폭주 진입 시 4초 솔로를 한 번만 예약하며, 사망·폭주 종료·사운드 비활성화 시 예약 음향을 정리합니다.",
       "v170: 리사의 기타 사운드를 저왜곡·저노이즈 중심으로 다시 믹싱했습니다. 일반 파워코드는 따뜻한 저역 중심으로 정리하고, 폭주 솔로는 겹쳐 울리던 음을 줄여 4음 프레이즈와 여유 있는 간격으로 선율이 또렷하게 들리도록 변경했습니다. 피해량·범위·주기·판정은 유지됩니다.",
       "v169: 고난의 사신 반경130 경계와 내부 음영은 유지하되 사신 범위 텍스트를 제거했습니다. 리사의 파워코드 사운드를 디스토션·파워코드 기반 전자기타 톤으로 재구성하고, 폭주 상태에서는 펜타토닉 고음 솔로·피치벤드·빠른 피킹 레이어와 번개형 현 궤적·음표·추가 파동 연출을 사용합니다. 피해량·범위·주기·판정은 유지됩니다.",
       "v168: 고난의 사신 반경130 범위를 선명한 경계·내부 음영으로 표시했습니다. 전투장 어두운색/하얀색 선택과 전체 화면 버튼을 추가했습니다. 엘팔아·고난·거미남·배관공·쿱하·코요테드를 얼굴~흉상 중심으로 재구성하고 도감도 같은 그림을 사용합니다. 쿱하 등껍질 돌진 잔상과 쿠파형 외형을 개선하고 불기둥 전용 게이지, 배관공 벽 접촉50 게이지, 코요테드 리안드리·라일라이 상태를 상태창에 추가했습니다. 코요테드 독구름을 반투명 구름으로, 리안드리 잔류독을 붉은색으로, 라일라이 둔화를 빙결형 연출로 구분했습니다. 전투 수치와 판정은 유지됩니다.",
@@ -6631,6 +6658,7 @@
     }
 
     function resetBattle() {
+      fighters.forEach(f => { if (f.lisa) stopLisaRageSolo(f); });
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       ironObjects = [];
       captainShields = [];
@@ -9271,6 +9299,7 @@
     }
 
     function triggerDeathEffect(target) {
+      if (target?.lisa) stopLisaRageSolo(target);
       clearDefeatedFighterStatusStacks(target);
       clearDefeatedFighterArtifacts(target);
       if(target.snapDustDeath){target.snapDustDeath=false;if(fastSimMode)return;cinematicFreeze=Math.max(cinematicFreeze,.28);deathEffects.push({x:target.x,y:target.y,r:target.r,color:target.color,mark:target.mark,name:target.name,life:3.6,maxLife:3.6,burst:false,dust:true});return;}
