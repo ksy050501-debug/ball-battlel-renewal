@@ -1,9 +1,10 @@
 name: One-shot v172 Coyote Riftmaker
 
-"on":
+on:
   push:
     paths:
       - '.github/workflows/patch-v172-coyote-riftmaker.yml'
+      - '.github/patch_v172_coyote_riftmaker.py'
 
 permissions:
   contents: write
@@ -14,113 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Apply patch
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          def one(old, new, label):
-              global s
-              if old not in s:
-                  raise SystemExit('missing ' + label)
-              s = s.replace(old, new, 1)
-
-          one('<title>볼배틀 리뉴얼 v171</title>', '<title>볼배틀 리뉴얼 v172</title>', 'title')
-          one('<h1 id="mainTitle">볼배틀 리뉴얼 v171</h1>', '<h1 id="mainTitle">볼배틀 리뉴얼 v172</h1>', 'heading')
-
-          one(
-'''      contactDamage:8, contactCooldown:1, flingDuration:.42, flingGap:10,
-      liandryAt:30, liandryTicks:3, rylaiAt:90, rylaiSlowMult:.8''',
-'''      contactDamage:8, contactCooldown:1, flingDuration:.42, flingGap:10,
-      liandryAt:30, liandryTicks:3,
-      riftmakerAt:60, riftThreshold:10, riftHeal:3,
-      rylaiAt:90, rylaiSlowMult:.8''',
-'coyote constants')
-
-          one(
-'f.coyote={trailCd:0,contactCd:new Map(),dirX:1,dirY:0,liandry:false,rylai:false};',
-'f.coyote={trailCd:0,contactCd:new Map(),dirX:1,dirY:0,liandry:false,riftmaker:false,riftDot:0,rylai:false};',
-'coyote init')
-
-          one(
-'''      if(!c.rylai&&battleTime>=COYOTE.rylaiAt){
-        c.rylai=true;
-        if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-36,"라일라이 획득!","#60a5fa");spawnBlast(f.x,f.y,52,"#60a5fa");}
-      }''',
-'''      if(!c.riftmaker&&battleTime>=COYOTE.riftmakerAt){
-        c.riftmaker=true;c.riftDot=0;
-        if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-36,"균열생성기 획득!","#a78bfa");spawnBlast(f.x,f.y,50,"#a78bfa");}
-      }
-      if(!c.rylai&&battleTime>=COYOTE.rylaiAt){
-        c.rylai=true;
-        if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-36,"라일라이 획득!","#60a5fa");spawnBlast(f.x,f.y,52,"#60a5fa");}
-      }''',
-'rift acquisition')
-
-          marker = '''    function coyotePoisonSlowMultiplier(f){
-      const p=f?.coyotePoison;if(!p)return 1;
-      const source=fighterById(p.sourceId);
-      return source?.coyote?.rylai?COYOTE.rylaiSlowMult:1;
-    }
-'''
-          addition = marker + '''    function coyoteRecordDotDamage(source,dealt){
-      const c=source?.coyote;
-      if(!source?.alive||!c?.riftmaker||dealt<=0)return;
-      c.riftDot=(c.riftDot||0)+dealt;
-      while(c.riftDot>=COYOTE.riftThreshold){
-        c.riftDot-=COYOTE.riftThreshold;
-        heal(source,COYOTE.riftHeal);
-      }
-    }
-'''
-          one(marker, addition, 'rift dot helper')
-
-          one(
-'''            const dealt=damage(target,COYOTE.trailDamage,owner,"독방구");
-            if(dealt>0){target.coyotePoisonCd=COYOTE.trailTick;if(!fastSimMode)spawnParticles(target.x,target.y,"#84cc16",3);}''',
-'''            const dealt=damage(target,COYOTE.trailDamage,owner,"독방구");
-            if(dealt>0){coyoteRecordDotDamage(owner,dealt);target.coyotePoisonCd=COYOTE.trailTick;if(!fastSimMode)spawnParticles(target.x,target.y,"#84cc16",3);}''',
-'cloud dot accounting')
-
-          one(
-'''          const dealt=damage(target,COYOTE.trailDamage,source,"리안드리 잔류독");
-          poison.ticksLeft-=1;poison.next+=COYOTE.trailTick;
-          if(dealt>0&&!fastSimMode)spawnParticles(target.x,target.y,"#ef4444",5);''',
-'''          const dealt=damage(target,COYOTE.trailDamage,source,"리안드리 잔류독");
-          if(dealt>0)coyoteRecordDotDamage(source,dealt);
-          poison.ticksLeft-=1;poison.next+=COYOTE.trailTick;
-          if(dealt>0&&!fastSimMode)spawnParticles(target.x,target.y,"#ef4444",5);''',
-'liandry dot accounting')
-
-          one(
-'''condition:"이동 경로에 3초 독방구 · 접촉8+넘기기 · 30초 리안드리 · 90초 라일라이", desc:"신지도를 모티브로 한 교란형 캐릭터. 이동 경로에 독방구를 남기고 접촉한 적을 몸 뒤로 넘긴다. 30초에는 리안드리를 얻어 독에서 벗어난 뒤에도 3틱이 이어지고, 90초에는 라일라이를 얻어 독이 지속되는 적의 이동속도를 20% 낮춘다."''',
-'''condition:"이동 경로에 3초 독방구 · 접촉8+넘기기 · 30초 리안드리 · 60초 균열생성기 · 90초 라일라이", desc:"신지도를 모티브로 한 교란형 캐릭터. 이동 경로에 독방구를 남기고 접촉한 적을 몸 뒤로 넘긴다. 30초에는 리안드리를 얻어 독에서 벗어난 뒤에도 3틱이 이어지고, 60초에는 균열생성기를 얻어 이후 실제 도트 피해 누적 10마다 체력3을 회복하며, 90초에는 라일라이를 얻어 독이 지속되는 적의 이동속도를 20% 낮춘다."''',
-'coyote card')
-
-          pat = re.compile(r'''      if\(f\.coyote\)\{\n        const c=f\.coyote,liandryRatio=.*?\n        return \{ratio:liandryRatio,className:.*?\n      \}''', re.S)
-          m = pat.search(s)
-          if not m:
-              raise SystemExit('missing coyote status block')
-          new_status = '''      if(f.coyote){
-        const c=f.coyote,
-          liandryRatio=c.liandry?1:clamp(battleTime/COYOTE.liandryAt,0,1),
-          riftRatio=c.riftmaker?1:clamp(battleTime/COYOTE.riftmakerAt,0,1),
-          rylaiRatio=c.rylai?1:clamp(battleTime/COYOTE.rylaiAt,0,1);
-        const riftText=c.riftmaker?`획득 · 도트 ${Math.floor(c.riftDot||0)}/${COYOTE.riftThreshold}`:Math.max(0,COYOTE.riftmakerAt-battleTime).toFixed(1)+"초";
-        return {ratio:liandryRatio,className:c.liandry?"rage-fill":"skill-fill",text:c.liandry?"리안드리 획득":"리안드리 "+Math.max(0,COYOTE.liandryAt-battleTime).toFixed(1)+"초",extraBarsHtml:`<div class="bar" title="균열생성기"><div class="bar-fill rage-fill" style="width:${riftRatio*100}%"></div></div><div class="bar" title="라일라이"><div class="bar-fill shield-fill" style="width:${rylaiRatio*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">균열생성기 ${riftText} · 도트 피해10마다 HP3 회복</div><div class="status-skill-label">라일라이 ${c.rylai?"획득":Math.max(0,COYOTE.rylaiAt-battleTime).toFixed(1)+"초"} · 독구름 피해1 / 0.5초</div>`};
-      }'''
-          s = s[:m.start()] + new_status + s[m.end():]
-
-          note = '      "v172: 코요테드 60초 성장 아이템 균열생성기 추가. 획득 이후 독방구와 리안드리 잔류독으로 실제 입힌 도트 피해를 누적해 10피해마다 HP3을 회복하고 초과 누적은 이월한다. 접촉 피해는 집계하지 않으며 최대 체력을 넘겨 회복하지 않는다. 30초 리안드리·90초 라일라이 및 기존 전투 수치는 유지.",\n'
-          one('      const patchNotes = [\n', '      const patchNotes = [\n' + note, 'patch note')
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
+        run: python3 .github/patch_v172_coyote_riftmaker.py
       - name: Validate
         shell: bash
         run: |
@@ -137,13 +32,12 @@ jobs:
           grep -q 'coyoteRecordDotDamage(owner,dealt)' index.html
           grep -q 'coyoteRecordDotDamage(source,dealt)' index.html
           grep -q '균열생성기 획득!' index.html
-
       - name: Commit
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git rm .github/workflows/patch-v172-coyote-riftmaker.yml
+          git rm .github/workflows/patch-v172-coyote-riftmaker.yml .github/patch_v172_coyote_riftmaker.py
           git commit -m "Add CoyoteD Riftmaker sustain v172"
           git push
