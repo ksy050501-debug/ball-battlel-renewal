@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v178</title>
+  <title>볼배틀 리뉴얼 v179</title>
   <style>
     :root {
       --bg: #020617;
@@ -1493,7 +1493,7 @@
         return;
       }
       if (l.mode === "rock" && l.rock <= 100 * LISA.rageDuration / LISA.duration + 1e-9) enterLisaRage(f);
-      if (f.stun > 0 || f.punchHold > 0 || f.punchFlight > 0 || f.vampSuppressed > 0) return;
+      if (isStunned(f) || f.punchHold > 0 || f.punchFlight > 0 || f.vampSuppressed > 0) return;
       l.attack -= dt;
       if (l.attack <= 0) { lisaAttack(f); l.attack = l.mode === "rage" ? LISA.ragePeriod : LISA.period; }
     }
@@ -1640,11 +1640,11 @@
       let dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy);
       // 점프가 정확히 상대 중심에 착지하면 방향 벡터가 0이 되어 넉백 동안 정지하던 문제를 방지한다.
       if(d<.001){const own=Math.hypot(target.vx||0,target.vy||0);if(own>.5){dx=target.vx/own;dy=target.vy/own;}else{const a=Math.atan2(f.vy||0,f.vx||1);dx=Math.cos(a);dy=Math.sin(a);}d=1;}
-      target.vx=dx/d*speed;target.vy=dy/d*speed;target.punchSource=f;target.punchWallPower=wallPower;target.punchWallHits=0;target.punchFlight=Math.max(target.punchFlight||0,duration);
+      applyKnockback(target,f,dx/d,dy/d,speed,duration,{wallDamageSource:f,wallDamage:wallPower,resetWallHits:true});
     }
 
     function logoContact(f,target) {
-      const l=f.logo;if(!l || l.mode==="doctor" || l.jump || l.smashCd>0 || f.stun>0 || !target?.alive || !areEnemies(f,target))return;
+      const l=f.logo;if(!l || l.mode==="doctor" || l.jump || l.smashCd>0 || isStunned(f) || !target?.alive || !areEnemies(f,target))return;
       const huge=l.mode==="hulk",power=huge?LOGO.smash:LOGO.smartSmash;
       l.smashCd=huge?1.05:1.2;
       if(huge){l.fistTime=.24;l.fistAngle=Math.atan2(target.y-f.y,target.x-f.x);}
@@ -1681,7 +1681,7 @@
       return 1+Math.min(NEWHELLO.maxBonus,Math.max(0,e.hp-f.hp)/NEWHELLO.gapForCap*NEWHELLO.maxBonus);
     }
     function newhelloBlocked(f) {
-      return !f.alive || f.stun>0 || f.punchHold>0 || f.punchFlight>0 ||
+      return !f.alive || isStunned(f) || f.punchHold>0 || f.punchFlight>0 ||
         f.vampSuppressed>0 || f.joltStop>0 || isCasting(f);
     }
     function newhelloWallPoint(f,a) {
@@ -1707,7 +1707,7 @@
       const dealt=bodyDirectDamage(target,burst,source,"출혈 폭발","#ef4444");
       spawnBlast(target.x,target.y,44,"#7f1d1d");
       spawnParticles(target.x,target.y,"#fecaca",14);
-      spawnFloatingText(target.x,target.y-target.r-52,`출혈 폭발 -${Math.round(burst)}`,"#fca5a5");
+      spawnFloatingText(target.x,target.y-target.r-52,`출혈 폭발 -${Math.round(burst)}`,dotDamageColor("출혈 폭발","#fca5a5"));
       playSound("slash",.85);
       return dealt;
     }
@@ -2666,7 +2666,7 @@
       };
     }
     function baldCapeBlocked(f){
-      return !f?.alive||f.stun>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
+      return !f?.alive||isStunned(f)||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
     }
     function baldCapeAngleDiff(a,b){return Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));}
     function baldCapeConeTargets(f,angle,range,halfAngle){
@@ -2816,9 +2816,7 @@
       const dealt=damage(target,BALD_CAPE.normalDamage,f,"보통펀치");
       b.punchAnim={angle:Math.atan2(dy,dx),time:.22,serious:false};
       if(dealt>0&&target.alive){
-        target.vx=dx/d*BALD_CAPE.wallKnockSpeed;target.vy=dy/d*BALD_CAPE.wallKnockSpeed;
-        target.punchFlight=Math.max(target.punchFlight||0,BALD_CAPE.wallKnockDuration);
-        target.punchSource=f;target.punchWallPower=BALD_CAPE.wallDamage;target.punchWallHits=0;
+        applyKnockback(target,f,dx/d,dy/d,BALD_CAPE.wallKnockSpeed,BALD_CAPE.wallKnockDuration,{wallDamageSource:f,wallDamage:BALD_CAPE.wallDamage,resetWallHits:true});
       }
       triggerHitStop(.18);screenShake=Math.max(screenShake,.42);
       spawnHitFlash(target.x,target.y,"#fef08a",88);spawnBlast(target.x,target.y,76,"#facc15");
@@ -2977,7 +2975,7 @@
       if(s.meter>=CONAN.maxMeter)triggerConanAssault(source,target,s);
     }
     function knifeSlowMultiplier(f){
-      return (f?.knifeSlow||0)>0&&!hasHarmfulImmunity(f)?CONAN.knifeSlow:1;
+      return slowMultiplier(CONAN.knifeSlow,(f?.knifeSlow||0)>0&&!hasHarmfulImmunity(f));
     }
     function resolveConanAssault(f,a,target){
       const dx=target.x-a.x,dy=target.y-a.y,d=Math.hypot(dx,dy)||1;
@@ -2987,23 +2985,21 @@
         label="흉기 습격! -"+Math.round(dealt)+" + 출혈30";color="#fca5a5";
         if(target.alive&&dealt>0&&!hasHarmfulImmunity(target)){
           applyBleed(target,f,CONAN.knifeBleedPower,CONAN.knifeBleedDuration,.55,CONAN.knifeBleedTicks);
-          refreshCcTimer(target,"knifeSlow",CONAN.knifeSlowDuration);
+          applySlow(target,CONAN.knifeSlow,CONAN.knifeSlowDuration,"knifeSlow");
         }
-        if(target.alive&&dealt>0){target.vx=dx/d*180;target.vy=dy/d*180;}
+        if(target.alive&&dealt>0){applyKnockback(target,f,dx/d,dy/d,180);}
       }else if(a.type==="car"){
         dealt=damage(target,CONAN.assaultDamage,f,"차량 돌진");
         label="차량 돌진! -"+Math.round(dealt);color="#fde68a";
         if(target.alive&&dealt>0){
-          target.vx=dx/d*CONAN.carKnock;target.vy=dy/d*CONAN.carKnock;
-          target.punchFlight=Math.max(target.punchFlight||0,CONAN.carKnockDuration);
-          target.punchSource=null;target.punchWallPower=0;target.punchWallHits=0;
+          applyKnockback(target,f,dx/d,dy/d,CONAN.carKnock,CONAN.carKnockDuration,{wallDamageSource:null,wallDamage:0,resetWallHits:true});
         }
       }else{
         dealt=damage(target,CONAN.assaultDamage,f,"둔기 습격");
         label="둔기 습격! -"+Math.round(dealt)+" · 기절";color="#ddd6fe";
         if(target.alive&&dealt>0){
           if(!hasHarmfulImmunity(target))applyStun(target,CONAN.bluntStun);
-          target.vx=dx/d*CONAN.bluntKnock;target.vy=dy/d*CONAN.bluntKnock;
+          applyKnockback(target,f,dx/d,dy/d,CONAN.bluntKnock);
         }
       }
       if(!fastSimMode){
@@ -3138,7 +3134,7 @@
       const dealt=damage(target,ELSA.shatterDamage,source,"빙결 파쇄");
       if(target.alive){
         const dx=target.x-source.x,dy=target.y-source.y,d=Math.hypot(dx,dy)||1;
-        target.vx=dx/d*ELSA.shatterKnock;target.vy=dy/d*ELSA.shatterKnock;
+        applyKnockback(target,source,dx/d,dy/d,ELSA.shatterKnock);
       }
       if(!fastSimMode){
         triggerHitStop(.13);screenShake=Math.max(screenShake,.30);
@@ -3209,7 +3205,7 @@
       if(!f?.alive||hasHarmfulImmunity(f))return 1;
       for(const source of fighters){
         if(!source.alive||!source.elsa||source.id===f.id||!areEnemies(source,f))continue;
-        if(Math.hypot(f.x-source.x,f.y-source.y)<=elsaAuraRadius(source)+f.r)return ELSA.auraSlow;
+        if(Math.hypot(f.x-source.x,f.y-source.y)<=elsaAuraRadius(source)+f.r)return applySlow(f,ELSA.auraSlow,0,"coldAura",{sample:true,active:true});
       }
       return 1;
     }
@@ -3295,7 +3291,7 @@
       let remaining=dt;
       while(remaining>1e-7 && h.dash && f.alive){
         const step=Math.min(remaining,1/120);remaining-=step;
-        const slow=(f.freeze>0?.42:1)*songSlowMultiplier(f)*(f.concussionSlow>0?HINTA.slowMultiplier:1)*timedCcSlowMultiplier(f);
+        const slow=slowMultiplier(.42,f.freeze>0)*songSlowMultiplier(f)*slowMultiplier(HINTA.slowMultiplier,f.concussionSlow>0)*timedCcSlowMultiplier(f);
         const advance=Math.min(d.left,HINTA.dashSpeed*slow*step);
         f.vx=d.dx*HINTA.dashSpeed;f.vy=d.dy*HINTA.dashSpeed;
         f.x+=d.dx*advance;f.y+=d.dy*advance;d.left-=advance;
@@ -3307,9 +3303,8 @@
             // 돌진 진행선을 비우도록 옆으로 밀어내며, 공을 향한 직선 경로는 유지한다.
             const cross=d.dx*(e.y-f.y)-d.dy*(e.x-f.x),side=cross<0?-1:1;
             const nx=-d.dy*side,ny=d.dx*side;
-            e.vx=nx*480;e.vy=ny*480;e.punchFlight=Math.max(e.punchFlight||0,.25);
-            e.punchSource=null;e.punchWallPower=0;
-            refreshCcTimer(e,"concussionSlow",HINTA.concussion);
+            applyKnockback(e,f,nx,ny,480,.25,{wallDamageSource:null,wallDamage:0});
+            applySlow(e,HINTA.slowMultiplier,HINTA.concussion,"concussionSlow");
             spawnFloatingText(e.x,e.y-e.r-32,"뇌진탕 · 둔화 2초","#fde68a");
           }
           spawnFloatingText(f.x,f.y-f.r-40,"비켜!!!","#fdba74");
@@ -3347,7 +3342,7 @@
         }
         const b=h.ball;b.age+=dt;b.spin+=dt*(b.flying?14:1.5);
         if(!b.flying){
-          const locked=f.stun>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
+          const locked=isStunned(f)||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
           if(!h.dash)h.wait+=dt;
           if(!locked && b.age>.15 && dist(f,b)<=f.r+b.r+HINTA.pickupBonus)spikeHintaBall(f);
           else if(!locked && !h.dash && h.wait>=HINTA.dashWait)startHintaDash(f);
@@ -3487,7 +3482,7 @@
     }
     function wokWokBlocked(f){
       const dashing=!!(f?.wok&&battleTime<(f.wok.dashUntil||0));
-      return !f?.alive||f.stun>0||f.hardFreeze>0||f.bindStun>0||f.punchHold>0||(!dashing&&f.punchFlight>0)||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
+      return !f?.alive||isStunned(f)||f.hardFreeze>0||f.bindStun>0||f.punchHold>0||(!dashing&&f.punchFlight>0)||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
     }
     function wokBloodSpeedMultiplier(f){
       const w=f?.wok;if(!w||!f.alive)return 1;
@@ -3686,7 +3681,7 @@
     function coyotePoisonSlowMultiplier(f){
       const p=f?.coyotePoison;if(!p)return 1;
       const source=fighterById(p.sourceId);
-      return source?.coyote?.rylai?COYOTE.rylaiSlowMult:1;
+      return applySlow(f,COYOTE.rylaiSlowMult,0,"coyotePoison",{sample:true,active:source?.coyote?.rylai});
     }
     function coyoteRecordDotDamage(source,dealt){
       const c=source?.coyote;
@@ -3783,8 +3778,7 @@
     function captainKnock(source, target, speed = CAPTAIN.knock) {
       if (!source?.alive || !target?.alive) return;
       const dx = target.x - source.x, dy = target.y - source.y, d = Math.hypot(dx, dy) || 1;
-      target.vx = dx / d * speed; target.vy = dy / d * speed;
-      target.punchSource = null; target.punchFlight = Math.max(target.punchFlight || 0, 0.24);
+      applyKnockback(target,source,dx/d,dy/d,speed,0.24,{wallDamageSource:null});
     }
     function throwCaptainShield(f) {
       const target = nearestEnemy(f).enemy;
@@ -3832,7 +3826,7 @@
       return true;
     }
     function captainContact(f, target) {
-      if (!f.captain || f.captain.counterCd > 0 || f.stun > 0 || !target?.alive || !areEnemies(f, target)) return;
+      if (!f.captain || f.captain.counterCd > 0 || isStunned(f) || !target?.alive || !areEnemies(f, target)) return;
       f.captain.counterCd = CAPTAIN.counterCooldown;
       const held = f.captain.hasShield;
       if (!held) {
@@ -4450,9 +4444,8 @@
     function applyIronImpulse(target, impulse) {
       if (!target.alive || target.tano?.hidden > 0) return;
       // 이미 더 강한 파워 넉백 중이면 그 궤적과 벽 추가 피해를 유지한다.
-      if (target.punchFlight > 0 && Math.hypot(target.vx, target.vy) > Math.hypot(impulse.vx, impulse.vy)) return;
-      target.vx = impulse.vx; target.vy = impulse.vy;
-      target.punchSource = null; target.punchFlight = impulse.duration;
+      applyKnockback(target,null,impulse.vx,impulse.vy,1,impulse.duration,
+        {wallDamageSource:null,replaceDuration:true,preserveExistingStrongerKnockback:true});
     }
     function ironKnock(source, target, speed = 540) {
       if (!target?.alive || target.tano?.hidden > 0) return;
@@ -4512,7 +4505,7 @@
         }
         return;
       }
-      if (f.stun > 0) return;
+      if (isStunned(f)) return;
       if (i.dash > 0) { i.dash = Math.max(0, i.dash - dt); if (i.dash <= 0) normalizeIronVelocity(f); }
       if (i.suit !== "hulk") {
         i.attackCd -= dt;
@@ -4739,14 +4732,13 @@
     function songSlowMultiplier(f) {
       const debuffs = f?.songDebuffs;
       if (!(debuffs instanceof Map) || debuffs.size === 0) return 1;
-      for (const time of debuffs.values()) if (time > 0) return OSHI.slowMultiplier;
+      for (const time of debuffs.values()) if (time > 0) return slowMultiplier(OSHI.slowMultiplier,true);
       return 1;
     }
 
     function applySongDebuff(target, source) {
       if (!target?.alive || !source?.alive) return;
-      if (!(target.songDebuffs instanceof Map)) target.songDebuffs = new Map();
-      target.songDebuffs.set(source.id, OSHI.debuffDuration);
+      applySlow(target, OSHI.slowMultiplier, OSHI.debuffDuration, "songDebuffs", {sourceId:source.id});
       if (!fastSimMode) spawnFloatingText(target.x, target.y - target.r - 28, "노래 디버프", "#f9a8d4");
     }
 
@@ -5095,10 +5087,7 @@
       source.tanoPunchCd = 0.8;
       const dealt = damage(target, TANO.power, source, "파워스톤 강펀치");
       if (dealt > 0 && target.alive && !(target.baseId === "dummy_unit" && target.hp === target.maxHp)) {
-        target.vx = dx * 700; target.vy = dy * 700; target.punchFlight = Math.max(target.punchFlight || 0, 0.3);
-        target.punchSource = source;
-        target.punchWallPower = TANO.power;
-        target.punchWallHits = 0;
+        applyKnockback(target,source,dx,dy,700,0.3,{wallDamageSource:source,wallDamage:TANO.power,resetWallHits:true});
       }
       spawnHitFlash(target.x, target.y, "#e9d5ff", 42);
       spawnFloatingText(target.x, target.y - 38, "강펀치!", "#e9d5ff");
@@ -5116,9 +5105,7 @@
           f.punchImpact = null;
           const dealt = damage(f, TANO.power, hit.source, "파워스톤 강펀치");
           if (dealt > 0 && f.alive && !(f.baseId === "dummy_unit" && f.hp === f.maxHp)) {
-            f.vx = hit.dx * 700; f.vy = hit.dy * 700; f.punchFlight = 0.3;
-            f.punchSource = hit.source;
-            f.punchWallHits = 0;
+            applyKnockback(f,hit.source,hit.dx,hit.dy,700,0.3,{wallDamageSource:hit.source,replaceDuration:true,resetWallHits:true});
           }
           spawnBlast(f.x, f.y, 60, "#a855f7");
           spawnParticles(f.x, f.y, "#e9d5ff", 18);
@@ -5139,8 +5126,7 @@
           remaining -= step;
           f.punchFlight = Math.max(0, f.punchFlight - step);
           f.x += f.vx * step; f.y += f.vy * step;
-          const contacts = Number(f.x - f.r < arena.x || f.x + f.r > arena.x2)
-            + Number(f.y - f.r < arena.y || f.y + f.r > arena.y2);
+          const contacts = knockbackWallContacts(f);
           bounceWalls(f);
           for (let i = 0; i < contacts && f.alive && f.punchSource; i++) {
             f.punchWallHits += 1;
@@ -5911,6 +5897,7 @@
     }
 
       const patchNotes = [
+      "v179: CC 공용 어댑터 리팩터링. 기절 적용/판정·종류별 둔화 적용·넉백 설정·비행 벽접촉 개수 계산을 공용 함수로 정리. 기존 타이머 감소 위치·중첩·면역·예약 공격·캐릭터별 연계 및 수치 유지. 완전빙결·넘기기·전역 시간정지 유지. DOT 피해 숫자만 독 보라/출혈 빨강/화상 주황으로 통일.",
       "v178: 웍웍 피의 사냥/흡혈 연계 강화. 야수의 돌진 중 외부 넉백·넉백 비행·예약 넉백을 무시하고 돌진 벡터를 유지한다. 기존처럼 돌진 속도는 현재 피 냄새 이동속도에 비례하므로 이동속도가 높을수록 같은 0.55초 동안 더 멀리 돌진한다. 웍웍 자신의 체력이 낮을수록 깨물기와 3연타 난타의 회복량이 연속적으로 증가해 HP100%에서 ×1, HP50%에서 ×1.5, 빈사에서 최대 ×2가 된다. 피 냄새 활성 시 현재 감지 대상에서 웍웍으로 흐르는 붉은 냄새 궤적을 표시하고, 대상이 반피 이하이면 궤적·대상 맥박·웍웍 이동 잔상을 강화한다. 120°/60° 판정 영역 자체는 표시하지 않으며 기존 붉은 눈 연출을 유지한다.",
       "v177: 웍웍 피의 사냥 구조 강화. 기본 이동속도 2.25→1.6으로 크게 낮추고, 전방120°·거리420 안 최저 체력 비율 적을 기준으로 HP50% 초과에서는 최대×1.35, HP50% 이하 진입 즉시×2.6에서 HP5% 이하 최대×3.4까지 폭발적으로 가속한다. 기존 부채꼴/피냄새 범위 시각화는 제거하고 피 냄새 활성 여부는 웍웍의 눈이 황색→붉은색으로 변하는 것으로 표시한다. 돌진 발동 시 진행방향 중앙60°·거리420 안에 적이 있으면 가장 낮은 HP비율 적을 타게팅해 돌진 중 방향을 보정하고, 없으면 기존처럼 진행방향 직선 돌진한다. 깨물기14+회복10, 돌진10초·0.55초·속도×2.7, 제압0.9초·7×3·타격당 회복4는 유지.",
       "v176: 웍웍 표시/피 냄새 가속 확인 개선. 인게임 웍웍 전용 렌더러에 체력바와 이름 표시가 누락된 문제를 수정했다. 진행방향 전방120°·거리420 피 냄새 감지 부채꼴을 표시하고, 감지 대상의 HP에 따라 가속이 활성화되면 붉게 강조한다. 상태창에도 현재 피 냄새 배율과 실효 이동속도를 함께 표시한다. 전투 수치와 판정은 v175 그대로 유지.",
@@ -7392,7 +7379,7 @@
     function initSpiderMan(f){
       f.spider={mode:"idle",chase:null,webs:[],volleyCd:2.4,volleyLeft:0,volleyTimer:0,wallWebs:[]};
     }
-    function webSlowMultiplier(f){return (f?.webSlow||0)>0&&!hasHarmfulImmunity(f)?SPIDER.webSlow:1;}
+    function webSlowMultiplier(f){return slowMultiplier(SPIDER.webSlow,(f?.webSlow||0)>0&&!hasHarmfulImmunity(f));}
     function spiderSegHit(x1,y1,x2,y2,cx,cy,r){
       const dx=x2-x1,dy=y2-y1,l2=dx*dx+dy*dy||1,t=clamp(((cx-x1)*dx+(cy-y1)*dy)/l2,0,1),px=x1+dx*t,py=y1+dy*t;
       return Math.hypot(px-cx,py-cy)<=r?t:null;
@@ -7404,7 +7391,7 @@
     }
     function spiderFinishMelee(f,target){
       const s=f.spider,dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,SPIDER.meleeDamage,f,"웹스윙 근접타격");
-      if(target.alive&&dealt>0){target.vx=dx/d*SPIDER.meleeKnock;target.vy=dy/d*SPIDER.meleeKnock;target.punchFlight=Math.max(target.punchFlight||0,.34);target.punchSource=null;target.punchWallPower=0;target.punchWallHits=0;}
+      if(target.alive&&dealt>0){applyKnockback(target,f,dx/d,dy/d,SPIDER.meleeKnock,.34,{wallDamageSource:null,wallDamage:0,resetWallHits:true});}
       if(!fastSimMode){spawnHitFlash(target.x,target.y,"#f8fafc",115);spawnBlast(target.x,target.y,72,"#dc2626");playSound("hit",1.0);}s.mode="idle";s.chase=null;
     }
     function spiderFireVolleyShot(f){
@@ -7413,7 +7400,7 @@
     }
     function bindStunTarget(f,target){
       if(!target?.alive||hasHarmfulImmunity(target))return false;
-      target.bindStun=Math.max(target.bindStun||0,SPIDER.bindTime);target.webSlow=0;target.webKnockTime=0;target.webKnockSourceId="";target.vx=0;target.vy=0;
+      applyStun(target,SPIDER.bindTime,{stateKey:"bindStun"});target.webSlow=0;target.webKnockTime=0;target.webKnockSourceId="";target.vx=0;target.vy=0;
       const s=f.spider;s.wallWebs.push({x:target.x,y:target.y,t:SPIDER.bindTime+.35,max:SPIDER.bindTime+.35});
       if(!fastSimMode){spawnBlast(target.x,target.y,54,"#e2e8f0");spawnParticles(target.x,target.y,"#f8fafc",24);spawnFloatingText(target.x,target.y-target.r-38,"벽 거미줄 속박!","#f8fafc");}
       startSpiderSwing(f,target.id);return true;
@@ -7427,7 +7414,7 @@
     function updateSpiderVolleyWebs(f,dt){
       const s=f.spider;for(let i=s.webs.length-1;i>=0;i--){const w=s.webs[i],x1=w.x,y1=w.y,x2=w.x+w.vx*dt,y2=w.y+w.vy*dt;let hit=null,best=2;
         for(const e of enemiesOf(f)){if(!e.alive||e.tano?.hidden>0)continue;const h=spiderSegHit(x1,y1,x2,y2,e.x,e.y,e.r+5);if(h!==null&&h<best){best=h;hit=e;}}
-        if(hit){const dealt=damage(hit,SPIDER.webDamage,f,"웹슈터");if(hit.alive&&dealt>0&&!hasHarmfulImmunity(hit)){const d=Math.hypot(w.vx,w.vy)||1;hit.vx+=w.vx/d*SPIDER.webKnock;hit.vy+=w.vy/d*SPIDER.webKnock;refreshCcTimer(hit,"webSlow",SPIDER.webSlowTime);hit.webKnockTime=Math.max(hit.webKnockTime||0,SPIDER.webKnockDuration);hit.webKnockSourceId=f.id;}if(!fastSimMode){spawnHitFlash(hit.x,hit.y,"#e2e8f0",55);spawnParticles(hit.x,hit.y,"#f8fafc",5);}s.webs.splice(i,1);continue;}
+        if(hit){const dealt=damage(hit,SPIDER.webDamage,f,"웹슈터");if(hit.alive&&dealt>0&&!hasHarmfulImmunity(hit)){const d=Math.hypot(w.vx,w.vy)||1;applyKnockback(hit,f,w.vx/d,w.vy/d,SPIDER.webKnock,undefined,{additive:true});applySlow(hit,SPIDER.webSlow,SPIDER.webSlowTime,"webSlow");hit.webKnockTime=Math.max(hit.webKnockTime||0,SPIDER.webKnockDuration);hit.webKnockSourceId=f.id;}if(!fastSimMode){spawnHitFlash(hit.x,hit.y,"#e2e8f0",55);spawnParticles(hit.x,hit.y,"#f8fafc",5);}s.webs.splice(i,1);continue;}
         w.x=x2;w.y=y2;w.life-=dt;if(w.life<=0||w.x<arena.x-10||w.x>arena.x2+10||w.y<arena.y-10||w.y>arena.y2+10)s.webs.splice(i,1);
       }
     }
@@ -7449,7 +7436,7 @@
     }
     function koopaFireCount(f){const q=f.maxHp>0?f.hp/f.maxHp:1;return q>2/3?1:q>1/3?2:3;}
     function koopaStartShell(f){
-      const k=f.koopa;if(!k||k.shellActive||k.recovery>0||f.stun>0)return false;
+      const k=f.koopa;if(!k||k.shellActive||k.recovery>0||isStunned(f))return false;
       k.shellActive=true;k.shellTime=KOOPA.shellDuration;k.shellCd=KOOPA.shellPeriod;k.hitCd={};
       const mag=Math.hypot(f.vx,f.vy)||1,a=mag>.01?Math.atan2(f.vy,f.vx):rand(0,Math.PI*2),v=k.baseSpeed*44*KOOPA.shellStartMult;
       f.vx=Math.cos(a)*v;f.vy=Math.sin(a)*v;
@@ -7481,7 +7468,7 @@
       f.vx=Math.cos(a)*v;f.vy=Math.sin(a)*v;
     }
     function koopaStartFire(f){
-      const k=f.koopa;if(!k||k.fire||f.stun>0)return false;
+      const k=f.koopa;if(!k||k.fire||isStunned(f))return false;
       k.fire={life:KOOPA.fireDuration,angle:rand(0,Math.PI*2),hitOnce:{}};k.fireCd=KOOPA.firePeriod;
       if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-48,`회전 불기둥 ${koopaFireCount(f)}개`,`#fb923c`);playSound("fireball",1.1);}
       return true;
@@ -7525,7 +7512,7 @@
     function koopaShellContact(source,target){
       const k=source?.koopa;if(!k?.shellActive||!target?.alive||!areEnemies(source,target)||(k.hitCd[target.id]||0)>0)return false;
       const dx=target.x-source.x,dy=target.y-source.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,KOOPA.shellDamage,source,"등껍질충돌");k.hitCd[target.id]=Math.max(.1,k.shellTime)+.25;
-      if(dealt>0&&target.alive){target.vx=dx/d*KOOPA.shellKnock;target.vy=dy/d*KOOPA.shellKnock;target.punchFlight=Math.max(target.punchFlight||0,KOOPA.shellFlight);target.punchSource=null;target.punchWallPower=0;target.punchWallHits=0;target.koopaWallCrash={sourceId:source.id,t:KOOPA.shellWallWindow};}
+      if(dealt>0&&target.alive){applyKnockback(target,source,dx/d,dy/d,KOOPA.shellKnock,KOOPA.shellFlight,{wallDamageSource:null,wallDamage:0,resetWallHits:true});target.koopaWallCrash={sourceId:source.id,t:KOOPA.shellWallWindow};}
       if(!fastSimMode){spawnHitFlash(target.x,target.y,"#bef264",58);spawnParticles(target.x,target.y,"#84cc16",10);}
       koopaEndShell(source);
       return dealt>0;
@@ -7676,11 +7663,11 @@
     function marioSuperPunchContact(f,target){
       const m=f?.mario;if(!m||m.kart||m.pipeTransit||m.power!=="mushroom"||m.punchCd>0||!target?.alive||!areEnemies(f,target))return false;
       const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1;const dealt=damage(target,MARIO.superPunchDamage,f,"슈퍼펀치");
-      if(dealt>0&&target.alive){target.vx+=dx/d*MARIO.superPunchKnock;target.vy+=dy/d*MARIO.superPunchKnock;}
+      if(dealt>0&&target.alive){applyKnockback(target,f,dx/d,dy/d,MARIO.superPunchKnock,undefined,{additive:true});}
       m.punchCd=MARIO.superPunchCd;if(!fastSimMode){spawnHitFlash(target.x,target.y,"#fca5a5",46);spawnFloatingText(target.x,target.y-target.r-28,"슈퍼펀치!","#fca5a5");}return true;
     }
     function marioApplySpin(target,duration=MARIO.shellSpin,slow=0){
-      if(!target?.alive)return;target.marioSpinFx=Math.max(target.marioSpinFx||0,duration);if(slow>0)target.marioItemSlow=Math.max(target.marioItemSlow||0,slow);
+      if(!target?.alive)return;target.marioSpinFx=Math.max(target.marioSpinFx||0,duration);if(slow>0)applySlow(target,MARIO.bananaSlowMult,slow,"marioItemSlow");
     }
     function marioKartTarget(f){
       const mains=enemiesOf(f).filter(e=>e.alive&&!e.isSummon&&!e.marioBlock);if(mains.length)return mains.sort((a,b)=>dist(f,a)-dist(f,b))[0];
@@ -7768,7 +7755,7 @@
     }
     function marioWallContact(f,hit){const m=f?.mario;if(!m||m.pipeTransit)return;m.wallContacts=Math.min(MARIO.kartWallNeed,m.wallContacts+1);if(m.wallContacts>=MARIO.kartWallNeed)startMarioPipeTransition(f,hit);}
     function marioKartContact(f,target){
-      const m=f?.mario;if(!m?.kart||m.pipeTransit||m.kartContactCd>0||!target?.alive||!areEnemies(f,target))return false;const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,MARIO.kartContactDamage,f,"카트충돌");if(dealt>0&&target.alive){target.vx+=dx/d*MARIO.kartContactKnock;target.vy+=dy/d*MARIO.kartContactKnock;}m.kartContactCd=MARIO.kartContactCd;if(!fastSimMode)spawnHitFlash(target.x,target.y,"#60a5fa",42);return true;
+      const m=f?.mario;if(!m?.kart||m.pipeTransit||m.kartContactCd>0||!target?.alive||!areEnemies(f,target))return false;const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,dealt=damage(target,MARIO.kartContactDamage,f,"카트충돌");if(dealt>0&&target.alive){applyKnockback(target,f,dx/d,dy/d,MARIO.kartContactKnock,undefined,{additive:true});}m.kartContactCd=MARIO.kartContactCd;if(!fastSimMode)spawnHitFlash(target.x,target.y,"#60a5fa",42);return true;
     }
     function updateMarioPipeTransit(f,dt){
       const m=f.mario,tr=m.pipeTransit;if(!tr)return false;
@@ -7803,7 +7790,7 @@
       }else{m.superStance=false;m.nextBlock=Math.max(0,m.nextBlock-dt);if(m.nextBlock<=0)marioSpawnBlock(f);}
       if(m.power==="star"){
         m.starTime-=dt;for(const id of Object.keys(m.starHits))m.starHits[id]=Math.max(0,m.starHits[id]-dt);
-        for(const e of enemiesOf(f)){if(!e.alive||e.marioBlock||Math.hypot(e.x-f.x,e.y-f.y)>f.r+e.r+3||(m.starHits[e.id]||0)>0)continue;const dx=e.x-f.x,dy=e.y-f.y,d=Math.hypot(dx,dy)||1;damage(e,MARIO.starDamage,f,"슈퍼스타");e.vx+=dx/d*220;e.vy+=dy/d*220;m.starHits[e.id]=MARIO.starContactCd;if(!fastSimMode)spawnHitFlash(e.x,e.y,`hsl(${(battleTime*180)%360} 90% 65%)`,58);}
+        for(const e of enemiesOf(f)){if(!e.alive||e.marioBlock||Math.hypot(e.x-f.x,e.y-f.y)>f.r+e.r+3||(m.starHits[e.id]||0)>0)continue;const dx=e.x-f.x,dy=e.y-f.y,d=Math.hypot(dx,dy)||1;damage(e,MARIO.starDamage,f,"슈퍼스타");applyKnockback(e,f,dx/d,dy/d,220,undefined,{additive:true});m.starHits[e.id]=MARIO.starContactCd;if(!fastSimMode)spawnHitFlash(e.x,e.y,`hsl(${(battleTime*180)%360} 90% 65%)`,58);}
         if(m.starTime<=0)marioRestoreStarState(f);return;
       }
       if(m.power==="fire"){m.fireCd-=dt;if(m.fireCd<=0){const fired=marioFire(f);if(fired&&m.power==="fire")m.fireCd+=MARIO.firePeriod;else if(!fired)m.fireCd=.25;}}
@@ -8445,16 +8432,60 @@
     // stun은 역사적 이름을 유지하되 공용 행동정지(stun/stop) API를 통해 사용한다.
     function applyHeavySlow(target, duration) {
       if (!target || !target.alive || hasHarmfulImmunity(target)) return false;
-      target.freeze = Math.max(target.freeze || 0, duration);
-      return true;
+      return applySlow(target, 0.42, duration, "freeze");
     }
     function applyFreeze(target, duration) { // 구형 캐릭터 호환용 별칭
       return applyHeavySlow(target, duration);
     }
-    function applyStun(target, duration) {
+    function applyStun(target, duration, options = {}) {
+      // bindStun remains a delayed bridge to stun at its original update position.
+      // Moving that bridge here would change same-frame web-swing/skill outcomes.
+      return refreshCcTimer(target, options.stateKey || "stun", duration);
+    }
+    function isStunned(target) {
+      return target.stun > 0;
+    }
+    function applySlow(target, multiplier, duration, sourceKey, options = {}) {
+      // Rates remain at the original read sites; timers keep their existing tick order.
+      // Domain effects deliberately have no shared persistent timer.
+      if (options.sample) return slowMultiplier(multiplier, options.active);
       if (!target || !target.alive) return false;
-      target.stun = Math.max(target.stun || 0, duration);
+      if (sourceKey === "songDebuffs") {
+        if (!(target.songDebuffs instanceof Map)) target.songDebuffs = new Map();
+        target.songDebuffs.set(options.sourceId, duration); // replace, not max
+        return true;
+      }
+      return refreshCcTimer(target, sourceKey, duration);
+    }
+    function slowMultiplier(multiplier, active) {
+      return active ? multiplier : 1;
+    }
+    function applyKnockback(target, source, directionX, directionY, speed, duration, options = {}) {
+      // Directions, eligibility, immunity and scheduled-impact order stay with callers.
+      // Do not normalize again: zero-length fallbacks differ between characters.
+      const vx = directionX * speed, vy = directionY * speed;
+      if (options.preserveExistingStrongerKnockback && target.punchFlight > 0 &&
+          Math.hypot(target.vx, target.vy) > Math.hypot(vx, vy)) return false;
+      if (options.additive) { target.vx += vx; target.vy += vy; }
+      else { target.vx = vx; target.vy = vy; }
+      if (duration !== undefined) target.punchFlight = options.replaceDuration
+        ? duration : Math.max(target.punchFlight || 0, duration);
+      if (Object.hasOwn(options, "wallDamageSource")) target.punchSource = options.wallDamageSource;
+      if (Object.hasOwn(options, "wallDamage")) target.punchWallPower = options.wallDamage;
+      if (options.resetWallHits) target.punchWallHits = 0;
       return true;
+    }
+    function knockbackWallContacts(f) {
+      // Count axes before bounceWalls clamps coordinates: a corner still counts twice.
+      return Number(f.x - f.r < arena.x || f.x + f.r > arena.x2)
+        + Number(f.y - f.r < arena.y || f.y + f.r > arena.y2);
+    }
+    function dotDamageColor(reason, fallback) {
+      if (reason === "독" || reason === "독가스" || reason === "독방구" ||
+          reason === "리안드리 잔류독" || reason === "독폭발") return "#a855f7";
+      if (reason === "출혈" || reason === "출혈 폭발" || reason === "도쿄돔 출혈") return "#ef4444";
+      if (reason === "화상") return "#fb923c";
+      return fallback;
     }
     function refreshCcTimer(target, stateKey, duration) {
       if (!target || !target.alive) return false;
@@ -9820,7 +9851,7 @@
       spawnParticles(target.x, target.y, target.color, 10);
       spawnHitFlash(target.x, target.y, target.color, Math.min(42, 14 + final));
       if (!target.isSummon && !reason.includes("얼티메이트 버스트")) {
-        const damageTextColor = fixedDamage ? "#facc15" : (reason === "회복" ? "#34d399" : "#fee2e2");
+        const damageTextColor = dotDamageColor(reason, fixedDamage ? "#facc15" : (reason === "회복" ? "#34d399" : "#fee2e2"));
         spawnFloatingText(target.x, target.y - target.r - 8, `-${final}`, damageTextColor);
       }
 
@@ -9908,7 +9939,7 @@
 
       spawnParticles(target.x, target.y, color, 4);
       spawnHitFlash(target.x, target.y, color, Math.min(34, 12 + final * 5));
-      if (!target.isSummon) spawnFloatingText(target.x, target.y - target.r - 8, `-${final}`, color);
+      if (!target.isSummon) spawnFloatingText(target.x, target.y - target.r - 8, `-${final}`, dotDamageColor(reason,color));
 
       if (target.hp <= 0) {
         if (advanceLogoFormOnLethal(target)) return final;
@@ -10471,13 +10502,13 @@
 
       if (f.baseId === "prism_iris") startIrisPrismCharge(f);
 
-      const slow = f.freeze > 0 ? 0.42 : 1;
+      const slow = slowMultiplier(0.42,f.freeze > 0);
       const gardenSlow = minaGardenSlowMultiplier(f);
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
-      const songAndConcussionSlow = songSlowMultiplier(f) * (f.concussionSlow > 0 ? HINTA.slowMultiplier : 1);
+      const songAndConcussionSlow = songSlowMultiplier(f) * slowMultiplier(HINTA.slowMultiplier,f.concussionSlow > 0);
       const coldAuraSlow = coldAuraSlowMultiplier(f);
       const timedCcSlow = timedCcSlowMultiplier(f);
-      const marioItemSlow = (f.marioItemSlow || 0) > 0 ? MARIO.bananaSlowMult : 1;
+      const marioItemSlow = slowMultiplier(MARIO.bananaSlowMult,(f.marioItemSlow || 0) > 0);
       const coyotePoisonSlow = coyotePoisonSlowMultiplier(f);
       const wokBloodSpeed = wokBloodSpeedMultiplier(f);
       if(f.wok)f.wok.effectiveSpeed=(f.wok.baseSpeed||f.baseSpeed||f.speed)*wokBloodSpeed;
@@ -11252,7 +11283,7 @@
       f.bindStun=Math.max(0,(f.bindStun||0)-dt);
       if(f.bindStun>0){applyStun(f,f.bindStun);f.vx=0;f.vy=0;}
       if(f.knifeSlow>0&&!fastSimMode&&Math.random()<dt*5)spawnParticles(f.x+rand(-f.r*.5,f.r*.5),f.y+rand(-f.r*.5,f.r*.5),"#7f1d1d",1);
-      if(f.hinta?.dash && (f.stun>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f)))endHintaDash(f);
+      if(f.hinta?.dash && (isStunned(f)||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f)))endHintaDash(f);
       updateSongDebuffs(f, dt);
       updateOshiAftershock(f, dt);
       if (!f.alive) return;
@@ -11470,20 +11501,20 @@
         return;
       }
 
-      if (f.stun > 0) return;
+      if (isStunned(f)) return;
       ensureFreeVelocity(f);
       if (updateCastPause(f, dt)) {
         return;
       }
       if (f.mario?.pipeTransit) return;
 
-      const slow = f.freeze > 0 ? 0.42 : 1;
+      const slow = slowMultiplier(0.42,f.freeze > 0);
       const gardenSlow = minaGardenSlowMultiplier(f);
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
-      const songAndConcussionSlow = songSlowMultiplier(f) * (f.concussionSlow > 0 ? HINTA.slowMultiplier : 1);
+      const songAndConcussionSlow = songSlowMultiplier(f) * slowMultiplier(HINTA.slowMultiplier,f.concussionSlow > 0);
       const coldAuraSlow = coldAuraSlowMultiplier(f);
       const timedCcSlow = timedCcSlowMultiplier(f);
-      const marioItemSlow = (f.marioItemSlow || 0) > 0 ? MARIO.bananaSlowMult : 1;
+      const marioItemSlow = slowMultiplier(MARIO.bananaSlowMult,(f.marioItemSlow || 0) > 0);
       const coyotePoisonSlow = coyotePoisonSlowMultiplier(f);
       const wokBloodSpeed = wokBloodSpeedMultiplier(f);
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
