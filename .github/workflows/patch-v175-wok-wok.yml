@@ -3,7 +3,7 @@ name: One-shot v175 WokWok
 on:
   push:
     paths:
-      - '.github/workflows/patch-v175-wok-wok.yml'
+      - .github/workflows/patch-v175-wok-wok.yml
   workflow_dispatch:
 
 permissions:
@@ -16,209 +16,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Patch index.html
-        shell: bash
+      - name: Patch index
+        run: python3 .github/scripts/patch_v175_wok.py
+      - name: JavaScript syntax check
+        run: node --check /tmp/ballbattle.js
+      - name: Verify patch
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          def one(old, new, label):
-              global s
-              n = s.count(old)
-              if n != 1:
-                  raise SystemExit(f'{label}: expected 1 match, got {n}')
-              s = s.replace(old, new, 1)
-
-          def many(old, new, expected, label):
-              global s
-              n = s.count(old)
-              if n != expected:
-                  raise SystemExit(f'{label}: expected {expected} matches, got {n}')
-              s = s.replace(old, new)
-
-          one('<title>볼배틀 리뉴얼 v174</title>', '<title>볼배틀 리뉴얼 v175</title>', 'version title')
-
-          dummy_anchor = '      { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,'
-          wok_card = '''      { id:"wok_wok", name:"웍웍", mark:"🐺", role:"게임", color:"#7f1d1d", hp:120, attack:0, speed:2.25, range:0,
-        skillName:"피의 사냥 · 야수의 돌진", condition:"깨물기 충전 · 전방120° 피냄새 가속 · 10초마다 직선 돌진", desc:"낮은 체력과 느린 기본 이동속도를 가진 흡혈 추격형. 자신의 체력이 낮을수록 깨물기가 빨리 충전되고, 진행방향 전방120°·420 안에서 가장 체력 비율이 낮은 적의 피 냄새에 반응해 이동속도가 최대2배까지 오른다. 10초마다 현재 피 냄새 속도에 비례한 직선 돌진을 사용하며 적중 시 0.9초 제압하고 3회 공격해 흡혈한다." },
-'''
-          one(dummy_anchor, wok_card + dummy_anchor, 'character card')
-
-          wok_code = r'''    const WOK = {
-      biteDamage:14, biteHeal:10, biteCooldownHigh:7, biteCooldownLow:3.5,
-      scentRange:420, scentHalfAngle:Math.PI/3, scentFloorHp:.05, scentMaxMult:2,
-      dashPeriod:10, dashDuration:.55, dashSpeedMult:2.7,
-      maulDuration:.9, maulHits:3, maulInterval:.3, maulDamage:7, maulHeal:4
-    };
-    function initWokWok(f){
-      f.wok={biteCharge:0,nextDashAt:WOK.dashPeriod,dashUntil:0,dashSpeed:0,dashDirX:1,dashDirY:0,bloodMult:1,bloodHp:1,biteFx:0,maul:null,baseSpeed:f.baseSpeed||f.speed||2.25};
-    }
-    function wokBiteCooldown(f){
-      const q=clamp((f?.hp||0)/Math.max(1,f?.maxHp||1),0,1);
-      return WOK.biteCooldownLow+(WOK.biteCooldownHigh-WOK.biteCooldownLow)*q;
-    }
-    function wokWokBlocked(f){
-      return !f?.alive||f.stun>0||f.hardFreeze>0||f.bindStun>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
-    }
-    function wokBloodSpeedMultiplier(f){
-      const w=f?.wok;if(!w||!f.alive)return 1;
-      if(w.maul||battleTime<(w.dashUntil||0))return w.bloodMult||1;
-      const mag=Math.hypot(f.vx||0,f.vy||0);
-      if(mag<.01){w.bloodMult=1;w.bloodHp=1;return 1;}
-      const ux=f.vx/mag,uy=f.vy/mag,cosHalf=Math.cos(WOK.scentHalfAngle);
-      let best=1,found=false;
-      enemiesOf(f).forEach(e=>{
-        if(!e?.alive||e.isSummon||e.duelMonster||e.marioBlock)return;
-        const dx=e.x-f.x,dy=e.y-f.y,d=Math.hypot(dx,dy);
-        if(d<.001||d>WOK.scentRange)return;
-        if((dx/d)*ux+(dy/d)*uy<cosHalf)return;
-        const q=clamp(e.hp/Math.max(1,e.maxHp||e.hp||1),0,1);
-        if(!found||q<best){best=q;found=true;}
-      });
-      w.bloodHp=found?best:1;
-      const t=found?clamp((1-best)/(1-WOK.scentFloorHp),0,1):0;
-      w.bloodMult=1+t*(WOK.scentMaxMult-1);
-      return w.bloodMult;
-    }
-    function wokRestoreCruise(f){
-      const w=f?.wok;if(!w)return;
-      let dx=w.dashDirX||1,dy=w.dashDirY||0,d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;
-      f.vx=dx*w.baseSpeed*44;f.vy=dy*w.baseSpeed*44;
-    }
-    function startWokWokDash(f){
-      const w=f?.wok;if(!w||w.maul||wokWokBlocked(f)||battleTime<(w.nextDashAt||0))return false;
-      const blood=wokBloodSpeedMultiplier(f),mag=Math.hypot(f.vx||0,f.vy||0)||1;
-      w.dashDirX=(f.vx||1)/mag;w.dashDirY=(f.vy||0)/mag;
-      w.dashSpeed=w.baseSpeed*44*blood*WOK.dashSpeedMult;
-      w.dashUntil=battleTime+WOK.dashDuration;w.nextDashAt=battleTime+WOK.dashPeriod;
-      f.vx=w.dashDirX*w.dashSpeed;f.vy=w.dashDirY*w.dashSpeed;
-      if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-34,"야수의 돌진!","#ef4444");spawnBlast(f.x,f.y,42,"#7f1d1d");}
-      return true;
-    }
-    function updateWokWok(f,dt){
-      const w=f?.wok;if(!w)return;
-      w.biteFx=Math.max(0,(w.biteFx||0)-dt);
-      w.biteCharge=Math.min(1,(w.biteCharge||0)+dt/Math.max(.1,wokBiteCooldown(f)));
-      if(w.maul){
-        const target=fighterById(w.maul.targetId);
-        if(!target?.alive||!areEnemies(f,target)||battleTime>=w.maul.endAt){w.maul=null;wokRestoreCruise(f);return;}
-        f.vx=0;f.vy=0;
-        while(w.maul.hits<WOK.maulHits&&battleTime+1e-9>=w.maul.nextAt&&target.alive){
-          const dealt=damage(target,WOK.maulDamage,f,"웍웍 야수의 난타");
-          if(dealt>0){heal(f,WOK.maulHeal);w.biteFx=.22;if(!fastSimMode){spawnParticles(target.x,target.y,"#fecaca",7);spawnBlast(target.x,target.y,28,"#991b1b");}}
-          w.maul.hits+=1;w.maul.nextAt+=WOK.maulInterval;
-        }
-        return;
-      }
-      if(battleTime<(w.dashUntil||0))return;
-      w.dashUntil=0;
-      wokBloodSpeedMultiplier(f);
-      if(battleTime>=(w.nextDashAt||0))startWokWokDash(f);
-    }
-    function moveWokWokDash(f,dt){
-      const w=f?.wok;if(!w||battleTime>=(w.dashUntil||0))return false;
-      if(wokWokBlocked(f)){w.dashUntil=0;wokRestoreCruise(f);return false;}
-      const speed=w.dashSpeed||w.baseSpeed*44*WOK.dashSpeedMult;
-      f.vx=w.dashDirX*speed;f.vy=w.dashDirY*speed;
-      let nx=f.x+f.vx*dt,ny=f.y+f.vy*dt,hitX=false,hitY=false;
-      if(nx<arena.x+f.r||nx>arena.x2-f.r)hitX=true;
-      if(ny<arena.y+f.r||ny>arena.y2-f.r)hitY=true;
-      f.x=clamp(nx,arena.x+f.r,arena.x2-f.r);f.y=clamp(ny,arena.y+f.r,arena.y2-f.r);
-      if(hitX||hitY){if(hitX)w.dashDirX*=-1;if(hitY)w.dashDirY*=-1;w.dashUntil=0;wokRestoreCruise(f);}
-      return true;
-    }
-    function wokWokContact(f,target){
-      const w=f?.wok;if(!w||!f.alive||!target?.alive||!areEnemies(f,target))return false;
-      if(target.isSummon||target.duelMonster||target.marioBlock||w.maul)return false;
-      if(battleTime<(w.dashUntil||0)){
-        w.dashUntil=0;w.maul={targetId:target.id,endAt:battleTime+WOK.maulDuration,nextAt:battleTime,hits:0};
-        applyStun(target,WOK.maulDuration);f.vx=0;f.vy=0;
-        if(!fastSimMode){spawnFloatingText(target.x,target.y-target.r-34,"제압!","#dc2626");spawnBlast(target.x,target.y,48,"#991b1b");}
-        return true;
-      }
-      if((w.biteCharge||0)<1)return false;
-      const dealt=damage(target,WOK.biteDamage,f,"웍웍 깨물기");
-      if(dealt<=0)return false;
-      w.biteCharge=0;heal(f,WOK.biteHeal);w.biteFx=.34;
-      if(!fastSimMode){spawnFloatingText(target.x,target.y-target.r-28,"깨물기!","#fca5a5");spawnParticles(target.x,target.y,"#fecaca",9);spawnBlast(target.x,target.y,34,"#7f1d1d");}
-      return true;
-    }
-    function drawWokWokCharacter(f){
-      const w=f.wok||{};ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
-      if(!f.portraitOnly&&(w.bloodMult||1)>1.02){ctx.save();ctx.globalAlpha=.18+.22*clamp(((w.bloodMult||1)-1)/(WOK.scentMaxMult-1),0,1);ctx.strokeStyle="#ef4444";ctx.lineWidth=2;for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(-4,1,24+i*7,-.9,.9);ctx.stroke();}ctx.restore();}
-      ctx.fillStyle="#292524";ctx.strokeStyle="#0c0a09";ctx.lineWidth=1.7;ctx.beginPath();ctx.ellipse(0,5,15,16,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-      ctx.fillStyle="#44403c";ctx.beginPath();ctx.moveTo(-13,-8);ctx.lineTo(-9,-24);ctx.lineTo(-2,-12);ctx.moveTo(13,-8);ctx.lineTo(9,-24);ctx.lineTo(2,-12);ctx.fill();ctx.stroke();
-      ctx.fillStyle="#57534e";ctx.beginPath();ctx.ellipse(0,-7,13,12,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-      ctx.fillStyle="#d6d3d1";ctx.beginPath();ctx.ellipse(0,-1,8,6,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#111827";ctx.beginPath();ctx.arc(0,-3,3,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle="#ef4444";ctx.shadowColor="#dc2626";ctx.shadowBlur=6;ctx.beginPath();ctx.arc(-5,-9,1.8,0,Math.PI*2);ctx.arc(5,-9,1.8,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
-      ctx.strokeStyle="#fafafa";ctx.fillStyle="#fafafa";ctx.lineWidth=1;for(let sgn of [-1,1]){ctx.beginPath();ctx.moveTo(sgn*2,2);ctx.lineTo(sgn*5,7);ctx.lineTo(sgn*7,2);ctx.closePath();ctx.fill();}
-      if((w.biteFx||0)>0&&!f.portraitOnly){const a=clamp(w.biteFx/.34,0,1);ctx.save();ctx.globalAlpha=.45+.5*a;ctx.strokeStyle="#fee2e2";ctx.fillStyle="#fff7ed";ctx.shadowColor="#ef4444";ctx.shadowBlur=9;ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(0,0,26,-2.75,-.38);ctx.stroke();ctx.beginPath();ctx.arc(0,0,26,.38,2.75);ctx.stroke();for(let i=-2;i<=2;i++){const x=i*7;ctx.beginPath();ctx.moveTo(x,-24);ctx.lineTo(x+3,-16);ctx.lineTo(x+6,-24);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(x,24);ctx.lineTo(x+3,16);ctx.lineTo(x+6,24);ctx.closePath();ctx.fill();}ctx.restore();}
-      ctx.restore();
-    }
-
-'''
-          one('    const COYOTE = {', wok_code + '    const COYOTE = {', 'WokWok mechanics')
-
-          one('const bustIds = new Set(["elsa","conan","spider_man","mario_plumber","koopa_king","coyote_d"]);', 'const bustIds = new Set(["elsa","conan","spider_man","mario_plumber","koopa_king","coyote_d","wok_wok"]);', 'portrait zoom')
-          one('        if (c.id === "coyote_d") initCoyote(preview);', '        if (c.id === "coyote_d") initCoyote(preview);\n        if (c.id === "wok_wok") initWokWok(preview);', 'portrait init')
-          one('      if (c.id === "coyote_d") initCoyote(fighter);', '      if (c.id === "coyote_d") initCoyote(fighter);\n      if (c.id === "wok_wok") initWokWok(fighter);', 'fighter init')
-          one('      updateCoyote(f, dt);', '      updateCoyote(f, dt);\n      updateWokWok(f, dt);', 'fighter update')
-
-          one('              coyoteContact(a, b);\n              coyoteContact(b, a);', '              coyoteContact(a, b);\n              coyoteContact(b, a);\n              wokWokContact(a, b);\n              wokWokContact(b, a);', 'collision hook')
-
-          many('      const coyotePoisonSlow = coyotePoisonSlowMultiplier(f);', '      const coyotePoisonSlow = coyotePoisonSlowMultiplier(f);\n      const wokBloodSpeed = wokBloodSpeedMultiplier(f);', 2, 'blood speed locals')
-          one('return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * timedCcSlow * coyotePoisonSlow;', 'return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * timedCcSlow * coyotePoisonSlow * wokBloodSpeed;', 'reported movement speed')
-          one('      if (f.newhello && moveNewhello(f, dt, slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * coyotePoisonSlow)) return;', '      if (f.wok && moveWokWokDash(f, dt)) return;\n      if (f.newhello && moveNewhello(f, dt, slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * coyotePoisonSlow)) return;', 'dash movement hook')
-          one('      f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * coyotePoisonSlow * dt;\n      f.y += f.vy * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * coyotePoisonSlow * dt;', '      f.x += f.vx * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * coyotePoisonSlow * wokBloodSpeed * dt;\n      f.y += f.vy * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * marioItemSlow * coyotePoisonSlow * wokBloodSpeed * dt;', 'normal movement multiplier')
-
-          one('      if (f.coyote) { drawCoyoteCharacter(f); return; }', '      if (f.coyote) { drawCoyoteCharacter(f); return; }\n      if (f.wok) { drawWokWokCharacter(f); return; }', 'draw hook')
-
-          status_anchor = '      if(f.spider){const s=f.spider||{};'
-          status_block = '''      if(f.wok){
-        const w=f.wok,biteRatio=clamp(w.biteCharge||0,0,1),dashLeft=Math.max(0,(w.nextDashAt||0)-battleTime),dashRatio=clamp(1-dashLeft/WOK.dashPeriod,0,1),blood=(w.bloodMult||1).toFixed(2),prey=Math.round((w.bloodHp||1)*100);
-        const active=w.maul?"제압 난타":battleTime<(w.dashUntil||0)?"직선 돌진":(w.biteCharge||0)>=1?"깨물기 충전 완료":"깨물기 충전 중";
-        return {ratio:biteRatio,className:(w.biteCharge||0)>=1?"rage-fill":"skill-fill",text:active,extraBarsHtml:`<div class="bar" title="야수의 돌진"><div class="bar-fill rage-fill" style="width:${dashRatio*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">깨물기 ${WOK.biteDamage} · 회복${WOK.biteHeal} · 현재 충전 기준 ${wokBiteCooldown(f).toFixed(1)}초</div><div class="status-skill-label">피 냄새 ×${blood} · 전방120°/420 · 감지 최저 HP ${prey}% · 돌진 ${dashLeft.toFixed(1)}초</div>`};
-      }
-'''
-          one(status_anchor, status_block + status_anchor, 'status UI')
-
-          damage_anchor = '      if(c.id==="newhello_sergeant")return'
-          damage_line = '      if(c.id==="wok_wok")return {damage:"깨물기14 + 체력10 회복 / 야수의 돌진 적중 후 7×3 + 타격당 체력4 회복",tick:"깨물기 충전: HP100%에서7초→HP0%에서3.5초 · 피 냄새 전방120°·거리420 · 적 HP100% ×1.0→5% 이하 ×2.0 이속 · 돌진10초·0.55초 직선 이동 · 적중 시0.9초 제압",tip:"피 냄새는 특정 대상을 저장하지 않는다. 매 순간 진행방향 부채꼴 안의 실제 적 캐릭터 중 체력 비율이 가장 낮은 1명의 비율만 사용해 이동속도를 계산하며 여러 적의 효과는 합산하지 않는다. 돌진은 적을 추적하거나 방향을 보정하지 않고 발동 순간 진행방향으로만 이동한다. 돌진 속도는 발동 순간 피 냄새가 반영된 이동속도의 2.7배이며, 적중하면 돌진을 끝내고 0.9초 동안 제압한 뒤 3회 공격·흡혈한다."};\n'
-          one(damage_anchor, damage_line + damage_anchor, 'damage info')
-
-          patch_anchor = '      "v174: 코요테드 근접 보상 상향.'
-          patch_line = '      "v175: 신캐 웍웍 추가. HP120·기본이속2.25. 깨물기는 HP100%에서7초, 저체력일수록 최대3.5초까지 빨리 충전되며 접촉 시14피해+HP10 회복. 진행방향 전방120°·거리420 안 실제 적 중 가장 낮은 체력 비율 하나를 기준으로 적 HP100%에서는 기본속도, 5% 이하에서는 최대2배까지 연속 가속한다. 10초마다 현재 피 냄새 속도에 비례한 0.55초 직선 돌진(×2.7)을 사용하고, 적중 시0.9초 제압 후7피해×3과 타격당 HP4 흡혈. 피 냄새는 특정 대상을 저장하거나 여러 적을 합산하지 않는다.",\n'
-          one(patch_anchor, patch_line + patch_anchor, 'patch note')
-
-          p.write_text(s, encoding='utf-8')
-          print('patched index.html')
-          PY
-
-          python3 - <<'PY'
-          import re
-          from pathlib import Path
-          s=Path('index.html').read_text(encoding='utf-8')
-          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s,re.I)
-          if not scripts:
-              raise SystemExit('no script blocks found')
-          Path('/tmp/ballbattle.js').write_text('\n'.join(scripts),encoding='utf-8')
-          PY
-          node --check /tmp/ballbattle.js
           grep -q '볼배틀 리뉴얼 v175' index.html
           grep -q 'id:"wok_wok"' index.html
           grep -q 'function wokWokContact' index.html
           grep -q 'wokBloodSpeed' index.html
-
-      - name: Commit patch and remove one-shot workflow
-        shell: bash
+      - name: Commit patch
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm --ignore-unmatch .github/workflows/patch-v175-wok-wok.yml
+          git rm --ignore-unmatch .github/workflows/patch-v175-wok-wok.yml .github/scripts/patch_v175_wok.py
           git add index.html
           git commit -m 'Add WokWok blood hunt fighter v175'
           git push
