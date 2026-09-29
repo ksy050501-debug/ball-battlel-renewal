@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v175</title>
+  <title>볼배틀 리뉴얼 v176</title>
   <style>
     :root {
       --bg: #020617;
@@ -3567,7 +3567,19 @@
       return true;
     }
     function drawWokWokCharacter(f){
-      const w=f.wok||{};ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
+      const w=f.wok||{};
+      if(!f.portraitOnly){
+        const mag=Math.hypot(f.vx||0,f.vy||0)||1;
+        const a=Math.atan2((f.vy||0)/mag,(f.vx||1)/mag);
+        const active=(w.bloodMult||1)>1.001;
+        ctx.save();ctx.translate(f.x,f.y);
+        ctx.globalAlpha=active ? .13 : .035;
+        ctx.fillStyle=active?"#ef4444":"#94a3b8";
+        ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,WOK.scentRange,a-WOK.scentHalfAngle,a+WOK.scentHalfAngle);ctx.closePath();ctx.fill();
+        ctx.globalAlpha=active ? .52 : .14;ctx.strokeStyle=active?"#f87171":"#94a3b8";ctx.lineWidth=active?2.2:1.2;
+        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a-WOK.scentHalfAngle)*WOK.scentRange,Math.sin(a-WOK.scentHalfAngle)*WOK.scentRange);ctx.arc(0,0,WOK.scentRange,a-WOK.scentHalfAngle,a+WOK.scentHalfAngle);ctx.lineTo(0,0);ctx.stroke();ctx.restore();
+      }
+      ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
       if(!f.portraitOnly&&(w.bloodMult||1)>1.02){ctx.save();ctx.globalAlpha=.18+.22*clamp(((w.bloodMult||1)-1)/(WOK.scentMaxMult-1),0,1);ctx.strokeStyle="#ef4444";ctx.lineWidth=2;for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(-4,1,24+i*7,-.9,.9);ctx.stroke();}ctx.restore();}
       ctx.fillStyle="#292524";ctx.strokeStyle="#0c0a09";ctx.lineWidth=1.7;ctx.beginPath();ctx.ellipse(0,5,15,16,0,0,Math.PI*2);ctx.fill();ctx.stroke();
       ctx.fillStyle="#44403c";ctx.beginPath();ctx.moveTo(-13,-8);ctx.lineTo(-9,-24);ctx.lineTo(-2,-12);ctx.moveTo(13,-8);ctx.lineTo(9,-24);ctx.lineTo(2,-12);ctx.fill();ctx.stroke();
@@ -3577,6 +3589,7 @@
       ctx.strokeStyle="#fafafa";ctx.fillStyle="#fafafa";ctx.lineWidth=1;for(let sgn of [-1,1]){ctx.beginPath();ctx.moveTo(sgn*2,2);ctx.lineTo(sgn*5,7);ctx.lineTo(sgn*7,2);ctx.closePath();ctx.fill();}
       if((w.biteFx||0)>0&&!f.portraitOnly){const a=clamp(w.biteFx/.34,0,1);ctx.save();ctx.globalAlpha=.45+.5*a;ctx.strokeStyle="#fee2e2";ctx.fillStyle="#fff7ed";ctx.shadowColor="#ef4444";ctx.shadowBlur=9;ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(0,0,26,-2.75,-.38);ctx.stroke();ctx.beginPath();ctx.arc(0,0,26,.38,2.75);ctx.stroke();for(let i=-2;i<=2;i++){const x=i*7;ctx.beginPath();ctx.moveTo(x,-24);ctx.lineTo(x+3,-16);ctx.lineTo(x+6,-24);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(x,24);ctx.lineTo(x+3,16);ctx.lineTo(x+6,24);ctx.closePath();ctx.fill();}ctx.restore();}
       ctx.restore();
+      if(!f.portraitOnly){drawHealthBar(f);drawName(f);}
     }
 
     const COYOTE = {
@@ -5843,6 +5856,7 @@
     }
 
       const patchNotes = [
+      "v176: 웍웍 표시/피 냄새 가속 확인 개선. 인게임 웍웍 전용 렌더러에 체력바와 이름 표시가 누락된 문제를 수정했다. 진행방향 전방120°·거리420 피 냄새 감지 부채꼴을 표시하고, 감지 대상의 HP에 따라 가속이 활성화되면 붉게 강조한다. 상태창에도 현재 피 냄새 배율과 실효 이동속도를 함께 표시한다. 전투 수치와 판정은 v175 그대로 유지.",
       "v175: 신캐 웍웍 추가. HP120·기본이속2.25. 깨물기는 HP100%에서7초, 저체력일수록 최대3.5초까지 빨리 충전되며 접촉 시14피해+HP10 회복. 진행방향 전방120°·거리420 안 실제 적 중 가장 낮은 체력 비율 하나를 기준으로 적 HP100%에서는 기본속도, 5% 이하에서는 최대2배까지 연속 가속한다. 10초마다 현재 피 냄새 속도에 비례한 0.55초 직선 돌진(×2.7)을 사용하고, 적중 시0.9초 제압 후7피해×3과 타격당 HP4 흡혈. 피 냄새는 특정 대상을 저장하거나 여러 적을 합산하지 않는다.",
       "v174: 코요테드 근접 보상 상향. 상대 본체와 접촉해 뒤로 넘기기에 성공할 때의 피해를 8→12로 상향했다. 대상별 접촉 쿨1초·0.42초 플링·독방구2/1초·리안드리1×3·균열생성기·라일라이·HP170·이속2.9는 유지.",
       "v173: 코요테드 독방구 틱 구조 조정. 기본 독은 피해1/0.5초에서 피해2/1초로 바꿔 지속 노출 DPS는 초당2로 유지한다. 리안드리 잔류독은 기본 독과 분리해 기존처럼 피해1을 0.5초 간격으로 3틱(총3피해, 1.5초) 유지한다. 균열생성기·라일라이·접촉8·HP170·넘기기 등 나머지는 유지.",
@@ -7821,7 +7835,7 @@
       if(f.wok){
         const w=f.wok,biteRatio=clamp(w.biteCharge||0,0,1),dashLeft=Math.max(0,(w.nextDashAt||0)-battleTime),dashRatio=clamp(1-dashLeft/WOK.dashPeriod,0,1),blood=(w.bloodMult||1).toFixed(2),prey=Math.round((w.bloodHp||1)*100);
         const active=w.maul?"제압 난타":battleTime<(w.dashUntil||0)?"직선 돌진":(w.biteCharge||0)>=1?"깨물기 충전 완료":"깨물기 충전 중";
-        return {ratio:biteRatio,className:(w.biteCharge||0)>=1?"rage-fill":"skill-fill",text:active,extraBarsHtml:`<div class="bar" title="야수의 돌진"><div class="bar-fill rage-fill" style="width:${dashRatio*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">깨물기 ${WOK.biteDamage} · 회복${WOK.biteHeal} · 현재 충전 기준 ${wokBiteCooldown(f).toFixed(1)}초</div><div class="status-skill-label">피 냄새 ×${blood} · 전방120°/420 · 감지 최저 HP ${prey}% · 돌진 ${dashLeft.toFixed(1)}초</div>`};
+        return {ratio:biteRatio,className:(w.biteCharge||0)>=1?"rage-fill":"skill-fill",text:active,extraBarsHtml:`<div class="bar" title="야수의 돌진"><div class="bar-fill rage-fill" style="width:${dashRatio*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">깨물기 ${WOK.biteDamage} · 회복${WOK.biteHeal} · 현재 충전 기준 ${wokBiteCooldown(f).toFixed(1)}초</div><div class="status-skill-label">피 냄새 ×${blood} · 실효 이속 ${(w.effectiveSpeed||w.baseSpeed||f.baseSpeed).toFixed(2)} · 전방120°/420 · 감지 최저 HP ${prey}% · 돌진 ${dashLeft.toFixed(1)}초</div>`};
       }
       if(f.spider){const s=f.spider||{};const active=s.mode==="chase",firing=(s.volleyLeft||0)>0;return {ratio:active||firing?1:clamp(1-Math.max(0,s.volleyCd||0)/SPIDER.volleyCooldown,0,1),className:active?"rage-fill":"skill-fill",text:active?"웹스윙 · 적 추격":firing?("웹슈터 연사 · "+(SPIDER.volleyCount-(s.volleyLeft||0))+"/"+SPIDER.volleyCount):("웹슈터 "+Math.max(0,s.volleyCd||0).toFixed(1)+"초"),extraTextHtml:'<div class="status-skill-label">웹슈터 5초마다 6연사 · 발당2·약넉백·0.9초 10%둔화</div><div class="status-skill-label">웹슈터 넉백 중 벽에 충돌해야만 0.9초 속박 · 속박 성공 시 타게팅 웹스윙 돌진18+강넉백</div>'};}
       if(f.conan){
@@ -10409,6 +10423,7 @@
       const marioItemSlow = (f.marioItemSlow || 0) > 0 ? MARIO.bananaSlowMult : 1;
       const coyotePoisonSlow = coyotePoisonSlowMultiplier(f);
       const wokBloodSpeed = wokBloodSpeedMultiplier(f);
+      if(f.wok)f.wok.effectiveSpeed=(f.wok.baseSpeed||f.baseSpeed||f.speed)*wokBloodSpeed;
       const boost = f.baseId === "wind_rio" ? rioMoveBoost(f) : (f.speedBoost > 0 ? 1.45 : 1);
       return Math.hypot(f.vx, f.vy) * slow * boost * gardenSlow * irisGlassSlow * songAndConcussionSlow * coldAuraSlow * timedCcSlow * coyotePoisonSlow * wokBloodSpeed;
     }
