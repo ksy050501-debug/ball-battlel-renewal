@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v177</title>
+  <title>볼배틀 리뉴얼 v178</title>
   <style>
     :root {
       --bg: #020617;
@@ -1262,7 +1262,7 @@
       { id:"coyote_d", name:"코요테드", mark:"☣", role:"게임", color:"#8b5a2b", hp:170, attack:0, speed:2.9, range:0,
         skillName:"독방구 · 뒤로 넘기기", condition:"이동 경로에 3초 독방구 · 접촉12+넘기기 · 30초 리안드리 · 60초 균열생성기 · 90초 라일라이", desc:"신지도를 모티브로 한 교란형 캐릭터. 이동 경로에 독방구를 남기고 접촉한 적을 몸 뒤로 넘긴다. 30초에는 리안드리를 얻어 독에서 벗어난 뒤에도 3틱이 이어지고, 60초에는 균열생성기를 얻어 이후 실제 도트 피해 누적 10마다 체력3을 회복하며, 90초에는 라일라이를 얻어 독이 지속되는 적의 이동속도를 20% 낮춘다." },
       { id:"wok_wok", name:"웍웍", mark:"🐺", role:"게임", color:"#7f1d1d", hp:120, attack:0, speed:1.6, range:0,
-        skillName:"피의 사냥 · 야수의 돌진", condition:"깨물기 충전 · 전방120° 피냄새 가속 · 10초마다 직선 돌진", desc:"낮은 체력과 느린 기본 이동속도를 가진 흡혈 추격형. 자신의 체력이 낮을수록 깨물기가 빨리 충전되고, 진행방향 전방120°·420 안에서 가장 체력 비율이 낮은 적의 피 냄새에 반응한다. 기본 이동은 매우 느리지만 상대가 반피 이하가 되면 폭발적으로 빨라진다. 10초마다 현재 피 냄새 속도에 비례해 돌진하며, 중앙60° 안에 적이 있으면 그 적을 타게팅하고 없으면 진행방향 직선으로 돌진한다. 적중 시 0.9초 제압하고 3회 공격해 흡혈한다." },
+        skillName:"피의 사냥 · 야수의 돌진", condition:"깨물기 충전 · 전방120° 피냄새 가속 · 중앙60° 타게팅 돌진 · 저체력 흡혈 강화", desc:"낮은 체력과 느린 기본 이동속도를 가진 흡혈 추격형. 자신의 체력이 낮을수록 깨물기가 빨리 충전되고, 진행방향 전방120°·420 안에서 가장 체력 비율이 낮은 적의 피 냄새에 반응한다. 기본 이동은 매우 느리지만 상대가 반피 이하가 되면 폭발적으로 빨라진다. 10초마다 현재 피 냄새 속도에 비례해 돌진하므로 빠를수록 돌진 거리도 길어진다. 중앙60° 안에 적이 있으면 그 적을 타게팅하고 없으면 진행방향 직선으로 돌진하며, 돌진 중에는 모든 넉백을 무시한다. 적중 시 0.9초 제압하고 3회 공격해 흡혈하며 웍웍 자신의 체력이 낮을수록 깨물기와 난타의 회복량이 최대 2배까지 증가한다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
         skillName: "공격 없음", condition: "이동만 함 / 무한 부활", desc: "HP 500. 피해를 받고 사망하면 체력 500으로 부활." }
     ];
@@ -3472,34 +3472,39 @@
       scentRange:420, scentHalfAngle:Math.PI/3, scentTargetHalfAngle:Math.PI/6,
       scentFloorHp:.05, scentHalfHp:.50, scentMidMult:1.35, scentHalfMult:2.6, scentMaxMult:3.4,
       dashPeriod:10, dashDuration:.55, dashSpeedMult:2.7,
-      maulDuration:.9, maulHits:3, maulInterval:.3, maulDamage:7, maulHeal:4
+      maulDuration:.9, maulHits:3, maulInterval:.3, maulDamage:7, maulHeal:4, healMaxMult:2
     };
     function initWokWok(f){
-      f.wok={biteCharge:0,nextDashAt:WOK.dashPeriod,dashUntil:0,dashSpeed:0,dashDirX:1,dashDirY:0,dashTargetId:null,bloodMult:1,bloodHp:1,biteFx:0,maul:null,baseSpeed:f.baseSpeed||f.speed||1.6};
+      f.wok={biteCharge:0,nextDashAt:WOK.dashPeriod,dashUntil:0,dashSpeed:0,dashDirX:1,dashDirY:0,dashTargetId:null,scentTargetId:null,bloodMult:1,bloodHp:1,biteFx:0,maul:null,baseSpeed:f.baseSpeed||f.speed||1.6};
     }
     function wokBiteCooldown(f){
       const q=clamp((f?.hp||0)/Math.max(1,f?.maxHp||1),0,1);
       return WOK.biteCooldownLow+(WOK.biteCooldownHigh-WOK.biteCooldownLow)*q;
     }
+    function wokHealMultiplier(f){
+      const q=clamp((f?.hp||0)/Math.max(1,f?.maxHp||1),0,1);
+      return 1+(WOK.healMaxMult-1)*(1-q);
+    }
     function wokWokBlocked(f){
-      return !f?.alive||f.stun>0||f.hardFreeze>0||f.bindStun>0||f.punchHold>0||f.punchFlight>0||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
+      const dashing=!!(f?.wok&&battleTime<(f.wok.dashUntil||0));
+      return !f?.alive||f.stun>0||f.hardFreeze>0||f.bindStun>0||f.punchHold>0||(!dashing&&f.punchFlight>0)||f.vampSuppressed>0||f.joltStop>0||isCasting(f);
     }
     function wokBloodSpeedMultiplier(f){
       const w=f?.wok;if(!w||!f.alive)return 1;
       if(w.maul||battleTime<(w.dashUntil||0))return w.bloodMult||1;
       const mag=Math.hypot(f.vx||0,f.vy||0);
-      if(mag<.01){w.bloodMult=1;w.bloodHp=1;return 1;}
+      if(mag<.01){w.bloodMult=1;w.bloodHp=1;w.scentTargetId=null;return 1;}
       const ux=f.vx/mag,uy=f.vy/mag,cosHalf=Math.cos(WOK.scentHalfAngle);
-      let best=1,found=false;
+      let best=1,found=false,bestTarget=null;
       enemiesOf(f).forEach(e=>{
         if(!e?.alive||e.isSummon||e.duelMonster||e.marioBlock)return;
         const dx=e.x-f.x,dy=e.y-f.y,d=Math.hypot(dx,dy);
         if(d<.001||d>WOK.scentRange)return;
         if((dx/d)*ux+(dy/d)*uy<cosHalf)return;
         const q=clamp(e.hp/Math.max(1,e.maxHp||e.hp||1),0,1);
-        if(!found||q<best){best=q;found=true;}
+        if(!found||q<best){best=q;found=true;bestTarget=e;}
       });
-      w.bloodHp=found?best:1;
+      w.scentTargetId=bestTarget?.id||null;w.bloodHp=found?best:1;
       if(!found){w.bloodMult=1;return 1;}
       if(best>WOK.scentHalfHp){
         const t=clamp((1-best)/(1-WOK.scentHalfHp),0,1);
@@ -3542,6 +3547,7 @@
       }
       w.dashSpeed=w.baseSpeed*44*blood*WOK.dashSpeedMult;
       w.dashUntil=battleTime+WOK.dashDuration;w.nextDashAt=battleTime+WOK.dashPeriod;
+      f.punchFlight=0;f.punchSource=null;f.punchWallPower=0;f.punchWallHits=0;f.queuedIronImpulse=null;f.webKnockTime=0;f.webKnockSourceId="";
       f.vx=w.dashDirX*w.dashSpeed;f.vy=w.dashDirY*w.dashSpeed;
       if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-34,target?"피의 추적!":"야수의 돌진!",target?"#fca5a5":"#ef4444");spawnBlast(f.x,f.y,42,"#7f1d1d");}
       return true;
@@ -3556,7 +3562,7 @@
         f.vx=0;f.vy=0;
         while(w.maul.hits<WOK.maulHits&&battleTime+1e-9>=w.maul.nextAt&&target.alive){
           const dealt=damage(target,WOK.maulDamage,f,"웍웍 야수의 난타");
-          if(dealt>0){heal(f,WOK.maulHeal);w.biteFx=.22;if(!fastSimMode){spawnParticles(target.x,target.y,"#fecaca",7);spawnBlast(target.x,target.y,28,"#991b1b");}}
+          if(dealt>0){heal(f,Math.round(WOK.maulHeal*wokHealMultiplier(f)));w.biteFx=.22;if(!fastSimMode){spawnParticles(target.x,target.y,"#fecaca",7);spawnBlast(target.x,target.y,28,"#991b1b");}}
           w.maul.hits+=1;w.maul.nextAt+=WOK.maulInterval;
         }
         return;
@@ -3568,6 +3574,8 @@
     }
     function moveWokWokDash(f,dt){
       const w=f?.wok;if(!w||battleTime>=(w.dashUntil||0))return false;
+      // 돌진 중에는 외부 넉백/비행 충격을 매 프레임 제거하고 돌진 벡터를 우선한다.
+      f.punchFlight=0;f.punchSource=null;f.punchWallPower=0;f.punchWallHits=0;f.queuedIronImpulse=null;f.webKnockTime=0;f.webKnockSourceId="";
       if(wokWokBlocked(f)){w.dashUntil=0;w.dashTargetId=null;wokRestoreCruise(f);return false;}
       if(w.dashTargetId){
         const target=fighterById(w.dashTargetId);
@@ -3597,12 +3605,35 @@
       if((w.biteCharge||0)<1)return false;
       const dealt=damage(target,WOK.biteDamage,f,"웍웍 깨물기");
       if(dealt<=0)return false;
-      w.biteCharge=0;heal(f,WOK.biteHeal);w.biteFx=.34;
+      w.biteCharge=0;heal(f,Math.round(WOK.biteHeal*wokHealMultiplier(f)));w.biteFx=.34;
       if(!fastSimMode){spawnFloatingText(target.x,target.y-target.r-28,"깨물기!","#fca5a5");spawnParticles(target.x,target.y,"#fecaca",9);spawnBlast(target.x,target.y,34,"#7f1d1d");}
       return true;
     }
+    function drawWokBloodScent(f){
+      const w=f?.wok;if(!w||fastSimMode||f.portraitOnly||(w.bloodMult||1)<=1.001||!w.scentTargetId)return;
+      const target=fighterById(w.scentTargetId);if(!target?.alive||!areEnemies(f,target))return;
+      const dx=f.x-target.x,dy=f.y-target.y,d=Math.hypot(dx,dy)||1,px=-dy/d,py=dx/d;
+      const strong=(w.bloodHp||1)<=WOK.scentHalfHp,pulse=.5+.5*Math.sin(battleTime*7);
+      ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();
+      for(let i=0;i<3;i++){
+        const off=(i-1)*(strong?11:8),wave=Math.sin(battleTime*3.2+i*2.1)*(strong?10:6);
+        const cx=(target.x+f.x)/2+px*(off+wave),cy=(target.y+f.y)/2+py*(off+wave);
+        ctx.globalAlpha=(strong?.40:.22)+i*.04;ctx.strokeStyle=strong?"#ef4444":"#b91c1c";ctx.lineWidth=strong?2.8:1.8;
+        ctx.setLineDash(strong?[9,9]:[5,13]);ctx.lineDashOffset=-(battleTime*(strong?90:55)+i*13);
+        ctx.beginPath();ctx.moveTo(target.x,target.y);ctx.quadraticCurveTo(cx,cy,f.x,f.y);ctx.stroke();
+      }
+      ctx.setLineDash([]);ctx.globalAlpha=strong?.62:.28;ctx.strokeStyle=strong?"#fb7185":"#dc2626";ctx.lineWidth=strong?3:2;
+      ctx.beginPath();ctx.arc(target.x,target.y,target.r+7+pulse*5,0,Math.PI*2);ctx.stroke();
+      if(strong){
+        const mag=Math.hypot(f.vx||0,f.vy||0)||1,ux=(f.vx||0)/mag,uy=(f.vy||0)/mag;
+        ctx.lineCap="round";
+        for(let i=0;i<3;i++){const side=(i-1)*7;ctx.globalAlpha=.16+i*.05;ctx.strokeStyle="#ef4444";ctx.lineWidth=3-i*.5;ctx.beginPath();ctx.moveTo(f.x-uy*side,f.y+ux*side);ctx.lineTo(f.x-ux*(24+i*10)-uy*side,f.y-uy*(24+i*10)+ux*side);ctx.stroke();}
+      }
+      ctx.restore();
+    }
     function drawWokWokCharacter(f){
       const w=f.wok||{};
+      drawWokBloodScent(f);
       ctx.save();ctx.translate(f.x,f.y);ctx.scale(f.r/20,f.r/20);
       ctx.fillStyle="#292524";ctx.strokeStyle="#0c0a09";ctx.lineWidth=1.7;ctx.beginPath();ctx.ellipse(0,5,15,16,0,0,Math.PI*2);ctx.fill();ctx.stroke();
       ctx.fillStyle="#44403c";ctx.beginPath();ctx.moveTo(-13,-8);ctx.lineTo(-9,-24);ctx.lineTo(-2,-12);ctx.moveTo(13,-8);ctx.lineTo(9,-24);ctx.lineTo(2,-12);ctx.fill();ctx.stroke();
@@ -5880,6 +5911,7 @@
     }
 
       const patchNotes = [
+      "v178: 웍웍 피의 사냥/흡혈 연계 강화. 야수의 돌진 중 외부 넉백·넉백 비행·예약 넉백을 무시하고 돌진 벡터를 유지한다. 기존처럼 돌진 속도는 현재 피 냄새 이동속도에 비례하므로 이동속도가 높을수록 같은 0.55초 동안 더 멀리 돌진한다. 웍웍 자신의 체력이 낮을수록 깨물기와 3연타 난타의 회복량이 연속적으로 증가해 HP100%에서 ×1, HP50%에서 ×1.5, 빈사에서 최대 ×2가 된다. 피 냄새 활성 시 현재 감지 대상에서 웍웍으로 흐르는 붉은 냄새 궤적을 표시하고, 대상이 반피 이하이면 궤적·대상 맥박·웍웍 이동 잔상을 강화한다. 120°/60° 판정 영역 자체는 표시하지 않으며 기존 붉은 눈 연출을 유지한다.",
       "v177: 웍웍 피의 사냥 구조 강화. 기본 이동속도 2.25→1.6으로 크게 낮추고, 전방120°·거리420 안 최저 체력 비율 적을 기준으로 HP50% 초과에서는 최대×1.35, HP50% 이하 진입 즉시×2.6에서 HP5% 이하 최대×3.4까지 폭발적으로 가속한다. 기존 부채꼴/피냄새 범위 시각화는 제거하고 피 냄새 활성 여부는 웍웍의 눈이 황색→붉은색으로 변하는 것으로 표시한다. 돌진 발동 시 진행방향 중앙60°·거리420 안에 적이 있으면 가장 낮은 HP비율 적을 타게팅해 돌진 중 방향을 보정하고, 없으면 기존처럼 진행방향 직선 돌진한다. 깨물기14+회복10, 돌진10초·0.55초·속도×2.7, 제압0.9초·7×3·타격당 회복4는 유지.",
       "v176: 웍웍 표시/피 냄새 가속 확인 개선. 인게임 웍웍 전용 렌더러에 체력바와 이름 표시가 누락된 문제를 수정했다. 진행방향 전방120°·거리420 피 냄새 감지 부채꼴을 표시하고, 감지 대상의 HP에 따라 가속이 활성화되면 붉게 강조한다. 상태창에도 현재 피 냄새 배율과 실효 이동속도를 함께 표시한다. 전투 수치와 판정은 v175 그대로 유지.",
       "v175: 신캐 웍웍 추가. HP120·기본이속2.25. 깨물기는 HP100%에서7초, 저체력일수록 최대3.5초까지 빨리 충전되며 접촉 시14피해+HP10 회복. 진행방향 전방120°·거리420 안 실제 적 중 가장 낮은 체력 비율 하나를 기준으로 적 HP100%에서는 기본속도, 5% 이하에서는 최대2배까지 연속 가속한다. 10초마다 현재 피 냄새 속도에 비례한 0.55초 직선 돌진(×2.7)을 사용하고, 적중 시0.9초 제압 후7피해×3과 타격당 HP4 흡혈. 피 냄새는 특정 대상을 저장하거나 여러 적을 합산하지 않는다.",
@@ -7860,7 +7892,7 @@
       if(f.wok){
         const w=f.wok,biteRatio=clamp(w.biteCharge||0,0,1),dashLeft=Math.max(0,(w.nextDashAt||0)-battleTime),dashRatio=clamp(1-dashLeft/WOK.dashPeriod,0,1),blood=(w.bloodMult||1).toFixed(2),prey=Math.round((w.bloodHp||1)*100);
         const active=w.maul?"제압 난타":battleTime<(w.dashUntil||0)?"직선 돌진":(w.biteCharge||0)>=1?"깨물기 충전 완료":"깨물기 충전 중";
-        return {ratio:biteRatio,className:(w.biteCharge||0)>=1?"rage-fill":"skill-fill",text:active,extraBarsHtml:`<div class="bar" title="야수의 돌진"><div class="bar-fill rage-fill" style="width:${dashRatio*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">깨물기 ${WOK.biteDamage} · 회복${WOK.biteHeal} · 현재 충전 기준 ${wokBiteCooldown(f).toFixed(1)}초</div><div class="status-skill-label">피 냄새 ×${blood} · 실효 이속 ${(w.effectiveSpeed||w.baseSpeed||f.baseSpeed).toFixed(2)} · 전방120°/420 · 중앙60° 돌진 타게팅 · 감지 최저 HP ${prey}% · 돌진 ${dashLeft.toFixed(1)}초</div>`};
+        return {ratio:biteRatio,className:(w.biteCharge||0)>=1?"rage-fill":"skill-fill",text:active,extraBarsHtml:`<div class="bar" title="야수의 돌진"><div class="bar-fill rage-fill" style="width:${dashRatio*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">깨물기 ${WOK.biteDamage} · 현재 회복${Math.round(WOK.biteHeal*wokHealMultiplier(f))} · 흡혈배율 ×${wokHealMultiplier(f).toFixed(2)} · 현재 충전 기준 ${wokBiteCooldown(f).toFixed(1)}초</div><div class="status-skill-label">피 냄새 ×${blood} · 실효 이속 ${(w.effectiveSpeed||w.baseSpeed||f.baseSpeed).toFixed(2)} · 전방120°/420 · 중앙60° 돌진 타게팅 · 돌진 중 넉백 면역 · 감지 최저 HP ${prey}% · 돌진 ${dashLeft.toFixed(1)}초</div>`};
       }
       if(f.spider){const s=f.spider||{};const active=s.mode==="chase",firing=(s.volleyLeft||0)>0;return {ratio:active||firing?1:clamp(1-Math.max(0,s.volleyCd||0)/SPIDER.volleyCooldown,0,1),className:active?"rage-fill":"skill-fill",text:active?"웹스윙 · 적 추격":firing?("웹슈터 연사 · "+(SPIDER.volleyCount-(s.volleyLeft||0))+"/"+SPIDER.volleyCount):("웹슈터 "+Math.max(0,s.volleyCd||0).toFixed(1)+"초"),extraTextHtml:'<div class="status-skill-label">웹슈터 5초마다 6연사 · 발당2·약넉백·0.9초 10%둔화</div><div class="status-skill-label">웹슈터 넉백 중 벽에 충돌해야만 0.9초 속박 · 속박 성공 시 타게팅 웹스윙 돌진18+강넉백</div>'};}
       if(f.conan){
