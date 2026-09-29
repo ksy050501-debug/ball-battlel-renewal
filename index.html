@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v188</title>
+  <title>볼배틀 리뉴얼 v189</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v188</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v189</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -3495,7 +3495,8 @@
       if(!f.alive||w.maul||battleTime<w.dashUntil||battleTime<w.huntReadyAt||wokWokBlocked(f))return;
       let target=null,lowest=Infinity,nearest=Infinity;
       for(const e of enemiesOf(f)){
-        if(!wokBiteEligibleTarget(f,e))continue;
+        // W marks enemy characters only; Q/R can hit their summons.
+        if(e.isSummon||e.duelMonster||!wokBiteEligibleTarget(f,e))continue;
         const q=e.hp/Math.max(1,e.maxHp),d=Math.hypot(e.x-f.x,e.y-f.y);
         if(q<=WOK.huntThreshold&&(q<lowest||(q===lowest&&d<nearest))){target=e;lowest=q;nearest=d;}
       }
@@ -3526,7 +3527,7 @@
       if(prey?.alive&&areEnemies(f,prey))return prey;
       let best=null,bestDist=Infinity;
       for(const e of enemiesOf(f)){
-        if(!e?.alive||e.isSummon||e.duelMonster||e.marioBlock)continue;
+        if(!wokBiteEligibleTarget(f,e))continue;
         const d=Math.hypot(e.x-f.x,e.y-f.y);
         if(d<bestDist){best=e;bestDist=d;}
       }
@@ -3611,7 +3612,7 @@
       return true;
     }
     function wokBiteEligibleTarget(f,e){
-      return !!(e?.alive&&areEnemies(f,e)&&!e.isSummon&&!e.duelMonster&&!e.marioBlock&&
+      return !!(e?.alive&&areEnemies(f,e)&&!e.marioBlock&&
         !(e.dodoVoid>0)&&!(e.logo?.jump?.phase==="flight")&&!e.coyoteFling&&
         !(e.mario?.pipeTransit&&e.mario.pipeTransit.phase!=="approach"));
     }
@@ -3628,7 +3629,7 @@
     }
     function wokWokContact(f,target){
       const w=f?.wok;if(!w||!f.alive||!target?.alive||!areEnemies(f,target))return false;
-      if(target.isSummon||target.duelMonster||target.marioBlock||w.maul)return false;
+      if(target.marioBlock||w.maul)return false;
       if(battleTime<(w.dashUntil||0)){
         w.dashContactAt=battleTime;
         w.dashUntil=0;w.dashTargetId=null;w.maul={targetId:target.id,endAt:battleTime+WOK.maulDuration,nextAt:battleTime,hits:0};
@@ -5919,6 +5920,7 @@
     }
 
       const patchNotes = [
+      "v189: 웍웍 Q/R의 isSummon·duelMonster 제외 조건 제거. Q 근접 깨물기, R 일반 대상 선택·경로 충돌·접촉 제압에 소환수 포함. W 본체 마킹과 마킹 대상 우선 R은 유지하되 경로의 소환수를 관통하지 않음. 피해·회복·쿨타임 유지.",
       "v188: 웍웍 Q 깨물기 피해14→18. Q 회복10·R 타격당 회복8 및 저체력 회복 배율 유지. R 쿨타임30초 및 나머지 판정 유지.",
       "v187: R 쿨타임30초·타격당 회복4→8. W 마킹 즉시 대상까지 피구름 연결, 붉은 눈과 두 줄 안광 잔상. 몸 접촉 종료 제거·Q 사용 시 W 종료(기존4초 제한/사망 종료 유지). W 중 R 잠금, 종료 후5초 및 R 쿨타임 모두 충족 시 직전 사냥감 우선 발동.",
       "v186: W를 HP40% 이하 최저 체력 비율 적 감지→4초 곡선 추적·이속×2.6→종료 후8초 대기로 단순화. 각도/흔적/최근 깨문 대상 판정 제거. W 중 R은 사냥감 우선, 첫 적/벽에 닿으면 종료. 공용 넉백 진입점에서 돌진 면역을 적용하고 비행 조기반환 전 잔여 넉백 정리. Q 및 피해/회복 수치 유지.",
@@ -6126,7 +6128,7 @@
       if(c.id==="andrum")return {damage:"킥 음파 5/6/7 · 반경110/135/160 · WHIPLASH 킥3(현재 그루브와 같은 반경) · 피날레 크래시16/반경210",
         tick:"그루브0~300: 0~100 기본 / 101~200 몰입 / 201~300 광란 · 초당+10 · 피격 시 실제 피해×5 감소 · 솔로게이지0~100 · 실제 적중 킥마다+5 · 100에서 다음 마디 WHIPLASH",
         tip:"그루브는 더 이상 단계별 별도 진행도가 아니라 하나의 0~300 수치다. 피해7을 받으면 35, 피해10을 받으면 50이 즉시 빠지며 경계값 아래로 내려가면 그루브 단계도 곧바로 하락한다. 별도 WHIPLASH 게이지는 일반 킥이 적에게 실제 피해를 준 경우에만 5씩 오르고 솔로 중에는 충전되지 않는다. 100이 되면 다음 마디 첫 박에서 2마디 솔로를 시작하고 게이지를 0으로 소모한다."};
-      if(c.id==="wok_wok")return {damage:"Q 깨물기18+회복10 / R 제압7×3+타격당 회복8",tick:"Q 시작 준비·접촉+8·재충전7→3.5초 / W HP40% 이하 감지·4초·이속×2.6·종료 후8초 / R 주기30초·W 종료 후5초 대기·지속0.55초",tip:"W는 각도·거리·흔적 조건 없이 가장 낮은 체력 비율의 적을 선택하고 대상 변경 없이 곡선 추적한다. Q 사용·처치·4초 경과 시 종료. 단순 몸 접촉으로는 종료하지 않는다. 넉백 중 조향 중지. W 중 R 사용 불가. W 종료 후5초와30초 재사용 대기를 모두 충족하면 직전 사냥감을 우선하며 아니면 가장 가까운 적을 선택한다. 첫 적이나 벽에 막히면 종료하며 실제 적중한 상대를 제압한다. R 중 넉백은 무시하지만 피해와 일반 기절 면역은 아니다. 기존 Q 무적 대상 회복 및 R 실제 피해 시 회복 유지."};
+      if(c.id==="wok_wok")return {damage:"Q 깨물기18+회복10 / R 제압7×3+타격당 회복8",tick:"Q 시작 준비·접촉+8·재충전7→3.5초 / W HP40% 이하 감지·4초·이속×2.6·종료 후8초 / R 주기30초·W 종료 후5초 대기·지속0.55초",tip:"W는 각도·거리·흔적 조건 없이 가장 낮은 체력 비율의 적을 선택하고 대상 변경 없이 곡선 추적한다. Q 사용·처치·4초 경과 시 종료. 단순 몸 접촉으로는 종료하지 않는다. 넉백 중 조향 중지. W 중 R 사용 불가. W 종료 후5초와30초 재사용 대기를 모두 충족하면 직전 사냥감을 우선하며 아니면 가장 가까운 적을 선택한다. Q는 소환수도 깨물며 R은 소환수도 대상으로 선택하고 경로를 가로막은 소환수에 적중해 종료·제압한다. W 마킹은 본체만 대상으로 유지한다. 첫 적이나 벽에 막히면 종료하며 실제 적중한 상대를 제압한다. R 중 넉백은 무시하지만 피해와 일반 기절 면역은 아니다. 기존 Q 무적 대상 회복 및 R 실제 피해 시 회복 유지."};
       if(c.id==="newhello_sergeant")return {damage:"일반 광역 회전베기8 / 와이어 광역 강습15 + 출혈1×5회 · 재타격 시 남은 출혈 즉시 폭발 후 재적용 · HP 열세 보정 최대 ×1.6",
         tick:"검 발동 사거리: 몸 충돌보다 +8 · 광역 베기 범위: 몸 반경보다 +28 · 기동7초 · 준비0.45초 · 고속이동1초(초당650) · 와이어 강습 최대 3연속 · 일반 베기 재사용1.2초 · 출혈 약1초마다 5회",
         tip:"뉴헬로는 상대와 몸이 닿지 않아도 검 사거리(+8)에 들어오면 베기가 발동한다. 공격을 발동시킨 상대가 누구든, 그 순간 병장 중심의 더 큰 베기 원(+28) 안에 있는 모든 적이 같은 베기 피해와 출혈을 받는다. 와이어 강습 적중 시 즉시 재와이어하지만 한 사이클에서 총 3번까지만 연속 강습할 수 있고, 3번째 적중 뒤에는 7초 쿨타임이 적용된다. 중간 강습이 빗나가거나 끊기면 연속 횟수는 초기화된다. 출혈 폭발과 실제 몸 충돌 시 상대 접촉 반격은 기존대로 유지된다."};
