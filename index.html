@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v179</title>
+  <title>볼배틀 리뉴얼 v180</title>
   <style>
     :root {
       --bg: #020617;
@@ -768,7 +768,6 @@
     }
 
 
-
     .analysis-card {
       width: min(720px, 96vw);
       max-height: 88vh;
@@ -1016,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v179</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v180</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1374,9 +1373,6 @@
       drawIronPunch(f);
       drawHealthBar(f);drawName(f);
     }
-    function ironPortrait() {
-      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="철가면 기본 슈트"><circle cx="24" cy="24" r="22" fill="#b91c1c"/><path d="M12 10H36L39 23L33 39H15L9 23Z" fill="#facc15" stroke="#7f1d1d" stroke-width="2"/><path d="M13 21L22 24L21 27L14 25ZM35 21L26 24L27 27L34 25Z" fill="#a5f3fc"/><path d="M19 34H29" stroke="#78350f" stroke-width="2"/></svg>';
-    }
 
 
     const LISA = { patience: 40, idleDelay: 5, idleGain: 2, duration: 14, rageDuration: 4, rageRange: 190, period: 1.25, ragePeriod: 0.55, power: 8, ragePower: 9, range: 150, halfAngle: Math.PI / 4, speed: 2.7 };
@@ -1564,21 +1560,9 @@
       f.tano.stones.forEach((id,n)=>{const stone=stoneTypes.find(s=>s.id===id);ctx.fillStyle=stone.color;ctx.beginPath();ctx.arc(16+(n%3)*3,5+Math.floor(n/3)*5,1.5,0,Math.PI*2);ctx.fill();});
       ctx.restore();drawHealthBar(f);drawName(f);
     }
-    function lisaPortrait() {
-      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="리사 리본 트윈테일"><defs><linearGradient id="lh" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff8a6"/><stop offset=".72" stop-color="#f4dc62"/><stop offset="1" stop-color="#75bf68"/></linearGradient></defs><circle cx="24" cy="24" r="22" fill="#f8fafc"/><path d="M12 13C1 15 1 34 9 39C3 43 7 48 13 43C20 37 12 29 16 19Z" fill="url(#lh)" stroke="#b89b35"/><path d="M36 13C47 15 47 34 39 39C45 43 41 48 35 43C28 37 36 29 32 19Z" fill="url(#lh)" stroke="#b89b35"/><path d="M13 11L3 8L8 17L2 23L15 19ZM35 11L45 8L40 17L46 23L33 19Z" fill="#1f2937"/><path d="M11 12L5 10L9 16L5 20L14 18ZM37 12L43 10L39 16L43 20L34 18Z" fill="#f0a08a"/><ellipse cx="24" cy="24" rx="12" ry="15" fill="#ffe7cf"/><path d="M12 23V13Q21 2 32 8Q39 12 36 23L31 13Q27 18 24 20L22 11Q17 18 12 23Z" fill="#fff27c" stroke="#c7a638"/><path d="M17 24H21M27 24H31" stroke="#8a5a20" stroke-width="2.5"/><path d="M20 33Q24 36 28 33" fill="none" stroke="#9f1239"/><path d="M18 38L24 45L30 38L27 36H21Z" fill="#fff"/><path d="M22 38L24 41L26 38L24 36Z" fill="#22b8a7"/></svg>';
-    }
-    function tanoPortrait() {
-      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="타노 황금 투구"><circle cx="24" cy="24" r="22" fill="#312e81" stroke="#d4a33e" stroke-width="2"/><ellipse cx="24" cy="25" rx="14" ry="18" fill="#a77aca"/><path d="M7 16L17 4L19 13H29L31 4L41 16L36 22L32 16H16L12 22Z" fill="#d4a33e"/><path d="M15 23H21M27 23H33" stroke="#fff7ed" stroke-width="2"/><path d="M18 33H30M18 36V41M22 36V42M26 36V42M30 36V41" stroke="#4c1d65"/></svg>';
-    }
 
-    function captainPortrait() {
-      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="캡틴 성조 방패"><circle cx="24" cy="24" r="22" fill="#dc2626" stroke="#f8fafc" stroke-width="2"/><circle cx="24" cy="24" r="16" fill="#f8fafc"/><circle cx="24" cy="24" r="10" fill="#2563eb"/><path d="M24 16.5l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z" fill="#fff"/></svg>';
-    }
 
     const LOGO = { doctorHp: 120, hulkHp: 300, rageDrain: 10, smash: 28, wall: 14, smartHp: 180, smartSmash: 11, smartWall: 4, jumpPeriod: 6.5, jumpDamage: 22, jumpRadius: 82 };
-    function logoPortrait() {
-      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="로고 박사"><circle cx="24" cy="24" r="22" fill="#dbeafe"/><path d="M6 48l5-12 9-4 8 0 9 4 5 12" fill="#f8fafc" stroke="#64748b" stroke-width="2"/><path d="M12 13q12-15 24 0l-2 10H14z" fill="#3f2c25"/><ellipse cx="24" cy="25" rx="12" ry="14" fill="#e8b899"/><path d="M14 24h9m2 0h9m-11 0h2" stroke="#334155" stroke-width="2"/><path d="M16 21h7v6h-7zm9 0h7v6h-7z" fill="none" stroke="#334155" stroke-width="1.5"/><path d="M18 31q6 4 12 0" fill="none" stroke="#6b3f2c" stroke-width="1.5"/><path d="M20 34l4 9 4-9" fill="#22c55e"/></svg>';
-    }
     function initLogo(f) { f.logo = { mode: "doctor", jumpCd: LOGO.jumpPeriod, jump: null, smashCd: 0, airHeight: 0, fistTime: 0, fistAngle: 0 }; }
     function changeLogoForm(f, mode) {
       const l=f.logo;
@@ -3205,7 +3189,7 @@
       if(!f?.alive||hasHarmfulImmunity(f))return 1;
       for(const source of fighters){
         if(!source.alive||!source.elsa||source.id===f.id||!areEnemies(source,f))continue;
-        if(Math.hypot(f.x-source.x,f.y-source.y)<=elsaAuraRadius(source)+f.r)return applySlow(f,ELSA.auraSlow,0,"coldAura",{sample:true,active:true});
+        if(Math.hypot(f.x-source.x,f.y-source.y)<=elsaAuraRadius(source)+f.r)return ELSA.auraSlow;
       }
       return 1;
     }
@@ -3681,7 +3665,7 @@
     function coyotePoisonSlowMultiplier(f){
       const p=f?.coyotePoison;if(!p)return 1;
       const source=fighterById(p.sourceId);
-      return applySlow(f,COYOTE.rylaiSlowMult,0,"coyotePoison",{sample:true,active:source?.coyote?.rylai});
+      return slowMultiplier(COYOTE.rylaiSlowMult,source?.coyote?.rylai);
     }
     function coyoteRecordDotDamage(source,dealt){
       const c=source?.coyote;
@@ -3941,12 +3925,6 @@
     const JABAMI_GAME_NAMES = { highcard: "하이카드" };
     const CARD_LABELS = ["2","3","4","5","6","7","8","9","10","J","Q","K","A","흑J","색J"];
     const CARD_SUITS = ["♠","♥","♦","♣"];
-    function jabamiPortrait() {
-      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="쟈바미 검은 장발 붉은 교복"><circle cx="24" cy="24" r="22" fill="#f8fafc"/><path d="M7 44Q5 14 14 7Q24-1 34 7Q43 15 41 44L34 47L31 18H17L14 47Z" fill="#09090b"/><ellipse cx="24" cy="21" rx="10.5" ry="12.5" fill="#ffe4d6"/><path d="M13 20Q12 5 24 5Q37 5 35 20Q30 13 16 14Z" fill="#09090b"/><path d="M17 22h5m4 0h5" stroke="#3f2d28" stroke-width="2.2"/><path d="M20 29q4 2.8 8 0" fill="none" stroke="#9f1239"/><path d="M11 47L16 34L24 38L32 34L37 47Z" fill="#b91c1c" stroke="#7f1d1d"/><path d="M21 35L24 41L27 35L24 33Z" fill="#111827"/></svg>';
-    }
-    function justiceAllyPortrait() {
-      return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-label="정의의 아군"><circle cx="24" cy="24" r="22" fill="#dbeafe"/><path d="M2 20L9 7L17 2L24 7L31 2L41 9L47 21L36 24L12 24Z" fill="#70472f" stroke="#211713" stroke-width="1.8"/><path d="M11 19Q12 12 24 11Q36 12 37 19L34 32Q30 39 24 39Q18 39 14 32Z" fill="#f0c9ab" stroke="#7c4a32"/><path d="M8 18Q24 9 41 17L34 24L31 16L27 27L24 16L19 27L17 17L12 24Z" fill="#563426"/><path d="M14 23L22 26L20 29L15 27Z M34 23L26 26L28 29L33 27Z" fill="#60a5fa" stroke="#172554" stroke-width="1.5"/><path d="M14 19L22 23M34 19L26 23" stroke="#382015" stroke-width="2.2"/><path d="M18 25L20 26L19 28ZM30 25L28 26L29 28Z" fill="#0f172a"/><path d="M20 34L28 34" stroke="#7c2d12" stroke-width="1.2"/><path d="M3 48L9 35L17 32L21 47ZM45 48L39 35L31 32L27 47Z" fill="#f8fafc" stroke="#475569" stroke-width="1.7"/><path d="M17 33L21 47H27L31 33L27 38L24 44L21 38Z" fill="#eef2ff" stroke="#94a3b8"/></svg>';
-    }
     function makeJusticeDeck(){return ["blueEyes","blueEyes","blueEyes","fusion"];}
     function initJusticeAlly(f) {
       f.duelist = { timer: 6, equipped: false, hand: [], deck: makeJusticeDeck(), drawCd: 0, playCd: 0, speech: "", speechTime: 0, obeliskSpeechUntil:0, blueSummoned: 0, fusionDone: false, fusion: null, emptyTimer: 0, obeliskUsed:false, godCinematic:null, summonDamageDealt:0, summonKills:0 };
@@ -3988,14 +3966,6 @@
         owner.duelist.summonKills=(owner.duelist.summonKills||0)+(m.kills||0);
       }
       m.justiceStatsArchived=true;
-    }
-    function justiceSummonBattleStats(owner){
-      if(!owner?.duelist)return {damage:0,kills:0};
-      let damage=owner.duelist.summonDamageDealt||0,kills=owner.duelist.summonKills||0;
-      fighters.filter(m=>m.isSummon&&m.ownerId===owner.id&&m.duelMonster&&!m.justiceStatsArchived).forEach(m=>{
-        damage+=m.damageDealt||0;kills+=m.kills||0;
-      });
-      return {damage,kills};
     }
     function restoreJusticeMotion(f,vx=f.vx,vy=f.vy){
       if(!f?.alive)return;
@@ -4073,12 +4043,6 @@
     }
     function recordJabamiContact(f, enemy) {
       if (f?.jabami && f.jabami.phase === "collect" && enemy?.alive && !enemy.isSummon && areEnemies(f, enemy)) f.jabami.contacts.add(enemy.id);
-    }
-    function jabamiChance(f, opponentCount = null) {
-      const j = f.jabami, ratio = Math.max(0, f.hp) / f.maxHp;
-      const rivals = Math.max(1, opponentCount ?? Math.max(1, j.participants.length - 1));
-      const weight = (j.debt > 0 || ratio <= 0.10) ? 1.35 : ratio <= 0.30 ? 1.25 : 1;
-      return weight / (rivals + weight);
     }
     function enterJabamiDebt(f, amount = 0) {
       const j = f.jabami;
@@ -4659,8 +4623,6 @@
     }
 
 
-
-
     const OSHI = {
       gaugeMax: 100,
       songPeriod: 2,
@@ -4732,7 +4694,7 @@
     function songSlowMultiplier(f) {
       const debuffs = f?.songDebuffs;
       if (!(debuffs instanceof Map) || debuffs.size === 0) return 1;
-      for (const time of debuffs.values()) if (time > 0) return slowMultiplier(OSHI.slowMultiplier,true);
+      for (const time of debuffs.values()) if (time > 0) return OSHI.slowMultiplier;
       return 1;
     }
 
@@ -5286,7 +5248,6 @@
     }
 
 
-
     let selected = new Set();
     let fighters = [];
     let projectiles = [];
@@ -5620,16 +5581,6 @@
       return out;
     }
 
-    function pointInPolygon(x, y, poly) {
-      let inside = false;
-      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-        const xi = poly[i].x, yi = poly[i].y;
-        const xj = poly[j].x, yj = poly[j].y;
-        const hit = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / ((yj - yi) || 1e-8) + xi);
-        if (hit) inside = !inside;
-      }
-      return inside;
-    }
 
     function circleTouchesPolygon(x, y, radius, poly) {
       if (!poly || poly.length < 3) return false;
@@ -5750,7 +5701,7 @@
         enemiesOf(f).forEach(e => {
           if (!e.alive) return;
           damage(e, burstDamage, f, "성유리완성");
-          applyFreeze(e, 1.20);
+          applyHeavySlow(e, 1.20);
           spawnHitFlash(e.x, e.y, "#fdf4ff", 52);
           spawnFloatingText(e.x, e.y - e.r - 28, `성유리 ${burstDamage}`, "#fdf4ff");
         });
@@ -5897,6 +5848,7 @@
     }
 
       const patchNotes = [
+      "v180: 미호출 구형 SVG 초상화·빈 호환 함수·미사용 보조 함수 및 뒤 선언에 가려진 중복 pointInPolygon 제거. applyFreeze 호환 별칭을 applyHeavySlow 직접 호출로 통합하고 불필요한 둔화 전달 분기·사용되지 않는 지역 계산 제거. 현재 인게임/도감 그림·전투 수치·상태 타이머·특수 연계는 유지.",
       "v179: CC 공용 어댑터 리팩터링. 기절 적용/판정·종류별 둔화 적용·넉백 설정·비행 벽접촉 개수 계산을 공용 함수로 정리. 기존 타이머 감소 위치·중첩·면역·예약 공격·캐릭터별 연계 및 수치 유지. 완전빙결·넘기기·전역 시간정지 유지. DOT 피해 숫자만 독 보라/출혈 빨강/화상 주황으로 통일.",
       "v178: 웍웍 피의 사냥/흡혈 연계 강화. 야수의 돌진 중 외부 넉백·넉백 비행·예약 넉백을 무시하고 돌진 벡터를 유지한다. 기존처럼 돌진 속도는 현재 피 냄새 이동속도에 비례하므로 이동속도가 높을수록 같은 0.55초 동안 더 멀리 돌진한다. 웍웍 자신의 체력이 낮을수록 깨물기와 3연타 난타의 회복량이 연속적으로 증가해 HP100%에서 ×1, HP50%에서 ×1.5, 빈사에서 최대 ×2가 된다. 피 냄새 활성 시 현재 감지 대상에서 웍웍으로 흐르는 붉은 냄새 궤적을 표시하고, 대상이 반피 이하이면 궤적·대상 맥박·웍웍 이동 잔상을 강화한다. 120°/60° 판정 영역 자체는 표시하지 않으며 기존 붉은 눈 연출을 유지한다.",
       "v177: 웍웍 피의 사냥 구조 강화. 기본 이동속도 2.25→1.6으로 크게 낮추고, 전방120°·거리420 안 최저 체력 비율 적을 기준으로 HP50% 초과에서는 최대×1.35, HP50% 이하 진입 즉시×2.6에서 HP5% 이하 최대×3.4까지 폭발적으로 가속한다. 기존 부채꼴/피냄새 범위 시각화는 제거하고 피 냄새 활성 여부는 웍웍의 눈이 황색→붉은색으로 변하는 것으로 표시한다. 돌진 발동 시 진행방향 중앙60°·거리420 안에 적이 있으면 가장 낮은 HP비율 적을 타게팅해 돌진 중 방향을 보정하고, 없으면 기존처럼 진행방향 직선 돌진한다. 깨물기14+회복10, 돌진10초·0.55초·속도×2.7, 제압0.9초·7×3·타격당 회복4는 유지.",
@@ -6451,9 +6403,6 @@
       });
     }
 
-    function activeSelectionCount() {
-      return battleMode === "team" ? teamA.length + teamB.length : selected.size;
-    }
 
     function renderAll() {
       if (!running && fighters.length === 0) setArenaSize(battleMode === "team" ? 2 : (selected.size || 6));
@@ -7163,7 +7112,6 @@
     }
 
 
-
     function heroSwordSwingState(z) {
       const stage = Math.max(1, z.heroStage || 1);
       const start = z.startAngle ?? (z.angle - (z.sweep || Math.PI / 4));
@@ -7801,7 +7749,6 @@
     function drawMarioBlock(f){
       const p=.5+.5*Math.sin(battleTime*4+f.id);ctx.save();ctx.translate(f.x,f.y);ctx.shadowColor='#f59e0b';ctx.shadowBlur=12+p*7;const g=ctx.createLinearGradient(-f.r,-f.r,f.r,f.r);g.addColorStop(0,'#fde68a');g.addColorStop(.5,'#f59e0b');g.addColorStop(1,'#b45309');ctx.fillStyle=g;ctx.strokeStyle='#78350f';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(-f.r,-f.r,f.r*2,f.r*2,4);ctx.fill();ctx.stroke();ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=1.4;ctx.strokeRect(-f.r+4,-f.r+4,f.r*2-8,f.r*2-8);ctx.fillStyle='#fff7ed';ctx.strokeStyle='#92400e';ctx.lineWidth=2;ctx.font='1000 24px Georgia,serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeText('?',0,1);ctx.fillText('?',0,1);ctx.fillStyle='#78350f';for(const [x,y] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ctx.beginPath();ctx.arc(x*(f.r-4),y*(f.r-4),1.8,0,Math.PI*2);ctx.fill();}ctx.restore();drawHealthBar(f);
     }
-    function drawMarioSpinOverlay(f){}
     function drawMarioPipeAt(pipe,alpha=1){
       if(!pipe||fastSimMode)return;const angle=pipe.wall==='left'?0:pipe.wall==='right'?Math.PI:pipe.wall==='top'?Math.PI/2:-Math.PI/2;ctx.save();ctx.translate(pipe.x,pipe.y);ctx.rotate(angle);ctx.globalAlpha=alpha;ctx.shadowColor='#16a34a';ctx.shadowBlur=14;const body=ctx.createLinearGradient(0,-14,0,14);body.addColorStop(0,'#86efac');body.addColorStop(.24,'#22c55e');body.addColorStop(.72,'#15803d');body.addColorStop(1,'#14532d');ctx.fillStyle=body;ctx.strokeStyle='#052e16';ctx.lineWidth=2.2;ctx.beginPath();ctx.roundRect(0,-13,34,26,3);ctx.fill();ctx.stroke();ctx.fillStyle='#166534';ctx.beginPath();ctx.ellipse(34,0,11,18,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#020617';ctx.beginPath();ctx.ellipse(35,0,7,13,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#bbf7d0';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(34,0,10,17,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='rgba(255,255,255,.3)';ctx.fillRect(5,-9,5,17);ctx.restore();
     }
@@ -8286,33 +8233,6 @@
       return enemies[0] || null;
     }
 
-    function jinFirstTarget(f) {
-      const enemies = enemiesOf(f);
-      if (enemies.length === 0) return null;
-
-      const mains = enemies.filter(e => !e.isSummon);
-      const summons = enemies.filter(e => e.isSummon);
-
-      // 진의 연쇄번개는 분신 교란을 어느 정도 받되,
-      // 분신만 계속 때리는 상황은 피한다.
-      if (summons.length > 0 && mains.length > 0 && Math.random() < 0.28) {
-        summons.sort((a, b) => dist(f, a) - dist(f, b));
-        return summons[0];
-      }
-
-      if (mains.length > 0) {
-        mains.sort((a, b) => dist(f, a) - dist(f, b));
-        return mains[0];
-      }
-
-      enemies.sort((a, b) => dist(f, a) - dist(f, b));
-      return enemies[0] || null;
-    }
-
-    function summonOwnerOf(summon) {
-      if (!summon || !summon.isSummon || !summon.ownerId) return null;
-      return fighters.find(e => e.alive && e.id === summon.ownerId) || null;
-    }
 
     function remainingPoisonDamageFrom(target, source) {
       if (!target || !source) return 0;
@@ -8365,9 +8285,6 @@
       return true;
     }
 
-    function aliveMainFighters() {
-      return fighters.filter(f => f.alive && !f.isSummon);
-    }
 
     function isSustainedDamage(reason) {
       return ["독", "독가스", "균열장판", "잔류독", "zenGas", "강화 메테오", "화상", "출혈", "과전류 벽면", "과전류 연쇄", "흡혈제압", "햇빛", "사슬접촉"].includes(reason);
@@ -8434,9 +8351,6 @@
       if (!target || !target.alive || hasHarmfulImmunity(target)) return false;
       return applySlow(target, 0.42, duration, "freeze");
     }
-    function applyFreeze(target, duration) { // 구형 캐릭터 호환용 별칭
-      return applyHeavySlow(target, duration);
-    }
     function applyStun(target, duration, options = {}) {
       // bindStun remains a delayed bridge to stun at its original update position.
       // Moving that bridge here would change same-frame web-swing/skill outcomes.
@@ -8448,9 +8362,8 @@
     function applySlow(target, multiplier, duration, sourceKey, options = {}) {
       // Rates remain at the original read sites; timers keep their existing tick order.
       // Domain effects deliberately have no shared persistent timer.
-      if (options.sample) return slowMultiplier(multiplier, options.active);
-      if (!target || !target.alive) return false;
       if (sourceKey === "songDebuffs") {
+        if (!target || !target.alive) return false;
         if (!(target.songDebuffs instanceof Map)) target.songDebuffs = new Map();
         target.songDebuffs.set(options.sourceId, duration); // replace, not max
         return true;
@@ -8710,49 +8623,7 @@
       return Math.max(1, target.attack * (base + stacks * bonus));
     }
 
-    function makePylon(owner) {
-      const target = nearestEnemy(owner).enemy;
-      let x, y;
-      if (target) {
-        const a = Math.atan2(target.y - owner.y, target.x - owner.x) + rand(-0.75, 0.75);
-        const d = rand(70, 115);
-        x = clamp(target.x + Math.cos(a) * d, arena.x + 28, arena.x2 - 28);
-        y = clamp(target.y + Math.sin(a) * d, arena.y + 28, arena.y2 - 28);
-      } else {
-        x = rand(arena.x + 40, arena.x2 - 40);
-        y = rand(arena.y + 40, arena.y2 - 40);
-      }
-      const p = {
-        id: "pylon_" + Math.random().toString(36).slice(2, 8),
-        ownerId: owner.id,
-        x, y,
-        r: 12,
-        hp: 18,
-        maxHp: 18,
-        life: 18,
-        alive: true,
-        color: "#67e8f9",
-        name: "피뢰침"
-      };
-      pylons.push(p);
-      spawnBlast(x, y, 48, p.color);
-      spawnFloatingText(x, y - 18, "피뢰침", p.color);
-      return p;
-    }
 
-    function ensureJinPylons(jin) {
-      const alivePylons = pylons.filter(p => p.alive && p.ownerId === jin.id);
-      if (alivePylons.length < 2) {
-        while (pylons.filter(p => p.alive && p.ownerId === jin.id).length < 2) {
-          makePylon(jin);
-        }
-      }
-      // 너무 많이 남는 경우 오래된 것부터 제거
-      const own = pylons.filter(p => p.alive && p.ownerId === jin.id);
-      if (own.length > 2) {
-        own.slice(0, own.length - 2).forEach(p => p.alive = false);
-      }
-    }
 
     function damagePylon(p, amount, source, reason = "피해") {
       if (!p || !p.alive) return 0;
@@ -8789,11 +8660,6 @@
       pylons = pylons.filter(p => p.alive);
     }
 
-    function nearestPylonTo(obj, ownerId = null) {
-      const list = pylons.filter(p => p.alive && (!ownerId || p.ownerId === ownerId));
-      list.sort((a, b) => Math.hypot(a.x - obj.x, a.y - obj.y) - Math.hypot(b.x - obj.x, b.y - obj.y));
-      return list[0] || null;
-    }
 
     function trySiaCloneEscape(sia, source, incomingDamage, reason = "공격") {
       if (!sia || !sia.alive || sia.baseId !== "purple_sia" || sia.isSummon) return false;
@@ -8894,16 +8760,6 @@
       return inside;
     }
 
-    function polygonArea(poly) {
-      if (!poly || poly.length < 3) return 0;
-      let sum = 0;
-      for (let i = 0; i < poly.length; i++) {
-        const a = poly[i];
-        const b = poly[(i + 1) % poly.length];
-        sum += a.x * b.y - b.x * a.y;
-      }
-      return Math.abs(sum) / 2;
-    }
 
     function distancePointToSegment(px, py, x1, y1, x2, y2) {
       const dx = x2 - x1;
@@ -8931,18 +8787,6 @@
       return { x: rand(arena.x + margin, arena.x2 - margin), y: arena.y2, wall };
     }
 
-    function chainWallBand(anchor, span = 92) {
-      if (anchor.wall === "left" || anchor.wall === "right") {
-        return [
-          { x: anchor.x, y: clamp(anchor.y - span, arena.y, arena.y2) },
-          { x: anchor.x, y: clamp(anchor.y + span, arena.y, arena.y2) }
-        ];
-      }
-      return [
-        { x: clamp(anchor.x - span, arena.x, arena.x2), y: anchor.y },
-        { x: clamp(anchor.x + span, arena.x, arena.x2), y: anchor.y }
-      ];
-    }
 
     function chainExplosionRadius(seg) {
       return 34;
@@ -8959,7 +8803,7 @@
           if (dealt > 0) {
             hits += 1;
             applyBleed(e, source, 2, 2.0, 0.45, 4);
-            applyFreeze(e, 0.16);
+            applyHeavySlow(e, 0.16);
             spawnHitFlash(e.x, e.y, "#ef4444", 58);
             spawnFloatingText(e.x, e.y - e.r - 34, `사슬폭발 -${dealt}`, "#ef4444");
           }
@@ -8998,7 +8842,7 @@
             hits += 1;
             applyBleed(e, source, 2, 1.8, 0.45, 3);
             spawnHitFlash(e.x, e.y, "#ef4444", 38);
-            applyFreeze(e, 0.12);
+            applyHeavySlow(e, 0.12);
           }
         }
       });
@@ -9071,7 +8915,7 @@
           const dealt = damage(e, Math.max(1, Math.round(nox.attack * 0.18)), nox, "사슬접촉");
           if (dealt > 0) {
             applyBleed(e, nox, 2, 2.0, 0.45, 4);
-            applyFreeze(e, 0.08);
+            applyHeavySlow(e, 0.08);
             spawnHitFlash(e.x, e.y, "#ef4444", 32);
           }
         });
@@ -10252,7 +10096,7 @@
       const hitNo = (dodo.dodoVoidHits || 0) + 1;
       const power = Math.round(dodo.attack * (hitNo >= 3 ? 0.42 : 0.36));
       damage(target, power, dodo, "공간습격");
-      applyFreeze(target, 0.22);
+      applyHeavySlow(target, 0.22);
       spawnLightning(dodo, target, "#67e8f9");
       spawnSlash(target.x, target.y, angle + Math.PI / 2, 74 + hitNo * 8, "#e0f2fe");
       spawnBlast(target.x, target.y, 48 + hitNo * 8, "#67e8f9");
@@ -10308,12 +10152,6 @@
       return true;
     }
 
-    function normalizeVelocity(f) {
-      const len = Math.hypot(f.vx, f.vy) || 1;
-      const target = f.baseSpeed * 44;
-      f.vx = f.vx / len * target;
-      f.vy = f.vy / len * target;
-    }
 
     function capVelocity(f, maxSpeed) {
       const len = Math.hypot(f.vx, f.vy) || 1;
@@ -10508,7 +10346,6 @@
       const songAndConcussionSlow = songSlowMultiplier(f) * slowMultiplier(HINTA.slowMultiplier,f.concussionSlow > 0);
       const coldAuraSlow = coldAuraSlowMultiplier(f);
       const timedCcSlow = timedCcSlowMultiplier(f);
-      const marioItemSlow = slowMultiplier(MARIO.bananaSlowMult,(f.marioItemSlow || 0) > 0);
       const coyotePoisonSlow = coyotePoisonSlowMultiplier(f);
       const wokBloodSpeed = wokBloodSpeedMultiplier(f);
       if(f.wok)f.wok.effectiveSpeed=(f.wok.baseSpeed||f.baseSpeed||f.speed)*wokBloodSpeed;
@@ -10747,7 +10584,7 @@
         case "ice_luna": {
           const enemies = enemiesOf(f).filter(e => Math.hypot(e.x - f.x, e.y - f.y) <= 138);
           enemies.forEach(e => {
-            applyFreeze(e, 2.6);
+            applyHeavySlow(e, 2.6);
             damage(e, f.attack * 1.12 + 3, f, "얼음해일");
           });
           f.skillClock = 0;
@@ -10891,7 +10728,7 @@
 
         case "stone_goro": {
           enemiesOf(f).forEach(e => {
-            applyFreeze(e, 1.8);
+            applyHeavySlow(e, 1.8);
             damage(e, f.attack * 0.85 + 4, f, "대지진");
           });
           spawnBlast(arena.x + arena.size / 2, arena.y + arena.size / 2, arena.size * 0.72, "#a8a29e");
@@ -11145,10 +10982,6 @@
       });
     }
 
-    function multiplyVelocity(f, factor) {
-      f.vx *= factor;
-      f.vy *= factor;
-    }
 
     // 충돌 방향은 유지하되 각 개체의 기본 속력으로 부드럽게 복귀한다.
     function recoverOwnMoveSpeed(f, dt) {
@@ -11513,7 +11346,6 @@
       const irisGlassSlow = irisLitGlassSlowMultiplier(f);
       const songAndConcussionSlow = songSlowMultiplier(f) * slowMultiplier(HINTA.slowMultiplier,f.concussionSlow > 0);
       const coldAuraSlow = coldAuraSlowMultiplier(f);
-      const timedCcSlow = timedCcSlowMultiplier(f);
       const marioItemSlow = slowMultiplier(MARIO.bananaSlowMult,(f.marioItemSlow || 0) > 0);
       const coyotePoisonSlow = coyotePoisonSlowMultiplier(f);
       const wokBloodSpeed = wokBloodSpeedMultiplier(f);
@@ -11606,10 +11438,6 @@
       }
     }
 
-    function handleBasicAttack(f) {
-      // 기본 작은 탄환 공격은 사용하지 않는다.
-      // 이 함수는 이전 버전 호환용으로만 남겨둔다.
-    }
 
     function handleSummonContact(summon, target) {
       if (!summon || !target || !summon.alive || !target.alive) return false;
@@ -11768,7 +11596,7 @@
                   : speedPower * 0.30) * accelMult;
                 damage(b, power, a, a.windRush > 0 ? "질풍돌파" : "풍압충돌");
                 if (a.windRush > 0) {
-                  applyFreeze(b, 0.36);
+                  applyHeavySlow(b, 0.36);
                   capVelocity(b, b.baseSpeed * 44 * 0.88);
                   capVelocity(a, a.baseSpeed * 44 * 1.18);
                   spawnSlash(a.x, a.y, Math.atan2(a.vy, a.vx), 64, a.rioStormRush > 0 ? "#bbf7d0" : "#86efac");
@@ -11783,7 +11611,7 @@
                   : speedPower * 0.30) * accelMult;
                 damage(a, power, b, b.windRush > 0 ? "질풍돌파" : "풍압충돌");
                 if (b.windRush > 0) {
-                  applyFreeze(a, 0.36);
+                  applyHeavySlow(a, 0.36);
                   capVelocity(a, a.baseSpeed * 44 * 0.88);
                   capVelocity(b, b.baseSpeed * 44 * 1.18);
                   spawnSlash(b.x, b.y, Math.atan2(b.vy, b.vx), 64, b.rioStormRush > 0 ? "#bbf7d0" : "#86efac");
@@ -11969,7 +11797,7 @@
               const len = Math.max(1, Math.hypot(p.vx || 0, p.vy || 0));
               f.vx += (p.vx || 0) / len * 380;
               f.vy += (p.vy || 0) / len * 380;
-              applyFreeze(f, 0.35);
+              applyHeavySlow(f, 0.35);
             }
 
             if ((p.kind === "독안개" || p.kind === "독가스") && !hasHarmfulImmunity(f)) {
@@ -12050,7 +11878,7 @@
               if (pointInTrianglePoint({ x: e.x, y: e.y }, tri)) {
                 const dealt = damage(e, z.power, source, "포화명령");
                 const burned = applyBurn(e, source, 5, 2.8, 0.45, 5, "artillery");
-                applyFreeze(e, 0.22);
+                applyHeavySlow(e, 0.22);
                 spawnHitFlash(e.x, e.y, "#fecaca", 58);
                 if (dealt > 0 || burned) hits += 1;
               }
@@ -12076,7 +11904,7 @@
                 const a = Math.atan2(e.y - source.y, e.x - source.x);
                 e.vx += Math.cos(a) * 260;
                 e.vy += Math.sin(a) * 260;
-                applyFreeze(e, 0.16);
+                applyHeavySlow(e, 0.16);
                 spawnHitFlash(e.x, e.y, "#fde68a", 68);
               }
             });
@@ -12159,7 +11987,7 @@
             enemiesOf(source).forEach(e => {
               if (Math.hypot(e.x - z.x, e.y - z.y) <= z.r + e.r) {
                 damage(e, z.power, source, "균열장판");
-                applyFreeze(e, 0.45);
+                applyHeavySlow(e, 0.45);
               }
             });
           }
@@ -12176,7 +12004,7 @@
             enemiesOf(source).forEach(e => {
               damage(e, z.power, source, "강화 메테오");
               applyBurn(e, source, 1, 1.05, 0.60, null, "meteor");
-              applyFreeze(e, 0.06);
+              applyHeavySlow(e, 0.06);
             });
           }
 
@@ -12206,7 +12034,7 @@
               e.vy += ny * z.knock;
               e.x = clamp(e.x + nx * 12, arena.x + e.r, arena.x2 - e.r);
               e.y = clamp(e.y + ny * 12, arena.y + e.r, arena.y2 - e.r);
-              applyFreeze(e, 0.16);
+              applyHeavySlow(e, 0.16);
               capVelocity(e, e.baseSpeed * 44 * 2.35);
 
               spawnSlash(z.x, z.y, Math.atan2(dy, dx), z.r * 0.86, "#f8fafc");
@@ -12268,7 +12096,7 @@
 
               if (firstExpel || now >= cd) {
                 damage(e, firstExpel ? z.power : (z.wallPower || 3), source, firstExpel ? "성벽추방" : "성벽충돌");
-                applyFreeze(e, firstExpel ? 0.45 : 0.22);
+                applyHeavySlow(e, firstExpel ? 0.45 : 0.22);
                 spawnHitFlash(e.x, e.y, z.color, firstExpel ? 52 : 34);
                 spawnFloatingText(e.x, e.y - e.r - 26, firstExpel ? "추방" : "튕겨남", "#fde68a");
                 z.hitCd[e.id] = now + 0.55;
@@ -12285,7 +12113,7 @@
 
               if (now >= cd) {
                 damage(e, z.wallPower || 3, source, "성벽충돌");
-                applyFreeze(e, 0.18);
+                applyHeavySlow(e, 0.18);
                 spawnHitFlash(e.x, e.y, z.color, 30);
                 spawnFloatingText(e.x, e.y - e.r - 26, "성벽충돌", "#fde68a");
                 z.hitCd[e.id] = now + 0.75;
@@ -12393,7 +12221,7 @@
             if (!z.hitIds.has(e.id) && d <= waveFront && d >= waveBack) {
               z.hitIds.add(e.id);
               damage(e, z.power, source, "해일반동");
-              applyFreeze(e, z.slow || 1.45);
+              applyHeavySlow(e, z.slow || 1.45);
               const pushDist = Math.min((z.maxR || currentR) + e.r + 14, Math.max(d + 48, currentR + e.r + 22));
               e.x = clamp(z.x + dx / d * pushDist, arena.x + e.r, arena.x2 - e.r);
               e.y = clamp(z.y + dy / d * pushDist, arena.y + e.r, arena.y2 - e.r);
@@ -12426,7 +12254,7 @@
             enemiesOf(source).forEach(e => {
               if (Math.hypot(e.x - z.x, e.y - z.y) <= z.r + e.r) {
                 damage(e, z.power, source, "독가스");
-                applyFreeze(e, 0.14);
+                applyHeavySlow(e, 0.14);
 
                 // 구름 밖으로 나가도 몇 초간 약한 도트 피해가 남도록 독을 갱신한다.
                 if (!hasHarmfulImmunity(e)) {
@@ -12939,7 +12767,6 @@
 
       ctx.restore();
     }
-
 
 
     function drawMetalChainLink(cx, cy, angle, alpha = 1, scale = 1, phase = 0) {
