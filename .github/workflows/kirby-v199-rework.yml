@@ -16,8 +16,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-      - name: Apply patch
-        run: python3 .github/scripts/kirby_v199.py
+      - name: Repair matcher and apply patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/scripts/kirby_v199.py')
+          s=p.read_text(encoding='utf-8')
+          old="sub(r'    function drawKirbyNeutral\\(f\\)\\{.*?\\n    \\}\\n    function drawKirbyCharacter',draw_neutral+'\\n    function drawKirbyCharacter','neutral art')"
+          new="sub(r'    function drawKirbyNeutral\\(f\\)\\{.*?\\}\\n    function drawKirbyCharacter',draw_neutral+'\\n    function drawKirbyCharacter','neutral art')"
+          if old not in s: raise SystemExit('neutral matcher line not found')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+          python3 .github/scripts/kirby_v199.py
       - name: Validate
         run: |
           python3 - <<'PY'
