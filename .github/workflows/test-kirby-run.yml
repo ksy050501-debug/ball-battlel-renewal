@@ -31,7 +31,7 @@ jobs:
           for line in block.splitlines():
               out.append(line[10:] if line.startswith('          ') else line)
           script='\n'.join(out)+'\n'
-          script=script.replace('\\\\n','\\n')
+          script=script.replace('condition:"기본 상태 6초 주기 120° 흡입 · 중립 몬스터 최대2마리 · 카피 상태 누적피해45 → 별 이탈"','condition:"기본 상태 6초 주기 120° 흡입 · 중립 몬스터 최대2마리 · 카피 누적피해45 → 별 이탈"',1)
           Path('/tmp/patch_kirby_v198.py').write_text(script,encoding='utf-8')
           PY
           python3 /tmp/patch_kirby_v198.py
