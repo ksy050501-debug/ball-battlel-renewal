@@ -1,0 +1,54 @@
+name: Run Kirby v198 patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/kirby-v198-runner.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Extract and apply patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, textwrap
+          src=Path('.github/workflows/kirby-v198.yml').read_text(encoding='utf-8')
+          m=re.search(r"cat > /tmp/patch_kirby_v198.py <<'PY'\n(.*?)\n          PY",src,re.S)
+          if not m:
+              raise SystemExit('embedded patch script not found')
+          Path('/tmp/patch_kirby_v198.py').write_text(textwrap.dedent(m.group(1)),encoding='utf-8')
+          PY
+          python3 /tmp/patch_kirby_v198.py
+      - name: Validate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert '<title>볼배틀 리뉴얼 v198</title>' in s
+          assert 'inhalePeriod:10, inhaleDuration:3.2' in s
+          assert '커비 빔 채찍' in s
+          assert '중립 소드 회전베기' in s
+          assert 'neutral.kirbyNeutral.recoil' in s
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
+          assert scripts
+          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+      - name: Commit result and cleanup helpers
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/kirby-v198.yml .github/workflows/kirby-v198-runner.yml
+          git add index.html
+          git commit -m 'v198: refine Kirby copy moves and neutral collisions'
+          git push
