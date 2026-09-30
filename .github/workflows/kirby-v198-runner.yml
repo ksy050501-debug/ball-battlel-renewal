@@ -20,12 +20,14 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re, textwrap
+          import re
           src=Path('.github/workflows/kirby-v198.yml').read_text(encoding='utf-8')
           m=re.search(r"cat > /tmp/patch_kirby_v198.py <<'PY'\n(.*?)\n          PY",src,re.S)
           if not m:
               raise SystemExit('embedded patch script not found')
-          Path('/tmp/patch_kirby_v198.py').write_text(textwrap.dedent(m.group(1)),encoding='utf-8')
+          lines=m.group(1).splitlines()
+          body='\n'.join(line[10:] if line.startswith('          ') else line for line in lines)+'\n'
+          Path('/tmp/patch_kirby_v198.py').write_text(body,encoding='utf-8')
           PY
           python3 /tmp/patch_kirby_v198.py
       - name: Validate
