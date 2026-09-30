@@ -1,0 +1,257 @@
+name: Apply Kirby v198 refinement
+
+on:
+  push:
+    paths:
+      - '.github/workflows/kirby-v198.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Patch index
+        run: |
+          cat > /tmp/patch_kirby_v198.py <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          def once(old,new,label):
+              global s
+              n=s.count(old)
+              if n != 1:
+                  raise SystemExit(f'{label}: expected 1 anchor, found {n}')
+              s=s.replace(old,new,1)
+
+          def sub_once(pattern,repl,label,flags=re.S):
+              global s
+              s2,n=re.subn(pattern,repl,s,count=1,flags=flags)
+              if n != 1:
+                  raise SystemExit(f'{label}: expected 1 match, found {n}')
+              s=s2
+
+          once('<title>볼배틀 리뉴얼 v197</title>','<title>볼배틀 리뉴얼 v198</title>','title')
+          once('<h1 id="mainTitle">볼배틀 리뉴얼 v197</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v198</h1>','header')
+
+          # 도감/피해정보: 흡입 템포와 각 카피의 새 전투 방식 반영
+          old_char='''      { id:"kirby", name:"커비", mark:"★", role:"게임", color:"#f472b6", hp:150, attack:0, speed:2.55, range:0,\n        skillName:"흡입 · 카피 능력", condition:"기본 상태 6초 주기 120° 흡입 · 중립 몬스터 최대2마리 · 카피 상태 누적피해45 → 별 이탈", desc:"기본 상태에서는 진행방향 전방120도를 주기적으로 흡입한다. 맵에는 커비와 상대 모두를 공격하는 중립 몬스터가 최대2마리까지 등장하며, 몬스터를 삼키면 소드·빔·파이어·밤 카피 능력을 얻는다. 상대 본체를 삼키면 잠시 몸속에 가둔 뒤 진행방향으로 뱉어 강하게 날리고 벽충돌 피해를 줄 수 있다. 카피 상태에서 누적 피해45를 받으면 능력이 별로 튕겨 나가며, 5초 안에 별에 다시 닿으면 해당 능력을 되찾는다." },'''
+          new_char='''      { id:"kirby", name:"커비", mark:"★", role:"게임", color:"#f472b6", hp:150, attack:0, speed:2.55, range:0,\n        skillName:"흡입 · 카피 능력", condition:"기본 상태 10초 주기 120° 장시간 흡입 · 중립 몬스터 최대2마리 · 카피 상태 누적피해45 → 별 이탈", desc:"기본 상태에서는 진행방향 전방120도를 3.2초 동안 천천히 흡입한다. 맵에는 커비와 상대 모두를 공격하는 중립 몬스터가 최대2마리까지 등장하며, 현재 존재하는 몬스터와 커비가 보유한 카피를 제외한 종류에서 새 몬스터가 생성된다. 소드는 회전베기, 빔은 별 채찍 광역기, 파이어는 부채꼴 화염방사, 밤은 한 번 튀는 포물선 폭탄을 사용한다. 커비가 카피하면 각 기술이 강화된다. 상대 본체를 삼키면 잠시 몸속에 가둔 뒤 뱉어 강하게 날리고 벽충돌 피해를 줄 수 있다. 카피 상태에서 누적 피해45를 받으면 능력이 별로 튕겨 나가며, 5초 안에 다시 닿으면 되찾는다." },'''
+          once(old_char,new_char,'kirby character')
+
+          old_info='''      if(c.id==="kirby")return {damage:"소드13 / 빔7 / 파이어7+화상1×3 / 밤14(반경58) / 뱉기 벽충돌12",tick:"기본 흡입6초 주기·1.5초 지속·전방120° / 중립 몬스터6.5초마다·최대2 / 카피 누적피해45에서 별 이탈·별5초",tip:"기본 상태에서만 흡입한다. 중립 몬스터를 삼키면 해당 카피 능력을 얻고, 상대 본체를 삼키면 1.4초 뒤 진행방향으로 뱉는다. 카피 능력은 받은 실제 피해 누적45에서 별로 빠지며 별에 다시 닿으면 즉시 복구된다."};'''
+          new_info='''      if(c.id==="kirby")return {damage:"소드 회전베기10+출혈1×4 / 빔 채찍7+둔화 / 파이어5+화상1×3 / 밤 폭탄12×2(반경58) / 뱉기 벽충돌12",tick:"기본 흡입10초 주기·3.2초 지속·전방120°·느린 흡입 / 중립 몬스터6.5초마다·최대2 / 카피 누적피해45에서 별 이탈·별5초",tip:"중립 몬스터는 이미 필드에 있는 종류와 커비가 현재 보유한 카피를 제외하고 생성된다. 소드는 미니 회전베기, 빔은 별 채찍 광역기, 파이어는 좁은 부채꼴 화염방사, 밤은 포물선으로 날아 한 번 튄 뒤 폭발한다. 카피 커비는 각 기술의 범위·부가효과 또는 투사 수가 강화된다."};'''
+          once(old_info,new_info,'kirby info')
+
+          # 흡입 수치: 쿨 증가 + 오래/느리게 빨아들임
+          old_const='''    const KIRBY = {\n      inhalePeriod:6, inhaleDuration:1.5, inhaleRange:165, inhaleCone:Math.PI*2/3, inhalePull:132, inhaleGrow:1.16,\n      swallowedDuration:1.4, spitSpeed:520, spitFlight:.72, spitWallDamage:12,\n      copyDamageNeed:45, starLife:5, starSpeed:150,\n      neutralFirst:2.5, neutralPeriod:6.5, neutralMax:2\n    };'''
+          new_const='''    const KIRBY = {\n      inhalePeriod:10, inhaleDuration:3.2, inhaleRange:165, inhaleCone:Math.PI*2/3, inhalePull:28, inhaleVelocity:22, inhaleGrow:1.16,\n      swallowedDuration:1.4, spitSpeed:520, spitFlight:.72, spitWallDamage:12,\n      copyDamageNeed:45, starLife:5, starSpeed:150,\n      neutralFirst:2.5, neutralPeriod:6.5, neutralMax:2\n    };'''
+          once(old_const,new_const,'kirby constants')
+
+          # 빔 둔화가 공용 이동속도 계산에 실제 반영되도록 별도 타이머를 공용 multiplier에 연결
+          once('''    function timedCcSlowMultiplier(target) {\n      return knifeSlowMultiplier(target) * webSlowMultiplier(target);\n    }''','''    function timedCcSlowMultiplier(target) {\n      return knifeSlowMultiplier(target) * webSlowMultiplier(target) * slowMultiplier(0.72,(target?.kirbyBeamSlow||0)>0&&!hasHarmfulImmunity(target));\n    }''','kirby slow multiplier')
+          once('''      f.webSlow=Math.max(0,(f.webSlow||0)-dt);''','''      f.webSlow=Math.max(0,(f.webSlow||0)-dt);\n      f.kirbyBeamSlow=Math.max(0,(f.kirbyBeamSlow||0)-dt);''','kirby slow timer')
+
+          # 글로벌 밤 폭탄 상태
+          once('''    let kirbyCopyStars = [];\n    let kirbyNeutralSpawnClock = 2.5;''','''    let kirbyCopyStars = [];\n    let kirbyBombs = [];\n    let kirbyNeutralSpawnClock = 2.5;''','kirby bomb globals')
+          s=s.replace('''      kirbyCopyStars = [];\n      kirbyNeutralSpawnClock = KIRBY.neutralFirst;''','''      kirbyCopyStars = [];\n      kirbyBombs = [];\n      kirbyNeutralSpawnClock = KIRBY.neutralFirst;''')
+          if s.count('kirbyBombs = [];') < 3:
+              raise SystemExit('battle reset: expected globals + two resets')
+
+          helpers=r'''
+    function kirbyValidNeutralVictim(source,e){return !!(e?.alive&&!e.kirbyNeutral&&!e.kirbySwallowedBy&&e!==source);}
+    function kirbyAreaTargets(source){
+      if(source?.kirbyNeutral)return fighters.filter(e=>kirbyValidNeutralVictim(source,e));
+      return enemiesOf(source).filter(e=>e.alive&&!e.kirbySwallowedBy);
+    }
+    function kirbyRadialSlash(source,radius,power,bleed=false,reason="커비 소드"){
+      let hits=0;
+      for(const e of kirbyAreaTargets(source)){
+        if(Math.hypot(e.x-source.x,e.y-source.y)>radius+e.r)continue;
+        const dealt=damage(e,power,source,reason);
+        if(dealt>0){hits++;if(bleed)applyBleed(e,source,1,2.05,.5,4);if(!fastSimMode)spawnHitFlash(e.x,e.y,"#86efac",36);}
+      }
+      if(!fastSimMode){for(let i=0;i<4;i++)spawnSlash(source.x,source.y,battleTime*8+i*Math.PI/2,radius,"#86efac");playSound("wind",.72);}
+      return hits;
+    }
+    function kirbyWhip(source,range,arc,power,slow=false,reason="빔 채찍"){
+      const target=kirbyAttackTarget(source)||kirbyNeutralTarget(source);if(!target)return false;
+      const a=Math.atan2(target.y-source.y,target.x-source.x),half=arc/2;let hits=0;
+      for(const e of kirbyAreaTargets(source)){
+        const dx=e.x-source.x,dy=e.y-source.y,d=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-a),Math.cos(ea-a)));
+        if(d>range+e.r||diff>half)continue;
+        const dealt=damage(e,power,source,reason);if(dealt>0){hits++;if(slow)applySlow(e,.72,.85,"kirbyBeamSlow");if(!fastSimMode)spawnHitFlash(e.x,e.y,"#fde047",38);}
+      }
+      if(!fastSimMode){
+        for(let i=0;i<7;i++){const t=i/6,aa=a-half+arc*t,rr=range*(.50+.45*Math.sin(t*Math.PI));spawnSlash(source.x,source.y,aa,rr,i%2?"#fde047":"#fff7ed");const px=source.x+Math.cos(aa)*rr,py=source.y+Math.sin(aa)*rr;spawnParticles(px,py,"#fde047",2);}
+        playSound("magic",.78);
+      }
+      return hits>0;
+    }
+    function kirbyFlameCone(source,range,arc,power,burn=false,reason="파이어"){
+      const target=kirbyAttackTarget(source)||kirbyNeutralTarget(source);if(!target)return false;
+      const a=Math.atan2(target.y-source.y,target.x-source.x),half=arc/2;let hits=0;
+      for(const e of kirbyAreaTargets(source)){
+        const dx=e.x-source.x,dy=e.y-source.y,d=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-a),Math.cos(ea-a)));
+        if(d>range+e.r||diff>half)continue;
+        const dealt=damage(e,power,source,reason);if(dealt>0){hits++;if(burn)applyBurn(e,source,1,1.8,.6,3,"kirbyFire");if(!fastSimMode)spawnHitFlash(e.x,e.y,"#fb923c",34);}
+      }
+      if(!fastSimMode){for(let i=-3;i<=3;i++){const aa=a+i*half/3.5,rr=range*rand(.72,1);spawnSlash(source.x,source.y,aa,rr,i%2?"#fb923c":"#fde68a");spawnParticles(source.x+Math.cos(aa)*rr*.7,source.y+Math.sin(aa)*rr*.7,"#f97316",2);}playSound("fireball",.72);}
+      return hits>0;
+    }
+    function kirbyThrowBomb(source,target,power,radius,reason,spread=0){
+      if(!source?.alive||!target?.alive)return false;
+      const base=Math.atan2(target.y-source.y,target.x-source.x),a=base+spread,d=Math.hypot(target.x-source.x,target.y-source.y),speed=clamp(d/.82,150,270);
+      kirbyBombs.push({source,sourceId:source.id,x:source.x,y:source.y,z:7,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,vz:175,gravity:390,bounces:1,r:7,power,radius,reason,color:source.kirbyNeutral?"#8b5cf6":"#c4b5fd",life:2.8});
+      if(!fastSimMode){spawnFloatingText(source.x,source.y-source.r-24,"밤!","#c4b5fd");playSound("magic",.56);}return true;
+    }
+    function kirbyBombExplode(b){
+      const source=b.source;if(!source)return;
+      for(const e of fighters){
+        if(!e.alive||e===source||e.kirbySwallowedBy)continue;
+        if(source.kirbyNeutral){if(e.kirbyNeutral||e.isSummon)continue;}else if(!areEnemies(source,e))continue;
+        if(Math.hypot(e.x-b.x,e.y-b.y)<=b.radius+e.r)damage(e,b.power,source,b.reason);
+      }
+      if(!fastSimMode){spawnBlast(b.x,b.y,b.radius,b.color);spawnParticles(b.x,b.y,b.color,16);playSound("explosion",.7);}
+    }
+    function updateKirbyBombs(dt){
+      for(let i=kirbyBombs.length-1;i>=0;i--){const b=kirbyBombs[i];b.life-=dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;b.vz-=b.gravity*dt;
+        if(b.x-b.r<arena.x||b.x+b.r>arena.x2){b.x=clamp(b.x,arena.x+b.r,arena.x2-b.r);b.vx*=-.62;}
+        if(b.y-b.r<arena.y||b.y+b.r>arena.y2){b.y=clamp(b.y,arena.y+b.r,arena.y2-b.r);b.vy*=-.62;}
+        if(b.z<=0&&b.vz<0){if(b.bounces>0){b.z=0;b.vz=105;b.vx*=.72;b.vy*=.72;b.bounces-=1;if(!fastSimMode)spawnParticles(b.x,b.y,b.color,5);}else{kirbyBombExplode(b);kirbyBombs.splice(i,1);continue;}}
+        if(b.life<=0){kirbyBombExplode(b);kirbyBombs.splice(i,1);}
+      }
+    }
+'''
+          # 카피 공격 전체 교체
+          sub_once(r'    function kirbyUseCopy\(f\)\{.*?\n    \}\n    function updateKirby\(f,dt\)\{',helpers+r'''
+    function kirbyUseCopy(f){
+      const k=f.kirby,target=kirbyAttackTarget(f);if(!target)return false;const d=dist(f,target);
+      if(k.mode==="sword"){
+        const slashR=f.r+NEWHELLO.radiusBonus;
+        if(d>132){k.attackCd=.22;return false;}
+        const dx=target.x-f.x,dy=target.y-f.y,m=Math.hypot(dx,dy)||1,lunge=Math.min(34,Math.max(0,d-(slashR*.62)));
+        if(lunge>0){f.x=clamp(f.x+dx/m*lunge,arena.x+f.r,arena.x2-f.r);f.y=clamp(f.y+dy/m*lunge,arena.y+f.r,arena.y2-f.r);if(!fastSimMode)spawnSlash(f.x-dx/m*lunge,f.y-dy/m*lunge,Math.atan2(dy,dx),lunge+18,"#f8fafc");}
+        kirbyRadialSlash(f,slashR,10,true,"커비 소드 회전베기");k.attackCd=1.45;return true;
+      }
+      if(k.mode==="beam"){kirbyWhip(f,138,Math.PI*5/6,7,true,"커비 빔 채찍");k.attackCd=1.65;return true;}
+      if(k.mode==="fire"){if(d>150){k.attackCd=.18;return false;}kirbyFlameCone(f,122,Math.PI*7/18,5,true,"커비 화염방사");k.attackCd=1.20;return true;}
+      if(k.mode==="bomb"){kirbyThrowBomb(f,target,12,58,"커비 밤",-.16);kirbyThrowBomb(f,target,12,58,"커비 밤",.16);k.attackCd=3.15;return true;}
+      return false;
+    }
+    function updateKirby(f,dt){''','kirby copy attacks')
+
+          # 몬스터 스폰: 이미 존재하는 종류 + 모든 살아있는 커비가 보유한 현재 카피를 제외
+          sub_once(r'    function spawnKirbyNeutral\(\)\{.*?\n    \}\n    function kirbyNeutralTarget',r'''    function spawnKirbyNeutral(){
+      const types=Object.keys(KIRBY_COPY),active=fighters.filter(e=>e.alive&&e.kirbyNeutral).map(e=>e.kirbyNeutral.type),held=fighters.filter(e=>e.alive&&!e.isSummon&&e.kirby&&e.kirby.mode!=="base").map(e=>e.kirby.mode);
+      let pool=types.filter(t=>!active.includes(t)&&!held.includes(t));if(!pool.length)pool=types.filter(t=>!active.includes(t));if(!pool.length)pool=types;
+      const type=pick(pool),d=kirbyNeutralData(type),r=13;
+      let x=rand(arena.x+r+18,arena.x2-r-18),y=rand(arena.y+r+18,arena.y2-r-18);
+      for(let tries=0;tries<10&&fighters.some(f=>f.alive&&!f.isSummon&&Math.hypot(f.x-x,f.y-y)<90);tries++){x=rand(arena.x+r+18,arena.x2-r-18);y=rand(arena.y+r+18,arena.y2-r-18);}
+      const spec={id:"kirby_neutral_"+type,name:d.name,mark:d.mark,role:"중립",color:d.color,hp:d.hp,attack:0,speed:d.speed,range:0,skillName:d.name,condition:""};
+      const m=makeFighter(spec,{x,y},fighterSerial++,null,null);m.isSummon=true;m.ownerId=null;m.summonLife=9999;m.r=r;m.kirbyNeutral={type,attackCd:rand(.4,1.0),recoil:0};fighters.push(m);
+      if(!fastSimMode){spawnBlast(x,y,34,d.color);spawnFloatingText(x,y-r-20,d.name,d.color);}return m;
+    }
+    function kirbyNeutralTarget''','neutral spawn')
+
+          # 중립 몬스터별 고유 공격: 소드=회전베기, 빔=채찍, 파이어=좁은 부채꼴, 밤=포물선 1회 바운드
+          sub_once(r'    function updateKirbyNeutral\(f,dt\)\{.*?\n    \}\n    function kirbySwallowEnemy',r'''    function updateKirbyNeutral(f,dt){
+      const n=f?.kirbyNeutral;if(!n||!f.alive)return;n.attackCd=Math.max(0,(n.attackCd||0)-dt);n.recoil=Math.max(0,(n.recoil||0)-dt);
+      if(n.recoil>0)return;
+      const target=kirbyNeutralTarget(f);if(!target||isStunned(f)||(f.hardFreeze||0)>0)return;
+      const dx=target.x-f.x,dy=target.y-f.y,d=Math.hypot(dx,dy)||1,v=(f.baseSpeed||f.speed||2)*44;f.vx=dx/d*v;f.vy=dy/d*v;
+      if(n.attackCd>0)return;
+      if(n.type==="sword"){
+        if(d<=f.r+28+target.r){kirbyRadialSlash(f,f.r+28,5,false,"중립 소드 회전베기");n.attackCd=1.35;}else n.attackCd=.16;
+      }else if(n.type==="beam"){
+        if(d<=118){kirbyWhip(f,98,Math.PI*2/3,5,false,"중립 빔 채찍");n.attackCd=1.85;}else n.attackCd=.16;
+      }else if(n.type==="fire"){
+        if(d<=100){kirbyFlameCone(f,82,Math.PI*5/18,4,false,"중립 화염방사");n.attackCd=1.45;}else n.attackCd=.16;
+      }else if(n.type==="bomb"){
+        if(d<=210){kirbyThrowBomb(f,target,8,48,"중립 밤");n.attackCd=3.0;}else n.attackCd=.16;
+      }
+    }
+    function kirbySwallowEnemy''','neutral attacks')
+
+          # 흡입은 3.2초 동안 훨씬 느리게. 밤 폭탄 물리 업데이트도 Kirby world에 포함.
+          sub_once(r'    function updateKirbyWorld\(dt\)\{.*?\n    \}\n    function drawKirbyStar',r'''    function updateKirbyWorld(dt){
+      const kirbies=fighters.filter(f=>f.alive&&!f.isSummon&&f.kirby);
+      if(!kirbies.length){kirbyCopyStars=[];kirbyBombs=[];fighters.filter(f=>f.alive&&f.kirbyNeutral).forEach(f=>f.alive=false);fighters.filter(f=>f.kirbySwallowedBy).forEach(f=>{f.kirbySwallowedBy="";});kirbyNeutralSpawnClock=KIRBY.neutralFirst;return;}
+      updateKirbyBombs(dt);
+      kirbyNeutralSpawnClock=Math.max(0,kirbyNeutralSpawnClock-dt);const neutralCount=fighters.filter(f=>f.alive&&f.kirbyNeutral).length;if(neutralCount<KIRBY.neutralMax&&kirbyNeutralSpawnClock<=0){spawnKirbyNeutral();kirbyNeutralSpawnClock=KIRBY.neutralPeriod;}
+      for(let i=kirbyCopyStars.length-1;i>=0;i--){const st=kirbyCopyStars[i];st.life-=dt;st.x+=st.vx*dt;st.y+=st.vy*dt;st.vx*=Math.pow(.93,dt*60);st.vy*=Math.pow(.93,dt*60);if(st.x-st.r<arena.x||st.x+st.r>arena.x2){st.x=clamp(st.x,arena.x+st.r,arena.x2-st.r);st.vx*=-.72;}if(st.y-st.r<arena.y||st.y+st.r>arena.y2){st.y=clamp(st.y,arena.y+st.r,arena.y2-st.r);st.vy*=-.72;}const owner=fighterById(st.ownerId);if(owner?.alive&&owner.kirby?.mode==="base"&&Math.hypot(owner.x-st.x,owner.y-st.y)<=owner.r+st.r){kirbyGainCopy(owner,st.type);kirbyCopyStars.splice(i,1);continue;}if(st.life<=0)kirbyCopyStars.splice(i,1);}
+      kirbies.forEach(f=>{const k=f.kirby;if(k.swallowedId){const t=fighterById(k.swallowedId);if(!t?.alive){k.swallowedId="";k.swallowTime=0;}else{t.kirbySwallowedBy=f.id;t.x=f.x;t.y=f.y;t.vx=0;t.vy=0;k.swallowTime=Math.max(0,(k.swallowTime||0)-dt);if(k.swallowTime<=0)kirbyReleaseSwallowed(f,true);}}});
+      kirbies.forEach(f=>{const k=f.kirby;if(k.mode!=="base"||k.inhaleTime<=0||k.swallowedId)return;const candidates=fighters.filter(e=>e.alive&&e.id!==f.id&&!e.kirbySwallowedBy&&(e.kirbyNeutral||(!e.isSummon&&areEnemies(f,e)))).filter(e=>kirbyConeContains(f,e)).sort((a,b)=>dist(f,a)-dist(f,b));for(const e of candidates){const dx=f.x-e.x,dy=f.y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,KIRBY.inhalePull*dt);e.x=clamp(e.x+dx/d*step,arena.x+e.r,arena.x2-e.r);e.y=clamp(e.y+dy/d*step,arena.y+e.r,arena.y2-e.r);e.vx=e.vx*.76+dx/d*KIRBY.inhaleVelocity;e.vy=e.vy*.76+dy/d*KIRBY.inhaleVelocity;if(Math.hypot(e.x-f.x,e.y-f.y)<=f.r+e.r+2){if(e.kirbyNeutral){const type=e.kirbyNeutral.type;e.alive=false;kirbyGainCopy(f,type);kirbyStopInhale(f);if(!fastSimMode)spawnParticles(e.x,e.y,KIRBY_COPY[type].color,12);}else kirbySwallowEnemy(f,e);break;}}});
+    }
+    function drawKirbyStar''','kirby world')
+
+          # 밤 폭탄 z축 포물선/바운드 렌더링을 기존 월드 렌더에 추가
+          once('''    function drawKirbyWorld(){\n      if(fastSimMode)return;\n      for(const st of kirbyCopyStars){''','''    function drawKirbyWorld(){\n      if(fastSimMode)return;\n      for(const b of kirbyBombs){const sy=b.y-b.z*.42,shadow=clamp(1-b.z/95,.18,.72);ctx.save();ctx.globalAlpha=shadow;ctx.fillStyle="rgba(15,23,42,.65)";ctx.beginPath();ctx.ellipse(b.x,b.y+5,9,4,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.shadowColor=b.color;ctx.shadowBlur=12;ctx.fillStyle="#312e81";ctx.strokeStyle=b.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(b.x,sy,b.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#fde68a";ctx.beginPath();ctx.arc(b.x+3,sy-4,2,0,Math.PI*2);ctx.fill();ctx.restore();}\n      for(const st of kirbyCopyStars){''','bomb draw')
+
+          # 중립 몬스터는 몸으로 캐릭터를 벽에 압착하지 않고 접촉 시 몬스터 자신이 튕겨나감.
+          collision_insert=r'''
+            const kirbyNeutralA=!!a.kirbyNeutral,kirbyNeutralB=!!b.kirbyNeutral;
+            if(kirbyNeutralA!==kirbyNeutralB){
+              const neutral=kirbyNeutralA?a:b,body=kirbyNeutralA?b:a;
+              if(neutral.alive&&body.alive&&!body.kirbyNeutral){
+                let ax=neutral.x-body.x,ay=neutral.y-body.y,ad=Math.hypot(ax,ay);
+                if(ad<.01){const c=arenaCenter();ax=c.x-body.x;ay=c.y-body.y;ad=Math.hypot(ax,ay)||1;}
+                ax/=ad;ay/=ad;
+                const sep=body.r+neutral.r+8;
+                let tx=clamp(body.x+ax*sep,arena.x+neutral.r,arena.x2-neutral.r),ty=clamp(body.y+ay*sep,arena.y+neutral.r,arena.y2-neutral.r);
+                if(Math.hypot(tx-body.x,ty-body.y)<body.r+neutral.r+2){const c=arenaCenter(),cx=c.x-body.x,cy=c.y-body.y,cd=Math.hypot(cx,cy)||1;tx=clamp(body.x+cx/cd*sep,arena.x+neutral.r,arena.x2-neutral.r);ty=clamp(body.y+cy/cd*sep,arena.y+neutral.r,arena.y2-neutral.r);ax=cx/cd;ay=cy/cd;}
+                neutral.x=tx;neutral.y=ty;neutral.vx=ax*235;neutral.vy=ay*235;neutral.kirbyNeutral.recoil=Math.max(neutral.kirbyNeutral.recoil||0,.38);
+                if(!fastSimMode)spawnParticles(neutral.x,neutral.y,KIRBY_COPY[neutral.kirbyNeutral.type]?.color||"#fff",3);
+                continue;
+              }
+            }
+'''
+          marker='''          if (d < minD) {\n            const nx = dx / d;'''
+          once(marker,'''          if (d < minD) {\n'''+collision_insert+'''            const nx = dx / d;''','neutral collision bounce')
+
+          # 상태창의 흡입 텍스트는 상수 기반이라 자동 반영. 패치노트 추가.
+          once('''      "v197: 신규 게임 진영 캐릭터 커비 추가. 기본 상태 6초 주기 전방120° 흡입, 중립 몬스터 최대2마리, 소드·빔·파이어·밤 카피, 상대 삼키기 후 1.4초 뒤 뱉기·넉백·벽충돌, 카피 상태 누적피해45에서 별 이탈 및 5초 내 재획득 구조를 추가.",''','''      "v198: 커비 1차 피드백 반영. 흡입을 10초 주기·3.2초 지속의 느린 장시간 흡입으로 변경. 중립 몬스터는 필드의 기존 종류와 커비 보유 카피를 제외해 생성. 소드는 회전베기(카피는 뉴헬로급 범위+출혈+짧은 찌르기), 빔은 별 채찍 광역기(카피는 범위 증가+둔화), 파이어는 부채꼴 화염방사(카피는 범위 증가+화상), 밤은 포물선 1회 바운드 폭탄(카피는 2개 투척)으로 재구성. 중립 몬스터가 캐릭터를 구석에 압착하지 않고 접촉 시 스스로 튕겨나가도록 충돌 버그 수정.",\n      "v197: 신규 게임 진영 캐릭터 커비 추가. 기본 상태 6초 주기 전방120° 흡입, 중립 몬스터 최대2마리, 소드·빔·파이어·밤 카피, 상대 삼키기 후 1.4초 뒤 뱉기·넉백·벽충돌, 카피 상태 누적피해45에서 별 이탈 및 5초 내 재획득 구조를 추가.",''','patch note')
+
+          p.write_text(s,encoding='utf-8')
+          PY
+          python3 /tmp/patch_kirby_v198.py
+
+      - name: Validate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert '<title>볼배틀 리뉴얼 v198</title>' in s
+          assert 'inhalePeriod:10, inhaleDuration:3.2' in s
+          assert 'kirbyBombs' in s
+          assert '커비 빔 채찍' in s
+          assert '중립 소드 회전베기' in s
+          assert 'neutral.kirbyNeutral.recoil' in s
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
+          assert scripts, 'script missing'
+          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          if [ -n "$CHROME" ]; then
+            "$CHROME" --headless=new --no-sandbox --disable-gpu --allow-file-access-from-files --virtual-time-budget=1800 --dump-dom file://$PWD/index.html >/tmp/kirby-v198-dom.txt
+            grep -q '볼배틀 리뉴얼 v198' /tmp/kirby-v198-dom.txt
+          fi
+
+      - name: Commit patch and remove one-shot workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/kirby-v198.yml
+          git add index.html
+          git commit -m 'v198: refine Kirby copy moves and neutral collisions'
+          git push
