@@ -30,7 +30,9 @@ jobs:
           out=[]
           for line in block.splitlines():
               out.append(line[10:] if line.startswith('          ') else line)
-          Path('/tmp/patch_kirby_v198.py').write_text('\n'.join(out)+'\n',encoding='utf-8')
+          script='\n'.join(out)+'\n'
+          script=script.replace('\\\\n','\\n')
+          Path('/tmp/patch_kirby_v198.py').write_text(script,encoding='utf-8')
           PY
           python3 /tmp/patch_kirby_v198.py
 
@@ -40,15 +42,7 @@ jobs:
           from pathlib import Path
           import re
           s=Path('index.html').read_text(encoding='utf-8')
-          checks=[
-            '<title>볼배틀 리뉴얼 v198</title>',
-            'inhalePeriod:10, inhaleDuration:3.2',
-            'kirbyBombs',
-            '커비 빔 채찍',
-            '중립 소드 회전베기',
-            'neutral.kirbyNeutral.recoil',
-            '현재 존재하는 몬스터와 커비가 보유한 카피를 제외'
-          ]
+          checks=['<title>볼배틀 리뉴얼 v198</title>','inhalePeriod:10, inhaleDuration:3.2','kirbyBombs','커비 빔 채찍','중립 소드 회전베기','neutral.kirbyNeutral.recoil','현재 존재하는 몬스터와 커비가 보유한 카피를 제외']
           missing=[x for x in checks if x not in s]
           assert not missing, missing
           scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
