@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v200</title>
+  <title>볼배틀 리뉴얼 v201</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v200</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v201</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1261,7 +1261,7 @@
       { id:"coyote_d", name:"코요테드", mark:"☣", role:"게임", color:"#8b5a2b", hp:170, attack:0, speed:2.9, range:0,
         skillName:"독방구 · 뒤로 넘기기", condition:"이동 경로에 3초 독방구 · 접촉12+넘기기 · 30초 리안드리 · 60초 균열생성기 · 90초 라일라이", desc:"신지도를 모티브로 한 교란형 캐릭터. 이동 경로에 독방구를 남기고 접촉한 적을 몸 뒤로 넘긴다. 30초에는 리안드리를 얻어 독에서 벗어난 뒤에도 3틱이 이어지고, 60초에는 균열생성기를 얻어 이후 실제 도트 피해 누적 10마다 체력3을 회복하며, 90초에는 라일라이를 얻어 독이 지속되는 적의 이동속도를 20% 낮춘다." },
       { id:"tracer_pan", name:"쟁반서", mark:"↶", role:"게임", color:"#38bdf8", hp:160, attack:0, speed:3.1, range:72,
-        skillName:"펄스 피스톨 · 연속 점멸 · 되감기", condition:"반경72 진입 시 하늘색 부채꼴 8연사 · 쏘기→점멸 3세트→되감기 · 피해 스택100 → 부착 폭탄", desc:"적이 뉴헬로의 칼날 범위보다 조금 넓은 사격권에 들어오면 그 방향으로 작고 얇은 하늘색 펄스탄을 부채꼴로 연사한다. 점멸이 3회 충전되면 사격과 점멸을 긴 간격으로 세 번 반복한 뒤 시작 위치와 체력으로 되감는다. 펄스 피스톨 피해로 스택을 채우면 마지막 점멸 직후 가장 가까운 적에게 부착 폭탄을 던진다." },
+        skillName:"펄스 피스톨 · 연속 점멸 · 되감기", condition:"반경72 진입 시 70° 부채꼴 8연사 · 사격 종료 후 0.9초 · 돌진→사격 3세트→위치 되감기", desc:"적이 사격권에 들어오면 그 방향으로 탄당 피해1의 작고 얇은 하늘색 펄스탄 8발을 70도 부채꼴로 빠르게 연사한다. 점멸이 3회 충전되고 사격 주기가 준비되면 짧은 돌진→사격을 세 번 반복하며, 각 사격 종료 0.9초 뒤 다음 돌진을 시작한다. 마지막에는 위치만 되감고 체력은 회복하지 않는다. 준비된 부착 폭탄은 광역으로 폭발하며 범위 안의 쟁반서도 피해를 받는다." },
       { id:"kirby", name:"커비", mark:"★", role:"게임", color:"#f472b6", hp:150, attack:0, speed:2.55, range:0,
         skillName:"흡입 · 카피 능력", condition:"기본 상태 10초 주기 120° 장시간 흡입 · 배회형 중립 몬스터 최대2마리 · 카피 누적피해45 → 별 이탈", desc:"기본 상태에서는 진행방향 전방120도를 3.2초 동안 천천히 흡입한다. 중립 몬스터는 캐릭터를 추적하지 않고 경기장을 제멋대로 배회하며, 공격 범위 안에 캐릭터가 들어오면 각자의 기술을 사용한다. 현재 존재하는 몬스터와 커비가 보유한 카피를 제외한 종류에서 새 몬스터가 생성된다. 소드는 회전베기, 빔은 별 채찍, 파이어는 부채꼴 화염방사, 밤은 한 번 튀는 포물선 폭탄을 사용하며 커비가 카피하면 강화판을 쓴다. 상대 본체를 삼키면 잠시 몸속에 가둔 뒤 뱉어 강하게 날리고 벽충돌 피해를 줄 수 있다. 카피 상태에서 누적 피해45를 받으면 능력이 별로 튕겨 나가며, 5초 안에 다시 닿으면 되찾는다." },
       { id:"wok_wok", name:"웍웍", mark:"🐺", role:"게임", color:"#7f1d1d", hp:140, attack:0, speed:1.6, range:0,
@@ -3452,8 +3452,8 @@
 
 
     const TRACER = {
-      fireRange:72, firePeriod:2.25, volleyCount:8, volleyGap:.07, bulletDamage:2, bulletSpeed:440, bulletLife:.22, bulletRadius:4, fanSpread:.26,
-      blinkRecharge:2.6, blinkCount:3, blinkDuration:.16, blinkGap:.62, blinkTrailBack:.20, blinkOffset:28,
+      fireRange:72, firePeriod:.9, volleyCount:8, volleyGap:.04, bulletDamage:1, bulletSpeed:440, bulletLife:.22, bulletRadius:4, fanSpread:.611,
+      blinkRecharge:2.6, blinkCount:3, blinkDuration:.16, blinkGap:.9, blinkDistance:68, blinkTrailBack:.20, blinkOffset:28,
       rewindDelay:.38, rewindDuration:.42, pulseMax:100, pulseGainMult:2, bombSpeed:500, bombFuse:1.15, bombDamage:36, bombRadius:72
     };
     function initTracer(f){
@@ -3465,9 +3465,9 @@
       t.pulse=Math.min(TRACER.pulseMax,t.pulse+amount*TRACER.pulseGainMult);
       if(t.pulse>=TRACER.pulseMax){t.pulse=TRACER.pulseMax;t.pulseReady=true;if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-35,'부착 폭탄 준비!','#60a5fa');spawnBlast(f.x,f.y,52,'#3b82f6');}}
     }
-    function queueTracerVolley(f){
+    function queueTracerVolley(f,force=false){
       const target=nearestEnemy(f).enemy;if(!target)return false;
-      const d=Math.hypot(target.x-f.x,target.y-f.y);if(d>TRACER.fireRange+target.r)return false;
+      const d=Math.hypot(target.x-f.x,target.y-f.y);if(!force&&d>TRACER.fireRange+target.r)return false;
       const t=f.tracer;t.volleyLeft=TRACER.volleyCount;t.shotCd=0;t.volleyAngle=Math.atan2(target.y-f.y,target.x-f.x);return true;
     }
     function fireTracerBullet(f){
@@ -3508,6 +3508,7 @@
     function explodeTracerBomb(f,b){
       if(b.state==='done')return;b.state='done';screenShake=Math.max(screenShake,2.2);
       for(const enemy of enemiesOf(f))if(Math.hypot(enemy.x-b.x,enemy.y-b.y)<=TRACER.bombRadius+enemy.r)damage(enemy,TRACER.bombDamage,f,'부착 폭탄');
+      if(f.alive&&Math.hypot(f.x-b.x,f.y-b.y)<=TRACER.bombRadius+f.r)damage(f,TRACER.bombDamage,null,'부착 폭탄 자해');
       if(!fastSimMode){spawnBlast(b.x,b.y,TRACER.bombRadius,'#60a5fa');spawnParticles(b.x,b.y,'#bfdbfe',22);spawnFloatingText(b.x,b.y-24,'펄스 폭발!','#dbeafe');}
     }
     function updateTracerBombs(f,dt){
@@ -3526,35 +3527,40 @@
     }
     function tracerDashPoint(f,index){
       const target=nearestEnemy(f).enemy;if(!target)return{x:f.x,y:f.y};
-      const speed=Math.hypot(target.vx||0,target.vy||0);let x=target.x-(target.vx||0)*TRACER.blinkTrailBack,y=target.y-(target.vy||0)*TRACER.blinkTrailBack;
-      if(speed<20){const a=Math.atan2(target.y-f.y,target.x-f.x)+(index%2?Math.PI/2:-Math.PI/2);x=target.x+Math.cos(a)*TRACER.blinkOffset;y=target.y+Math.sin(a)*TRACER.blinkOffset;}
-      return{x:clamp(x,arena.x+f.r,arena.x2-f.r),y:clamp(y,arena.y+f.r,arena.y2-f.r)};
+      const speed=Math.hypot(target.vx||0,target.vy||0);let tx=target.x-(target.vx||0)*TRACER.blinkTrailBack,ty=target.y-(target.vy||0)*TRACER.blinkTrailBack;
+      if(speed<20){const side=index%2?Math.PI/7:-Math.PI/7,a=Math.atan2(target.y-f.y,target.x-f.x)+side;tx=target.x+Math.cos(a)*TRACER.blinkOffset;ty=target.y+Math.sin(a)*TRACER.blinkOffset;}
+      const dx=tx-f.x,dy=ty-f.y,d=Math.max(1,Math.hypot(dx,dy)),step=Math.min(TRACER.blinkDistance,d);
+      return{x:clamp(f.x+dx/d*step,arena.x+f.r,arena.x2-f.r),y:clamp(f.y+dy/d*step,arena.y+f.r,arena.y2-f.r)};
     }
     function beginTracerDash(f,index){
       const p=tracerDashPoint(f,index),s=f.tracer.sequence;s.phase='dash';s.index=index;s.timer=TRACER.blinkDuration;s.startX=f.x;s.startY=f.y;s.endX=p.x;s.endY=p.y;
       if(!fastSimMode){spawnBlast(f.x,f.y,34,'#38bdf8');spawnParticles(f.x,f.y,'#93c5fd',10);}
     }
-    function beginTracerBurstStep(f,index){
-      const s=f.tracer.sequence;s.phase='burst';s.index=index;s.timer=TRACER.blinkGap;queueTracerVolley(f);
-      if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-30,index===0?'쵸죠조조족!':'연속 사격!','#7dd3fc');
-    }
     function beginTracerSequence(f){
-      const t=f.tracer;t.blinkCharges=0;t.blinkChargeCd=TRACER.blinkRecharge;t.sequence={phase:'burst',index:0,timer:TRACER.blinkGap,startX:f.x,startY:f.y,endX:f.x,endY:f.y,snapshot:{x:f.x,y:f.y,hp:f.hp,vx:f.vx,vy:f.vy},rewindFromX:f.x,rewindFromY:f.y};beginTracerBurstStep(f,0);
-      if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-48,'사격·점멸 연계!','#7dd3fc');
+      const t=f.tracer;t.blinkCharges=0;t.blinkChargeCd=TRACER.blinkRecharge;t.sequence={phase:'dash',index:0,timer:0,startX:f.x,startY:f.y,endX:f.x,endY:f.y,snapshot:{x:f.x,y:f.y,vx:f.vx,vy:f.vy},rewindFromX:f.x,rewindFromY:f.y,cooldownStarted:false};beginTracerDash(f,0);
+      if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-48,'돌진·사격 연계!','#7dd3fc');
+    }
+    function finishTracerChain(f){
+      const t=f.tracer,s=t.sequence;s.phase='rewindDelay';s.timer=TRACER.rewindDelay;if(t.pulseReady)throwTracerBomb(f);
     }
     function updateTracerSequence(f,dt){
       const t=f.tracer,s=t.sequence;if(!s)return false;
       t.trailCd-=dt;if(t.trailCd<=0){t.trailCd=.035;t.trails.push({x:f.x,y:f.y,at:battleTime});}
-      if(s.phase==='burst'){f.vx=0;f.vy=0;s.timer-=dt;if(s.timer<=0)beginTracerDash(f,s.index);return true;}
       if(s.phase==='dash'){
         s.timer=Math.max(0,s.timer-dt);const p=1-s.timer/TRACER.blinkDuration,e=1-Math.pow(1-clamp(p,0,1),3);f.x=s.startX+(s.endX-s.startX)*e;f.y=s.startY+(s.endY-s.startY)*e;f.vx=0;f.vy=0;
-        if(s.timer<=0){f.x=s.endX;f.y=s.endY;if(s.index<TRACER.blinkCount-1)beginTracerBurstStep(f,s.index+1);else{s.phase='rewindDelay';s.timer=TRACER.rewindDelay;if(t.pulseReady)throwTracerBomb(f);}}
+        if(s.timer<=0){f.x=s.endX;f.y=s.endY;queueTracerVolley(f,true);s.phase='shot';s.cooldownStarted=false;if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-30,'쵸죠조조족!','#7dd3fc');}
         return true;
       }
-      if(s.phase==='rewindDelay'){f.vx=0;f.vy=0;s.timer-=dt;if(s.timer<=0){s.phase='rewind';s.timer=TRACER.rewindDuration;s.rewindFromX=f.x;s.rewindFromY=f.y;t.invuln=TRACER.rewindDuration;if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-36,'되감기!','#bfdbfe');}return true;}
+      if(s.phase==='shot'){
+        f.vx=0;f.vy=0;if(t.volleyLeft>0)return true;
+        if(s.index>=TRACER.blinkCount-1){finishTracerChain(f);return true;}
+        if(!s.cooldownStarted){s.cooldownStarted=true;s.timer=TRACER.blinkGap;}
+        s.timer-=dt;if(s.timer<=0)beginTracerDash(f,s.index+1);return true;
+      }
+      if(s.phase==='rewindDelay'){f.vx=0;f.vy=0;s.timer-=dt;if(s.timer<=0){s.phase='rewind';s.timer=TRACER.rewindDuration;s.rewindFromX=f.x;s.rewindFromY=f.y;t.invuln=TRACER.rewindDuration;if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-36,'위치 되감기!','#bfdbfe');}return true;}
       if(s.phase==='rewind'){
         s.timer=Math.max(0,s.timer-dt);t.invuln=Math.max(0,s.timer);const p=1-s.timer/TRACER.rewindDuration,e=clamp(p,0,1);f.x=s.rewindFromX+(s.snapshot.x-s.rewindFromX)*e;f.y=s.rewindFromY+(s.snapshot.y-s.rewindFromY)*e;f.vx=0;f.vy=0;
-        if(s.timer<=0){f.x=s.snapshot.x;f.y=s.snapshot.y;f.hp=Math.max(1,Math.min(f.maxHp,s.snapshot.hp));f.vx=s.snapshot.vx;f.vy=s.snapshot.vy;if(Math.hypot(f.vx,f.vy)<1){const v=randomVelocity(f.baseSpeed);f.vx=v.vx;f.vy=v.vy;}t.invuln=0;t.sequence=null;if(!fastSimMode){spawnBlast(f.x,f.y,48,'#60a5fa');spawnParticles(f.x,f.y,'#dbeafe',16);}}
+        if(s.timer<=0){f.x=s.snapshot.x;f.y=s.snapshot.y;f.vx=s.snapshot.vx;f.vy=s.snapshot.vy;if(Math.hypot(f.vx,f.vy)<1){const v=randomVelocity(f.baseSpeed);f.vx=v.vx;f.vy=v.vy;}t.invuln=0;t.sequence=null;if(!fastSimMode){spawnBlast(f.x,f.y,48,'#60a5fa');spawnParticles(f.x,f.y,'#dbeafe',16);}}
         return true;
       }
       return false;
@@ -3562,9 +3568,10 @@
     function updateTracer(f,dt){
       const t=f.tracer;if(!t)return false;
       t.trails=t.trails.filter(p=>battleTime-p.at<.45);updateTracerVolley(f,dt);updateTracerBullets(f,dt);updateTracerBombs(f,dt);if(!f.alive)return false;
-      if(t.sequence)return updateTracerSequence(f,dt);
-      t.blinkChargeCd-=dt;if(t.blinkChargeCd<=0){t.blinkCharges=Math.min(TRACER.blinkCount,t.blinkCharges+1);t.blinkChargeCd+=TRACER.blinkRecharge;if(t.blinkCharges>=TRACER.blinkCount){beginTracerSequence(f);return true;}}
-      t.fireCd-=dt;if(t.volleyLeft<=0&&t.fireCd<=0)queueTracerVolley(f);
+      t.fireCd-=dt;if(t.sequence)return updateTracerSequence(f,dt);
+      t.blinkChargeCd-=dt;if(t.blinkChargeCd<=0){t.blinkCharges=Math.min(TRACER.blinkCount,t.blinkCharges+1);t.blinkChargeCd+=TRACER.blinkRecharge;}
+      if(t.blinkCharges>=TRACER.blinkCount&&t.volleyLeft<=0&&t.fireCd<=0){beginTracerSequence(f);return true;}
+      if(t.volleyLeft<=0&&t.fireCd<=0)queueTracerVolley(f);
       return false;
     }
     function drawTracerCharacter(f){
@@ -6061,6 +6068,7 @@
     }
 
       const patchNotes = [
+      "v201: 쟁반서 전투 흐름 재구성. 탄당 피해1·0.04초 간격 8연사·총70° 부채꼴. 사격 종료 후0.9초를 기본 주기와 돌진 간격으로 통일. 점멸 3회와 사격 준비 완료 시 최대68의 짧은 돌진→사격을 3세트 반복. 부착 폭탄 범위 안 쟁반서 자해 추가, 되감기 체력 회복 제거.",
       "v200: 쟁반서 사격 구조 수정. 적 반경72 진입 시에만 작은 하늘색 탄환 8발을 부채꼴 연사. 3회 충전 뒤 사격→0.62초→점멸을 3세트 반복하고 되감기. 부착 폭탄 화면 진동7→2.2.",
       "v199: 커비 비주얼·중립 몬스터 AI 재작업. 중립 몬스터는 캐릭터를 추적하지 않고 임의 방향으로 배회하며 사거리 안에 들어온 캐릭터에게만 기술 사용. 소드·빔·파이어·밤 몬스터 외형을 서로 다른 소형 캐릭터로 재구성하고, 소드 회전베기·곡선형 별 채찍·지속 화염방사·포물선 폭탄 및 흡입 바람 연출을 전면 개선. 전투 피해·카피 이탈 기준 등 핵심 수치는 유지.",
       "v198: 커비 1차 피드백 반영. 흡입을 10초 주기·3.2초 지속의 느린 장시간 흡입으로 변경. 중립 몬스터는 필드의 기존 종류와 커비 보유 카피를 제외해 생성. 소드는 회전베기(카피는 뉴헬로급 범위+출혈+짧은 찌르기), 빔은 별 채찍 광역기(카피는 범위 증가+둔화), 파이어는 부채꼴 화염방사(카피는 범위 증가+화상), 밤은 포물선 1회 바운드 폭탄(카피는 2개 투척)으로 재구성. 중립 몬스터가 캐릭터를 구석에 압착하지 않고 접촉 시 스스로 튕겨나가도록 충돌 버그 수정.",
@@ -6280,7 +6288,7 @@
       if(c.id==="andrum")return {damage:"킥 음파 5/6/7 · 반경110/135/160 · WHIPLASH 킥3(현재 그루브와 같은 반경) · 피날레 크래시16/반경210",
         tick:"그루브0~300: 0~100 기본 / 101~200 몰입 / 201~300 광란 · 초당+10 · 피격 시 실제 피해×5 감소 · 솔로게이지0~100 · 실제 적중 킥마다+5 · 100에서 다음 마디 WHIPLASH",
         tip:"그루브는 더 이상 단계별 별도 진행도가 아니라 하나의 0~300 수치다. 피해7을 받으면 35, 피해10을 받으면 50이 즉시 빠지며 경계값 아래로 내려가면 그루브 단계도 곧바로 하락한다. 별도 WHIPLASH 게이지는 일반 킥이 적에게 실제 피해를 준 경우에만 5씩 오르고 솔로 중에는 충전되지 않는다. 100이 되면 다음 마디 첫 박에서 2마디 솔로를 시작하고 게이지를 0으로 소모한다."};
-      if(c.id==="tracer_pan")return {damage:"근접 부채꼴 펄스 피스톨2×8 / 부착 폭탄36(반경72)",tick:"적 반경72 진입 시 8연사 · 점멸2.6초마다1회 충전 · 3회 충전 시 사격→점멸을 3세트 반복 후 되감기",tip:"원거리 저격이 아니라 뉴헬로의 칼날 범위보다 조금 넓은 거리에서만 발사한다. 작은 하늘색 탄환 8발이 적 방향의 부채꼴로 퍼진다. 점멸은 적의 현재 위치에 직접 충돌하지 않고 이동 흔적으로 향한다. 펄스 피스톨 실제 피해×2만큼 폭탄 스택이 차며 100에서 준비 완료된다."};
+      if(c.id==="tracer_pan")return {damage:"70° 부채꼴 펄스 피스톨1×8 / 부착 폭탄36(반경72·자해 가능)",tick:"사격 종료 후0.9초 · 점멸2.6초마다1회 충전 · 3회 충전+사격 준비 시 돌진→사격 3세트",tip:"점멸은 적의 이동 흔적 방향으로 최대68만큼 짧게 돌진한다. 연계 중 각 사격이 끝난 뒤0.9초 후 다음 돌진을 시작한다. 마지막에는 시작 위치만 되감으며 체력은 회복하지 않는다. 부착 폭탄은 범위 안의 모든 적과 쟁반서 자신에게도 피해36을 준다."};
       if(c.id==="kirby")return {damage:"소드 회전베기10+출혈1×4 / 빔 채찍7+둔화 / 파이어5+화상1×3 / 밤 폭탄12×2(반경58) / 뱉기 벽충돌12",tick:"기본 흡입10초 주기·3.2초 지속·전방120°·느린 흡입 / 배회형 중립 몬스터6.5초마다·최대2 / 카피 누적피해45에서 별 이탈·별5초",tip:"중립 몬스터는 적을 추적하지 않고 임의 방향으로 돌아다니다 사거리 안에 캐릭터가 들어왔을 때만 기술을 사용한다. 소드는 회전베기, 빔은 휘어지는 별 채찍, 파이어는 좁은 화염방사, 밤은 한 번 튀는 폭탄이며 카피 커비는 강화판을 사용한다."};
       if(c.id==="wok_wok")return {damage:"Q 깨물기18+회복5 / R 제압7×3+타격당 회복4",tick:"Q 시작 준비·접촉+8·재충전7→3.5초 / W HP35% 이하 감지·4초·이속×2.6·종료 후8초 / R 주기30초·W 종료 후5초 대기·지속0.55초",tip:"W는 각도·거리·흔적 조건 없이 가장 낮은 체력 비율의 적을 선택하고 대상 변경 없이 곡선 추적한다. Q 사용·처치·4초 경과 시 종료. 단순 몸 접촉으로는 종료하지 않는다. 넉백 중 조향 중지. W 중 R 사용 불가. W 종료 후5초와30초 재사용 대기를 모두 충족하면 직전 사냥감을 우선하며 아니면 가장 가까운 적을 선택한다. Q는 소환수도 깨물며 R은 소환수도 대상으로 선택하고 경로를 가로막은 소환수에 적중해 종료·제압한다. W 마킹은 본체만 대상으로 유지한다. 첫 적이나 벽에 막히면 종료하며 실제 적중한 상대를 제압한다. R 중 넉백은 무시하지만 피해와 일반 기절 면역은 아니다. 기존 Q 무적 대상 회복 및 R 실제 피해 시 회복 유지."};
       if(c.id==="newhello_sergeant")return {damage:"일반 광역 회전베기8 / 와이어 광역 강습15 + 출혈1×5회 · 재타격 시 남은 출혈 즉시 폭발 후 재적용 · HP 열세 보정 최대 ×1.6",
@@ -8368,7 +8376,7 @@
         return {ratio:biteRatio,className:(w.biteCharge||0)>=1?"rage-fill":"skill-fill",text:active,extraBarsHtml:`<div class="bar" title="W 피의 사냥"><div class="bar-fill skill-fill" style="width:${huntRatio*100}%"></div></div><div class="bar" title="E 야수의 끈기"><div class="bar-fill shield-fill" style="width:${enduranceRatio*100}%"></div></div><div class="bar" title="R 야수의 돌진"><div class="bar-fill rage-fill" style="width:${dashRatio*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">Q 깨물기 ${WOK.biteDamage} · 회복${Math.round(WOK.biteHeal*wokHealMultiplier(f))} · 충전 ${wokBiteCooldown(f).toFixed(1)}초</div><div class="status-skill-label">W ${w.huntTargetId?"사냥 "+Math.max(0,w.huntUntil-battleTime).toFixed(1)+"초":battleTime<w.huntReadyAt?"쿨타임 "+(w.huntReadyAt-battleTime).toFixed(1)+"초":(w.biteCharge||0)<1?"깨물기 준비 대기":"HP35% 이하 적 감지 대기"} · 가속 ×${blood} · R ${w.huntTargetId?"추적 중 잠금":dashLeft.toFixed(1)+"초"} · 사냥감 우선 돌진 · 돌진 중 넉백 면역</div><div class="status-skill-label">E 야수의 끈기 ${enduranceActive?"피해35% 감소 "+Math.max(0,w.enduranceUntil-battleTime).toFixed(1)+"초":enduranceLeft>0?(f.hp>f.maxHp*WOK.enduranceThreshold?"쿨타임 정지 ":"쿨타임 ")+enduranceLeft.toFixed(1)+"초":"준비 완료"} · HP50% 이하가 될 피해부터 발동 · 쿨타임은 HP50% 이하에서만 감소</div>`};
       }
       if(f.kirby){const k=f.kirby,neutral=fighters.filter(e=>e.alive&&e.kirbyNeutral).length,stars=kirbyCopyStars.filter(st=>st.ownerId===f.id).length;if(k.mode==="base"){const active=k.inhaleTime>0,ratio=active?clamp(k.inhaleTime/KIRBY.inhaleDuration,0,1):clamp(1-(k.inhaleCd||0)/KIRBY.inhalePeriod,0,1);return {ratio,className:active?"rage-fill":"skill-fill",text:k.swallowedId?`상대 삼킴 · 뱉기 ${(k.swallowTime||0).toFixed(1)}초`:active?`흡입 중 ${(k.inhaleTime||0).toFixed(1)}초`:`흡입 ${(k.inhaleCd||0).toFixed(1)}초`,extraTextHtml:`<div class="status-skill-label">기본 · 전방120° 흡입 · 중립 몬스터 ${neutral}/${KIRBY.neutralMax} · 카피별 ${stars}</div>`};}const taken=Math.max(0,(f.damageTaken||0)-(k.copyDamageStart||0));return {ratio:clamp(taken/KIRBY.copyDamageNeed,0,1),className:"condition-fill",text:`${kirbyCopyName(k.mode)} 커비 · 카피피해 ${Math.round(taken)}/${KIRBY.copyDamageNeed}`,extraTextHtml:`<div class="status-skill-label">누적 ${KIRBY.copyDamageNeed} 피해 → 별 이탈 ${KIRBY.starLife}초 · 중립 몬스터 ${neutral}/${KIRBY.neutralMax}</div>`};}
-      if(f.tracer){const t=f.tracer||{},active=!!t.sequence,charges=t.blinkCharges||0,pulse=clamp((t.pulse||0)/TRACER.pulseMax,0,1);return {ratio:active?1:clamp(charges/TRACER.blinkCount,0,1),className:active?"rage-fill":"skill-fill",text:active?"사격·점멸 연계 · "+(t.sequence.phase==="rewind"?"되감기":(t.sequence.index+1)+"/3"):"점멸 충전 "+charges+"/3",extraBarsHtml:`<div class="bar" title="부착 폭탄"><div class="bar-fill shield-fill" style="width:${pulse*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">펄스 피스톨 반경${TRACER.fireRange} 진입 시 · 피해${TRACER.bulletDamage}×${TRACER.volleyCount} · 하늘색 부채꼴 얇은 탄환</div><div class="status-skill-label">점멸 ${TRACER.blinkRecharge.toFixed(1)}초마다 1회 충전 · 3회 충전 시 사격→${TRACER.blinkGap.toFixed(2)}초→점멸을 3세트 반복 후 위치·체력 되감기</div><div class="status-skill-label">부착 폭탄 ${Math.round(t.pulse||0)}/${TRACER.pulseMax}${t.pulseReady?" · 준비 완료":""} · 펄스 피스톨 실제 피해×${TRACER.pulseGainMult} · 폭발${TRACER.bombDamage}</div>`};}
+      if(f.tracer){const t=f.tracer||{},active=!!t.sequence,charges=t.blinkCharges||0,pulse=clamp((t.pulse||0)/TRACER.pulseMax,0,1);return {ratio:active?1:clamp(charges/TRACER.blinkCount,0,1),className:active?"rage-fill":"skill-fill",text:active?"돌진·사격 연계 · "+(t.sequence.phase==="rewind"?"위치 되감기":(t.sequence.index+1)+"/3"):charges>=TRACER.blinkCount&&t.fireCd>0?"첫 돌진 대기 · "+Math.max(0,t.fireCd).toFixed(1)+"초":"점멸 충전 "+charges+"/3",extraBarsHtml:`<div class="bar" title="부착 폭탄"><div class="bar-fill shield-fill" style="width:${pulse*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">펄스 피스톨 반경${TRACER.fireRange} 진입 시 · 피해${TRACER.bulletDamage}×${TRACER.volleyCount} · 70° 부채꼴 · 사격 종료 후 ${TRACER.firePeriod.toFixed(1)}초</div><div class="status-skill-label">점멸 ${TRACER.blinkRecharge.toFixed(1)}초마다 1회 충전 · 3회+사격 준비 시 최대${TRACER.blinkDistance} 돌진→사격을 3세트 · 체력 회복 없음</div><div class="status-skill-label">부착 폭탄 ${Math.round(t.pulse||0)}/${TRACER.pulseMax}${t.pulseReady?" · 준비 완료":""} · 펄스 피스톨 실제 피해×${TRACER.pulseGainMult} · 광역${TRACER.bombDamage} · 쟁반서도 범위 내 피해</div>`};}
       if(f.spider){const s=f.spider||{};const active=s.mode==="chase",firing=(s.volleyLeft||0)>0;return {ratio:active||firing?1:clamp(1-Math.max(0,s.volleyCd||0)/SPIDER.volleyCooldown,0,1),className:active?"rage-fill":"skill-fill",text:active?"웹스윙 · 적 추격":firing?("웹슈터 연사 · "+(SPIDER.volleyCount-(s.volleyLeft||0))+"/"+SPIDER.volleyCount):("웹슈터 "+Math.max(0,s.volleyCd||0).toFixed(1)+"초"),extraTextHtml:'<div class="status-skill-label">웹슈터 5초마다 6연사 · 발당2·약넉백·0.9초 10%둔화</div><div class="status-skill-label">웹슈터 넉백 중 벽에 충돌해야만 0.9초 속박 · 속박 성공 시 타게팅 웹스윙 돌진18+강넉백</div>'};}
       if(f.conan){
         const pending=f.conan.assaults.length>0;
