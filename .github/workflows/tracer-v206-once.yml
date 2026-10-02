@@ -1,0 +1,59 @@
+name: Apply Tracer v206 once
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Patch Tracer volley 8 to 9
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          reps=[
+            ('<title>볼배틀 리뉴얼 v205</title>','<title>볼배틀 리뉴얼 v206</title>'),
+            ('fireRange:72, firePeriod:.9, volleyCount:8, volleyGap:.07, bulletDamage:1, coneHalfAngle:.611,','fireRange:72, firePeriod:.9, volleyCount:9, volleyGap:.07, bulletDamage:1, coneHalfAngle:.611,'),
+            ('반경72 진입 시 윤곽 없는 70° 부채꼴 8연타','반경72 진입 시 윤곽 없는 70° 부채꼴 9연타'),
+            ('피해1로 8번 빠르게 타격한다.','피해1로 9번 빠르게 타격한다.'),
+            ('8연타를 모두 마친 직후 다음 돌진','9연타를 모두 마친 직후 다음 돌진'),
+            ('단일 70° 부채꼴 판정1×8 / 점착 폭탄36','단일 70° 부채꼴 판정1×9 / 점착 폭탄36'),
+            ('윤곽 없는 부채꼴 8연타를 끝낸 직후 다음 점멸','윤곽 없는 부채꼴 9연타를 끝낸 직후 다음 점멸'),
+          ]
+          for old,new in reps:
+            if old not in s:
+              raise SystemExit(f'missing expected text: {old}')
+            s=s.replace(old,new,1)
+          marker='    const patchNotes = [\n'
+          if marker not in s:
+            raise SystemExit('patch note marker missing')
+          note='      "v206: 쟁반서 미약 버프. 펄스 피스톨 연타 횟수8→9(탄당 피해1 유지)로 상향. 사거리·사격 간격·점멸·되감기·점착 폭탄 수치는 유지.",\n'
+          s=s.replace(marker,marker+note,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          checks=['<title>볼배틀 리뉴얼 v206</title>','volleyCount:9','부채꼴 9연타','판정1×9','v206: 쟁반서 미약 버프']
+          missing=[x for x in checks if x not in s]
+          assert not missing, missing
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
+          assert scripts
+          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+      - name: Commit and clean helper
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/tracer-v206-once.yml
+          git add index.html
+          git commit -m 'v206: buff Tracer pulse pistol to 9 hits'
+          git push
