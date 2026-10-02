@@ -1,0 +1,57 @@
+name: Fix v220 display once
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-v220-display-once.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fix index
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          text = text.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v217</h1>', '<h1 id="mainTitle">볼배틀 리뉴얼 v220</h1>')
+          lines = text.splitlines()
+          for i, line in enumerate(lines):
+              if 'const patchNotes = [' in line and i + 1 < len(lines):
+                  lines[i+1] = '      "v220: 커비 체력170→180으로 상향. 전체 테스트의 모든 조합 시뮬레이션 횟수를 30전에서 50전으로 상향. 1인 전체 테스트 50전과 1대1 100전은 유지.",'
+                  break
+          text = '\n'.join(lines) + '\n'
+          p.write_text(text, encoding='utf-8')
+          PY
+      - name: Validate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+          text = Path('index.html').read_text(encoding='utf-8')
+          assert '<title>볼배틀 리뉴얼 v220</title>' in text
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v220</h1>' in text
+          assert 'id:"kirby", name:"커비"' in text and 'hp:180' in text
+          assert 'runFullMatchupMatrix(50)' in text
+          m = re.search(r'<script>([\s\S]*)</script>', text)
+          assert m, 'script not found'
+          Path('/tmp/app.js').write_text(m.group(1), encoding='utf-8')
+          PY
+          node --check /tmp/app.js
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'v220 hotfix: restore title and valid patch note' || true
+          git push
+      - name: Remove workflow
+        run: |
+          git pull --rebase
+          git rm .github/workflows/fix-v220-display-once.yml
+          git commit -m 'chore: remove v220 hotfix workflow'
+          git push
