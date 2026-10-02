@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v218</title>
+  <title>볼배틀 리뉴얼 v219</title>
   <style>
     :root {
       --bg: #020617;
@@ -1092,7 +1092,7 @@
         <button class="ghost" id="volumeBtn">볼륨 60%</button>
       </div>
       <div class="button-row three" id="simBoostRow" style="width:min(700px,100%);">
-        <button class="primary" id="quickSimAll30Btn">1인 전체 테스트</button>
+        <button class="primary" id="quickSimAll50Btn">1인 전체 테스트</button>
         <button class="warn" id="fullMatrix30Btn">전체 테스트</button>
         <button class="ghost" id="quickSim100Btn">1대1 100전</button>
       </div>
@@ -1100,7 +1100,7 @@
         <button class="ghost" id="copyMatchupBtn">전적 복사</button>
         <button class="danger" id="resetMatchupBtn">전적 리셋</button>
       </div>
-      <p class="status" id="tipText">1인 전체 테스트는 선택한 1명을 나머지 전원과 각각 30전, 전체 테스트는 모든 조합을 각각 30전, 1대1 100전은 선택한 2명을 100전 시뮬레이션합니다.</p>
+      <p class="status" id="tipText">1인 전체 테스트는 선택한 1명을 나머지 전원과 각각 50전, 전체 테스트는 모든 조합을 각각 30전, 1대1 100전은 선택한 2명을 100전 시뮬레이션합니다.</p>
     </section>
 
     <section class="panel">
@@ -6081,6 +6081,7 @@
     }
 
       const patchNotes = [
+      "v219: 1인 전체 테스트의 상대별 시뮬레이션 횟수를 30전에서 50전으로 상향. 전체 테스트 30전과 1대1 100전은 유지.",
       "v218: 커비 체력150→170으로 상향. 카피 능력이 누적 체력 피해45에서 이탈할 때 별이 튀어나오는 연출은 유지하되, 별 접촉·흡입을 통한 재획득 기능을 제거. 별은 5초간 시각 연출로만 남고 이후 다시 중립 몬스터를 흡입해야 카피 능력을 얻도록 변경.",
       "v217: 밤 몬스터는 투척 성공·실패나 표적 변경과 무관하게 한 번 던진 순간부터 3초의 전역 투척 쿨타임을 적용해 폭탄을 쉴 새 없이 연속 투척하지 않도록 수정.",
       "v216: 중립 몬스터의 별도 이동·방향 보정 코드를 제거하고 모든 캐릭터와 같은 공통 속도 복구·벽 반사 로직을 사용하도록 변경. 공격 정지 중 공통 이동이 다시 속도를 생성하던 떨림을 차단하고, 몬스터 몸체가 벽이나 표적 방향으로 통째로 회전하지 않도록 고정. 피해가 막힌 빔·소드도 정상적인 공격 실행으로 기록해 쿨타임 없이 두 번 발동하던 문제를 수정하고 파이어·밤까지 동일 실행 잠금을 점검.",
@@ -15593,8 +15594,8 @@
       updateHud(); updateStatusPanel(); draw();
     }
 
-    function runQuickSimAll30() {
-      runQuickSimAllCount(30);
+    function runQuickSimAll50() {
+      runQuickSimAllCount(50);
     }
 
     function matchupMatrixHtml(roster, entries) {
@@ -15789,7 +15790,7 @@
       if (e.target.id === "analysisModal") closeBattleAnalysis();
     });
     $("patchNoteBtn").addEventListener("click", openPatchNotes);
-    $("quickSimAll30Btn").addEventListener("click", runQuickSimAll30);
+    $("quickSimAll50Btn").addEventListener("click", runQuickSimAll50);
     $("quickSim100Btn").addEventListener("click", runQuickSim100);
     $("fullMatrix30Btn").addEventListener("click", () => runFullMatchupMatrix(30));
     $("copyMatchupBtn").addEventListener("click", copyMatchupHistory);
