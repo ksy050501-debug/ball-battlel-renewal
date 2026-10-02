@@ -1,0 +1,92 @@
+name: Apply Kirby v218 once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/kirby-v218-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          original = s
+
+          # Version
+          if '<title>볼배틀 리뉴얼 v217</title>' not in s:
+              raise SystemExit('Expected v217 title not found')
+          s = s.replace('<title>볼배틀 리뉴얼 v217</title>', '<title>볼배틀 리뉴얼 v218</title>', 1)
+
+          # Kirby HP 150 -> 170 only in the roster entry.
+          s, n = re.subn(r'(\{ id:"kirby", name:"커비", mark:"★", role:"게임", color:"#f472b6", hp:)150(, attack:0, speed:2\.55, range:0,)', r'\g<1>170\2', s, count=1)
+          if n != 1:
+              raise SystemExit(f'Kirby HP replacement count={n}')
+
+          old_cond = 'condition:"기본 10초 주기 흡입 · 카피 피해45 시 별 이탈 · 재획득 후 피해30 시 영구 소실"'
+          new_cond = 'condition:"기본 10초 주기 흡입 · 카피 피해45 시 별 이탈(연출) · 별 재획득 불가"'
+          if old_cond not in s:
+              raise SystemExit('Kirby condition text not found')
+          s = s.replace(old_cond, new_cond, 1)
+
+          old_desc = '카피 상태에서 누적 체력 피해가 45에 도달하면 능력이 별로 튕겨 나가며, 5초 안에 접촉하거나 흡입으로 끌어오면 되찾는다. 재획득한 능력은 누적 체력 피해 30에 도달하면 영구 소실되고, 다른 능력을 얻으면 기존 별은 즉시 사라진다.'
+          new_desc = '카피 상태에서 누적 체력 피해가 45에 도달하면 능력이 별로 튕겨 나가지만 별은 연출용으로만 남고 재획득할 수 없다. 이후 다시 중립 몬스터를 흡입해야 새로운 카피 능력을 얻는다.'
+          if old_desc not in s:
+              raise SystemExit('Kirby description reacquire text not found')
+          s = s.replace(old_desc, new_desc, 1)
+
+          old_tick = '카피 누적피해45에서 별 이탈·별5초'
+          new_tick = '카피 누적피해45에서 별 이탈(연출)·재획득 불가'
+          if old_tick not in s:
+              raise SystemExit('Kirby damage info text not found')
+          s = s.replace(old_tick, new_tick, 1)
+
+          # Copy stars are visual only: do not pull them with inhale and do not reacquire on contact.
+          pull_re = re.compile(r'\n\s*if\(owner\?\.alive&&owner\.kirby\?\.mode==="base"&&owner\.kirby\.inhaleTime>0&&kirbyConeContains\(owner,st\)\)\{const dx=owner\.x-st\.x,dy=owner\.y-st\.y,d=Math\.hypot\(dx,dy\)\|\|1,p=clamp\(1-\(owner\.kirby\.inhaleTime\|\|0\)/KIRBY\.inhaleDuration,0,1\),curve=p\*p,pull=KIRBY\.starPullStart\+\(KIRBY\.starPullEnd-KIRBY\.starPullStart\)\*curve,velocity=KIRBY\.inhaleVelocityStart\+\(KIRBY\.inhaleVelocityEnd-KIRBY\.inhaleVelocityStart\)\*curve,step=Math\.min\(d,pull\*dt\);st\.x\+=dx/d\*step;st\.y\+=dy/d\*step;st\.vx=st\.vx\*\.62\+dx/d\*velocity\*2\.6;st\.vy=st\.vy\*\.62\+dy/d\*velocity\*2\.6;\}')
+          s, n_pull = pull_re.subn('', s, count=1)
+          if n_pull != 1:
+              raise SystemExit(f'Star inhale-pull removal count={n_pull}')
+
+          pickup = '        if(owner?.alive&&owner.kirby?.mode==="base"&&st.pickupDelay<=0&&Math.hypot(owner.x-st.x,owner.y-st.y)<=owner.r+st.r){kirbyGainCopy(owner,st.type,true);continue;}\n'
+          if pickup not in s:
+              raise SystemExit('Star pickup line not found')
+          s = s.replace(pickup, '', 1)
+
+          # Status panel: no recovered-copy branch is reachable anymore.
+          old_status = 'extraTextHtml:"<div class=\\"status-skill-label\\">"+(k.copyRecovered?"재획득 상태 · 피해 "+KIRBY.recoveredDamage+"에 영구 소실":"피해 "+KIRBY.copyDamage+" → 카피별 "+KIRBY.starLife+"초")+" · 중립 몬스터 "+neutral+"/"+KIRBY.neutralMax+"</div>"'
+          new_status = 'extraTextHtml:"<div class=\\"status-skill-label\\">피해 "+KIRBY.copyDamage+" → 카피별 이탈(연출) · 재획득 불가 · 중립 몬스터 "+neutral+"/"+KIRBY.neutralMax+"</div>"'
+          if old_status not in s:
+              raise SystemExit('Kirby status text not found')
+          s = s.replace(old_status, new_status, 1)
+
+          note_anchor = '      const patchNotes = [\n'
+          note = '      "v218: 커비 체력150→170으로 상향. 카피 능력이 누적 체력 피해45에서 이탈할 때 별이 튀어나오는 연출은 유지하되, 별 접촉·흡입을 통한 재획득 기능을 제거. 별은 5초간 시각 연출로만 남고 이후 다시 중립 몬스터를 흡입해야 카피 능력을 얻도록 변경.",\n'
+          if note_anchor not in s:
+              raise SystemExit('Patch note anchor not found')
+          s = s.replace(note_anchor, note_anchor + note, 1)
+
+          if s == original:
+              raise SystemExit('No changes made')
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Remove helper workflow
+        run: rm -f .github/workflows/kirby-v218-once.yml
+      - name: Commit v218
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html .github/workflows/kirby-v218-once.yml
+          git commit -m 'v218: raise Kirby HP and make copy stars visual only'
+          git push
