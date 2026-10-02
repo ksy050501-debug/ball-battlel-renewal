@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v221</title>
+  <title>볼배틀 리뉴얼 v222</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v221</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v222</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1264,6 +1264,8 @@
         skillName:"펄스 피스톨 · 연속 점멸 · 되감기", condition:"반경72 진입 시 윤곽 없는 70° 부채꼴 9연타 · 돌진마다 사격 쿨 초기화 · 빈 사거리면 0.2초 후 다음 돌진", desc:"적이 사격권에 들어오면 그 방향의 단일 70도 부채꼴 영역을 피해1로 9번 빠르게 타격한다. 판정은 하나지만 연출은 짧고 얇은 하늘색 총탄이 흩뿌려지는 형태다. 점멸이 3회 충전되고 사격 주기가 준비되면 짧은 돌진을 시작하고, 돌진할 때마다 사격 쿨타임을 즉시 초기화한다. 돌진 후 적이 사격권에 있으면 9연타를 모두 마친 직후 다음 돌진을 하며, 적이 없으면 0.2초 뒤 바로 다음 돌진을 한다. 점멸 도중 넉백되면 저장된 도착 좌표를 폐기해 넉백 종료 후 순간이동하지 않는다. 세 번째 점멸 후에는 위치만 되감고 체력은 회복하지 않는다. 준비된 점착 폭탄은 광역으로 폭발하며 범위 안의 쟁반서도 피해를 받는다." },
       { id:"kirby", name:"자가비", mark:"★", role:"게임", color:"#f472b6", hp:180, attack:0, speed:2.55, range:0,
         skillName:"흡입 · 카피 능력", condition:"기본 10초 주기 흡입 · 카피 피해45 시 별 이탈(연출) · 별 재획득 불가", desc:"기본 상태에서는 진행방향 전방120도를 3.2초 동안 흡입한다. 블레이드 나이트는 제자리 전방180도 베기, 웨이들 두는 160도 빔 채찍, 핫 헤드는 멈춰서 다단히트 화염방사, 포피 브라더스 Jr.는 예상 위치로 폭탄을 던진다. 자가비가 카피하면 소드는 공격과 별개로 주기적으로 돌진하며 제자리 180도 베기와 출혈을 주고, 빔은 넓은 160도 공격에 둔화를 추가하며, 파이어는 사거리와 화상 피해가 강화되고, 밤은 적중한 상대에게 붙은 뒤 폭발한다. 능력 획득 순간에는 잠깐 느려진다. 카피 상태에서 누적 체력 피해가 45에 도달하면 능력이 별로 튕겨 나가지만 별은 연출용으로만 남고 재획득할 수 없다. 이후 다시 중립 몬스터를 흡입해야 새로운 카피 능력을 얻는다. 흡입은 처음에는 완만하지만 유지할수록 점점 강해진다." },
+      { id:"steve_miner", name:"스티브", mark:"⛏", role:"게임", color:"#3b82f6", hp:170, attack:0, speed:2.6, range:0,
+        skillName:"채굴 · 장비 진화 · 네더 원정", condition:"자원 1개 랜덤 생성 · 7초 미습득 시 자원으로 이동 · 돌2→철2→다이아2 · 다이아 이후 네더 포탈", desc:"나무 장비로 시작한다. 현재 단계에 필요한 자원은 맵의 랜덤 위치에 항상 1개만 존재하며 평소에는 자원을 추적하지 않는다. 7초 동안 습득하지 못하면 그 자원으로 이동하고, 넉넉한 습득 판정으로 자원을 모은다. 돌 2개, 철 2개, 다이아 2개를 차례로 모아 장비가 강화된다. 다이아 장비가 되면 일정 주기로 랜덤한 벽 일부가 네더 포탈로 변하고, 포탈에 닿으면 10초간 전장을 떠난 뒤 랜덤한 벽에서 네더라이트 장비로 귀환하며 체력30을 잃는다." },
       { id:"wok_wok", name:"웍웍", mark:"🐺", role:"게임", color:"#7f1d1d", hp:140, attack:0, speed:1.6, range:0,
         skillName:"피의 사냥 · 야수의 돌진", condition:"Q 준비+적 HP35% 이하 → W · E 야수의 끈기 · R 돌진", desc:"Q는 시작 즉시 준비되며 몸 접촉거리+8에서 피해18와 회복5. W는 Q 깨물기가 준비된 상태에서만 시작하며, 맵 전체에서 HP35% 이하인 적 중 체력 비율이 가장 낮은 한 명을 선택해 최대4초간 이속×2.6으로 곡선 추적한다. 추격 대상과 무관하게 누구든 Q 깨물기를 사용하면 즉시 끝나며 종료 후12초 대기한다. 마킹 즉시 두 캐릭터 사이에 피구름을 표시하고 붉은 눈과 두 줄 안광 잔상을 남긴다. W 중 R은 잠기며 종료 후5초와 R 쿨타임30초가 모두 지나야 발동한다. 직전 사냥감이 살아 있으면 우선 돌진하고 없으면 가장 가까운 적을 선택한다. R은 기본 돌진거리가 길며, 추적 대상의 HP가 50% 아래로 낮아질수록 사거리가 더 늘고 도달 시간은 짧아진다. 첫 적 또는 벽에 닿으면 끝난다. 돌진 중 넉백 면역, 적중 시0.9초 제압과7피해×3 및 타격당 회복4. E 야수의 끈기는 피해로 HP가50% 이하가 될 때 해당 피해부터 0.8초간 35% 감소시키며, 12초 쿨타임은 HP50% 이하인 동안에만 감소한다. 저체력일수록 Q 충전과 흡혈이 최대1.5배까지 강화된다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
@@ -3201,6 +3203,103 @@
       const e=f.elsa||{radius:ELSA.minRadius,moveSpeed:ELSA.maxSpeed,auraPulse:0};if(!f.portraitOnly&&!fastSimMode){const radius=e.radius||elsaAuraRadius(f),lost=1-elsaHpRatio(f),pulse=.5+.5*Math.sin(battleTime*3.2);ctx.save();ctx.beginPath();ctx.rect(arena.x,arena.y,arena.size,arena.size);ctx.clip();const g=ctx.createRadialGradient(f.x,f.y,10,f.x,f.y,radius);g.addColorStop(0,'rgba(240,249,255,'+(.18+lost*.08)+')');g.addColorStop(.48,'rgba(125,211,252,'+(.11+lost*.1)+')');g.addColorStop(.86,'rgba(56,189,248,'+(.08+lost*.08)+')');g.addColorStop(1,'rgba(14,116,144,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(f.x,f.y,radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(224,242,254,'+(.7+pulse*.2)+')';ctx.shadowColor='#7dd3fc';ctx.shadowBlur=8;ctx.lineWidth=2.4;ctx.setLineDash([10,7]);ctx.lineDashOffset=-battleTime*15;ctx.beginPath();ctx.arc(f.x,f.y,radius,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);for(let i=0;i<12;i++){const a=i*Math.PI/6+battleTime*.08,rr=radius-3,x=f.x+Math.cos(a)*rr,y=f.y+Math.sin(a)*rr;ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.fillStyle='rgba(224,242,254,.75)';ctx.beginPath();ctx.moveTo(0,-3);ctx.lineTo(8,0);ctx.lineTo(0,3);ctx.closePath();ctx.fill();ctx.restore();}ctx.restore();}
       ctx.save();ctx.translate(f.x,f.y);applyMarioSpriteSpin(f);ctx.scale(f.r/20,f.r/20);ctx.fillStyle='#38bdf8';ctx.strokeStyle='#0e7490';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-17,19);ctx.quadraticCurveTo(-14,5,-8,2);ctx.lineTo(0,8);ctx.lineTo(8,2);ctx.quadraticCurveTo(14,5,17,19);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='rgba(224,242,254,.72)';ctx.beginPath();ctx.moveTo(-15,7);ctx.lineTo(-21,19);ctx.lineTo(-8,16);ctx.moveTo(15,7);ctx.lineTo(21,19);ctx.lineTo(8,16);ctx.fill();
       ctx.fillStyle='#f8d8c7';ctx.strokeStyle='#a45b52';ctx.beginPath();ctx.ellipse(0,-6,12,14,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#f8fafc';ctx.beginPath();ctx.moveTo(-12,-8);ctx.quadraticCurveTo(-14,-21,-2,-23);ctx.quadraticCurveTo(10,-25,13,-10);ctx.lineTo(8,-17);ctx.lineTo(2,-12);ctx.lineTo(-4,-18);ctx.lineTo(-8,-10);ctx.closePath();ctx.fill();ctx.strokeStyle='#cbd5e1';ctx.stroke();ctx.fillStyle='#e0f2fe';ctx.beginPath();ctx.moveTo(10,-12);ctx.quadraticCurveTo(19,-6,13,5);ctx.quadraticCurveTo(21,11,12,18);ctx.lineTo(8,13);ctx.quadraticCurveTo(15,8,9,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(-5,-6,3.8,2.8,0,0,Math.PI*2);ctx.ellipse(5,-6,3.8,2.8,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#0284c7';ctx.beginPath();ctx.arc(-4,-6,1.5,0,Math.PI*2);ctx.arc(4,-6,1.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#a45b52';ctx.beginPath();ctx.arc(0,1,4,.25,Math.PI-.25);ctx.stroke();ctx.fillStyle='#e0f2fe';for(let i=0;i<3;i++){ctx.save();ctx.rotate(i*Math.PI*2/3);ctx.beginPath();ctx.moveTo(0,-25);ctx.lineTo(2,-20);ctx.lineTo(0,-15);ctx.lineTo(-2,-20);ctx.closePath();ctx.fill();ctx.restore();}ctx.restore();drawHealthBar(f);drawName(f);
+    }
+
+
+    const STEVE = {
+      pickupBonus:20, resourceRadius:10, forceWait:7,
+      attackPeriod:1.05, meleeBonus:12,
+      portalFirst:5, portalLife:4.5, portalGap:4.5, portalLength:96,
+      netherTime:10, netherCost:30
+    };
+    const STEVE_TIERS = [
+      {name:"나무",resource:"stone",resourceName:"돌",need:2,damage:7,reduction:1.00,color:"#a16207"},
+      {name:"돌",resource:"iron",resourceName:"철",need:2,damage:9,reduction:.98,color:"#78716c"},
+      {name:"철",resource:"diamond",resourceName:"다이아",need:2,damage:11,reduction:.92,color:"#d1d5db"},
+      {name:"다이아",resource:null,resourceName:"",need:0,damage:14,reduction:.86,color:"#22d3ee"},
+      {name:"네더라이트",resource:null,resourceName:"",need:0,damage:17,reduction:.80,color:"#4c1d95"}
+    ];
+    const STEVE_RES = {
+      stone:{name:"돌",color:"#78716c",edge:"#44403c"},
+      iron:{name:"철",color:"#d1d5db",edge:"#6b7280"},
+      diamond:{name:"다이아",color:"#22d3ee",edge:"#0e7490"}
+    };
+    function initSteve(f){
+      f.steve={tier:0,count:0,resource:null,attackCd:.35,swing:0,forcing:false,portal:null,portalCd:0,nether:0,baseSpeed:f.baseSpeed||f.speed||2.6};
+      steveSpawnResource(f);
+    }
+    function steveTier(f){return STEVE_TIERS[f?.steve?.tier||0]||STEVE_TIERS[0];}
+    function steveBlocked(f){return !f?.alive||isStunned(f)||(f.hardFreeze||0)>0||(f.bindStun||0)>0||(f.punchHold||0)>0||(f.punchFlight||0)>0||(f.vampSuppressed||0)>0||(f.joltStop||0)>0||isCasting(f);}
+    function steveSpawnResource(f){
+      const s=f?.steve,t=steveTier(f);if(!s||!t.resource){if(s)s.resource=null;return;}
+      const r=STEVE.resourceRadius;
+      s.resource={type:t.resource,x:rand(arena.x+r+18,arena.x2-r-18),y:rand(arena.y+r+18,arena.y2-r-18),r,age:0};s.forcing=false;
+    }
+    function steveCollectResource(f){
+      const s=f?.steve,t=steveTier(f),res=s?.resource;if(!s||!res||!t.resource||res.type!==t.resource)return false;
+      s.count++;s.resource=null;s.forcing=false;
+      const info=STEVE_RES[res.type];
+      if(!fastSimMode){spawnBlast(res.x,res.y,28,info.color);spawnParticles(res.x,res.y,info.color,10);spawnFloatingText(f.x,f.y-f.r-30,info.name+" 획득 "+s.count+"/"+t.need,info.color);playSound("hit",.35);}
+      if(s.count>=t.need){s.tier=Math.min(3,s.tier+1);s.count=0;const nt=steveTier(f);if(!fastSimMode){spawnBlast(f.x,f.y,50,nt.color);spawnParticles(f.x,f.y,nt.color,18);spawnFloatingText(f.x,f.y-f.r-42,nt.name+" 장비!",nt.color);playSound("summon",.65);}if(s.tier===3){s.portalCd=STEVE.portalFirst;s.resource=null;}else steveSpawnResource(f);}else steveSpawnResource(f);
+      return true;
+    }
+    function steveSpawnPortal(f){
+      const s=f?.steve;if(!s||s.tier!==3||s.nether>0)return;
+      const side=Math.floor(rand(0,4)),half=STEVE.portalLength/2,margin=half+18;
+      const pos=(side<2)?rand(arena.x+margin,arena.x2-margin):rand(arena.y+margin,arena.y2-margin);
+      s.portal={side,pos,life:STEVE.portalLife,maxLife:STEVE.portalLife};
+      if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-38,"네더 포탈 생성","#c084fc");
+    }
+    function steveTouchingPortal(f,p){
+      if(!p)return false;const half=STEVE.portalLength/2+f.r;
+      if(p.side===0)return f.y-f.r<=arena.y+5&&Math.abs(f.x-p.pos)<=half;
+      if(p.side===1)return f.y+f.r>=arena.y2-5&&Math.abs(f.x-p.pos)<=half;
+      if(p.side===2)return f.x-f.r<=arena.x+5&&Math.abs(f.y-p.pos)<=half;
+      return f.x+f.r>=arena.x2-5&&Math.abs(f.y-p.pos)<=half;
+    }
+    function steveEnterNether(f){
+      const s=f?.steve;if(!s||s.tier!==3||s.nether>0)return false;
+      s.nether=STEVE.netherTime;s.portal=null;s.portalCd=0;s.forcing=false;f.vx=0;f.vy=0;f.x=arena.x-5000;f.y=arena.y-5000;
+      if(!fastSimMode){spawnFloatingText(arena.x+arena.size/2,arena.y+32,"스티브 · 네더 진입","#c084fc");playSound("magic",.8);}return true;
+    }
+    function steveExitNether(f){
+      const s=f?.steve;if(!s)return;const side=Math.floor(rand(0,4)),pad=f.r+3;
+      if(side===0){f.x=rand(arena.x+35,arena.x2-35);f.y=arena.y+pad;f.vx=rand(-45,45);f.vy=Math.abs((s.baseSpeed||2.6)*44);}
+      else if(side===1){f.x=rand(arena.x+35,arena.x2-35);f.y=arena.y2-pad;f.vx=rand(-45,45);f.vy=-Math.abs((s.baseSpeed||2.6)*44);}
+      else if(side===2){f.x=arena.x+pad;f.y=rand(arena.y+35,arena.y2-35);f.vx=Math.abs((s.baseSpeed||2.6)*44);f.vy=rand(-45,45);}
+      else{f.x=arena.x2-pad;f.y=rand(arena.y+35,arena.y2-35);f.vx=-Math.abs((s.baseSpeed||2.6)*44);f.vy=rand(-45,45);}
+      s.tier=4;s.count=0;s.resource=null;s.portal=null;s.portalCd=0;
+      if(!fastSimMode){spawnBlast(f.x,f.y,72,"#7e22ce");spawnParticles(f.x,f.y,"#c084fc",24);spawnFloatingText(f.x,f.y-f.r-40,"네더라이트 장비 · 체력 -"+STEVE.netherCost,"#c084fc");playSound("summon",1);}
+      bodyDirectDamage(f,STEVE.netherCost,f,"네더 원정","#a855f7");
+    }
+    function steveAttack(f,dt){
+      const s=f.steve;s.attackCd=Math.max(0,s.attackCd-dt);s.swing=Math.max(0,(s.swing||0)-dt);if(s.attackCd>0||steveBlocked(f))return;
+      const q=nearestEnemy(f),e=q.enemy;if(!e||q.d>f.r+e.r+STEVE.meleeBonus)return;
+      const tier=steveTier(f),dealt=damage(e,tier.damage,f,tier.name+" 검");s.attackCd=STEVE.attackPeriod;s.swing=.22;
+      if(dealt>0&&!fastSimMode){spawnHitFlash(e.x,e.y,tier.color,34);playSound("hit",.48);}
+    }
+    function updateSteve(f,dt){
+      const s=f?.steve;if(!s||!f.alive)return false;
+      if(s.nether>0){s.nether=Math.max(0,s.nether-dt);f.vx=0;f.vy=0;if(s.nether<=0){steveExitNether(f);return false;}return true;}
+      steveAttack(f,dt);
+      if(s.tier<3){if(!s.resource)steveSpawnResource(f);const r=s.resource;if(r){r.age+=dt;const pickup=f.r+r.r+STEVE.pickupBonus;if(Math.hypot(f.x-r.x,f.y-r.y)<=pickup){steveCollectResource(f);return false;}if(r.age>=STEVE.forceWait&&!steveBlocked(f)){const dx=r.x-f.x,dy=r.y-f.y,d=Math.hypot(dx,dy)||1,sp=(s.baseSpeed||f.baseSpeed||2.6)*44;f.vx=dx/d*sp;f.vy=dy/d*sp;s.forcing=true;}else s.forcing=false;}}
+      else if(s.tier===3){if(s.portal){s.portal.life=Math.max(0,s.portal.life-dt);if(steveTouchingPortal(f,s.portal)){steveEnterNether(f);return true;}if(s.portal.life<=0){s.portal=null;s.portalCd=STEVE.portalGap;}}else{s.portalCd=Math.max(0,(s.portalCd||0)-dt);if(s.portalCd<=0)steveSpawnPortal(f);}}
+      return false;
+    }
+    function stevePortalEndpoints(p){
+      const h=STEVE.portalLength/2;if(p.side===0)return [p.pos-h,arena.y,p.pos+h,arena.y];if(p.side===1)return [p.pos-h,arena.y2,p.pos+h,arena.y2];if(p.side===2)return [arena.x,p.pos-h,arena.x,p.pos+h];return [arena.x2,p.pos-h,arena.x2,p.pos+h];
+    }
+    function drawSteveWorld(){
+      if(fastSimMode)return;for(const f of fighters){const s=f.alive&&f.steve;if(!s)continue;
+        if(s.resource){const r=s.resource,info=STEVE_RES[r.type],pulse=.5+.5*Math.sin(battleTime*5);ctx.save();ctx.translate(r.x,r.y);ctx.shadowColor=info.color;ctx.shadowBlur=8+7*pulse;ctx.fillStyle=info.color;ctx.strokeStyle=info.edge;ctx.lineWidth=2;ctx.fillRect(-9,-9,18,18);ctx.strokeRect(-9,-9,18,18);ctx.globalAlpha=.55;ctx.fillStyle="#fff";ctx.fillRect(-5,-5,4,4);ctx.fillRect(2,1,4,4);ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle=info.color;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.lineWidth=3;ctx.strokeText(info.name,r.x,r.y-16);ctx.fillText(info.name,r.x,r.y-16);ctx.restore();}
+        if(s.portal){const p=s.portal,[x1,y1,x2,y2]=stevePortalEndpoints(p),pulse=.5+.5*Math.sin(battleTime*9);ctx.save();ctx.strokeStyle="#a855f7";ctx.shadowColor="#c084fc";ctx.shadowBlur=18;ctx.lineWidth=13+3*pulse;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.strokeStyle="#e9d5ff";ctx.globalAlpha=.65;ctx.lineWidth=2.2;ctx.setLineDash([8,7]);ctx.lineDashOffset=-battleTime*25;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+      }
+    }
+    function drawSteveCharacter(f){
+      const s=f.steve||{tier:0,swing:0},tier=STEVE_TIERS[s.tier]||STEVE_TIERS[0];ctx.save();ctx.translate(f.x,f.y);applyMarioSpriteSpin(f);ctx.scale(f.r/18,f.r/18);ctx.imageSmoothingEnabled=false;
+      ctx.fillStyle="#2563eb";ctx.fillRect(-9,-2,18,15);ctx.fillStyle="#312e81";ctx.fillRect(-9,13,8,9);ctx.fillRect(1,13,8,9);ctx.fillStyle="#b77956";ctx.fillRect(-10,-18,20,17);ctx.fillStyle="#3f2a1d";ctx.fillRect(-10,-18,20,5);ctx.fillRect(-10,-13,4,5);ctx.fillStyle="#fff";ctx.fillRect(-6,-10,5,3);ctx.fillRect(2,-10,5,3);ctx.fillStyle="#2563eb";ctx.fillRect(-4,-10,2,2);ctx.fillRect(3,-10,2,2);
+      if(s.tier>=2){ctx.globalAlpha=.82;ctx.fillStyle=tier.color;ctx.fillRect(-10,-19,20,6);ctx.fillRect(-11,-3,22,12);ctx.globalAlpha=1;ctx.strokeStyle="#f8fafc";ctx.lineWidth=.8;ctx.strokeRect(-11,-3,22,12);}else if(s.tier===1){ctx.strokeStyle=tier.color;ctx.lineWidth=2;ctx.strokeRect(-10,-3,20,13);}
+      const swing=(s.swing||0)>0?-1.0+((.22-s.swing)/.22)*1.65:-.45;ctx.save();ctx.translate(9,2);ctx.rotate(swing);ctx.strokeStyle=tier.color;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(22,0);ctx.stroke();ctx.strokeStyle="#f8fafc";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(4,-1);ctx.lineTo(22,-1);ctx.stroke();ctx.fillStyle="#78350f";ctx.fillRect(-3,-3,7,6);ctx.restore();ctx.restore();drawHealthBar(f);drawName(f);
     }
 
     const HINTA = { startDelay: 5, respawn: 5, ballRadius: 10, pickupBonus: 24,
@@ -6081,6 +6180,7 @@
     }
 
       const patchNotes = [
+      "v222: 신규 캐릭터 스티브 추가. 자원은 현재 단계에 맞춰 랜덤 위치에 1개만 존재하고 평소에는 추적하지 않으며 7초 미습득 시 자원으로 이동. 돌2→철2→다이아2로 장비가 진화하고, 다이아 단계에서는 랜덤 벽 구간의 네더 포탈에 접촉하면 10초 뒤 랜덤 벽에서 네더라이트 장비로 귀환하며 체력30 감소.",
       "v221: 캐릭터 표시명 커비→자가비로 변경. 내부 ID와 전투 로직은 유지.",
       "v220: 자가비 체력170→180으로 상향. 전체 테스트의 모든 조합 시뮬레이션 횟수를 30전에서 50전으로 상향. 1인 전체 테스트 50전과 1대1 100전은 유지.",
       "v219: 1인 전체 테스트의 상대별 시뮬레이션 횟수를 30전에서 50전으로 상향. 전체 테스트 30전과 1대1 100전은 유지.",
@@ -6323,6 +6423,7 @@
         tip:"그루브는 더 이상 단계별 별도 진행도가 아니라 하나의 0~300 수치다. 피해7을 받으면 35, 피해10을 받으면 50이 즉시 빠지며 경계값 아래로 내려가면 그루브 단계도 곧바로 하락한다. 별도 WHIPLASH 게이지는 일반 킥이 적에게 실제 피해를 준 경우에만 5씩 오르고 솔로 중에는 충전되지 않는다. 100이 되면 다음 마디 첫 박에서 2마디 솔로를 시작하고 게이지를 0으로 소모한다."};
       if(c.id==="tracer_pan")return {damage:"단일 70° 부채꼴 판정1×9 / 점착 폭탄36(반경72·자해 가능)",tick:"사격 종료 후0.9초 · 점멸2.6초마다1회 충전 · 빈 사거리면0.2초 뒤 다음 점멸",tip:"점멸은 적의 이동 흔적 방향으로 최대68만큼 짧게 이동하며 매번 사격 쿨타임을 초기화한다. 적이 사격권에 있으면 윤곽 없는 부채꼴 9연타를 끝낸 직후 다음 점멸, 적이 없으면0.2초 후 다음 점멸을 한다. 점멸 도중 넉백되면 해당 점멸 경로는 즉시 폐기된다. 마지막에는 시작 위치만 되감으며 체력은 회복하지 않는다."};
       if(c.id==="kirby")return {damage:"소드 회전베기10+출혈1×4 / 빔 채찍7+둔화 / 파이어5+화상1×3 / 밤 폭탄12×2(반경58) / 뱉기 벽충돌12",tick:"기본 흡입10초 주기·3.2초 지속·전방120°·느린 흡입 / 배회형 중립 몬스터6.5초마다·최대2 / 카피 누적피해45에서 별 이탈(연출)·재획득 불가",tip:"중립 몬스터는 적을 추적하지 않고 임의 방향으로 돌아다니다 사거리 안에 캐릭터가 들어왔을 때만 기술을 사용한다. 소드는 회전베기, 빔은 휘어지는 별 채찍, 파이어는 좁은 화염방사, 밤은 한 번 튀는 폭탄이며 카피 자가비는 강화판을 사용한다."};
+      if(c.id==="steve_miner")return {damage:"나무검7 / 돌검9 / 철검11 / 다이아검14 / 네더라이트검17",tick:"근접 공격1.05초 · 자원 1개만 존재 · 7초 미습득 시 자원 이동 · 돌2→철2→다이아2 · 네더10초",tip:"자원은 랜덤 위치에 한 개만 생기며 처음 7초 동안은 추적하지 않는다. 습득 반경은 몸체+자원 반경에 20을 더한다. 철부터 장비의 일반 피해 감소가 생기며 다이아 이후 랜덤 벽 포탈에 닿으면 10초 뒤 네더라이트로 귀환하고 현재 체력30을 잃는다."};
       if(c.id==="wok_wok")return {damage:"Q 깨물기18+회복5 / R 제압7×3+타격당 회복4",tick:"Q 시작 준비·접촉+8·재충전7→3.5초 / W HP35% 이하 감지·4초·이속×2.6·종료 후8초 / R 주기30초·W 종료 후5초 대기·지속0.55초",tip:"W는 각도·거리·흔적 조건 없이 가장 낮은 체력 비율의 적을 선택하고 대상 변경 없이 곡선 추적한다. Q 사용·처치·4초 경과 시 종료. 단순 몸 접촉으로는 종료하지 않는다. 넉백 중 조향 중지. W 중 R 사용 불가. W 종료 후5초와30초 재사용 대기를 모두 충족하면 직전 사냥감을 우선하며 아니면 가장 가까운 적을 선택한다. Q는 소환수도 깨물며 R은 소환수도 대상으로 선택하고 경로를 가로막은 소환수에 적중해 종료·제압한다. W 마킹은 본체만 대상으로 유지한다. 첫 적이나 벽에 막히면 종료하며 실제 적중한 상대를 제압한다. R 중 넉백은 무시하지만 피해와 일반 기절 면역은 아니다. 기존 Q 무적 대상 회복 및 R 실제 피해 시 회복 유지."};
       if(c.id==="newhello_sergeant")return {damage:"일반 광역 회전베기8 / 와이어 광역 강습15 + 출혈1×5회 · 재타격 시 남은 출혈 즉시 폭발 후 재적용 · HP 열세 보정 최대 ×1.6",
         tick:"검 발동 사거리: 몸 충돌보다 +8 · 광역 베기 범위: 몸 반경보다 +28 · 기동7초 · 준비0.45초 · 고속이동1초(초당650) · 와이어 강습 최대 3연속 · 일반 베기 재사용1.2초 · 출혈 약1초마다 5회",
@@ -6483,6 +6584,7 @@
         if (c.id === "conan") initConan(preview);
         if (c.id === "spider_man") initSpiderMan(preview);
         if (c.id === "kirby") initKirby(preview);
+        if (c.id === "steve_miner") initSteve(preview);
         if (c.id === "mario_plumber") initMario(preview);
         if (c.id === "coyote_d") initCoyote(preview);
         if (c.id === "wok_wok") initWokWok(preview);
@@ -6968,6 +7070,7 @@
       if (c.id === "spider_man") initSpiderMan(fighter);
       if (c.id === "tracer_pan") initTracer(fighter);
       if (c.id === "kirby") initKirby(fighter);
+      if (c.id === "steve_miner") initSteve(fighter);
       if (c.id === "mario_plumber") initMario(fighter);
       if (c.id === "koopa_king") initKoopa(fighter);
       if (c.id === "bald_cape") initBaldCape(fighter);
@@ -8428,6 +8531,7 @@
           text:r.elderBuff>0?`딱총나무 강화 ${r.elderBuff.toFixed(1)}초`:r.wand?`지팡이 자동 습득 ${r.wand.autoPickup.toFixed(1)}초`:`딱총나무 등장 ${r.wandTimer.toFixed(1)}초`,
           extraTextHtml:`<div class="status-skill-label">다음 ${next} ${r.spellCd.toFixed(1)}초 · 공유 쿨9초</div>`};
       }
+      if(f.steve){const s=f.steve,t=steveTier(f);if(s.nether>0)return {ratio:clamp(1-s.nether/STEVE.netherTime,0,1),className:"skill-fill",text:`네더 탐험 · ${s.nether.toFixed(1)}초`,extraTextHtml:'<div class="status-skill-label">귀환 시 네더라이트 · 체력 -30</div>'};if(s.tier<3){const r=s.resource,wait=r?Math.max(0,STEVE.forceWait-r.age):STEVE.forceWait;return {ratio:t.need?clamp(s.count/t.need,0,1):1,className:"skill-fill",text:`${t.name} 장비 · ${t.resourceName} ${s.count}/${t.need}`,extraTextHtml:`<div class="status-skill-label">${s.forcing?"자원으로 이동 중":`자동 이동까지 ${wait.toFixed(1)}초`}</div>`};}if(s.tier===3)return {ratio:s.portal?clamp(s.portal.life/s.portal.maxLife,0,1):clamp(1-(s.portalCd||0)/STEVE.portalGap,0,1),className:"skill-fill",text:s.portal?`다이아 장비 · 포탈 ${s.portal.life.toFixed(1)}초`:`다이아 장비 · 포탈 대기 ${(s.portalCd||0).toFixed(1)}초`,extraTextHtml:'<div class="status-skill-label">포탈 접촉 → 네더 10초</div>'};return {ratio:1,className:"skill-fill",text:"네더라이트 장비 · 최종 단계",extraTextHtml:'<div class="status-skill-label">검17 · 일반 피해 20% 감소</div>'};}
       if(f.hinta){
         const h=f.hinta,b=h.ball;
         return {ratio:b?(b.flying?clamp((HINTA.maxContacts-b.contacts)/HINTA.maxContacts,0,1):1):clamp(1-h.timer/(h.started?HINTA.respawn:HINTA.startDelay),0,1),
@@ -10076,6 +10180,7 @@
 
       // 캡틴은 방패를 들고 있을 때만 일반 피해를 줄인다.
       if (!fixedDamage && target.captain?.hasShield) final *= CAPTAIN.heldReduction;
+      if (!fixedDamage && target.steve) final *= (STEVE_TIERS[target.steve.tier||0]?.reduction ?? 1);
 
       // 고정데미지는 표식 증폭과 피해 감소를 모두 무시한다.
       if (!fixedDamage && target.marked) final *= 1.12;
@@ -11747,6 +11852,7 @@
       if (f.tracer && updateTracer(f, dt)) return;
       if (f.kirbyNeutral && updateKirbyNeutral(f, dt)) return;
       if (f.kirby) updateKirby(f, dt);
+      if (f.steve && updateSteve(f, dt)) return;
       if (f.mario) updateMario(f, dt);
       if (f.koopa) updateKoopa(f, dt);
       if (!f.alive) return;
@@ -12273,6 +12379,7 @@
 
     function areEnemies(a, b) {
       if (!a || !b) return false;
+      if ((a.steve?.nether||0)>0 || (b.steve?.nether||0)>0) return false;
       if (a.id && b.id && a.id === b.id) return false;
       if (a.kirbyNeutral || b.kirbyNeutral) return !(a.kirbyNeutral && b.kirbyNeutral);
       if (a.teamId && b.teamId && a.teamId === b.teamId) return false;
@@ -13708,6 +13815,7 @@
       drawCaptainShields();
       drawCoyoteTrails();
       drawHintaBalls();
+      drawSteveWorld();
       drawRiddleEffects();
       drawLisaWaves();
       drawKoopaFirePillars();
@@ -14800,6 +14908,7 @@
         ctx.rotate((MARIO.shellSpin-f.marioSpinFx)*28);
     }
     function drawFighter(f) {
+      if((f.steve?.nether||0)>0)return;
       drawConcussionSlow(f);drawPowerFist(f);drawIronSuit(f);drawConanDeathMark(f);drawCoyoteStatusOverlay(f);
       // Spin local body images only; world effects and UI keep their original coordinates.
       drawKirbyBeamSlow(f);drawFighterBody(f);drawElsaColdOverlay(f);
@@ -14820,6 +14929,7 @@
       if (f.tracer) { drawTracerCharacter(f); return; }
       if (f.kirbyNeutral) { drawKirbyNeutral(f); return; }
       if (f.kirby) { drawKirbyCharacter(f); return; }
+      if (f.steve) { drawSteveCharacter(f); return; }
       if (f.marioBlock) { drawMarioBlock(f); return; }
       if (f.mario) { drawMarioCharacter(f); return; }
       if (f.koopa) { drawKoopaCharacter(f); return; }
