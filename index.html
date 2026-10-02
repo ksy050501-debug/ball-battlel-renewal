@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v216</title>
+  <title>볼배틀 리뉴얼 v217</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v216</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v217</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -6081,6 +6081,7 @@
     }
 
       const patchNotes = [
+      "v217: 밤 몬스터는 투척 성공·실패나 표적 변경과 무관하게 한 번 던진 순간부터 3초의 전역 투척 쿨타임을 적용해 폭탄을 쉴 새 없이 연속 투척하지 않도록 수정.",
       "v216: 중립 몬스터의 별도 이동·방향 보정 코드를 제거하고 모든 캐릭터와 같은 공통 속도 복구·벽 반사 로직을 사용하도록 변경. 공격 정지 중 공통 이동이 다시 속도를 생성하던 떨림을 차단하고, 몬스터 몸체가 벽이나 표적 방향으로 통째로 회전하지 않도록 고정. 피해가 막힌 빔·소드도 정상적인 공격 실행으로 기록해 쿨타임 없이 두 번 발동하던 문제를 수정하고 파이어·밤까지 동일 실행 잠금을 점검.",
       "v215: 소드 공격에서 돌진을 제거해 블레이드 나이트와 소드 커비가 제자리에서 180도 베기를 사용하도록 분리. 소드 커비에게만 공격과 별개인 3.8초 주기의 상대 방향 돌진을 추가. 빔·파이어·밤은 각각 채찍 연출·화염방사·투척 동작이 끝날 때까지 완전히 정지한 뒤 기존 이동을 복구한다.",
       "v214: 빔 채찍의 원점을 발동 순간 좌표가 아닌 매 프레임 시전자 현재 좌표로 계산하도록 변경. 채찍을 휘두르는 도중 넉백되거나 이동해도 이펙트가 제자리에 남지 않고 시전자를 중심으로 따라간다.",
@@ -7916,7 +7917,7 @@
       else if(n.type==="beam")used=kirbyWhip(f,108,Math.PI*8/9,5,false,"웨이들 두 빔 채찍",target);
       else if(n.type==="fire")used=kirbyStartFlame(f,90,Math.PI*5/9,1,false,5,"핫 헤드 화염방사",target);
       else if(n.type==="bomb")used=kirbyThrowBomb(f,target,8,48,"포피 브라더스 Jr. 밤",false);
-      if(used){n.targetCooldowns.set(target.id,data.targetCooldown);n.attackLock=({sword:.66,beam:.72,fire:1.02,bomb:.48})[n.type]||.5;}return !!(f.kirbyFlame||f.kirbyCastFreeze);
+      if(used){n.targetCooldowns.set(target.id,data.targetCooldown);n.attackLock=n.type==="bomb"?data.targetCooldown:(({sword:.66,beam:.72,fire:1.02})[n.type]||.5);}return !!(f.kirbyFlame||f.kirbyCastFreeze);
     }
     function kirbySwallowEnemy(f,target){
       const k=f?.kirby;if(!k||k.swallowedId||!target?.alive||target.isSummon||!areEnemies(f,target))return false;
