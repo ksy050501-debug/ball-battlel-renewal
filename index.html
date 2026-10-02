@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v214</title>
+  <title>볼배틀 리뉴얼 v215</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v214</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v215</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1263,7 +1263,7 @@
       { id:"tracer_pan", name:"쟁반서", mark:"↶", role:"게임", color:"#38bdf8", hp:150, attack:0, speed:3.1, range:72,
         skillName:"펄스 피스톨 · 연속 점멸 · 되감기", condition:"반경72 진입 시 윤곽 없는 70° 부채꼴 9연타 · 돌진마다 사격 쿨 초기화 · 빈 사거리면 0.2초 후 다음 돌진", desc:"적이 사격권에 들어오면 그 방향의 단일 70도 부채꼴 영역을 피해1로 9번 빠르게 타격한다. 판정은 하나지만 연출은 짧고 얇은 하늘색 총탄이 흩뿌려지는 형태다. 점멸이 3회 충전되고 사격 주기가 준비되면 짧은 돌진을 시작하고, 돌진할 때마다 사격 쿨타임을 즉시 초기화한다. 돌진 후 적이 사격권에 있으면 9연타를 모두 마친 직후 다음 돌진을 하며, 적이 없으면 0.2초 뒤 바로 다음 돌진을 한다. 점멸 도중 넉백되면 저장된 도착 좌표를 폐기해 넉백 종료 후 순간이동하지 않는다. 세 번째 점멸 후에는 위치만 되감고 체력은 회복하지 않는다. 준비된 점착 폭탄은 광역으로 폭발하며 범위 안의 쟁반서도 피해를 받는다." },
       { id:"kirby", name:"커비", mark:"★", role:"게임", color:"#f472b6", hp:150, attack:0, speed:2.55, range:0,
-        skillName:"흡입 · 카피 능력", condition:"기본 10초 주기 흡입 · 카피 피해45 시 별 이탈 · 재획득 후 피해30 시 영구 소실", desc:"기본 상태에서는 진행방향 전방120도를 3.2초 동안 흡입한다. 블레이드 나이트는 돌진 후 전방180도 베기, 웨이들 두는 160도 빔 채찍, 핫 헤드는 멈춰서 다단히트 화염방사, 포피 브라더스 Jr.는 예상 위치로 폭탄을 던진다. 커비가 카피하면 소드는 더 넓게 돌진해 180도 베기와 출혈을 주고, 빔은 넓은 160도 공격에 둔화를 추가하며, 파이어는 사거리와 화상 피해가 강화되고, 밤은 적중한 상대에게 붙은 뒤 폭발한다. 능력 획득 순간에는 잠깐 느려진다. 카피 상태에서 누적 체력 피해가 45에 도달하면 능력이 별로 튕겨 나가며, 5초 안에 접촉하거나 흡입으로 끌어오면 되찾는다. 재획득한 능력은 누적 체력 피해 30에 도달하면 영구 소실되고, 다른 능력을 얻으면 기존 별은 즉시 사라진다. 흡입은 처음에는 완만하지만 유지할수록 점점 강해진다." },
+        skillName:"흡입 · 카피 능력", condition:"기본 10초 주기 흡입 · 카피 피해45 시 별 이탈 · 재획득 후 피해30 시 영구 소실", desc:"기본 상태에서는 진행방향 전방120도를 3.2초 동안 흡입한다. 블레이드 나이트는 제자리 전방180도 베기, 웨이들 두는 160도 빔 채찍, 핫 헤드는 멈춰서 다단히트 화염방사, 포피 브라더스 Jr.는 예상 위치로 폭탄을 던진다. 커비가 카피하면 소드는 공격과 별개로 주기적으로 돌진하며 제자리 180도 베기와 출혈을 주고, 빔은 넓은 160도 공격에 둔화를 추가하며, 파이어는 사거리와 화상 피해가 강화되고, 밤은 적중한 상대에게 붙은 뒤 폭발한다. 능력 획득 순간에는 잠깐 느려진다. 카피 상태에서 누적 체력 피해가 45에 도달하면 능력이 별로 튕겨 나가며, 5초 안에 접촉하거나 흡입으로 끌어오면 되찾는다. 재획득한 능력은 누적 체력 피해 30에 도달하면 영구 소실되고, 다른 능력을 얻으면 기존 별은 즉시 사라진다. 흡입은 처음에는 완만하지만 유지할수록 점점 강해진다." },
       { id:"wok_wok", name:"웍웍", mark:"🐺", role:"게임", color:"#7f1d1d", hp:140, attack:0, speed:1.6, range:0,
         skillName:"피의 사냥 · 야수의 돌진", condition:"Q 준비+적 HP35% 이하 → W · E 야수의 끈기 · R 돌진", desc:"Q는 시작 즉시 준비되며 몸 접촉거리+8에서 피해18와 회복5. W는 Q 깨물기가 준비된 상태에서만 시작하며, 맵 전체에서 HP35% 이하인 적 중 체력 비율이 가장 낮은 한 명을 선택해 최대4초간 이속×2.6으로 곡선 추적한다. 추격 대상과 무관하게 누구든 Q 깨물기를 사용하면 즉시 끝나며 종료 후12초 대기한다. 마킹 즉시 두 캐릭터 사이에 피구름을 표시하고 붉은 눈과 두 줄 안광 잔상을 남긴다. W 중 R은 잠기며 종료 후5초와 R 쿨타임30초가 모두 지나야 발동한다. 직전 사냥감이 살아 있으면 우선 돌진하고 없으면 가장 가까운 적을 선택한다. R은 기본 돌진거리가 길며, 추적 대상의 HP가 50% 아래로 낮아질수록 사거리가 더 늘고 도달 시간은 짧아진다. 첫 적 또는 벽에 닿으면 끝난다. 돌진 중 넉백 면역, 적중 시0.9초 제압과7피해×3 및 타격당 회복4. E 야수의 끈기는 피해로 HP가50% 이하가 될 때 해당 피해부터 0.8초간 35% 감소시키며, 12초 쿨타임은 HP50% 이하인 동안에만 감소한다. 저체력일수록 Q 충전과 흡혈이 최대1.5배까지 강화된다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
@@ -6081,6 +6081,7 @@
     }
 
       const patchNotes = [
+      "v215: 소드 공격에서 돌진을 제거해 블레이드 나이트와 소드 커비가 제자리에서 180도 베기를 사용하도록 분리. 소드 커비에게만 공격과 별개인 3.8초 주기의 상대 방향 돌진을 추가. 빔·파이어·밤은 각각 채찍 연출·화염방사·투척 동작이 끝날 때까지 완전히 정지한 뒤 기존 이동을 복구한다.",
       "v214: 빔 채찍의 원점을 발동 순간 좌표가 아닌 매 프레임 시전자 현재 좌표로 계산하도록 변경. 채찍을 휘두르는 도중 넉백되거나 이동해도 이펙트가 제자리에 남지 않고 시전자를 중심으로 따라간다.",
       "v213: 빔 채찍을 전방 찌르기형 연출에서 160도 범위를 휘감아 휘두르는 별 사슬 채찍으로 변경. 빔 둔화 지속시간을 늘리고 둔화 고리·별 효과를 캐릭터 뒤쪽 레이어로 이동. 중립 몬스터는 현재 공격 연출과 동작이 완전히 끝난 뒤에만 다음 대상을 고르도록 공격 완료 잠금을 추가. 블레이드 나이트 감지 거리를 150에서 92로 줄이고 돌진 후 현재 표적 방향을 다시 조준해 허공 베기를 방지.",
       "v212: 블레이드 나이트와 소드 커비가 베기 때 좌표를 한 프레임에 이동해 버벅이던 원인을 수정. 실제 위치를 0.18/0.16초 동안 부드럽게 이동한 뒤 180도 반월베기가 이어진다. 빔 채찍은 전방으로 곧게 펼쳐지는 별 사슬·선명한 타격 섬광으로 재작화하고 둔화 지속 중 황금 구속 고리·회전 별 효과를 추가. 커비 빔 채찍은 피해7/1.65초에서 피해14/3.3초로 변경해 DPS는 유지하면서 한 번의 타격감을 강화. 파이어는 직선 광선 묶음 대신 부채꼴 화염 혀와 불씨 연출로 변경. 중립 몬스터는 임의 방향전환을 제거하고 벽에 닿을 때만 반사하며, 소드150·빔132·파이어116·밤220의 개별 감지 범위와 상대별 공격 쿨타임을 적용해 한 상대를 공격한 직후 새로 범위에 들어온 다른 상대를 즉시 공격할 수 있도록 변경.",
@@ -7777,7 +7778,7 @@
     };
     function kirbyCopyName(type){return KIRBY_COPY[type]?.name||"기본";}
     function initKirby(f){
-      f.kirby={mode:"base",baseR:f.r||16,inhaleCd:1.8,inhaleTime:0,inhaleAngle:Math.atan2(f.vy||0,f.vx||1),copyDamageStart:f.damageTaken||0,copyRecovered:false,copyDamageLimit:KIRBY.copyDamage,attackCd:0,flameCast:null,swallowedId:"",swallowTime:0};
+      f.kirby={mode:"base",baseR:f.r||16,inhaleCd:1.8,inhaleTime:0,inhaleAngle:Math.atan2(f.vy||0,f.vx||1),copyDamageStart:f.damageTaken||0,copyRecovered:false,copyDamageLimit:KIRBY.copyDamage,attackCd:0,swordDashCd:0,flameCast:null,swallowedId:"",swallowTime:0};
     }
     function kirbyResetBody(f){if(f?.kirby)f.r=f.kirby.baseR||16;}
     function kirbyCopyGainFx(f,type,recovered){
@@ -7786,14 +7787,14 @@
     function kirbyGainCopy(f,type,recovered=false){
       const k=f?.kirby;if(!k||!KIRBY_COPY[type])return false;
       kirbyCopyStars=kirbyCopyStars.filter(st=>st.ownerId!==f.id);
-      k.mode=type;k.attackCd=.2;k.flameCast=null;k.inhaleTime=0;k.inhaleCd=KIRBY.inhalePeriod;k.copyDamageStart=f.damageTaken||0;k.copyRecovered=!!recovered;k.copyDamageLimit=recovered?KIRBY.recoveredDamage:KIRBY.copyDamage;kirbyResetBody(f);
+      k.mode=type;k.attackCd=.2;k.swordDashCd=type==="sword"?2.6:0;k.flameCast=null;k.inhaleTime=0;k.inhaleCd=KIRBY.inhalePeriod;k.copyDamageStart=f.damageTaken||0;k.copyRecovered=!!recovered;k.copyDamageLimit=recovered?KIRBY.recoveredDamage:KIRBY.copyDamage;kirbyResetBody(f);
       applySlow(f,KIRBY.copySlowDuration,.55,"kirbyCopyGain");kirbyCopyGainFx(f,type,recovered);return true;
     }
     function kirbyDropCopy(f){
       const k=f?.kirby;if(!k||k.mode==="base")return false;
-      const type=k.mode,permanent=!!k.copyRecovered;
+      const type=k.mode,permanent=!!k.copyRecovered;f.kirbyCopyDash=null;f.kirbyCastFreeze=null;
       if(!permanent){const move=Math.atan2(f.vy||0,f.vx||1),a=move+Math.PI+rand(-.38,.38),launch=f.r+12;kirbyCopyStars=kirbyCopyStars.filter(st=>st.ownerId!==f.id);kirbyCopyStars.push({ownerId:f.id,type,x:clamp(f.x+Math.cos(a)*launch,arena.x+9,arena.x2-9),y:clamp(f.y+Math.sin(a)*launch,arena.y+9,arena.y2-9),r:9,vx:Math.cos(a)*KIRBY.starSpeed,vy:Math.sin(a)*KIRBY.starSpeed,life:KIRBY.starLife,maxLife:KIRBY.starLife,pickupDelay:KIRBY.starPickupDelay});}
-      k.mode="base";k.attackCd=0;k.flameCast=null;k.inhaleTime=0;k.inhaleCd=1.6;k.copyDamageStart=f.damageTaken||0;k.copyRecovered=false;k.copyDamageLimit=KIRBY.copyDamage;kirbyResetBody(f);
+      k.mode="base";k.attackCd=0;k.swordDashCd=0;k.flameCast=null;k.inhaleTime=0;k.inhaleCd=1.6;k.copyDamageStart=f.damageTaken||0;k.copyRecovered=false;k.copyDamageLimit=KIRBY.copyDamage;kirbyResetBody(f);
       if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-32,permanent?"카피 능력 영구 소실!":"카피 능력 이탈!",permanent?"#fca5a5":"#fde68a");spawnParticles(f.x,f.y,permanent?"#fb7185":"#fde68a",permanent?18:12);}
       return true;
     }
@@ -7820,21 +7821,28 @@
       source.kirbyFx={kind:"sword",t:.48,max:.48,x:source.x,y:source.y,angle:c.angle,range:c.radius,arc:Math.PI,enhanced:!source.kirbyNeutral};
       if(!fastSimMode){spawnParticles(source.x+Math.cos(c.angle)*c.radius*.72,source.y+Math.sin(c.angle)*c.radius*.72,source.kirbyNeutral?"#bbf7d0":"#f8fafc",source.kirbyNeutral?6:10);playSound("wind",source.kirbyNeutral?.7:.9);}return hits>0;
     }
-    function updateKirbySwordDash(source,dt){
-      const c=source?.kirbySwordDash;if(!c)return false;c.time+=dt;const p=clamp(c.time/c.duration,0,1),ease=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;source.x=c.startX+(c.endX-c.startX)*ease;source.y=c.startY+(c.endY-c.startY)*ease;source.vx=0;source.vy=0;if(source.kirbyNeutral)source.kirbyNeutral.facing=c.angle;
-      if(!fastSimMode&&Math.random()<dt*42)spawnParticles(source.x-Math.cos(c.angle)*source.r*.7,source.y-Math.sin(c.angle)*source.r*.7,source.kirbyNeutral?"#86efac":"#dcfce7",2);
-      if(p>=1){source.kirbySwordDash=null;kirbyResolveSlash(source,c);source.vx=c.savedVx||0;source.vy=c.savedVy||0;}return true;
+    function kirbySlashArc(source,target,radius,_dashDistance,power,bleed=false,reason="소드 베기"){
+      if(!source?.alive||!target?.alive)return false;const a=Math.atan2(target.y-source.y,target.x-source.x);
+      return kirbyResolveSlash(source,{angle:a,radius,power,bleed,reason,targetId:target.id});
     }
-    function kirbySlashArc(source,target,radius,dashDistance,power,bleed=false,reason="소드 베기"){
-      if(!source?.alive||!target?.alive||source.kirbySwordDash)return false;
-      const a=Math.atan2(target.y-source.y,target.x-source.x),d=Math.hypot(target.x-source.x,target.y-source.y)||1,travel=Math.min(dashDistance,Math.max(0,d-(source.r+target.r+5))),endX=clamp(source.x+Math.cos(a)*travel,arena.x+source.r,arena.x2-source.r),endY=clamp(source.y+Math.sin(a)*travel,arena.y+source.r,arena.y2-source.r);
-      source.kirbySwordDash={time:0,duration:source.kirbyNeutral?.18:.16,startX:source.x,startY:source.y,endX,endY,angle:a,radius,power,bleed,reason,targetId:target.id,savedVx:source.vx,savedVy:source.vy};source.vx=0;source.vy=0;if(source.kirbyNeutral)source.kirbyNeutral.facing=a;if(!fastSimMode)playSound("wind",source.kirbyNeutral?.55:.7);return true;
+    function kirbyStartCopySwordDash(source,target){
+      if(!source?.alive||!target?.alive||source.kirbyCopyDash)return false;const a=Math.atan2(target.y-source.y,target.x-source.x),d=Math.hypot(target.x-source.x,target.y-source.y),travel=Math.min(80,Math.max(0,d-(source.r+target.r+12)));if(travel<12)return false;
+      source.kirbyCopyDash={time:0,duration:.18,startX:source.x,startY:source.y,endX:clamp(source.x+Math.cos(a)*travel,arena.x+source.r,arena.x2-source.r),endY:clamp(source.y+Math.sin(a)*travel,arena.y+source.r,arena.y2-source.r),angle:a,savedVx:source.vx,savedVy:source.vy};source.vx=0;source.vy=0;if(!fastSimMode)playSound("wind",.62);return true;
+    }
+    function updateKirbyCopySwordDash(source,dt){
+      const c=source?.kirbyCopyDash;if(!c)return false;c.time+=dt;const p=clamp(c.time/c.duration,0,1),ease=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;source.x=c.startX+(c.endX-c.startX)*ease;source.y=c.startY+(c.endY-c.startY)*ease;source.vx=0;source.vy=0;if(!fastSimMode&&Math.random()<dt*38)spawnParticles(source.x-Math.cos(c.angle)*source.r*.65,source.y-Math.sin(c.angle)*source.r*.65,"#86efac",2);if(p>=1){source.kirbyCopyDash=null;source.vx=c.savedVx||0;source.vy=c.savedVy||0;}return true;
+    }
+    function kirbyStartCastFreeze(source,duration){
+      if(!source?.alive)return false;if(!source.kirbyCastFreeze)source.kirbyCastFreeze={time:duration,savedVx:source.vx,savedVy:source.vy};else source.kirbyCastFreeze.time=Math.max(source.kirbyCastFreeze.time,duration);source.vx=0;source.vy=0;return true;
+    }
+    function updateKirbyCastFreeze(source,dt){
+      const c=source?.kirbyCastFreeze;if(!c)return false;source.vx=0;source.vy=0;c.time-=dt;if(c.time<=0){source.kirbyCastFreeze=null;const v=Math.hypot(c.savedVx||0,c.savedVy||0)>1?{vx:c.savedVx,vy:c.savedVy}:randomVelocity(source.baseSpeed||source.speed||2);source.vx=v.vx;source.vy=v.vy;return false;}return true;
     }
     function kirbyWhip(source,range,arc,power,slow=false,reason="빔 채찍",forcedTarget=null){
       const target=forcedTarget||(source.kirbyNeutral?kirbyNeutralTarget(source):kirbyAttackTarget(source));if(!target)return false;
       const a=Math.atan2(target.y-source.y,target.x-source.x),half=arc/2,hitIds=[];let hits=0;
       for(const e of kirbyAreaTargets(source)){const dx=e.x-source.x,dy=e.y-source.y,d=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-a),Math.cos(ea-a)));if(d>range+e.r||diff>half)continue;const dealt=damage(e,power,source,reason);if(dealt>0){hits++;hitIds.push(e.id);if(slow)applySlow(e,.72,1.65,"kirbyBeamSlow");if(!fastSimMode){spawnHitFlash(e.x,e.y,"#fde047",slow?68:50);spawnParticles(e.x,e.y,"#fff7ae",slow?12:7);}}}
-      source.kirbyFx={kind:"beam",t:.72,max:.72,x:source.x,y:source.y,angle:a,range,arc,enhanced:!source.kirbyNeutral,hitIds};if(!fastSimMode)playSound("magic",.92);return hits>0;
+      source.kirbyFx={kind:"beam",t:.72,max:.72,x:source.x,y:source.y,angle:a,range,arc,enhanced:!source.kirbyNeutral,hitIds};kirbyStartCastFreeze(source,.72);if(!fastSimMode)playSound("magic",.92);return hits>0;
     }
     function kirbyFlameCone(source,range,arc,power,burn=false,reason="파이어",fixedAngle=null){
       const target=source.kirbyNeutral?kirbyNeutralTarget(source):kirbyAttackTarget(source);if(!target&&fixedAngle==null)return false;
@@ -7851,7 +7859,7 @@
     }
     function kirbyThrowBomb(source,target,power,radius,reason,sticky=false){
       if(!source?.alive||!target?.alive)return false;const lead=source.kirbyNeutral?.42:.24,tx=target.x+(target.vx||0)*lead,ty=target.y+(target.vy||0)*lead,base=Math.atan2(ty-source.y,tx-source.x),d=Math.hypot(tx-source.x,ty-source.y),speed=clamp(d/.82,150,285);
-      kirbyBombs.push({source,sourceId:source.id,x:source.x,y:source.y,z:7,vx:Math.cos(base)*speed,vy:Math.sin(base)*speed,vz:175,gravity:390,bounces:1,r:sticky?8:7,power,radius,reason,sticky,attachedId:null,color:source.kirbyNeutral?"#8b5cf6":"#c4b5fd",life:2.8});if(!fastSimMode){spawnFloatingText(source.x,source.y-source.r-24,sticky?"점착 밤!":"밤!","#c4b5fd");playSound("magic",.56);}return true;
+      kirbyBombs.push({source,sourceId:source.id,x:source.x,y:source.y,z:7,vx:Math.cos(base)*speed,vy:Math.sin(base)*speed,vz:175,gravity:390,bounces:1,r:sticky?8:7,power,radius,reason,sticky,attachedId:null,color:source.kirbyNeutral?"#8b5cf6":"#c4b5fd",life:2.8});kirbyStartCastFreeze(source,.48);if(!fastSimMode){spawnFloatingText(source.x,source.y-source.r-24,sticky?"점착 밤!":"밤!","#c4b5fd");playSound("magic",.56);}return true;
     }
     function kirbyBombExplode(b){
       const source=b.source;if(!source)return;for(const e of fighters){if(!e.alive||e===source||e.kirbySwallowedBy)continue;if(source.kirbyNeutral){if(e.kirbyNeutral||e.isSummon)continue;}else if(!areEnemies(source,e))continue;if(Math.hypot(e.x-b.x,e.y-b.y)<=b.radius+e.r)damage(e,b.power,source,b.reason);}if(!fastSimMode){spawnBlast(b.x,b.y,b.radius,b.color);spawnParticles(b.x,b.y,b.color,20);playSound("explosion",.7);}
@@ -7868,23 +7876,23 @@
 
     function kirbyUseCopy(f){
       const k=f.kirby,target=kirbyAttackTarget(f);if(!target)return false;const d=dist(f,target);
-      if(k.mode==="sword"){if(d>188){k.attackCd=.18;return false;}kirbySlashArc(f,target,82,88,10,true,"커비 소드 반월베기");k.attackCd=1.55;return true;}
+      if(k.mode==="sword"){if(d>98){k.attackCd=.18;return false;}kirbySlashArc(f,target,82,0,10,true,"커비 소드 반월베기");k.attackCd=1.55;return true;}
       if(k.mode==="beam"){if(d>182){k.attackCd=.18;return false;}kirbyWhip(f,168,Math.PI*8/9,14,true,"커비 빔 채찍");k.attackCd=3.3;return true;}
       if(k.mode==="fire"){if(d>188){k.attackCd=.18;return false;}kirbyStartFlame(f,152,Math.PI*5/9,2,true,5,"커비 화염방사");k.attackCd=2.25;return true;}
       if(k.mode==="bomb"){kirbyThrowBomb(f,target,12,58,"커비 점착 밤",true);k.attackCd=3.15;return true;}
       return false;
     }
     function updateKirby(f,dt){
-      const k=f?.kirby;if(!k||!f.alive)return;if(f.kirbyFx){f.kirbyFx.t-=dt;if(f.kirbyFx.t<=0)f.kirbyFx=null;}if(updateKirbySwordDash(f,dt))return;
+      const k=f?.kirby;if(!k||!f.alive)return;if(f.kirbyFx){f.kirbyFx.t-=dt;if(f.kirbyFx.t<=0)f.kirbyFx=null;}if(updateKirbyCopySwordDash(f,dt))return;
       if(k.mode!=="base"&&(f.damageTaken||0)-(k.copyDamageStart||0)>=(k.copyDamageLimit||KIRBY.copyDamage)){kirbyDropCopy(f);return;}
-      if(updateKirbyFlame(f,dt))return;
+      if(updateKirbyFlame(f,dt))return;if(updateKirbyCastFreeze(f,dt))return;
       if(k.inhaleTime>0){if(kirbyBlocked(f)){kirbyStopInhale(f);}else{const mag=Math.hypot(f.vx||0,f.vy||0);if(mag>2)k.inhaleAngle=Math.atan2(f.vy,f.vx);k.inhaleTime=Math.max(0,k.inhaleTime-dt);f.r=(k.baseR||16)*KIRBY.inhaleGrow;if(k.inhaleTime<=0)kirbyStopInhale(f);}}else kirbyResetBody(f);
       if(k.mode==="base"){k.inhaleCd=Math.max(0,(k.inhaleCd||0)-dt);if(!k.swallowedId&&k.inhaleTime<=0&&k.inhaleCd<=0&&!kirbyBlocked(f))kirbyStartInhale(f);}
-      else{k.attackCd=Math.max(0,(k.attackCd||0)-dt);if(k.attackCd<=0&&!kirbyBlocked(f))kirbyUseCopy(f);}
+      else{if(k.mode==="sword"){k.swordDashCd=Math.max(0,(k.swordDashCd||0)-dt);if(k.swordDashCd<=0&&!kirbyBlocked(f)){const dashTarget=kirbyAttackTarget(f);if(dashTarget&&kirbyStartCopySwordDash(f,dashTarget)){k.swordDashCd=3.8;return;}k.swordDashCd=.55;}}k.attackCd=Math.max(0,(k.attackCd||0)-dt);if(k.attackCd<=0&&!kirbyBlocked(f))kirbyUseCopy(f);}
     }
     function kirbyNeutralData(type){
       return ({
-        sword:{name:"블레이드 나이트",mark:"⚔",color:"#4ade80",hp:30,speed:2.2,attackRange:92,targetCooldown:1.7},
+        sword:{name:"블레이드 나이트",mark:"⚔",color:"#4ade80",hp:30,speed:2.2,attackRange:50,targetCooldown:1.7},
         beam:{name:"웨이들 두",mark:"◎",color:"#facc15",hp:27,speed:1.9,attackRange:132,targetCooldown:1.85},
         fire:{name:"핫 헤드",mark:"♨",color:"#f97316",hp:31,speed:2.0,attackRange:116,targetCooldown:2.45},
         bomb:{name:"포피 브라더스 Jr.",mark:"●",color:"#8b5cf6",hp:32,speed:1.75,attackRange:220,targetCooldown:3.0}
@@ -7900,10 +7908,10 @@
       const n=f?.kirbyNeutral,data=kirbyNeutralData(n?.type);if(!n||!data)return null;if(!(n.targetCooldowns instanceof Map))n.targetCooldowns=new Map();return fighters.filter(e=>e.alive&&!e.isSummon&&!e.kirbySwallowedBy&&e!==f&&Math.hypot(e.x-f.x,e.y-f.y)<=data.attackRange+e.r&&(n.targetCooldowns.get(e.id)||0)<=0).sort((a,b)=>dist(f,a)-dist(f,b))[0]||null;
     }
     function updateKirbyNeutral(f,dt){
-      const n=f?.kirbyNeutral;if(!n||!f.alive)return;n.recoil=Math.max(0,(n.recoil||0)-dt);n.attackLock=Math.max(0,(n.attackLock||0)-dt);if(!(n.targetCooldowns instanceof Map))n.targetCooldowns=new Map();for(const [id,time] of [...n.targetCooldowns.entries()]){const left=time-dt;if(left<=0)n.targetCooldowns.delete(id);else n.targetCooldowns.set(id,left);}if(f.kirbyFx){f.kirbyFx.t-=dt;if(f.kirbyFx.t<=0)f.kirbyFx=null;}if(updateKirbySwordDash(f,dt))return;if(updateKirbyFlame(f,dt))return;if(isStunned(f)||(f.hardFreeze||0)>0){f.vx*=.90;f.vy*=.90;return;}if(n.recoil>0){n.facing=Math.atan2(f.vy||0,f.vx||1);return;}
+      const n=f?.kirbyNeutral;if(!n||!f.alive)return;n.recoil=Math.max(0,(n.recoil||0)-dt);n.attackLock=Math.max(0,(n.attackLock||0)-dt);if(!(n.targetCooldowns instanceof Map))n.targetCooldowns=new Map();for(const [id,time] of [...n.targetCooldowns.entries()]){const left=time-dt;if(left<=0)n.targetCooldowns.delete(id);else n.targetCooldowns.set(id,left);}if(f.kirbyFx){f.kirbyFx.t-=dt;if(f.kirbyFx.t<=0)f.kirbyFx=null;}if(updateKirbyFlame(f,dt))return;if(updateKirbyCastFreeze(f,dt))return;if(isStunned(f)||(f.hardFreeze||0)>0){f.vx*=.90;f.vy*=.90;return;}if(n.recoil>0){n.facing=Math.atan2(f.vy||0,f.vx||1);return;}
       const v=(f.baseSpeed||f.speed||2)*44,wallPad=f.r+2;let vx=f.vx||Math.cos(n.moveAngle||0)*v,vy=f.vy||Math.sin(n.moveAngle||0)*v;if(f.x<=arena.x+wallPad&&vx<0)vx=Math.abs(vx);else if(f.x>=arena.x2-wallPad&&vx>0)vx=-Math.abs(vx);if(f.y<=arena.y+wallPad&&vy<0)vy=Math.abs(vy);else if(f.y>=arena.y2-wallPad&&vy>0)vy=-Math.abs(vy);const mag=Math.hypot(vx,vy)||1;f.vx=vx/mag*v;f.vy=vy/mag*v;n.moveAngle=Math.atan2(f.vy,f.vx);n.facing=n.moveAngle;
       if(n.attackLock>0)return;const target=kirbyNeutralReadyTarget(f);if(!target)return;const data=kirbyNeutralData(n.type);let used=false;
-      if(n.type==="sword")used=kirbySlashArc(f,target,50,54,5,false,"블레이드 나이트 반월베기");
+      if(n.type==="sword")used=kirbySlashArc(f,target,50,0,5,false,"블레이드 나이트 반월베기");
       else if(n.type==="beam")used=kirbyWhip(f,108,Math.PI*8/9,5,false,"웨이들 두 빔 채찍",target);
       else if(n.type==="fire")used=kirbyStartFlame(f,90,Math.PI*5/9,1,false,5,"핫 헤드 화염방사",target);
       else if(n.type==="bomb")used=kirbyThrowBomb(f,target,8,48,"포피 브라더스 Jr. 밤",false);
