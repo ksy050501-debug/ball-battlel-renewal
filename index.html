@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v211</title>
+  <title>볼배틀 리뉴얼 v212</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v211</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v212</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -6081,6 +6081,7 @@
     }
 
       const patchNotes = [
+      "v212: 블레이드 나이트와 소드 커비가 베기 때 좌표를 한 프레임에 이동해 버벅이던 원인을 수정. 실제 위치를 0.18/0.16초 동안 부드럽게 이동한 뒤 180도 반월베기가 이어진다. 빔 채찍은 전방으로 곧게 펼쳐지는 별 사슬·선명한 타격 섬광으로 재작화하고 둔화 지속 중 황금 구속 고리·회전 별 효과를 추가. 커비 빔 채찍은 피해7/1.65초에서 피해14/3.3초로 변경해 DPS는 유지하면서 한 번의 타격감을 강화. 파이어는 직선 광선 묶음 대신 부채꼴 화염 혀와 불씨 연출로 변경. 중립 몬스터는 임의 방향전환을 제거하고 벽에 닿을 때만 반사하며, 소드150·빔132·파이어116·밤220의 개별 감지 범위와 상대별 공격 쿨타임을 적용해 한 상대를 공격한 직후 새로 범위에 들어온 다른 상대를 즉시 공격할 수 있도록 변경.",
       "v211: 커비 카피 내구도를 최초 피해45·별 재획득 피해30으로 상향. 소드 전용 반월 검격과 동시에 출력되던 공용 직선 베기 이펙트를 제거해 빔처럼 보이던 문제를 수정하고, 공격 지점에 고정된 다층 초승달 검광·잔광·칼끝 불꽃으로 블레이드 나이트와 소드 커비의 180도 베기를 재작화.",
       "v210: 커비 카피 내구도를 피격 횟수에서 누적 체력 피해로 변경. 최초 카피는 36 피해, 별 재획득 카피는 20 피해에서 영구 소실된다. 흡입은 약하게 시작해 유지할수록 급격히 강해지며 카피별 회수력도 함께 증가. 초반 흡입력 자체도 상향.",
       "v209: 커비 카피 시스템 전면 개편. 블레이드 나이트 돌진 180도 베기, 웨이들 두 160도 빔 채찍, 핫 헤드 정지 다단 화염방사, 포피 브라더스 Jr. 예측 폭탄을 적용. 커비 강화 카피에 출혈·둔화·화상·점착 폭탄을 추가하고, 5회 피격 시 별 이탈→5초 회수→재획득 후 3회 피격 시 영구 소실 구조 및 흡입 별 회수를 구현. 몬스터 4종·기본 커비·카피 커비 외형과 공격 이펙트를 전면 재작화.",
@@ -7810,22 +7811,27 @@
       if(source?.kirbyNeutral)return fighters.filter(e=>kirbyValidNeutralVictim(source,e));
       return enemiesOf(source).filter(e=>e.alive&&!e.kirbySwallowedBy);
     }
-    function kirbySlashArc(source,target,radius,dashDistance,power,bleed=false,reason="소드 베기"){
-      if(!source?.alive||!target?.alive)return false;
-      const a=Math.atan2(target.y-source.y,target.x-source.x),beforeX=source.x,beforeY=source.y,d=Math.hypot(target.x-source.x,target.y-source.y)||1;
-      const travel=Math.min(dashDistance,Math.max(0,d-(source.r+target.r+5)));
-      if(travel>0){source.x=clamp(source.x+Math.cos(a)*travel,arena.x+source.r,arena.x2-source.r);source.y=clamp(source.y+Math.sin(a)*travel,arena.y+source.r,arena.y2-source.r);if(!fastSimMode){for(let i=0;i<5;i++)spawnParticles(beforeX+(source.x-beforeX)*i/4,beforeY+(source.y-beforeY)*i/4,"#dcfce7",2);}}
-      if(source.kirbyNeutral)source.kirbyNeutral.facing=a;
+    function kirbyResolveSlash(source,c){
       let hits=0;
-      for(const e of kirbyAreaTargets(source)){const dx=e.x-source.x,dy=e.y-source.y,ed=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-a),Math.cos(ea-a)));if(ed>radius+e.r||diff>Math.PI/2)continue;const dealt=damage(e,power,source,reason);if(dealt>0){hits++;if(bleed)applyBleed(e,source,1,2.05,.5,4);if(!fastSimMode)spawnHitFlash(e.x,e.y,"#86efac",source.kirbyNeutral?38:52);}}
-      source.kirbyFx={kind:"sword",t:.48,max:.48,x:source.x,y:source.y,angle:a,range:radius,arc:Math.PI,enhanced:!source.kirbyNeutral};
-      if(!fastSimMode){spawnParticles(source.x+Math.cos(a)*radius*.72,source.y+Math.sin(a)*radius*.72,source.kirbyNeutral?"#bbf7d0":"#f8fafc",source.kirbyNeutral?6:10);playSound("wind",source.kirbyNeutral?.7:.9);}return hits>0;
+      for(const e of kirbyAreaTargets(source)){const dx=e.x-source.x,dy=e.y-source.y,ed=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-c.angle),Math.cos(ea-c.angle)));if(ed>c.radius+e.r||diff>Math.PI/2)continue;const dealt=damage(e,c.power,source,c.reason);if(dealt>0){hits++;if(c.bleed)applyBleed(e,source,1,2.05,.5,4);if(!fastSimMode)spawnHitFlash(e.x,e.y,"#86efac",source.kirbyNeutral?38:52);}}
+      source.kirbyFx={kind:"sword",t:.48,max:.48,x:source.x,y:source.y,angle:c.angle,range:c.radius,arc:Math.PI,enhanced:!source.kirbyNeutral};
+      if(!fastSimMode){spawnParticles(source.x+Math.cos(c.angle)*c.radius*.72,source.y+Math.sin(c.angle)*c.radius*.72,source.kirbyNeutral?"#bbf7d0":"#f8fafc",source.kirbyNeutral?6:10);playSound("wind",source.kirbyNeutral?.7:.9);}return hits>0;
     }
-    function kirbyWhip(source,range,arc,power,slow=false,reason="빔 채찍"){
-      const target=source.kirbyNeutral?kirbyNeutralTarget(source):kirbyAttackTarget(source);if(!target)return false;
-      const a=Math.atan2(target.y-source.y,target.x-source.x),half=arc/2;let hits=0;
-      for(const e of kirbyAreaTargets(source)){const dx=e.x-source.x,dy=e.y-source.y,d=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-a),Math.cos(ea-a)));if(d>range+e.r||diff>half)continue;const dealt=damage(e,power,source,reason);if(dealt>0){hits++;if(slow)applySlow(e,.72,.85,"kirbyBeamSlow");if(!fastSimMode)spawnHitFlash(e.x,e.y,"#fde047",slow?48:38);}}
-      source.kirbyFx={kind:"beam",t:.62,max:.62,angle:a,range,arc,enhanced:!source.kirbyNeutral};if(!fastSimMode)playSound("magic",.78);return hits>0;
+    function updateKirbySwordDash(source,dt){
+      const c=source?.kirbySwordDash;if(!c)return false;c.time+=dt;const p=clamp(c.time/c.duration,0,1),ease=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;source.x=c.startX+(c.endX-c.startX)*ease;source.y=c.startY+(c.endY-c.startY)*ease;source.vx=0;source.vy=0;if(source.kirbyNeutral)source.kirbyNeutral.facing=c.angle;
+      if(!fastSimMode&&Math.random()<dt*42)spawnParticles(source.x-Math.cos(c.angle)*source.r*.7,source.y-Math.sin(c.angle)*source.r*.7,source.kirbyNeutral?"#86efac":"#dcfce7",2);
+      if(p>=1){source.kirbySwordDash=null;kirbyResolveSlash(source,c);source.vx=c.savedVx||0;source.vy=c.savedVy||0;}return true;
+    }
+    function kirbySlashArc(source,target,radius,dashDistance,power,bleed=false,reason="소드 베기"){
+      if(!source?.alive||!target?.alive||source.kirbySwordDash)return false;
+      const a=Math.atan2(target.y-source.y,target.x-source.x),d=Math.hypot(target.x-source.x,target.y-source.y)||1,travel=Math.min(dashDistance,Math.max(0,d-(source.r+target.r+5))),endX=clamp(source.x+Math.cos(a)*travel,arena.x+source.r,arena.x2-source.r),endY=clamp(source.y+Math.sin(a)*travel,arena.y+source.r,arena.y2-source.r);
+      source.kirbySwordDash={time:0,duration:source.kirbyNeutral?.18:.16,startX:source.x,startY:source.y,endX,endY,angle:a,radius,power,bleed,reason,savedVx:source.vx,savedVy:source.vy};source.vx=0;source.vy=0;if(source.kirbyNeutral)source.kirbyNeutral.facing=a;if(!fastSimMode)playSound("wind",source.kirbyNeutral?.55:.7);return true;
+    }
+    function kirbyWhip(source,range,arc,power,slow=false,reason="빔 채찍",forcedTarget=null){
+      const target=forcedTarget||(source.kirbyNeutral?kirbyNeutralTarget(source):kirbyAttackTarget(source));if(!target)return false;
+      const a=Math.atan2(target.y-source.y,target.x-source.x),half=arc/2,hitIds=[];let hits=0;
+      for(const e of kirbyAreaTargets(source)){const dx=e.x-source.x,dy=e.y-source.y,d=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-a),Math.cos(ea-a)));if(d>range+e.r||diff>half)continue;const dealt=damage(e,power,source,reason);if(dealt>0){hits++;hitIds.push(e.id);if(slow)applySlow(e,.72,.85,"kirbyBeamSlow");if(!fastSimMode){spawnHitFlash(e.x,e.y,"#fde047",slow?68:50);spawnParticles(e.x,e.y,"#fff7ae",slow?12:7);}}}
+      source.kirbyFx={kind:"beam",t:.72,max:.72,x:source.x,y:source.y,angle:a,range,arc,enhanced:!source.kirbyNeutral,hitIds};if(!fastSimMode)playSound("magic",.92);return hits>0;
     }
     function kirbyFlameCone(source,range,arc,power,burn=false,reason="파이어",fixedAngle=null){
       const target=source.kirbyNeutral?kirbyNeutralTarget(source):kirbyAttackTarget(source);if(!target&&fixedAngle==null)return false;
@@ -7833,8 +7839,8 @@
       for(const e of kirbyAreaTargets(source)){const dx=e.x-source.x,dy=e.y-source.y,d=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-a),Math.cos(ea-a)));if(d>range+e.r||diff>half)continue;const dealt=damage(e,power,source,reason);if(dealt>0){hits++;if(burn)applyBurn(e,source,1,1.8,.6,3,"kirbyFire");if(!fastSimMode)spawnHitFlash(e.x,e.y,burn?"#fb923c":"#fdba74",34);}}
       source.kirbyFx={kind:"fire",t:.25,max:.25,angle:a,range,arc,enhanced:!source.kirbyNeutral};if(!fastSimMode)playSound("fireball",.38);return hits>0;
     }
-    function kirbyStartFlame(source,range,arc,power,burn,hits,reason){
-      const target=source.kirbyNeutral?kirbyNeutralTarget(source):kirbyAttackTarget(source);if(!target)return false;const a=Math.atan2(target.y-source.y,target.x-source.x);
+    function kirbyStartFlame(source,range,arc,power,burn,hits,reason,forcedTarget=null){
+      const target=forcedTarget||(source.kirbyNeutral?kirbyNeutralTarget(source):kirbyAttackTarget(source));if(!target)return false;const a=Math.atan2(target.y-source.y,target.x-source.x);
       source.kirbyFlame={time:1.02,tick:0,interval:.18,hitsLeft:hits,angle:a,range,arc,power,burn,reason,savedVx:source.vx,savedVy:source.vy};source.vx=0;source.vy=0;if(source.kirbyNeutral)source.kirbyNeutral.facing=a;if(!fastSimMode)spawnFloatingText(source.x,source.y-source.r-24,"화염방사!",burn?"#fb923c":"#fdba74");return true;
     }
     function updateKirbyFlame(source,dt){
@@ -7860,13 +7866,13 @@
     function kirbyUseCopy(f){
       const k=f.kirby,target=kirbyAttackTarget(f);if(!target)return false;const d=dist(f,target);
       if(k.mode==="sword"){if(d>188){k.attackCd=.18;return false;}kirbySlashArc(f,target,82,88,10,true,"커비 소드 반월베기");k.attackCd=1.55;return true;}
-      if(k.mode==="beam"){if(d>182){k.attackCd=.18;return false;}kirbyWhip(f,168,Math.PI*8/9,7,true,"커비 빔 채찍");k.attackCd=1.65;return true;}
+      if(k.mode==="beam"){if(d>182){k.attackCd=.18;return false;}kirbyWhip(f,168,Math.PI*8/9,14,true,"커비 빔 채찍");k.attackCd=3.3;return true;}
       if(k.mode==="fire"){if(d>188){k.attackCd=.18;return false;}kirbyStartFlame(f,152,Math.PI*5/9,2,true,5,"커비 화염방사");k.attackCd=2.25;return true;}
       if(k.mode==="bomb"){kirbyThrowBomb(f,target,12,58,"커비 점착 밤",true);k.attackCd=3.15;return true;}
       return false;
     }
     function updateKirby(f,dt){
-      const k=f?.kirby;if(!k||!f.alive)return;if(f.kirbyFx){f.kirbyFx.t-=dt;if(f.kirbyFx.t<=0)f.kirbyFx=null;}
+      const k=f?.kirby;if(!k||!f.alive)return;if(f.kirbyFx){f.kirbyFx.t-=dt;if(f.kirbyFx.t<=0)f.kirbyFx=null;}if(updateKirbySwordDash(f,dt))return;
       if(k.mode!=="base"&&(f.damageTaken||0)-(k.copyDamageStart||0)>=(k.copyDamageLimit||KIRBY.copyDamage)){kirbyDropCopy(f);return;}
       if(updateKirbyFlame(f,dt))return;
       if(k.inhaleTime>0){if(kirbyBlocked(f)){kirbyStopInhale(f);}else{const mag=Math.hypot(f.vx||0,f.vy||0);if(mag>2)k.inhaleAngle=Math.atan2(f.vy,f.vx);k.inhaleTime=Math.max(0,k.inhaleTime-dt);f.r=(k.baseR||16)*KIRBY.inhaleGrow;if(k.inhaleTime<=0)kirbyStopInhale(f);}}else kirbyResetBody(f);
@@ -7875,26 +7881,30 @@
     }
     function kirbyNeutralData(type){
       return ({
-        sword:{name:"블레이드 나이트",mark:"⚔",color:"#4ade80",hp:30,speed:2.2},
-        beam:{name:"웨이들 두",mark:"◎",color:"#facc15",hp:27,speed:1.9},
-        fire:{name:"핫 헤드",mark:"♨",color:"#f97316",hp:31,speed:2.0},
-        bomb:{name:"포피 브라더스 Jr.",mark:"●",color:"#8b5cf6",hp:32,speed:1.75}
+        sword:{name:"블레이드 나이트",mark:"⚔",color:"#4ade80",hp:30,speed:2.2,attackRange:150,targetCooldown:1.7},
+        beam:{name:"웨이들 두",mark:"◎",color:"#facc15",hp:27,speed:1.9,attackRange:132,targetCooldown:1.85},
+        fire:{name:"핫 헤드",mark:"♨",color:"#f97316",hp:31,speed:2.0,attackRange:116,targetCooldown:2.45},
+        bomb:{name:"포피 브라더스 Jr.",mark:"●",color:"#8b5cf6",hp:32,speed:1.75,attackRange:220,targetCooldown:3.0}
       })[type];
     }
     function spawnKirbyNeutral(){
       const types=Object.keys(KIRBY_COPY),active=fighters.filter(e=>e.alive&&e.kirbyNeutral).map(e=>e.kirbyNeutral.type),held=fighters.filter(e=>e.alive&&!e.isSummon&&e.kirby&&e.kirby.mode!=="base").map(e=>e.kirby.mode);let pool=types.filter(t=>!active.includes(t)&&!held.includes(t));if(!pool.length)pool=types.filter(t=>!active.includes(t));if(!pool.length)pool=types;
       const type=pick(pool),d=kirbyNeutralData(type),r=14;let x=rand(arena.x+r+18,arena.x2-r-18),y=rand(arena.y+r+18,arena.y2-r-18);for(let tries=0;tries<10&&fighters.some(f=>f.alive&&!f.isSummon&&Math.hypot(f.x-x,f.y-y)<90);tries++){x=rand(arena.x+r+18,arena.x2-r-18);y=rand(arena.y+r+18,arena.y2-r-18);}
-      const spec={id:"kirby_neutral_"+type,name:d.name,mark:d.mark,role:"중립",color:d.color,hp:d.hp,attack:0,speed:d.speed,range:0,skillName:d.name,condition:""};const m=makeFighter(spec,{x,y},fighterSerial++,null,null);m.isSummon=true;m.ownerId=null;m.summonLife=9999;m.r=r;m.kirbyNeutral={type,attackCd:rand(.4,1.0),recoil:0,wanderAngle:rand(0,Math.PI*2),wanderTime:rand(1.2,3.0),facing:0};m.kirbyNeutral.facing=m.kirbyNeutral.wanderAngle;fighters.push(m);if(!fastSimMode){spawnBlast(x,y,34,d.color);spawnFloatingText(x,y-r-20,d.name,d.color);}return m;
+      const spec={id:"kirby_neutral_"+type,name:d.name,mark:d.mark,role:"중립",color:d.color,hp:d.hp,attack:0,speed:d.speed,range:0,skillName:d.name,condition:""};const m=makeFighter(spec,{x,y},fighterSerial++,null,null);m.isSummon=true;m.ownerId=null;m.summonLife=9999;m.r=r;const moveAngle=rand(0,Math.PI*2),moveSpeed=(m.baseSpeed||m.speed||2)*44;m.kirbyNeutral={type,recoil:0,moveAngle,facing:moveAngle,targetCooldowns:new Map()};m.vx=Math.cos(moveAngle)*moveSpeed;m.vy=Math.sin(moveAngle)*moveSpeed;fighters.push(m);if(!fastSimMode){spawnBlast(x,y,34,d.color);spawnFloatingText(x,y-r-20,d.name,d.color);}return m;
     }
     function kirbyNeutralTarget(f){return fighters.filter(e=>e.alive&&!e.isSummon&&!e.kirbySwallowedBy&&e!==f).sort((a,b)=>dist(f,a)-dist(f,b))[0]||null;}
+    function kirbyNeutralReadyTarget(f){
+      const n=f?.kirbyNeutral,data=kirbyNeutralData(n?.type);if(!n||!data)return null;if(!(n.targetCooldowns instanceof Map))n.targetCooldowns=new Map();return fighters.filter(e=>e.alive&&!e.isSummon&&!e.kirbySwallowedBy&&e!==f&&Math.hypot(e.x-f.x,e.y-f.y)<=data.attackRange+e.r&&(n.targetCooldowns.get(e.id)||0)<=0).sort((a,b)=>dist(f,a)-dist(f,b))[0]||null;
+    }
     function updateKirbyNeutral(f,dt){
-      const n=f?.kirbyNeutral;if(!n||!f.alive)return;n.attackCd=Math.max(0,(n.attackCd||0)-dt);n.recoil=Math.max(0,(n.recoil||0)-dt);n.wanderTime=(n.wanderTime||0)-dt;if(f.kirbyFx){f.kirbyFx.t-=dt;if(f.kirbyFx.t<=0)f.kirbyFx=null;}if(updateKirbyFlame(f,dt))return;if(isStunned(f)||(f.hardFreeze||0)>0){f.vx*=.90;f.vy*=.90;return;}if(n.recoil>0){n.facing=Math.atan2(f.vy||0,f.vx||1);return;}
-      const wallPad=f.r+5;if(f.x<=arena.x+wallPad||f.x>=arena.x2-wallPad||f.y<=arena.y+wallPad||f.y>=arena.y2-wallPad){const cx=(arena.x+arena.x2)/2-f.x,cy=(arena.y+arena.y2)/2-f.y;n.wanderAngle=Math.atan2(cy,cx)+rand(-.75,.75);n.wanderTime=rand(.8,2.2);}else if(n.wanderTime<=0){n.wanderAngle+=rand(-1,1)*Math.PI*.85;n.wanderTime=rand(1.2,3.0);}
-      const v=(f.baseSpeed||f.speed||2)*44;f.vx=Math.cos(n.wanderAngle)*v;f.vy=Math.sin(n.wanderAngle)*v;n.facing=n.wanderAngle;if(n.attackCd>0)return;const target=kirbyNeutralTarget(f);if(!target)return;const d=Math.hypot(target.x-f.x,target.y-f.y);
-      if(n.type==="sword"){if(d<=150){kirbySlashArc(f,target,50,54,5,false,"블레이드 나이트 반월베기");n.attackCd=1.7;}}
-      else if(n.type==="beam"){if(d<=132){kirbyWhip(f,108,Math.PI*8/9,5,false,"웨이들 두 빔 채찍");n.attackCd=1.85;}}
-      else if(n.type==="fire"){if(d<=116){kirbyStartFlame(f,90,Math.PI*5/9,1,false,5,"핫 헤드 화염방사");n.attackCd=2.45;}}
-      else if(n.type==="bomb"){if(d<=220){kirbyThrowBomb(f,target,8,48,"포피 브라더스 Jr. 밤",false);n.attackCd=3.0;}}
+      const n=f?.kirbyNeutral;if(!n||!f.alive)return;n.recoil=Math.max(0,(n.recoil||0)-dt);if(!(n.targetCooldowns instanceof Map))n.targetCooldowns=new Map();for(const [id,time] of [...n.targetCooldowns.entries()]){const left=time-dt;if(left<=0)n.targetCooldowns.delete(id);else n.targetCooldowns.set(id,left);}if(f.kirbyFx){f.kirbyFx.t-=dt;if(f.kirbyFx.t<=0)f.kirbyFx=null;}if(updateKirbySwordDash(f,dt))return;if(updateKirbyFlame(f,dt))return;if(isStunned(f)||(f.hardFreeze||0)>0){f.vx*=.90;f.vy*=.90;return;}if(n.recoil>0){n.facing=Math.atan2(f.vy||0,f.vx||1);return;}
+      const v=(f.baseSpeed||f.speed||2)*44,wallPad=f.r+2;let vx=f.vx||Math.cos(n.moveAngle||0)*v,vy=f.vy||Math.sin(n.moveAngle||0)*v;if(f.x<=arena.x+wallPad&&vx<0)vx=Math.abs(vx);else if(f.x>=arena.x2-wallPad&&vx>0)vx=-Math.abs(vx);if(f.y<=arena.y+wallPad&&vy<0)vy=Math.abs(vy);else if(f.y>=arena.y2-wallPad&&vy>0)vy=-Math.abs(vy);const mag=Math.hypot(vx,vy)||1;f.vx=vx/mag*v;f.vy=vy/mag*v;n.moveAngle=Math.atan2(f.vy,f.vx);n.facing=n.moveAngle;
+      const target=kirbyNeutralReadyTarget(f);if(!target)return;const data=kirbyNeutralData(n.type);let used=false;
+      if(n.type==="sword")used=kirbySlashArc(f,target,50,54,5,false,"블레이드 나이트 반월베기");
+      else if(n.type==="beam")used=kirbyWhip(f,108,Math.PI*8/9,5,false,"웨이들 두 빔 채찍",target);
+      else if(n.type==="fire")used=kirbyStartFlame(f,90,Math.PI*5/9,1,false,5,"핫 헤드 화염방사",target);
+      else if(n.type==="bomb")used=kirbyThrowBomb(f,target,8,48,"포피 브라더스 Jr. 밤",false);
+      if(used)n.targetCooldowns.set(target.id,data.targetCooldown);
     }
     function kirbySwallowEnemy(f,target){
       const k=f?.kirby;if(!k||k.swallowedId||!target?.alive||target.isSummon||!areEnemies(f,target))return false;
@@ -7940,9 +7950,10 @@
             const trails=fx.enhanced?3:2;for(let i=0;i<trails;i++){const rr=r-3-i*(fx.enhanced?7:6),lag=.08+i*.075,trailEnd=Math.max(start,end-lag),trailStart=Math.max(start,trailEnd-(fx.enhanced ? .82 : .62));ctx.globalAlpha=(.72-i*.18)*fade;ctx.strokeStyle=i===0?"#f0fdf4":i===1?"#86efac":"#22c55e";ctx.lineWidth=(fx.enhanced?6:4)-i;ctx.beginPath();ctx.arc(cx,cy,rr,trailStart,trailEnd);ctx.stroke();}
             const tipX=cx+Math.cos(end)*r,tipY=cy+Math.sin(end)*r,nx=-Math.sin(end),ny=Math.cos(end);ctx.globalAlpha=.95*fade;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.moveTo(tipX+Math.cos(end)*9,tipY+Math.sin(end)*9);ctx.lineTo(tipX+nx*(fx.enhanced?8:5),tipY+ny*(fx.enhanced?8:5));ctx.lineTo(tipX-nx*(fx.enhanced?8:5),tipY-ny*(fx.enhanced?8:5));ctx.closePath();ctx.fill();for(let i=0;i<(fx.enhanced?6:3);i++){const sa=end+(i-(fx.enhanced?2.5:1))*0.13,len=8+(i%3)*5;ctx.strokeStyle=i%2?"#dcfce7":"#f0fdf4";ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(tipX+Math.cos(sa)*4,tipY+Math.sin(sa)*4);ctx.lineTo(tipX+Math.cos(sa)*len,tipY+Math.sin(sa)*len);ctx.stroke();}}
         }else if(fx.kind==="beam"){
-          const sweep=-(fx.arc||Math.PI*8/9)/2+q*(fx.arc||Math.PI*8/9),a=fx.angle+sweep,range=fx.range,startX=f.x+Math.cos(a)*f.r*.55,startY=f.y+Math.sin(a)*f.r*.55,endX=f.x+Math.cos(a)*range,endY=f.y+Math.sin(a)*range,side=fx.enhanced?34:22,nx=-Math.sin(a),ny=Math.cos(a),cx=(startX+endX)/2+nx*Math.sin(q*Math.PI)*side,cy=(startY+endY)/2+ny*Math.sin(q*Math.PI)*side;ctx.globalAlpha=.92;ctx.strokeStyle=fx.enhanced?"#fff7ae":"#fef08a";ctx.shadowColor="#fde047";ctx.shadowBlur=fx.enhanced?26:18;ctx.lineWidth=fx.enhanced?7:4;ctx.beginPath();ctx.moveTo(startX,startY);ctx.quadraticCurveTo(cx,cy,endX,endY);ctx.stroke();for(let i=1;i<=11;i++){const t=i/11,u=1-t,x=u*u*startX+2*u*t*cx+t*t*endX,y=u*u*startY+2*u*t*cy+t*t*endY;drawKirbyStar(x,y,fx.enhanced?5.5:4.1,i%2?"#fde047":"#fff7ae",battleTime*5+i*.45);}
+          const a=fx.angle,range=fx.range,unfurl=1-Math.pow(1-clamp(q*1.65,0,1),3),length=range*(.18+.82*unfurl),ox=fx.x??f.x,oy=fx.y??f.y,startX=ox+Math.cos(a)*f.r*.5,startY=oy+Math.sin(a)*f.r*.5,endX=ox+Math.cos(a)*length,endY=oy+Math.sin(a)*length,nx=-Math.sin(a),ny=Math.cos(a),bend=Math.sin(q*Math.PI)*8,cx=(startX+endX)/2+nx*bend,cy=(startY+endY)/2+ny*bend,fade=clamp((1-q)*1.7,0,1);ctx.globalCompositeOperation="lighter";ctx.shadowColor="#fde047";ctx.shadowBlur=fx.enhanced?30:20;for(let band=-1;band<=1;band++){ctx.globalAlpha=(band===0?.95:.42)*fade;ctx.strokeStyle=band===0?"#fffce1":"#facc15";ctx.lineWidth=(fx.enhanced?6:4)-(Math.abs(band)*1.5);ctx.beginPath();ctx.moveTo(startX+nx*band*4,startY+ny*band*4);ctx.quadraticCurveTo(cx+nx*band*3,cy+ny*band*3,endX+nx*band*2,endY+ny*band*2);ctx.stroke();}for(let i=1;i<=9;i++){const t=i/9,u=1-t,x=u*u*startX+2*u*t*cx+t*t*endX,y=u*u*startY+2*u*t*cy+t*t*endY;ctx.globalAlpha=(.55+.35*(i/9))*fade;drawKirbyStar(x,y,fx.enhanced?5.2:3.8,i%2?"#fde047":"#fff7ae",a+battleTime*3+i*.5);}ctx.globalAlpha=fade;drawKirbyStar(endX,endY,fx.enhanced?10:7,"#ffffff",a+battleTime*7);
+          for(const id of fx.hitIds||[]){const hit=fighterById(id);if(!hit?.alive)continue;const pulse=.5+.5*Math.sin(battleTime*20+id);ctx.globalAlpha=(.35+.45*pulse)*fade;ctx.strokeStyle="#fff7ae";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(hit.x,hit.y,hit.r+7+pulse*5,0,Math.PI*2);ctx.stroke();}
         }else if(fx.kind==="fire"){
-          const half=fx.arc/2;ctx.globalCompositeOperation="lighter";for(let i=0;i<15;i++){const t=(i+.5)/15,aa=fx.angle-half+fx.arc*t+Math.sin(battleTime*12+i)*.025,len=fx.range*(.48+.48*((i*37)%11)/10),wide=4+7*(i%4)/3;ctx.globalAlpha=.22+.50*(1-q);ctx.strokeStyle=i%3===0?"#fef08a":i%2?"#fb923c":"#ef4444";ctx.lineWidth=wide;ctx.beginPath();ctx.moveTo(f.x+Math.cos(aa)*(f.r*.55),f.y+Math.sin(aa)*(f.r*.55));ctx.quadraticCurveTo(f.x+Math.cos(aa)*len*.55-Math.sin(aa)*Math.sin(battleTime*14+i)*8,f.y+Math.sin(aa)*len*.55+Math.cos(aa)*Math.sin(battleTime*14+i)*8,f.x+Math.cos(aa)*len,f.y+Math.sin(aa)*len);ctx.stroke();}
+          const half=fx.arc/2,originX=f.x+Math.cos(fx.angle)*f.r*.45,originY=f.y+Math.sin(fx.angle)*f.r*.45;ctx.globalCompositeOperation="lighter";for(let i=0;i<13;i++){const t=(i+.5)/13,aa=fx.angle-half+fx.arc*t+Math.sin(battleTime*9+i)*.018,len=fx.range*(.44+.52*((i*37)%13)/12),w=(fx.enhanced?10:7)*(1-(Math.abs(t-.5)*.45)),nx=-Math.sin(aa),ny=Math.cos(aa),tipX=originX+Math.cos(aa)*len,tipY=originY+Math.sin(aa)*len,wave=Math.sin(battleTime*13+i*1.7)*5;ctx.globalAlpha=(.28+.48*(1-q))*(.7+.3*Math.sin(i));ctx.fillStyle=i%3===0?"#fef08a":i%2?"#fb923c":"#ef4444";ctx.beginPath();ctx.moveTo(originX+nx*w,originY+ny*w);ctx.quadraticCurveTo(originX+Math.cos(aa)*len*.55+nx*(w+wave),originY+Math.sin(aa)*len*.55+ny*(w+wave),tipX,tipY);ctx.quadraticCurveTo(originX+Math.cos(aa)*len*.48-nx*(w-wave),originY+Math.sin(aa)*len*.48-ny*(w-wave),originX-nx*w,originY-ny*w);ctx.closePath();ctx.fill();if(i%3===0){ctx.globalAlpha=.75*(1-q);ctx.fillStyle="#fff7ae";ctx.beginPath();ctx.arc(tipX+Math.sin(i)*4,tipY+Math.cos(i)*4,2.2,0,Math.PI*2);ctx.fill();}}
         }
         ctx.restore();
       }
@@ -14765,6 +14776,10 @@
       if(fastSimMode||f.portraitOnly||!f.alive)return;const meter=conanMeterForTarget(f);if(meter<=0)return;const p=clamp(meter/100,0,1),segments=Math.ceil(p*10),pulse=.5+.5*Math.sin(battleTime*(4+p*5)+f.id);ctx.save();ctx.translate(f.x,f.y);ctx.globalAlpha=.26+.36*p;ctx.strokeStyle=p>.78?'#ef4444':'#7f1d1d';ctx.shadowColor='#dc2626';ctx.shadowBlur=4+12*p;ctx.lineWidth=2.2;for(let i=0;i<segments;i++){const a=-Math.PI/2+i*Math.PI*2/10;ctx.beginPath();ctx.arc(0,0,f.r+8,a+.07,a+Math.PI*2/10-.07);ctx.stroke();}if(p>.55){ctx.globalAlpha=(p-.5)*(.65+.25*pulse);ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(0,-f.r-11,8+5*p,7+4*p,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(-7,-f.r-12);ctx.quadraticCurveTo(-4,-f.r-15,-1,-f.r-12);ctx.quadraticCurveTo(-4,-f.r-9,-7,-f.r-12);ctx.moveTo(1,-f.r-12);ctx.quadraticCurveTo(4,-f.r-15,7,-f.r-12);ctx.quadraticCurveTo(4,-f.r-9,1,-f.r-12);ctx.fill();}ctx.restore();
     }
 
+    function drawKirbyBeamSlow(f){
+      if(!(f?.kirbyBeamSlow>0)||fastSimMode||f.portraitOnly)return;const pulse=.5+.5*Math.sin(battleTime*12+f.id),r=f.r+7;ctx.save();ctx.translate(f.x,f.y);ctx.globalCompositeOperation="lighter";ctx.shadowColor="#fde047";ctx.shadowBlur=16;ctx.globalAlpha=.38+.30*pulse;ctx.strokeStyle="#facc15";ctx.lineWidth=2.4;for(let i=0;i<3;i++){const start=battleTime*(i%2?2.4:-2.1)+i*Math.PI*2/3;ctx.beginPath();ctx.arc(0,0,r+i*3,start,start+Math.PI*.62);ctx.stroke();}for(let i=0;i<5;i++){const a=-battleTime*3.2+i*Math.PI*2/5,rr=r+5+Math.sin(battleTime*10+i)*3;ctx.globalAlpha=.55+.35*pulse;drawKirbyStar(Math.cos(a)*rr,Math.sin(a)*rr,3.2,i%2?"#fff7ae":"#fde047",-a);}ctx.globalAlpha=.22+.20*pulse;ctx.fillStyle="#fef9c3";ctx.beginPath();ctx.ellipse(0,0,f.r+5,f.r*.72,0,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+
     function applyMarioSpriteSpin(f) {
       if((f.marioSpinFx||0)>0 && !fastSimMode && !f.portraitOnly)
         ctx.rotate((MARIO.shellSpin-f.marioSpinFx)*28);
@@ -14772,7 +14787,7 @@
     function drawFighter(f) {
       drawConcussionSlow(f);drawPowerFist(f);drawIronSuit(f);drawConanDeathMark(f);drawCoyoteStatusOverlay(f);
       // Spin local body images only; world effects and UI keep their original coordinates.
-      drawFighterBody(f);drawElsaColdOverlay(f);
+      drawFighterBody(f);drawElsaColdOverlay(f);drawKirbyBeamSlow(f);
     }
 
     function drawFighterBody(f) {
@@ -15732,6 +15747,57 @@
         const selectedBattleCount = pool.filter(c => selected.has(c.id)).length;
         if (selectedBattleCount === pool.length) selected.clear();
         else {
+          selected.clear();
+          pool.forEach(c => selected.add(c.id));
+        }
+      }
+      renderAll();
+    });
+    $("soloModeBtn").addEventListener("click", () => {
+      if (running) return;
+      battleMode = "solo";
+      teamState = null;
+      resetBattle();
+      renderAll();
+    });
+    $("teamModeBtn").addEventListener("click", () => {
+      if (running) return;
+      battleMode = "team";
+      teamState = null;
+      resetBattle();
+      renderAll();
+    });
+
+    $("damageModalClose").addEventListener("click", closeDamageInfo);
+    $("damageModal").addEventListener("click", e => {
+      if (e.target.id === "damageModal") closeDamageInfo();
+    });
+    $("analysisModalClose").addEventListener("click", closeBattleAnalysis);
+    $("analysisModal").addEventListener("click", e => {
+      if (e.target.id === "analysisModal") closeBattleAnalysis();
+    });
+    $("patchNoteBtn").addEventListener("click", openPatchNotes);
+    $("quickSimAll30Btn").addEventListener("click", runQuickSimAll30);
+    $("quickSim100Btn").addEventListener("click", runQuickSim100);
+    $("fullMatrix30Btn").addEventListener("click", () => runFullMatchupMatrix(30));
+    $("copyMatchupBtn").addEventListener("click", copyMatchupHistory);
+    $("resetMatchupBtn").addEventListener("click", resetMatchupHistory);
+    $("patchModalClose").addEventListener("click", closePatchNotes);
+    $("patchModal").addEventListener("click", e => {
+      if (e.target.id === "patchModal") closePatchNotes();
+    });
+
+    // 기본값은 전원 불참 상태로 시작한다.
+    setArenaSize(battleMode === "team" ? 2 : (selected.size || 6));
+
+    renderFilters();
+    renderAll();
+    updateMatchupButtons();
+    resetBattle();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
           selected.clear();
           pool.forEach(c => selected.add(c.id));
         }
