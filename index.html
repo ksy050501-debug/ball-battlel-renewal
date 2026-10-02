@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v206</title>
+  <title>볼배틀 리뉴얼 v207</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v205</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v207</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -6081,6 +6081,7 @@
     }
 
       const patchNotes = [
+      "v207: 커비 중립 몬스터가 최대 수로 존재하는 동안 재생성 타이머가 미리 0까지 소진되던 버그 수정. 몬스터가 제거된 시점부터 6.5초를 새로 계산한 뒤 빈자리를 보충하며, 중립 몬스터의 공격 대상 판정과 무작위 카피 구조는 유지.",
       "v206: 쟁반서 미약 버프. 펄스 피스톨 연타 횟수8→9(탄당 피해1 유지)로 상향. 사거리·사격 간격·점멸·되감기·점착 폭탄 수치는 유지.",
       "v205: 쟁반서 체력160→150, 펄스 피스톨의 탄당 피해1은 유지하되 다단히트 간격0.04→0.07초, 점착 폭탄 요구 스택100→140으로 너프. 사거리·연사 횟수·점멸 구조는 유지.",
       "v204: 쟁반서 3연속 점멸 도중 넉백을 받으면 기존 점멸 도착 좌표를 즉시 폐기. 넉백·밀려남·넘기기 종료 후 과거 목표 좌표로 순간이동하던 현상을 수정하고, 현재 밀려난 위치에서 사격 확인 또는 다음 점멸을 이어가도록 변경.",
@@ -7953,7 +7954,7 @@
       const kirbies=fighters.filter(f=>f.alive&&!f.isSummon&&f.kirby);
       if(!kirbies.length){kirbyCopyStars=[];kirbyBombs=[];fighters.filter(f=>f.alive&&f.kirbyNeutral).forEach(f=>f.alive=false);fighters.filter(f=>f.kirbySwallowedBy).forEach(f=>{f.kirbySwallowedBy="";});kirbyNeutralSpawnClock=KIRBY.neutralFirst;return;}
       updateKirbyBombs(dt);
-      kirbyNeutralSpawnClock=Math.max(0,kirbyNeutralSpawnClock-dt);const neutralCount=fighters.filter(f=>f.alive&&f.kirbyNeutral).length;if(neutralCount<KIRBY.neutralMax&&kirbyNeutralSpawnClock<=0){spawnKirbyNeutral();kirbyNeutralSpawnClock=KIRBY.neutralPeriod;}
+      const neutralCount=fighters.filter(f=>f.alive&&f.kirbyNeutral).length;if(neutralCount<KIRBY.neutralMax){kirbyNeutralSpawnClock=Math.max(0,kirbyNeutralSpawnClock-dt);if(kirbyNeutralSpawnClock<=0){spawnKirbyNeutral();kirbyNeutralSpawnClock=KIRBY.neutralPeriod;}}else kirbyNeutralSpawnClock=KIRBY.neutralPeriod;
       for(let i=kirbyCopyStars.length-1;i>=0;i--){const st=kirbyCopyStars[i];st.life-=dt;st.x+=st.vx*dt;st.y+=st.vy*dt;st.vx*=Math.pow(.93,dt*60);st.vy*=Math.pow(.93,dt*60);if(st.x-st.r<arena.x||st.x+st.r>arena.x2){st.x=clamp(st.x,arena.x+st.r,arena.x2-st.r);st.vx*=-.72;}if(st.y-st.r<arena.y||st.y+st.r>arena.y2){st.y=clamp(st.y,arena.y+st.r,arena.y2-st.r);st.vy*=-.72;}const owner=fighterById(st.ownerId);if(owner?.alive&&owner.kirby?.mode==="base"&&Math.hypot(owner.x-st.x,owner.y-st.y)<=owner.r+st.r){kirbyGainCopy(owner,st.type);kirbyCopyStars.splice(i,1);continue;}if(st.life<=0)kirbyCopyStars.splice(i,1);}
       kirbies.forEach(f=>{const k=f.kirby;if(k.swallowedId){const t=fighterById(k.swallowedId);if(!t?.alive){k.swallowedId="";k.swallowTime=0;}else{t.kirbySwallowedBy=f.id;t.x=f.x;t.y=f.y;t.vx=0;t.vy=0;k.swallowTime=Math.max(0,(k.swallowTime||0)-dt);if(k.swallowTime<=0)kirbyReleaseSwallowed(f,true);}}});
       kirbies.forEach(f=>{const k=f.kirby;if(k.mode!=="base"||k.inhaleTime<=0||k.swallowedId)return;const candidates=fighters.filter(e=>e.alive&&e.id!==f.id&&!e.kirbySwallowedBy&&(e.kirbyNeutral||(!e.isSummon&&areEnemies(f,e)))).filter(e=>kirbyConeContains(f,e)).sort((a,b)=>dist(f,a)-dist(f,b));for(const e of candidates){const dx=f.x-e.x,dy=f.y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,KIRBY.inhalePull*dt);e.x=clamp(e.x+dx/d*step,arena.x+e.r,arena.x2-e.r);e.y=clamp(e.y+dy/d*step,arena.y+e.r,arena.y2-e.r);e.vx=e.vx*.76+dx/d*KIRBY.inhaleVelocity;e.vy=e.vy*.76+dy/d*KIRBY.inhaleVelocity;if(Math.hypot(e.x-f.x,e.y-f.y)<=f.r+e.r+2){if(e.kirbyNeutral){const type=e.kirbyNeutral.type;e.alive=false;kirbyGainCopy(f,type);kirbyStopInhale(f);if(!fastSimMode)spawnParticles(e.x,e.y,KIRBY_COPY[type].color,12);}else kirbySwallowEnemy(f,e);break;}}});
