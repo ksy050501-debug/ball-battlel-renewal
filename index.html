@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v207</title>
+  <title>볼배틀 리뉴얼 v208</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v207</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v208</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -6081,6 +6081,7 @@
     }
 
       const patchNotes = [
+      "v208: 커비 중립 몬스터 체력바를 빨간색으로 고정. 중립 몬스터에게 준 피해는 캐릭터의 최종 피해 통계에서 제외하고, 중립 몬스터 사망 시 화면 정지·진동·폭발 연출을 제거.",
       "v207: 커비 중립 몬스터가 최대 수로 존재하는 동안 재생성 타이머가 미리 0까지 소진되던 버그 수정. 몬스터가 제거된 시점부터 6.5초를 새로 계산한 뒤 빈자리를 보충하며, 중립 몬스터의 공격 대상 판정과 무작위 카피 구조는 유지.",
       "v206: 쟁반서 미약 버프. 펄스 피스톨 연타 횟수8→9(탄당 피해1 유지)로 상향. 사거리·사격 간격·점멸·되감기·점착 폭탄 수치는 유지.",
       "v205: 쟁반서 체력160→150, 펄스 피스톨의 탄당 피해1은 유지하되 다단히트 간격0.04→0.07초, 점착 폭탄 요구 스택100→140으로 너프. 사거리·연사 횟수·점멸 구조는 유지.",
@@ -9962,6 +9963,7 @@
       if (target?.kirby) { kirbyReleaseSwallowed(target,false); kirbyCopyStars=kirbyCopyStars.filter(st=>st.ownerId!==target.id); }
       clearDefeatedFighterStatusStacks(target);
       clearDefeatedFighterArtifacts(target);
+      if(target?.kirbyNeutral)return;
       if(target.snapDustDeath){target.snapDustDeath=false;if(fastSimMode)return;cinematicFreeze=Math.max(cinematicFreeze,.28);deathEffects.push({x:target.x,y:target.y,r:target.r,color:target.color,mark:target.mark,name:target.name,life:3.6,maxLife:3.6,burst:false,dust:true});return;}
       if (fastSimMode) {
         spawnParticles(target.x, target.y, "#ffffff", 42);
@@ -10258,7 +10260,7 @@
       lisaOnDamage(target, actualDamage);
       if (actualDamage > 0 && target.baseId === "prism_iris" && reason !== "성유리영역") lightIrisGlassCell(target);
       
-      if (source && source.alive && source !== target) creditCombatDamage(source, actualDamage);
+      if (source && source.alive && source !== target && !target.kirbyNeutral) creditCombatDamage(source, actualDamage);
       if (actualDamage > 0 && source?.tracer && reason === "펄스 피스톨") gainTracerPulse(source, actualDamage);
       heroLeonOnDamaged(target, source, reason);
 
@@ -10363,7 +10365,7 @@
       lisaOnDamage(target, actualBodyDamage);
       if (actualBodyDamage > 0 && target.baseId === "prism_iris" && reason !== "성유리영역") lightIrisGlassCell(target);
       
-      if (source && source.alive && source !== target) creditCombatDamage(source, actualBodyDamage);
+      if (source && source.alive && source !== target && !target.kirbyNeutral) creditCombatDamage(source, actualBodyDamage);
       heroLeonOnDamaged(target, source, reason);
       target.hitsTaken += 1;
       target.hitsTakenSkill += 1;
@@ -15246,7 +15248,7 @@
       ctx.fillStyle = "rgba(0,0,0,.58)";
       roundRect(ctx, x, y, w, h, 4, true, false);
 
-      ctx.fillStyle = f.logo?.mode === "hulk" ? "#ef4444" : ratio > 0.5 ? "#22c55e" : ratio > 0.25 ? "#fbbf24" : "#ef4444";
+      ctx.fillStyle = f.kirbyNeutral ? "#ef4444" : f.logo?.mode === "hulk" ? "#ef4444" : ratio > 0.5 ? "#22c55e" : ratio > 0.25 ? "#fbbf24" : "#ef4444";
       roundRect(ctx, x, y, w * ratio, h, 4, true, false);
       if (f.logo?.mode === "hulk") {ctx.font="800 9px system-ui";ctx.textAlign="center";ctx.fillStyle="#fca5a5";ctx.fillText("분노",f.x,y-3);}
 
