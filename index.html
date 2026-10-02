@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v213</title>
+  <title>볼배틀 리뉴얼 v214</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v213</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v214</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -6081,6 +6081,7 @@
     }
 
       const patchNotes = [
+      "v214: 빔 채찍의 원점을 발동 순간 좌표가 아닌 매 프레임 시전자 현재 좌표로 계산하도록 변경. 채찍을 휘두르는 도중 넉백되거나 이동해도 이펙트가 제자리에 남지 않고 시전자를 중심으로 따라간다.",
       "v213: 빔 채찍을 전방 찌르기형 연출에서 160도 범위를 휘감아 휘두르는 별 사슬 채찍으로 변경. 빔 둔화 지속시간을 늘리고 둔화 고리·별 효과를 캐릭터 뒤쪽 레이어로 이동. 중립 몬스터는 현재 공격 연출과 동작이 완전히 끝난 뒤에만 다음 대상을 고르도록 공격 완료 잠금을 추가. 블레이드 나이트 감지 거리를 150에서 92로 줄이고 돌진 후 현재 표적 방향을 다시 조준해 허공 베기를 방지.",
       "v212: 블레이드 나이트와 소드 커비가 베기 때 좌표를 한 프레임에 이동해 버벅이던 원인을 수정. 실제 위치를 0.18/0.16초 동안 부드럽게 이동한 뒤 180도 반월베기가 이어진다. 빔 채찍은 전방으로 곧게 펼쳐지는 별 사슬·선명한 타격 섬광으로 재작화하고 둔화 지속 중 황금 구속 고리·회전 별 효과를 추가. 커비 빔 채찍은 피해7/1.65초에서 피해14/3.3초로 변경해 DPS는 유지하면서 한 번의 타격감을 강화. 파이어는 직선 광선 묶음 대신 부채꼴 화염 혀와 불씨 연출로 변경. 중립 몬스터는 임의 방향전환을 제거하고 벽에 닿을 때만 반사하며, 소드150·빔132·파이어116·밤220의 개별 감지 범위와 상대별 공격 쿨타임을 적용해 한 상대를 공격한 직후 새로 범위에 들어온 다른 상대를 즉시 공격할 수 있도록 변경.",
       "v211: 커비 카피 내구도를 최초 피해45·별 재획득 피해30으로 상향. 소드 전용 반월 검격과 동시에 출력되던 공용 직선 베기 이펙트를 제거해 빔처럼 보이던 문제를 수정하고, 공격 지점에 고정된 다층 초승달 검광·잔광·칼끝 불꽃으로 블레이드 나이트와 소드 커비의 180도 베기를 재작화.",
@@ -7952,7 +7953,7 @@
             const trails=fx.enhanced?3:2;for(let i=0;i<trails;i++){const rr=r-3-i*(fx.enhanced?7:6),lag=.08+i*.075,trailEnd=Math.max(start,end-lag),trailStart=Math.max(start,trailEnd-(fx.enhanced ? .82 : .62));ctx.globalAlpha=(.72-i*.18)*fade;ctx.strokeStyle=i===0?"#f0fdf4":i===1?"#86efac":"#22c55e";ctx.lineWidth=(fx.enhanced?6:4)-i;ctx.beginPath();ctx.arc(cx,cy,rr,trailStart,trailEnd);ctx.stroke();}
             const tipX=cx+Math.cos(end)*r,tipY=cy+Math.sin(end)*r,nx=-Math.sin(end),ny=Math.cos(end);ctx.globalAlpha=.95*fade;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.moveTo(tipX+Math.cos(end)*9,tipY+Math.sin(end)*9);ctx.lineTo(tipX+nx*(fx.enhanced?8:5),tipY+ny*(fx.enhanced?8:5));ctx.lineTo(tipX-nx*(fx.enhanced?8:5),tipY-ny*(fx.enhanced?8:5));ctx.closePath();ctx.fill();for(let i=0;i<(fx.enhanced?6:3);i++){const sa=end+(i-(fx.enhanced?2.5:1))*0.13,len=8+(i%3)*5;ctx.strokeStyle=i%2?"#dcfce7":"#f0fdf4";ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(tipX+Math.cos(sa)*4,tipY+Math.sin(sa)*4);ctx.lineTo(tipX+Math.cos(sa)*len,tipY+Math.sin(sa)*len);ctx.stroke();}}
         }else if(fx.kind==="beam"){
-          const a=fx.angle,half=(fx.arc||Math.PI*8/9)/2,sweep=clamp(q/.76,0,1),ease=sweep<.5?2*sweep*sweep:1-Math.pow(-2*sweep+2,2)/2,wa=a-half*.9+(half*1.8)*ease,range=fx.range,ox=fx.x??f.x,oy=fx.y??f.y,startX=ox+Math.cos(wa)*f.r*.42,startY=oy+Math.sin(wa)*f.r*.42,tipX=ox+Math.cos(wa)*range,tipY=oy+Math.sin(wa)*range,curveA=wa-(.62-.22*ease),cx=ox+Math.cos(curveA)*range*.56,cy=oy+Math.sin(curveA)*range*.56,fade=clamp(Math.min(q/.12,(1-q)/.18),0,1);ctx.globalCompositeOperation="lighter";ctx.shadowColor="#fde047";ctx.shadowBlur=fx.enhanced?30:20;for(let trail=3;trail>=0;trail--){const lag=Math.max(0,ease-trail*.055),ta=a-half*.9+(half*1.8)*lag,tsx=ox+Math.cos(ta)*f.r*.42,tsy=oy+Math.sin(ta)*f.r*.42,ttx=ox+Math.cos(ta)*range,tty=oy+Math.sin(ta)*range,tca=ta-(.62-.22*lag),tcx=ox+Math.cos(tca)*range*.56,tcy=oy+Math.sin(tca)*range*.56;ctx.globalAlpha=fade*(trail===0?.98:.12+(3-trail)*.06);ctx.strokeStyle=trail===0?"#fffce1":trail%2?"#fde047":"#facc15";ctx.lineWidth=trail===0?(fx.enhanced?6:4):Math.max(1,(fx.enhanced?4:3)-trail*.7);ctx.beginPath();ctx.moveTo(tsx,tsy);ctx.quadraticCurveTo(tcx,tcy,ttx,tty);ctx.stroke();}for(let i=1;i<=10;i++){const t=i/10,u=1-t,x=u*u*startX+2*u*t*cx+t*t*tipX,y=u*u*startY+2*u*t*cy+t*t*tipY;ctx.globalAlpha=(.48+.48*t)*fade;drawKirbyStar(x,y,fx.enhanced?5.4:3.9,i%2?"#fde047":"#fff7ae",wa+battleTime*3+i*.48);}ctx.globalAlpha=fade;drawKirbyStar(tipX,tipY,fx.enhanced?11:7.5,"#ffffff",wa+battleTime*8);
+          const a=fx.angle,half=(fx.arc||Math.PI*8/9)/2,sweep=clamp(q/.76,0,1),ease=sweep<.5?2*sweep*sweep:1-Math.pow(-2*sweep+2,2)/2,wa=a-half*.9+(half*1.8)*ease,range=fx.range,ox=f.x,oy=f.y,startX=ox+Math.cos(wa)*f.r*.42,startY=oy+Math.sin(wa)*f.r*.42,tipX=ox+Math.cos(wa)*range,tipY=oy+Math.sin(wa)*range,curveA=wa-(.62-.22*ease),cx=ox+Math.cos(curveA)*range*.56,cy=oy+Math.sin(curveA)*range*.56,fade=clamp(Math.min(q/.12,(1-q)/.18),0,1);ctx.globalCompositeOperation="lighter";ctx.shadowColor="#fde047";ctx.shadowBlur=fx.enhanced?30:20;for(let trail=3;trail>=0;trail--){const lag=Math.max(0,ease-trail*.055),ta=a-half*.9+(half*1.8)*lag,tsx=ox+Math.cos(ta)*f.r*.42,tsy=oy+Math.sin(ta)*f.r*.42,ttx=ox+Math.cos(ta)*range,tty=oy+Math.sin(ta)*range,tca=ta-(.62-.22*lag),tcx=ox+Math.cos(tca)*range*.56,tcy=oy+Math.sin(tca)*range*.56;ctx.globalAlpha=fade*(trail===0?.98:.12+(3-trail)*.06);ctx.strokeStyle=trail===0?"#fffce1":trail%2?"#fde047":"#facc15";ctx.lineWidth=trail===0?(fx.enhanced?6:4):Math.max(1,(fx.enhanced?4:3)-trail*.7);ctx.beginPath();ctx.moveTo(tsx,tsy);ctx.quadraticCurveTo(tcx,tcy,ttx,tty);ctx.stroke();}for(let i=1;i<=10;i++){const t=i/10,u=1-t,x=u*u*startX+2*u*t*cx+t*t*tipX,y=u*u*startY+2*u*t*cy+t*t*tipY;ctx.globalAlpha=(.48+.48*t)*fade;drawKirbyStar(x,y,fx.enhanced?5.4:3.9,i%2?"#fde047":"#fff7ae",wa+battleTime*3+i*.48);}ctx.globalAlpha=fade;drawKirbyStar(tipX,tipY,fx.enhanced?11:7.5,"#ffffff",wa+battleTime*8);
           for(const id of fx.hitIds||[]){const hit=fighterById(id);if(!hit?.alive)continue;const pulse=.5+.5*Math.sin(battleTime*16+id);ctx.globalAlpha=(.28+.36*pulse)*fade;ctx.strokeStyle="#fff7ae";ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(hit.x,hit.y,hit.r+5+pulse*4,0,Math.PI*2);ctx.stroke();}
         }else if(fx.kind==="fire"){
           const half=fx.arc/2,originX=f.x+Math.cos(fx.angle)*f.r*.45,originY=f.y+Math.sin(fx.angle)*f.r*.45;ctx.globalCompositeOperation="lighter";for(let i=0;i<13;i++){const t=(i+.5)/13,aa=fx.angle-half+fx.arc*t+Math.sin(battleTime*9+i)*.018,len=fx.range*(.44+.52*((i*37)%13)/12),w=(fx.enhanced?10:7)*(1-(Math.abs(t-.5)*.45)),nx=-Math.sin(aa),ny=Math.cos(aa),tipX=originX+Math.cos(aa)*len,tipY=originY+Math.sin(aa)*len,wave=Math.sin(battleTime*13+i*1.7)*5;ctx.globalAlpha=(.28+.48*(1-q))*(.7+.3*Math.sin(i));ctx.fillStyle=i%3===0?"#fef08a":i%2?"#fb923c":"#ef4444";ctx.beginPath();ctx.moveTo(originX+nx*w,originY+ny*w);ctx.quadraticCurveTo(originX+Math.cos(aa)*len*.55+nx*(w+wave),originY+Math.sin(aa)*len*.55+ny*(w+wave),tipX,tipY);ctx.quadraticCurveTo(originX+Math.cos(aa)*len*.48-nx*(w-wave),originY+Math.sin(aa)*len*.48-ny*(w-wave),originX-nx*w,originY-ny*w);ctx.closePath();ctx.fill();if(i%3===0){ctx.globalAlpha=.75*(1-q);ctx.fillStyle="#fff7ae";ctx.beginPath();ctx.arc(tipX+Math.sin(i)*4,tipY+Math.cos(i)*4,2.2,0,Math.PI*2);ctx.fill();}}
