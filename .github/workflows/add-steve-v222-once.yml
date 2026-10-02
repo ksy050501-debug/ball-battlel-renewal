@@ -1,0 +1,116 @@
+name: Add Steve v222 once
+on:
+  push:
+    paths:
+      - '.github/workflows/add-steve-v222-once.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch Steve prototype
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          def rep(old,new,label,count=1):
+              global s
+              n=s.count(old)
+              if n!=count:
+                  raise SystemExit(f'{label}: expected {count}, got {n}')
+              s=s.replace(old,new,count)
+
+          rep('<title>볼배틀 리뉴얼 v221</title>','<title>볼배틀 리뉴얼 v222</title>','head title')
+          rep('<h1 id="mainTitle">볼배틀 리뉴얼 v221</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v222</h1>','main title')
+
+          char='''      { id:"steve_builder", name:"스티브", mark:"⛏", role:"게임", color:"#22c1a6", hp:170, attack:0, speed:2.65, range:0,
+        skillName:"채굴 · 장비 진화 · 네더 원정", condition:"자원은 동시에 1개 · 8초 미습득 시 자원으로 이동 · 돌3→철3→다이아2 · 다이아 이후 네더 포탈", desc:"맵의 무작위 위치에 나타나는 현재 단계 자원을 우연히 지나가며 채굴한다. 자원은 한 번에 하나만 존재하고 평소에는 추적하지 않지만 8초 동안 얻지 못하면 그 자원 쪽으로 이동한다. 돌3개, 철3개, 다이아2개를 모을 때마다 나무→돌→철→다이아 장비로 진화한다. 다이아 장비가 되면 벽 일부에 네더 포탈이 주기적으로 나타나며, 포탈에 닿으면 10초간 전장을 떠났다가 무작위 벽에서 네더라이트 장비로 귀환하고 체력30을 잃는다." },
+'''
+          rep('      { id: "dummy_unit", name: "훈련용 더미"',char+'      { id: "dummy_unit", name: "훈련용 더미"','character entry')
+
+          info='''      if(c.id==="steve_builder")return {damage:"나무검7 / 돌검9 / 철검11 / 다이아검14 / 네더라이트검17",tick:"자원 1개만 존재 · 습득 반경+34 · 8초 미습득 시 강제 이동 · 돌3→철3→다이아2 · 다이아 후 포탈 5초 뒤 등장·7.5초마다 위치 변경",tip:"평소에는 자원을 추적하지 않고 기존 이동을 유지한다. 자원을 8초 동안 줍지 못했을 때만 현재 자원 방향으로 이동하며 습득 즉시 원래 이동으로 돌아간다. 다이아 장비 이후 보라색 네더 포탈이 벽 일부에 나타난다. 접촉하면 10초 동안 전장에서 사라지고 무작위 벽으로 귀환하면서 네더라이트 장비가 되며 체력30을 잃는다."};
+'''
+          rep('      if(c.id==="tracer_pan")return {damage:',info+'      if(c.id==="tracer_pan")return {damage:','damage info')
+
+          code=r'''    const STEVE = {
+      pickupBonus:34, seekAfter:8, portalDelay:5, portalPeriod:7.5, portalLength:96, netherDuration:10, netherHpCost:30,
+      attackCd:.9, attackReach:22,
+      tiers:[
+        {key:"wood",name:"나무",damage:7,color:"#a16207"},
+        {key:"stone",name:"돌",damage:9,color:"#94a3b8"},
+        {key:"iron",name:"철",damage:11,color:"#e5e7eb"},
+        {key:"diamond",name:"다이아",damage:14,color:"#22d3ee"},
+        {key:"netherite",name:"네더라이트",damage:17,color:"#4c1d95"}
+      ]
+    };
+    function steveTierInfo(f){return STEVE.tiers[clamp(f?.steve?.tier||0,0,4)]||STEVE.tiers[0];}
+    function steveNeedResource(f){const t=f?.steve?.tier||0;return t===0?{kind:"stone",name:"돌",need:3,color:"#94a3b8"}:t===1?{kind:"iron",name:"철",need:3,color:"#e5e7eb"}:t===2?{kind:"diamond",name:"다이아",need:2,color:"#22d3ee"}:null;}
+    function steveRandomPoint(r=13){return {x:rand(arena.x+r+20,arena.x2-r-20),y:rand(arena.y+r+20,arena.y2-r-20)};}
+    function steveSpawnResource(f){const s=f?.steve,need=steveNeedResource(f);if(!s||!need){if(s)s.resource=null;return;}const p=steveRandomPoint(12);s.resource={...p,r:12,kind:need.kind,name:need.name,color:need.color,age:0,forced:false};}
+    function initSteve(f){
+      f.steve={tier:0,counts:{stone:0,iron:0,diamond:0},resource:null,portal:null,portalClock:0,attackCd:0,swing:0,swingAngle:0,inNether:false,netherTime:0};
+      steveSpawnResource(f);
+    }
+    function steveUpgrade(f,tier){const s=f.steve;s.tier=tier;s.resource=null;s.portal=null;s.portalClock=tier===3?STEVE.portalDelay:0;const info=steveTierInfo(f);if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-34,`${info.name} 장비!`,info.color);spawnBlast(f.x,f.y,48,info.color);spawnParticles(f.x,f.y,info.color,14);playSound("summon",.6);}if(tier<3)steveSpawnResource(f);}
+    function steveCollectResource(f){const s=f.steve,r=s.resource,need=steveNeedResource(f);if(!r||!need)return;s.counts[need.kind]=(s.counts[need.kind]||0)+1;const got=s.counts[need.kind];if(!fastSimMode){spawnFloatingText(r.x,r.y-18,`${need.name} ${got}/${need.need}`,need.color);spawnParticles(r.x,r.y,need.color,10);playSound("hit",.42);}s.resource=null;if(got>=need.need)steveUpgrade(f,(s.tier||0)+1);else steveSpawnResource(f);}
+    function steveRollPortal(f){const s=f.steve,wall=Math.floor(rand(0,4)),margin=58;const horizontal=wall===0||wall===2;const min=horizontal?arena.x+margin:arena.y+margin,max=horizontal?arena.x2-margin:arena.y2-margin;s.portal={wall,pos:rand(min,max),len:STEVE.portalLength,age:0};if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-34,"네더 포탈 생성","#c084fc");}
+    function steveTouchesPortal(f,p){if(!p)return false;const half=p.len/2+f.r;if(p.wall===0)return f.y-f.r<=arena.y+5&&Math.abs(f.x-p.pos)<=half;if(p.wall===1)return f.x+f.r>=arena.x2-5&&Math.abs(f.y-p.pos)<=half;if(p.wall===2)return f.y+f.r>=arena.y2-5&&Math.abs(f.x-p.pos)<=half;return f.x-f.r<=arena.x+5&&Math.abs(f.y-p.pos)<=half;}
+    function steveEnterNether(f){const s=f.steve;s.inNether=true;s.netherTime=STEVE.netherDuration;s.portal=null;f.vx=0;f.vy=0;f.x=-10000;f.y=-10000;if(!fastSimMode)playSound("magic",.8);}
+    function steveExitPoint(f){const wall=Math.floor(rand(0,4)),gap=f.r+5;if(wall===0)return{x:rand(arena.x+50,arena.x2-50),y:arena.y+gap};if(wall===1)return{x:arena.x2-gap,y:rand(arena.y+50,arena.y2-50)};if(wall===2)return{x:rand(arena.x+50,arena.x2-50),y:arena.y2-gap};return{x:arena.x+gap,y:rand(arena.y+50,arena.y2-50)};}
+    function steveReturnFromNether(f){const s=f.steve,p=steveExitPoint(f);s.inNether=false;s.netherTime=0;s.tier=4;s.portal=null;f.x=p.x;f.y=p.y;const v=randomVelocity(f.baseSpeed||2.65);f.vx=v.vx;f.vy=v.vy;const loss=Math.min(STEVE.netherHpCost,Math.max(0,f.hp));f.hp=Math.max(0,f.hp-loss);f.damageTaken=(f.damageTaken||0)+loss;if(!fastSimMode){spawnBlast(f.x,f.y,64,"#9333ea");spawnParticles(f.x,f.y,"#c084fc",20);spawnFloatingText(f.x,f.y-f.r-36,`네더라이트 · HP -${loss}`,"#c084fc");playSound("magic",1);}if(f.hp<=0)f.alive=false;}
+    function updateSteve(f,dt){
+      const s=f.steve;if(!s||!f.alive)return false;s.swing=Math.max(0,(s.swing||0)-dt);s.attackCd=Math.max(0,(s.attackCd||0)-dt);
+      if(s.inNether){s.netherTime=Math.max(0,(s.netherTime||0)-dt);f.vx=0;f.vy=0;if(s.netherTime<=0)steveReturnFromNether(f);return true;}
+      const near=enemiesOf(f).filter(e=>e.alive).sort((a,b)=>dist(f,a)-dist(f,b))[0];
+      if(near&&s.attackCd<=0&&!isStunned(f)&&(f.hardFreeze||0)<=0){const d=dist(f,near);if(d<=f.r+near.r+STEVE.attackReach){const a=Math.atan2(near.y-f.y,near.x-f.x);s.swing=.22;s.swingAngle=a;s.attackCd=STEVE.attackCd;const dealt=damage(near,steveTierInfo(f).damage,f,`${steveTierInfo(f).name}검`);if(dealt>0&&!fastSimMode){spawnHitFlash(near.x,near.y,steveTierInfo(f).color,34);playSound("slash",.55);}}}
+      if((s.tier||0)<3){if(!s.resource)steveSpawnResource(f);const r=s.resource;r.age+=dt;if(Math.hypot(f.x-r.x,f.y-r.y)<=f.r+r.r+STEVE.pickupBonus){steveCollectResource(f);return false;}if(r.age>=STEVE.seekAfter&&!isStunned(f)){r.forced=true;const a=Math.atan2(r.y-f.y,r.x-f.x),speed=(f.baseSpeed||2.65)*44;f.vx=Math.cos(a)*speed;f.vy=Math.sin(a)*speed;}}
+      else if(s.tier===3){if(!s.portal){s.portalClock=Math.max(0,(s.portalClock||0)-dt);if(s.portalClock<=0){steveRollPortal(f);s.portalClock=STEVE.portalPeriod;}}else{s.portal.age+=dt;if(steveTouchesPortal(f,s.portal)){steveEnterNether(f);return true;}if(s.portal.age>=STEVE.portalPeriod)steveRollPortal(f);}}
+      return false;
+    }
+    function drawSteveWorld(){if(fastSimMode)return;for(const f of fighters){const s=f.steve;if(!f.alive||!s)continue;const r=s.resource;if(r){ctx.save();ctx.translate(r.x,r.y);ctx.shadowColor=r.color;ctx.shadowBlur=r.forced?18:8;ctx.fillStyle="#334155";ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.fillRect(-11,-11,22,22);ctx.strokeRect(-11,-11,22,22);ctx.fillStyle=r.color;for(const q of [[-5,-4],[4,-6],[-2,4],[6,4]])ctx.fillRect(q[0]-2,q[1]-2,4,4);if(r.forced){ctx.globalAlpha=.35+.25*Math.sin(battleTime*8);ctx.strokeStyle="#fde68a";ctx.strokeRect(-16,-16,32,32);}ctx.restore();}const p=s.portal;if(p&&!s.inNether){ctx.save();ctx.strokeStyle="#c084fc";ctx.shadowColor="#9333ea";ctx.shadowBlur=22;ctx.lineWidth=11;ctx.lineCap="round";const h=p.len/2;if(p.wall===0){ctx.beginPath();ctx.moveTo(p.pos-h,arena.y+2);ctx.lineTo(p.pos+h,arena.y+2);ctx.stroke();}else if(p.wall===1){ctx.beginPath();ctx.moveTo(arena.x2-2,p.pos-h);ctx.lineTo(arena.x2-2,p.pos+h);ctx.stroke();}else if(p.wall===2){ctx.beginPath();ctx.moveTo(p.pos-h,arena.y2-2);ctx.lineTo(p.pos+h,arena.y2-2);ctx.stroke();}else{ctx.beginPath();ctx.moveTo(arena.x+2,p.pos-h);ctx.lineTo(arena.x+2,p.pos+h);ctx.stroke();}ctx.restore();}}}
+    function drawSteveCharacter(f){const s=f.steve||{tier:0,swing:0,swingAngle:0},info=STEVE.tiers[clamp(s.tier||0,0,4)];if(s.inNether)return;ctx.save();ctx.translate(f.x,f.y);applyMarioSpriteSpin(f);ctx.scale(f.r/18,f.r/18);ctx.lineJoin="miter";ctx.fillStyle="#3f2d20";ctx.fillRect(-9,-16,18,7);ctx.fillStyle="#c58b62";ctx.fillRect(-9,-9,18,10);ctx.fillStyle="#fff";ctx.fillRect(-6,-6,4,3);ctx.fillRect(3,-6,4,3);ctx.fillStyle="#2563eb";ctx.fillRect(-5,-6,2,2);ctx.fillRect(4,-6,2,2);ctx.fillStyle="#7c2d12";ctx.fillRect(-2,-1,7,2);ctx.fillStyle="#0f766e";ctx.fillRect(-10,1,20,11);ctx.fillStyle="#1d4ed8";ctx.fillRect(-8,12,7,12);ctx.fillRect(1,12,7,12);if((s.tier||0)>=2){ctx.globalAlpha=.82;ctx.fillStyle=info.color;ctx.fillRect(-11,0,22,12);ctx.fillRect(-10,-11,20,5);ctx.globalAlpha=1;}ctx.restore();if((s.swing||0)>0){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(s.swingAngle||0);ctx.strokeStyle=info.color;ctx.shadowColor=info.color;ctx.shadowBlur=10;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(f.r*.15,-f.r*.1);ctx.lineTo(f.r+18,-9);ctx.stroke();ctx.strokeStyle="#78350f";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(f.r*.1,2);ctx.lineTo(f.r*.55,2);ctx.stroke();ctx.restore();}drawHealthBar(f);drawName(f);}
+
+'''
+          rep('    const KIRBY = {',code+'    const KIRBY = {','steve code')
+
+          rep('if (!e.alive || e.id === f.id || (e.dodoVoid || 0) > 0 || e.kirbySwallowedBy) return false;','if (!e.alive || e.id === f.id || (e.dodoVoid || 0) > 0 || e.kirbySwallowedBy || e.steve?.inNether) return false;','enemy filtering')
+          rep('if (!target || !target.alive || target.kirbySwallowedBy || (target.dodoVoid || 0) > 0 || target.tano?.hidden > 0) return 0;','if (!target || !target.alive || target.kirbySwallowedBy || target.steve?.inNether || (target.dodoVoid || 0) > 0 || target.tano?.hidden > 0) return 0;','nether damage immunity')
+          rep('      if (f.kirby) updateKirby(f, dt);\n      if (f.mario) updateMario(f, dt);','      if (f.kirby) updateKirby(f, dt);\n      if (f.baseId === "steve_builder") { if(!f.steve)initSteve(f); if(updateSteve(f,dt)) return; }\n      if (f.mario) updateMario(f, dt);','update dispatch')
+          rep('      drawKirbyWorld();\n      drawJabamiGames();','      drawKirbyWorld();\n      drawSteveWorld();\n      drawJabamiGames();','world draw')
+          rep('      if (f.kirby) { drawKirbyCharacter(f); return; }\n      if (f.marioBlock) { drawMarioBlock(f); return; }','      if (f.kirby) { drawKirbyCharacter(f); return; }\n      if (f.baseId === "steve_builder") { drawSteveCharacter(f); return; }\n      if (f.marioBlock) { drawMarioBlock(f); return; }','fighter draw')
+
+          rep('      const patchNotes = [\n      "v221: 캐릭터 표시명 커비→자가비로 변경. 내부 ID와 전투 로직은 유지.",','      const patchNotes = [\n      "v222: 신규 캐릭터 스티브 추가. 자원은 현재 단계에 맞춰 맵 무작위 위치에 1개만 존재하고 평소에는 추적하지 않으며 8초 미습득 시에만 자원으로 이동한다. 돌3→철3→다이아2 순으로 장비가 진화하고, 다이아 이후 벽의 네더 포탈 접촉 시 10초간 전장을 떠난 뒤 무작위 벽에서 네더라이트 장비로 귀환하며 체력30을 잃는다.",\n      "v221: 캐릭터 표시명 커비→자가비로 변경. 내부 ID와 전투 로직은 유지.",','patch note')
+
+          p.write_text(s,encoding='utf-8')
+          PY
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)
+          if not scripts: raise SystemExit('no script found')
+          Path('/tmp/ballbattle.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/ballbattle.js
+          grep -q '볼배틀 리뉴얼 v222' index.html
+          grep -q 'id:"steve_builder", name:"스티브"' index.html
+          grep -q '돌3→철3→다이아2' index.html
+      - name: Commit v222
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'v222: add Steve resource progression prototype'
+          git push origin HEAD:main
+          git rm .github/workflows/add-steve-v222-once.yml
+          git commit -m 'chore: remove v222 Steve workflow'
+          git push origin HEAD:main
