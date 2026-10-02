@@ -1,0 +1,44 @@
+name: Fast v220 once
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fast-v220-once.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply v220
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          assert '<title>볼배틀 리뉴얼 v219</title>' in s
+          assert 'id:"kirby", name:"커비"' in s
+          assert 'id:"kirby", name:"커비", mark:"★", role:"게임", color:"#f472b6", hp:170' in s
+          assert '$("fullMatrix30Btn").addEventListener("click", () => runFullMatchupMatrix(30));' in s
+          assert '전체 테스트는 모든 조합을 각각 30전' in s
+          s=s.replace('<title>볼배틀 리뉴얼 v219</title>','<title>볼배틀 리뉴얼 v220</title>',1)
+          s=s.replace('id:"kirby", name:"커비", mark:"★", role:"게임", color:"#f472b6", hp:170','id:"kirby", name:"커비", mark:"★", role:"게임", color:"#f472b6", hp:180',1)
+          s=s.replace('$("fullMatrix30Btn").addEventListener("click", () => runFullMatchupMatrix(30));','$("fullMatrix30Btn").addEventListener("click", () => runFullMatchupMatrix(50));',1)
+          s=s.replace('전체 테스트는 모든 조합을 각각 30전','전체 테스트는 모든 조합을 각각 50전',1)
+          note='      \\"v220: 커비 체력170→180으로 상향. 전체 테스트의 모든 조합 시뮬레이션 횟수를 30전에서 50전으로 상향. 1인 전체 테스트 50전과 1대1 100전은 유지.\\",\n'
+          marker='      const patchNotes = [\n'
+          assert marker in s
+          s=s.replace(marker, marker+note,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -f .github/workflows/fast-v220-once.yml
+          git add index.html
+          git commit -m "v220: raise Kirby HP and full test to 50"
+          git push
