@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v212</title>
+  <title>볼배틀 리뉴얼 v213</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v212</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v213</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -6081,6 +6081,7 @@
     }
 
       const patchNotes = [
+      "v213: 빔 채찍을 전방 찌르기형 연출에서 160도 범위를 휘감아 휘두르는 별 사슬 채찍으로 변경. 빔 둔화 지속시간을 늘리고 둔화 고리·별 효과를 캐릭터 뒤쪽 레이어로 이동. 중립 몬스터는 현재 공격 연출과 동작이 완전히 끝난 뒤에만 다음 대상을 고르도록 공격 완료 잠금을 추가. 블레이드 나이트 감지 거리를 150에서 92로 줄이고 돌진 후 현재 표적 방향을 다시 조준해 허공 베기를 방지.",
       "v212: 블레이드 나이트와 소드 커비가 베기 때 좌표를 한 프레임에 이동해 버벅이던 원인을 수정. 실제 위치를 0.18/0.16초 동안 부드럽게 이동한 뒤 180도 반월베기가 이어진다. 빔 채찍은 전방으로 곧게 펼쳐지는 별 사슬·선명한 타격 섬광으로 재작화하고 둔화 지속 중 황금 구속 고리·회전 별 효과를 추가. 커비 빔 채찍은 피해7/1.65초에서 피해14/3.3초로 변경해 DPS는 유지하면서 한 번의 타격감을 강화. 파이어는 직선 광선 묶음 대신 부채꼴 화염 혀와 불씨 연출로 변경. 중립 몬스터는 임의 방향전환을 제거하고 벽에 닿을 때만 반사하며, 소드150·빔132·파이어116·밤220의 개별 감지 범위와 상대별 공격 쿨타임을 적용해 한 상대를 공격한 직후 새로 범위에 들어온 다른 상대를 즉시 공격할 수 있도록 변경.",
       "v211: 커비 카피 내구도를 최초 피해45·별 재획득 피해30으로 상향. 소드 전용 반월 검격과 동시에 출력되던 공용 직선 베기 이펙트를 제거해 빔처럼 보이던 문제를 수정하고, 공격 지점에 고정된 다층 초승달 검광·잔광·칼끝 불꽃으로 블레이드 나이트와 소드 커비의 180도 베기를 재작화.",
       "v210: 커비 카피 내구도를 피격 횟수에서 누적 체력 피해로 변경. 최초 카피는 36 피해, 별 재획득 카피는 20 피해에서 영구 소실된다. 흡입은 약하게 시작해 유지할수록 급격히 강해지며 카피별 회수력도 함께 증가. 초반 흡입력 자체도 상향.",
@@ -7812,6 +7813,7 @@
       return enemiesOf(source).filter(e=>e.alive&&!e.kirbySwallowedBy);
     }
     function kirbyResolveSlash(source,c){
+      const tracked=fighterById(c.targetId);if(tracked?.alive&&Math.hypot(tracked.x-source.x,tracked.y-source.y)<=c.radius+tracked.r+28)c.angle=Math.atan2(tracked.y-source.y,tracked.x-source.x);
       let hits=0;
       for(const e of kirbyAreaTargets(source)){const dx=e.x-source.x,dy=e.y-source.y,ed=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-c.angle),Math.cos(ea-c.angle)));if(ed>c.radius+e.r||diff>Math.PI/2)continue;const dealt=damage(e,c.power,source,c.reason);if(dealt>0){hits++;if(c.bleed)applyBleed(e,source,1,2.05,.5,4);if(!fastSimMode)spawnHitFlash(e.x,e.y,"#86efac",source.kirbyNeutral?38:52);}}
       source.kirbyFx={kind:"sword",t:.48,max:.48,x:source.x,y:source.y,angle:c.angle,range:c.radius,arc:Math.PI,enhanced:!source.kirbyNeutral};
@@ -7825,12 +7827,12 @@
     function kirbySlashArc(source,target,radius,dashDistance,power,bleed=false,reason="소드 베기"){
       if(!source?.alive||!target?.alive||source.kirbySwordDash)return false;
       const a=Math.atan2(target.y-source.y,target.x-source.x),d=Math.hypot(target.x-source.x,target.y-source.y)||1,travel=Math.min(dashDistance,Math.max(0,d-(source.r+target.r+5))),endX=clamp(source.x+Math.cos(a)*travel,arena.x+source.r,arena.x2-source.r),endY=clamp(source.y+Math.sin(a)*travel,arena.y+source.r,arena.y2-source.r);
-      source.kirbySwordDash={time:0,duration:source.kirbyNeutral?.18:.16,startX:source.x,startY:source.y,endX,endY,angle:a,radius,power,bleed,reason,savedVx:source.vx,savedVy:source.vy};source.vx=0;source.vy=0;if(source.kirbyNeutral)source.kirbyNeutral.facing=a;if(!fastSimMode)playSound("wind",source.kirbyNeutral?.55:.7);return true;
+      source.kirbySwordDash={time:0,duration:source.kirbyNeutral?.18:.16,startX:source.x,startY:source.y,endX,endY,angle:a,radius,power,bleed,reason,targetId:target.id,savedVx:source.vx,savedVy:source.vy};source.vx=0;source.vy=0;if(source.kirbyNeutral)source.kirbyNeutral.facing=a;if(!fastSimMode)playSound("wind",source.kirbyNeutral?.55:.7);return true;
     }
     function kirbyWhip(source,range,arc,power,slow=false,reason="빔 채찍",forcedTarget=null){
       const target=forcedTarget||(source.kirbyNeutral?kirbyNeutralTarget(source):kirbyAttackTarget(source));if(!target)return false;
       const a=Math.atan2(target.y-source.y,target.x-source.x),half=arc/2,hitIds=[];let hits=0;
-      for(const e of kirbyAreaTargets(source)){const dx=e.x-source.x,dy=e.y-source.y,d=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-a),Math.cos(ea-a)));if(d>range+e.r||diff>half)continue;const dealt=damage(e,power,source,reason);if(dealt>0){hits++;hitIds.push(e.id);if(slow)applySlow(e,.72,.85,"kirbyBeamSlow");if(!fastSimMode){spawnHitFlash(e.x,e.y,"#fde047",slow?68:50);spawnParticles(e.x,e.y,"#fff7ae",slow?12:7);}}}
+      for(const e of kirbyAreaTargets(source)){const dx=e.x-source.x,dy=e.y-source.y,d=Math.hypot(dx,dy)||1,ea=Math.atan2(dy,dx),diff=Math.abs(Math.atan2(Math.sin(ea-a),Math.cos(ea-a)));if(d>range+e.r||diff>half)continue;const dealt=damage(e,power,source,reason);if(dealt>0){hits++;hitIds.push(e.id);if(slow)applySlow(e,.72,1.65,"kirbyBeamSlow");if(!fastSimMode){spawnHitFlash(e.x,e.y,"#fde047",slow?68:50);spawnParticles(e.x,e.y,"#fff7ae",slow?12:7);}}}
       source.kirbyFx={kind:"beam",t:.72,max:.72,x:source.x,y:source.y,angle:a,range,arc,enhanced:!source.kirbyNeutral,hitIds};if(!fastSimMode)playSound("magic",.92);return hits>0;
     }
     function kirbyFlameCone(source,range,arc,power,burn=false,reason="파이어",fixedAngle=null){
@@ -7881,7 +7883,7 @@
     }
     function kirbyNeutralData(type){
       return ({
-        sword:{name:"블레이드 나이트",mark:"⚔",color:"#4ade80",hp:30,speed:2.2,attackRange:150,targetCooldown:1.7},
+        sword:{name:"블레이드 나이트",mark:"⚔",color:"#4ade80",hp:30,speed:2.2,attackRange:92,targetCooldown:1.7},
         beam:{name:"웨이들 두",mark:"◎",color:"#facc15",hp:27,speed:1.9,attackRange:132,targetCooldown:1.85},
         fire:{name:"핫 헤드",mark:"♨",color:"#f97316",hp:31,speed:2.0,attackRange:116,targetCooldown:2.45},
         bomb:{name:"포피 브라더스 Jr.",mark:"●",color:"#8b5cf6",hp:32,speed:1.75,attackRange:220,targetCooldown:3.0}
@@ -7897,14 +7899,14 @@
       const n=f?.kirbyNeutral,data=kirbyNeutralData(n?.type);if(!n||!data)return null;if(!(n.targetCooldowns instanceof Map))n.targetCooldowns=new Map();return fighters.filter(e=>e.alive&&!e.isSummon&&!e.kirbySwallowedBy&&e!==f&&Math.hypot(e.x-f.x,e.y-f.y)<=data.attackRange+e.r&&(n.targetCooldowns.get(e.id)||0)<=0).sort((a,b)=>dist(f,a)-dist(f,b))[0]||null;
     }
     function updateKirbyNeutral(f,dt){
-      const n=f?.kirbyNeutral;if(!n||!f.alive)return;n.recoil=Math.max(0,(n.recoil||0)-dt);if(!(n.targetCooldowns instanceof Map))n.targetCooldowns=new Map();for(const [id,time] of [...n.targetCooldowns.entries()]){const left=time-dt;if(left<=0)n.targetCooldowns.delete(id);else n.targetCooldowns.set(id,left);}if(f.kirbyFx){f.kirbyFx.t-=dt;if(f.kirbyFx.t<=0)f.kirbyFx=null;}if(updateKirbySwordDash(f,dt))return;if(updateKirbyFlame(f,dt))return;if(isStunned(f)||(f.hardFreeze||0)>0){f.vx*=.90;f.vy*=.90;return;}if(n.recoil>0){n.facing=Math.atan2(f.vy||0,f.vx||1);return;}
+      const n=f?.kirbyNeutral;if(!n||!f.alive)return;n.recoil=Math.max(0,(n.recoil||0)-dt);n.attackLock=Math.max(0,(n.attackLock||0)-dt);if(!(n.targetCooldowns instanceof Map))n.targetCooldowns=new Map();for(const [id,time] of [...n.targetCooldowns.entries()]){const left=time-dt;if(left<=0)n.targetCooldowns.delete(id);else n.targetCooldowns.set(id,left);}if(f.kirbyFx){f.kirbyFx.t-=dt;if(f.kirbyFx.t<=0)f.kirbyFx=null;}if(updateKirbySwordDash(f,dt))return;if(updateKirbyFlame(f,dt))return;if(isStunned(f)||(f.hardFreeze||0)>0){f.vx*=.90;f.vy*=.90;return;}if(n.recoil>0){n.facing=Math.atan2(f.vy||0,f.vx||1);return;}
       const v=(f.baseSpeed||f.speed||2)*44,wallPad=f.r+2;let vx=f.vx||Math.cos(n.moveAngle||0)*v,vy=f.vy||Math.sin(n.moveAngle||0)*v;if(f.x<=arena.x+wallPad&&vx<0)vx=Math.abs(vx);else if(f.x>=arena.x2-wallPad&&vx>0)vx=-Math.abs(vx);if(f.y<=arena.y+wallPad&&vy<0)vy=Math.abs(vy);else if(f.y>=arena.y2-wallPad&&vy>0)vy=-Math.abs(vy);const mag=Math.hypot(vx,vy)||1;f.vx=vx/mag*v;f.vy=vy/mag*v;n.moveAngle=Math.atan2(f.vy,f.vx);n.facing=n.moveAngle;
-      const target=kirbyNeutralReadyTarget(f);if(!target)return;const data=kirbyNeutralData(n.type);let used=false;
+      if(n.attackLock>0)return;const target=kirbyNeutralReadyTarget(f);if(!target)return;const data=kirbyNeutralData(n.type);let used=false;
       if(n.type==="sword")used=kirbySlashArc(f,target,50,54,5,false,"블레이드 나이트 반월베기");
       else if(n.type==="beam")used=kirbyWhip(f,108,Math.PI*8/9,5,false,"웨이들 두 빔 채찍",target);
       else if(n.type==="fire")used=kirbyStartFlame(f,90,Math.PI*5/9,1,false,5,"핫 헤드 화염방사",target);
       else if(n.type==="bomb")used=kirbyThrowBomb(f,target,8,48,"포피 브라더스 Jr. 밤",false);
-      if(used)n.targetCooldowns.set(target.id,data.targetCooldown);
+      if(used){n.targetCooldowns.set(target.id,data.targetCooldown);n.attackLock=({sword:.66,beam:.72,fire:1.02,bomb:.48})[n.type]||.5;}
     }
     function kirbySwallowEnemy(f,target){
       const k=f?.kirby;if(!k||k.swallowedId||!target?.alive||target.isSummon||!areEnemies(f,target))return false;
@@ -7950,8 +7952,8 @@
             const trails=fx.enhanced?3:2;for(let i=0;i<trails;i++){const rr=r-3-i*(fx.enhanced?7:6),lag=.08+i*.075,trailEnd=Math.max(start,end-lag),trailStart=Math.max(start,trailEnd-(fx.enhanced ? .82 : .62));ctx.globalAlpha=(.72-i*.18)*fade;ctx.strokeStyle=i===0?"#f0fdf4":i===1?"#86efac":"#22c55e";ctx.lineWidth=(fx.enhanced?6:4)-i;ctx.beginPath();ctx.arc(cx,cy,rr,trailStart,trailEnd);ctx.stroke();}
             const tipX=cx+Math.cos(end)*r,tipY=cy+Math.sin(end)*r,nx=-Math.sin(end),ny=Math.cos(end);ctx.globalAlpha=.95*fade;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.moveTo(tipX+Math.cos(end)*9,tipY+Math.sin(end)*9);ctx.lineTo(tipX+nx*(fx.enhanced?8:5),tipY+ny*(fx.enhanced?8:5));ctx.lineTo(tipX-nx*(fx.enhanced?8:5),tipY-ny*(fx.enhanced?8:5));ctx.closePath();ctx.fill();for(let i=0;i<(fx.enhanced?6:3);i++){const sa=end+(i-(fx.enhanced?2.5:1))*0.13,len=8+(i%3)*5;ctx.strokeStyle=i%2?"#dcfce7":"#f0fdf4";ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(tipX+Math.cos(sa)*4,tipY+Math.sin(sa)*4);ctx.lineTo(tipX+Math.cos(sa)*len,tipY+Math.sin(sa)*len);ctx.stroke();}}
         }else if(fx.kind==="beam"){
-          const a=fx.angle,range=fx.range,unfurl=1-Math.pow(1-clamp(q*1.65,0,1),3),length=range*(.18+.82*unfurl),ox=fx.x??f.x,oy=fx.y??f.y,startX=ox+Math.cos(a)*f.r*.5,startY=oy+Math.sin(a)*f.r*.5,endX=ox+Math.cos(a)*length,endY=oy+Math.sin(a)*length,nx=-Math.sin(a),ny=Math.cos(a),bend=Math.sin(q*Math.PI)*8,cx=(startX+endX)/2+nx*bend,cy=(startY+endY)/2+ny*bend,fade=clamp((1-q)*1.7,0,1);ctx.globalCompositeOperation="lighter";ctx.shadowColor="#fde047";ctx.shadowBlur=fx.enhanced?30:20;for(let band=-1;band<=1;band++){ctx.globalAlpha=(band===0?.95:.42)*fade;ctx.strokeStyle=band===0?"#fffce1":"#facc15";ctx.lineWidth=(fx.enhanced?6:4)-(Math.abs(band)*1.5);ctx.beginPath();ctx.moveTo(startX+nx*band*4,startY+ny*band*4);ctx.quadraticCurveTo(cx+nx*band*3,cy+ny*band*3,endX+nx*band*2,endY+ny*band*2);ctx.stroke();}for(let i=1;i<=9;i++){const t=i/9,u=1-t,x=u*u*startX+2*u*t*cx+t*t*endX,y=u*u*startY+2*u*t*cy+t*t*endY;ctx.globalAlpha=(.55+.35*(i/9))*fade;drawKirbyStar(x,y,fx.enhanced?5.2:3.8,i%2?"#fde047":"#fff7ae",a+battleTime*3+i*.5);}ctx.globalAlpha=fade;drawKirbyStar(endX,endY,fx.enhanced?10:7,"#ffffff",a+battleTime*7);
-          for(const id of fx.hitIds||[]){const hit=fighterById(id);if(!hit?.alive)continue;const pulse=.5+.5*Math.sin(battleTime*20+id);ctx.globalAlpha=(.35+.45*pulse)*fade;ctx.strokeStyle="#fff7ae";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(hit.x,hit.y,hit.r+7+pulse*5,0,Math.PI*2);ctx.stroke();}
+          const a=fx.angle,half=(fx.arc||Math.PI*8/9)/2,sweep=clamp(q/.76,0,1),ease=sweep<.5?2*sweep*sweep:1-Math.pow(-2*sweep+2,2)/2,wa=a-half*.9+(half*1.8)*ease,range=fx.range,ox=fx.x??f.x,oy=fx.y??f.y,startX=ox+Math.cos(wa)*f.r*.42,startY=oy+Math.sin(wa)*f.r*.42,tipX=ox+Math.cos(wa)*range,tipY=oy+Math.sin(wa)*range,curveA=wa-(.62-.22*ease),cx=ox+Math.cos(curveA)*range*.56,cy=oy+Math.sin(curveA)*range*.56,fade=clamp(Math.min(q/.12,(1-q)/.18),0,1);ctx.globalCompositeOperation="lighter";ctx.shadowColor="#fde047";ctx.shadowBlur=fx.enhanced?30:20;for(let trail=3;trail>=0;trail--){const lag=Math.max(0,ease-trail*.055),ta=a-half*.9+(half*1.8)*lag,tsx=ox+Math.cos(ta)*f.r*.42,tsy=oy+Math.sin(ta)*f.r*.42,ttx=ox+Math.cos(ta)*range,tty=oy+Math.sin(ta)*range,tca=ta-(.62-.22*lag),tcx=ox+Math.cos(tca)*range*.56,tcy=oy+Math.sin(tca)*range*.56;ctx.globalAlpha=fade*(trail===0?.98:.12+(3-trail)*.06);ctx.strokeStyle=trail===0?"#fffce1":trail%2?"#fde047":"#facc15";ctx.lineWidth=trail===0?(fx.enhanced?6:4):Math.max(1,(fx.enhanced?4:3)-trail*.7);ctx.beginPath();ctx.moveTo(tsx,tsy);ctx.quadraticCurveTo(tcx,tcy,ttx,tty);ctx.stroke();}for(let i=1;i<=10;i++){const t=i/10,u=1-t,x=u*u*startX+2*u*t*cx+t*t*tipX,y=u*u*startY+2*u*t*cy+t*t*tipY;ctx.globalAlpha=(.48+.48*t)*fade;drawKirbyStar(x,y,fx.enhanced?5.4:3.9,i%2?"#fde047":"#fff7ae",wa+battleTime*3+i*.48);}ctx.globalAlpha=fade;drawKirbyStar(tipX,tipY,fx.enhanced?11:7.5,"#ffffff",wa+battleTime*8);
+          for(const id of fx.hitIds||[]){const hit=fighterById(id);if(!hit?.alive)continue;const pulse=.5+.5*Math.sin(battleTime*16+id);ctx.globalAlpha=(.28+.36*pulse)*fade;ctx.strokeStyle="#fff7ae";ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(hit.x,hit.y,hit.r+5+pulse*4,0,Math.PI*2);ctx.stroke();}
         }else if(fx.kind==="fire"){
           const half=fx.arc/2,originX=f.x+Math.cos(fx.angle)*f.r*.45,originY=f.y+Math.sin(fx.angle)*f.r*.45;ctx.globalCompositeOperation="lighter";for(let i=0;i<13;i++){const t=(i+.5)/13,aa=fx.angle-half+fx.arc*t+Math.sin(battleTime*9+i)*.018,len=fx.range*(.44+.52*((i*37)%13)/12),w=(fx.enhanced?10:7)*(1-(Math.abs(t-.5)*.45)),nx=-Math.sin(aa),ny=Math.cos(aa),tipX=originX+Math.cos(aa)*len,tipY=originY+Math.sin(aa)*len,wave=Math.sin(battleTime*13+i*1.7)*5;ctx.globalAlpha=(.28+.48*(1-q))*(.7+.3*Math.sin(i));ctx.fillStyle=i%3===0?"#fef08a":i%2?"#fb923c":"#ef4444";ctx.beginPath();ctx.moveTo(originX+nx*w,originY+ny*w);ctx.quadraticCurveTo(originX+Math.cos(aa)*len*.55+nx*(w+wave),originY+Math.sin(aa)*len*.55+ny*(w+wave),tipX,tipY);ctx.quadraticCurveTo(originX+Math.cos(aa)*len*.48-nx*(w-wave),originY+Math.sin(aa)*len*.48-ny*(w-wave),originX-nx*w,originY-ny*w);ctx.closePath();ctx.fill();if(i%3===0){ctx.globalAlpha=.75*(1-q);ctx.fillStyle="#fff7ae";ctx.beginPath();ctx.arc(tipX+Math.sin(i)*4,tipY+Math.cos(i)*4,2.2,0,Math.PI*2);ctx.fill();}}
         }
@@ -14787,7 +14789,7 @@
     function drawFighter(f) {
       drawConcussionSlow(f);drawPowerFist(f);drawIronSuit(f);drawConanDeathMark(f);drawCoyoteStatusOverlay(f);
       // Spin local body images only; world effects and UI keep their original coordinates.
-      drawFighterBody(f);drawElsaColdOverlay(f);drawKirbyBeamSlow(f);
+      drawKirbyBeamSlow(f);drawFighterBody(f);drawElsaColdOverlay(f);
     }
 
     function drawFighterBody(f) {
