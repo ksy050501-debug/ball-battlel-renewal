@@ -1,0 +1,55 @@
+name: Rename Kirby to Zagabi once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/rename-zagabi-once.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch index
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          assert '<title>볼배틀 리뉴얼 v220</title>' in s
+          assert '<h1 id="mainTitle">볼배틀 리뉴얼 v220</h1>' in s
+          assert '커비' in s
+          s=s.replace('커비','자가비')
+          s=s.replace('<title>볼배틀 리뉴얼 v220</title>','<title>볼배틀 리뉴얼 v221</title>',1)
+          s=s.replace('<h1 id="mainTitle">볼배틀 리뉴얼 v220</h1>','<h1 id="mainTitle">볼배틀 리뉴얼 v221</h1>',1)
+          marker='      const patchNotes = [\n'
+          assert marker in s
+          s=s.replace(marker, marker+'      "v221: 캐릭터 표시명 커비→자가비로 변경. 내부 ID와 전투 로직은 유지.",\n',1)
+          assert re.search(r'id:"kirby"[^\n]*name:"자가비"[^\n]*hp:180', s)
+          p.write_text(s,encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)
+          assert scripts
+          Path('/tmp/check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/check.js
+          git diff --check
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'v221: rename Kirby to Zagabi'
+          git push origin main
+      - name: Remove one-shot workflow
+        shell: bash
+        run: |
+          git pull --rebase origin main
+          git rm .github/workflows/rename-zagabi-once.yml
+          git commit -m 'chore: remove v221 rename workflow'
+          git push origin main
