@@ -1,4 +1,4 @@
-name: Apply v225 background simulation patch
+name: Apply v225 automatic simulation background support
 
 on:
   push:
@@ -14,148 +14,66 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Patch background simulation
+      - name: Patch automatic simulation background support
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
-
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-
           if '볼배틀 리뉴얼 v224' not in s:
               raise SystemExit('v224 title marker missing')
           s = s.replace('볼배틀 리뉴얼 v224', '볼배틀 리뉴얼 v225', 1)
-
-          state_old = '''    let speedMultiplier = 1;
-    let summonCounter = 0;
-    let enhancedSimMode = false;
-    let fastSimMode = false;
-    let screenShake = 0;'''
-          state_new = '''    let speedMultiplier = 1;
-    let summonCounter = 0;
-    let enhancedSimMode = false;
-    let fastSimMode = false;
-    let backgroundHiddenAt = null;
-    const simulationYieldResolvers = new Set();
-    let screenShake = 0;'''
-          if s.count(state_old) != 1:
-              raise SystemExit(f'state marker expected 1, found {s.count(state_old)}')
-          s = s.replace(state_old, state_new, 1)
-
-          sim_marker = '    async function simulateQuickPair(chosen, count, progressText = "") {'
-          helpers = '''    function flushSimulationYields() {
-      for (const finish of [...simulationYieldResolvers]) finish();
-      simulationYieldResolvers.clear();
-    }
-
-    function simulationYield() {
-      if (document.hidden) return Promise.resolve();
-      return new Promise(resolve => {
-        let done = false;
-        let timer = null;
-        const finish = () => {
-          if (done) return;
-          done = true;
-          if (timer !== null) clearTimeout(timer);
-          simulationYieldResolvers.delete(finish);
-          resolve();
-        };
-        timer = setTimeout(finish, 0);
-        simulationYieldResolvers.add(finish);
-      });
-    }
-
-'''
-          if s.count(sim_marker) != 1:
+          marker = '    async function simulateQuickPair(chosen, count, progressText = "") {'
+          if s.count(marker) != 1:
               raise SystemExit('simulateQuickPair marker missing')
-          s = s.replace(sim_marker, helpers + sim_marker, 1)
-
+          helper_lines = [
+              '    const simulationYieldResolvers = new Set();',
+              '    function flushSimulationYields(){',
+              '      for(const finish of [...simulationYieldResolvers]) finish();',
+              '      simulationYieldResolvers.clear();',
+              '    }',
+              '    function simulationYield(){',
+              '      if(document.hidden) return Promise.resolve();',
+              '      return new Promise(resolve=>{',
+              '        let done=false,timer=null;',
+              '        const finish=()=>{',
+              '          if(done)return;',
+              '          done=true;',
+              '          if(timer!==null)clearTimeout(timer);',
+              '          simulationYieldResolvers.delete(finish);',
+              '          resolve();',
+              '        };',
+              '        timer=setTimeout(finish,0);',
+              '        simulationYieldResolvers.add(finish);',
+              '      });',
+              '    }',
+              '    document.addEventListener("visibilitychange",()=>{',
+              '      if(document.hidden&&fastSimMode)flushSimulationYields();',
+              '      lastFrame=performance.now();',
+              '    });',
+              '    window.addEventListener("pagehide",()=>{if(fastSimMode)flushSimulationYields();});'
+          ]
+          helpers = '\n'.join(helper_lines) + '\n\n'
+          s = s.replace(marker, helpers + marker, 1)
           old_yield = 'await new Promise(resolve => setTimeout(resolve, 0));'
-          yield_count = s.count(old_yield)
-          if yield_count != 4:
-              raise SystemExit(f'expected 4 simulation yields, found {yield_count}')
+          count = s.count(old_yield)
+          if count != 4:
+              raise SystemExit(f'expected 4 simulation yields, found {count}')
           s = s.replace(old_yield, 'await simulationYield();')
-
-          loop_marker = '    function loop(now) {'
-          bg_helpers = '''    function markBackgroundStart() {
-      if (backgroundHiddenAt === null) backgroundHiddenAt = Date.now();
-    }
-
-    function catchUpBackgroundBattle(elapsedSeconds) {
-      if (!Number.isFinite(elapsedSeconds) || elapsedSeconds <= 0) return;
-      if (!running || paused || ended || fastSimMode) return;
-
-      const prevFast = fastSimMode;
-      const prevSound = soundEnabled;
-      fastSimMode = true;
-      soundEnabled = false;
-
-      let simLeft = elapsedSeconds * speedMultiplier;
-      const step = 0.033;
-      while (simLeft > 0 && running && !ended) {
-        const sub = Math.min(step, simLeft);
-        updateCinematics(sub);
-        if (cinematicFreeze <= 0) update(sub);
-        simLeft -= sub;
-      }
-
-      fastSimMode = prevFast;
-      soundEnabled = prevSound;
-      updateHud();
-      updateStatusPanel();
-      if (ended) showBattleAnalysis();
-      draw();
-    }
-
-    function resumeFromBackground() {
-      const hiddenAt = backgroundHiddenAt;
-      backgroundHiddenAt = null;
-      lastFrame = performance.now();
-      if (hiddenAt === null) return;
-      catchUpBackgroundBattle(Math.max(0, (Date.now() - hiddenAt) / 1000));
-    }
-
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        markBackgroundStart();
-        // 자동 테스트가 setTimeout 양보 중이었다면 즉시 깨워 남은 계산을 고속으로 이어간다.
-        flushSimulationYields();
-      } else {
-        resumeFromBackground();
-      }
-    });
-    window.addEventListener("pagehide", () => {
-      markBackgroundStart();
-      flushSimulationYields();
-    });
-    window.addEventListener("pageshow", () => {
-      if (!document.hidden) resumeFromBackground();
-    });
-
-'''
-          if s.count(loop_marker) != 1:
-              raise SystemExit('loop marker missing')
-          s = s.replace(loop_marker, bg_helpers + loop_marker, 1)
-
           note_marker = '      "v224: 스티브 채굴 구조 및 공격범위 개편.'
           if s.count(note_marker) != 1:
               raise SystemExit('v224 patch note marker missing')
-          v225 = '      "v225: 백그라운드 시뮬레이션 대응. 자동 50/100전·전체 테스트·전체 상성표는 탭/앱이 숨겨지면 기존 setTimeout 양보를 즉시 해제하고 렌더링 없는 고속 계산을 계속 시도하도록 변경. 일반 전투는 visibilitychange/pagehide 시 숨김 시작 시각을 저장하고 복귀 시 누락된 실제 시간을 현재 배속 기준 0.033초 단위로 고속 보정한 뒤 화면에 반영. 일시정지·종료 상태와 기존 전투 판정은 변경하지 않음.",\n'
-          s = s.replace('      "v224: 스티브 채굴 구조 및 공격범위 개편.', v225 + '      "v224: 스티브 채굴 구조 및 공격범위 개편.', 1)
-
-          checks = [
-              ('볼배틀 리뉴얼 v225', 'v225 title'),
-              ('function simulationYield()', 'simulationYield'),
-              ('function catchUpBackgroundBattle(elapsedSeconds)', 'catch-up'),
-              ('document.addEventListener("visibilitychange"', 'visibility handler'),
-          ]
-          for needle, label in checks:
+          note = '      "v225: 자동 시뮬레이션 백그라운드 대응. 자동 50/100전·전체 테스트·전체 상성표는 탭이나 앱이 숨겨지면 기존 setTimeout 양보를 즉시 해제하고 렌더링 없는 고속 계산을 최대한 계속 시도한다. 일반 전투는 기존처럼 백그라운드에서 멈추며 복귀 시 숨겨진 시간을 따라잡지 않는다.",\n'
+          s = s.replace(note_marker, note + note_marker, 1)
+          checks = ['볼배틀 리뉴얼 v225','function simulationYield()','document.addEventListener("visibilitychange"','await simulationYield();']
+          for needle in checks:
               if needle not in s:
-                  raise SystemExit(label + ' missing after patch')
+                  raise SystemExit('missing after patch: '+needle)
           if old_yield in s:
-              raise SystemExit('old setTimeout simulation yield remains')
-
+              raise SystemExit('old simulation yield remains')
+          if 'catchUpBackgroundBattle' in s or 'backgroundHiddenAt' in s:
+              raise SystemExit('general-battle catch-up code must not exist')
           p.write_text(s, encoding='utf-8')
           PY
       - name: Syntax check
@@ -163,17 +81,18 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
-          s=Path('index.html').read_text(encoding='utf-8')
-          m=re.search(r'<script>(.*)</script>',s,re.S)
-          if not m: raise SystemExit('script block missing')
-          Path('/tmp/app.js').write_text(m.group(1),encoding='utf-8')
+          s = Path('index.html').read_text(encoding='utf-8')
+          m = re.search(r'<script>(.*)</script>', s, re.S)
+          if not m:
+              raise SystemExit('script block missing')
+          Path('/tmp/app.js').write_text(m.group(1), encoding='utf-8')
           PY
           node --check /tmp/app.js
       - name: Commit v225
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          rm .github/workflows/v225-background-sim.yml
-          git add index.html .github/workflows/v225-background-sim.yml
-          git commit -m 'v225: support background simulation catch-up'
+          rm -f .github/workflows/v225-background-sim.yml
+          git add -A
+          git commit -m 'v225: keep automatic simulations running in background'
           git push
