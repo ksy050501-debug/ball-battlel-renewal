@@ -19,154 +19,77 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
-
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-
-          if '볼배틀 리뉴얼 v225' not in s:
-              raise SystemExit('v225 title marker missing')
+          if '볼배틀 리뉴얼 v225' not in s: raise SystemExit('v225 title marker missing')
           s=s.replace('볼배틀 리뉴얼 v225','볼배틀 리뉴얼 v226',1)
-
-          steve_old='''    const STEVE = {
-      pickupBonus:24, resourceRadius:10, resourceSpawnDelay:1,
-      attackPeriod:1.05, attackBonuses:[4,6,7,8,10,12],
-      mineTimes:{wood:.6,stone:.9,iron:1.2,diamond:1.6},
-      portalFirst:5, portalLife:4.5, portalGap:4.5, portalLength:96,
-      netherTime:10, netherCost:30
-    };'''
-          steve_new='''    const STEVE = {
-      pickupBonus:24, resourceRadius:10, resourceSpawnDelay:1,
-      attackPeriod:1.05, attackBonuses:[4,6,7,8,10,12],
-      mineTimes:{wood:.6,stone:.9,iron:1.2,diamond:1.6},
-      enchantBookSpawnDelay:1, enchantPickupBonus:24, enchantBookRadius:10,
-      sharpnessBonus:3, knockbackSpeed:330, knockbackTime:.16, mendingHeal:3, mendingCooldown:1.5,
-      portalFirst:5, portalLife:4.5, portalGap:4.5, portalLength:96,
-      netherTime:10, netherCost:30
-    };'''
-          if s.count(steve_old)!=1:
-              raise SystemExit(f'STEVE marker expected 1, found {s.count(steve_old)}')
-          s=s.replace(steve_old,steve_new,1)
-
-          init_marker='    function initSteve(f){'
-          helpers='''    const STEVE_ENCHANTS = [
-      {id:"sharpness",name:"날카로움 IV",color:"#c084fc"},
-      {id:"knockback",name:"넉백 IV",color:"#60a5fa"},
-      {id:"mending",name:"수선 IV",color:"#34d399"}
-    ];
-    function steveHasEnchant(f,id){return !!f?.steve?.enchants?.includes(id);}
-    function steveSpawnEnchantBook(f){
-      const s=f?.steve;if(!s||s.tier<4||s.nether>0||s.enchantBook)return false;
-      const remain=STEVE_ENCHANTS.filter(e=>!s.enchants.includes(e.id));
-      if(!remain.length)return false;
-      const e=remain[Math.floor(rand(0,remain.length))]||remain[0],pad=28;
-      s.enchantBook={id:e.id,x:rand(arena.x+pad,arena.x2-pad),y:rand(arena.y+pad,arena.y2-pad),r:STEVE.enchantBookRadius};
-      return true;
-    }
-    function steveCollectEnchantBook(f){
-      const s=f?.steve,b=s?.enchantBook;if(!s||!b)return false;
-      const info=STEVE_ENCHANTS.find(e=>e.id===b.id);if(!info)return false;
-      if(!s.enchants.includes(b.id))s.enchants.push(b.id);
-      s.enchantBook=null;s.enchantBookSpawnCd=STEVE.enchantBookSpawnDelay;
-      if(!fastSimMode){spawnBlast(f.x,f.y,38,info.color);spawnParticles(f.x,f.y,info.color,14);spawnFloatingText(f.x,f.y-f.r-38,info.name+" 획득",info.color);playSound("magic",.65);}
-      return true;
-    }
-    function steveUpdateEnchantBook(f,dt){
-      const s=f?.steve;if(!s||s.tier<4)return;
-      s.mendingCd=Math.max(0,(s.mendingCd||0)-dt);
-      if(s.nether>0)return;
-      if(!s.enchantBook){
-        if(s.enchants.length>=STEVE_ENCHANTS.length)return;
-        s.enchantBookSpawnCd=Math.max(0,(s.enchantBookSpawnCd||0)-dt);
-        if(s.enchantBookSpawnCd<=0)steveSpawnEnchantBook(f);
-        return;
-      }
-      const b=s.enchantBook;
-      if(Math.hypot(f.x-b.x,f.y-b.y)<=f.r+b.r+STEVE.enchantPickupBonus)steveCollectEnchantBook(f);
-    }
-
-'''
-          if s.count(init_marker)!=1:
-              raise SystemExit('initSteve marker missing')
-          s=s.replace(init_marker,helpers+init_marker,1)
-
-          init_old='''      f.steve={tier:0,count:0,resource:null,resourceSpawnCd:0,attackCd:.35,swing:0,mining:false,mineAnim:0,portal:null,portalCd:0,nether:0,baseSpeed:f.baseSpeed||f.speed||2.6};'''
-          init_new='''      f.steve={tier:0,count:0,resource:null,resourceSpawnCd:0,attackCd:.35,swing:0,mining:false,mineAnim:0,portal:null,portalCd:0,nether:0,enchants:[],enchantBook:null,enchantBookSpawnCd:0,mendingCd:0,baseSpeed:f.baseSpeed||f.speed||2.6};'''
-          if s.count(init_old)!=1:
-              raise SystemExit('Steve init state marker missing')
-          s=s.replace(init_old,init_new,1)
-
-          tier4_old='''if(s.tier===4){s.portalCd=STEVE.portalFirst;s.resource=null;s.resourceSpawnCd=0;}'''
-          tier4_new='''if(s.tier===4){s.portalCd=STEVE.portalFirst;s.resource=null;s.resourceSpawnCd=0;s.enchantBookSpawnCd=STEVE.enchantBookSpawnDelay;}'''
-          if s.count(tier4_old)!=1:
-              raise SystemExit('tier4 marker missing')
-          s=s.replace(tier4_old,tier4_new,1)
-
-          attack_old='''      const tier=steveTier(f),dealt=damage(e,tier.damage,f,tier.name+" 검");s.attackCd=STEVE.attackPeriod;s.swing=.22;
-      if(dealt>0&&!fastSimMode){spawnHitFlash(e.x,e.y,tier.color,34);playSound("hit",.48);}'''
-          attack_new='''      const tier=steveTier(f),power=tier.damage+(steveHasEnchant(f,"sharpness")?STEVE.sharpnessBonus:0),dealt=damage(e,power,f,tier.name+" 검");s.attackCd=STEVE.attackPeriod;s.swing=.22;
-      if(dealt>0&&steveHasEnchant(f,"knockback")){
-        const dx=e.x-f.x,dy=e.y-f.y,d=Math.hypot(dx,dy)||1;
-        applyKnockback(e,f,dx/d,dy/d,STEVE.knockbackSpeed,STEVE.knockbackTime,{wallDamageSource:null,wallDamage:0,resetWallHits:true});
-      }
-      if(dealt>0&&steveHasEnchant(f,"mending")&&(s.mendingCd||0)<=0){
-        f.hp=Math.min(f.maxHp,f.hp+STEVE.mendingHeal);s.mendingCd=STEVE.mendingCooldown;
-        if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-28,"수선 +"+STEVE.mendingHeal,"#34d399");
-      }
-      if(dealt>0&&!fastSimMode){spawnHitFlash(e.x,e.y,tier.color,34);playSound("hit",.48);}'''
-          if s.count(attack_old)!=1:
-              raise SystemExit('steveAttack marker missing')
-          s=s.replace(attack_old,attack_new,1)
-
-          update_old='''      steveAttack(f,dt);
-      if(s.tier===4){'''
-          update_new='''      steveUpdateEnchantBook(f,dt);
-      steveAttack(f,dt);
-      if(s.tier===4){'''
-          if s.count(update_old)!=1:
-              raise SystemExit('updateSteve insertion marker missing')
-          s=s.replace(update_old,update_new,1)
-
-          world_old='''        if(s.resource){const r=s.resource,info=STEVE_RES[r.type],pulse=.5+.5*Math.sin(battleTime*5);ctx.save();ctx.translate(r.x,r.y);ctx.shadowColor=info.color;ctx.shadowBlur=8+7*pulse;ctx.fillStyle=info.color;ctx.strokeStyle=info.edge;ctx.lineWidth=2;ctx.fillRect(-9,-9,18,18);ctx.strokeRect(-9,-9,18,18);ctx.globalAlpha=.55;ctx.fillStyle="#fff";ctx.fillRect(-5,-5,4,4);ctx.fillRect(2,1,4,4);ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle=info.color;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.lineWidth=3;ctx.strokeText(info.name,r.x,r.y-16);ctx.fillText(info.name,r.x,r.y-16);ctx.restore();}'''
-          world_new=world_old+'''\n        if(s.enchantBook){const b=s.enchantBook,info=STEVE_ENCHANTS.find(e=>e.id===b.id),pulse=.5+.5*Math.sin(battleTime*6);if(info){ctx.save();ctx.translate(b.x,b.y);ctx.rotate(-.12);ctx.shadowColor=info.color;ctx.shadowBlur=10+8*pulse;ctx.fillStyle="#7e22ce";ctx.strokeStyle="#e9d5ff";ctx.lineWidth=2;ctx.fillRect(-10,-8,20,16);ctx.strokeRect(-10,-8,20,16);ctx.strokeStyle="#f5d0fe";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(0,7);ctx.stroke();ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle=info.color;ctx.strokeStyle="rgba(0,0,0,.82)";ctx.lineWidth=3;ctx.strokeText(info.name,b.x,b.y-16);ctx.fillText(info.name,b.x,b.y-16);ctx.restore();}}'''
-          if s.count(world_old)!=1:
-              raise SystemExit('drawSteveWorld resource marker missing')
-          s=s.replace(world_old,world_new,1)
-
-          desc_old='''다이아 장비가 되면 네더 포탈이 나타나며 10초 뒤 네더라이트 장비로 귀환하면서 체력30을 잃는다.'''
-          desc_new='''다이아 장비가 되면 날카로움 IV·넉백 IV·수선 IV 인챈트 북이 랜덤 위치에 한 권씩 등장하며 접촉하면 영구 획득한다. 획득한 인챈트는 네더 원정과 네더라이트 전환 뒤에도 유지된다. 네더 포탈에 진입하면 10초 뒤 네더라이트 장비로 귀환하면서 체력30을 잃는다.'''
-          if s.count(desc_old)!=1:
-              raise SystemExit('Steve character desc marker missing')
-          s=s.replace(desc_old,desc_new,1)
-
-          damage_old='''if(c.id==="steve_miner")return {damage:"맨손5 / 나무검7 / 돌검9 / 철검11 / 다이아검14 / 네더라이트검17 · 공격범위 보너스 +4/+6/+7/+8/+10/+12",tick:"근접 공격1.05초 · 자원 1개만 존재 · 채굴 나무0.6/돌0.9/철1.2/다이아1.6초 · 나무1→돌2→철3→다이아4 · 다음 자원1초 후 생성 · 네더10초",tip:"자원 추적 이동은 하지 않는다. 습득 반경은 몸체+자원 반경에 24를 더하며, 범위 안에서는 이동·공격을 멈추고 곡괭이질한다. 다른 캐릭터 본체와 충돌하면 채굴이 즉시 중단되지만 진행도는 자원에 누적되어 다음 접촉 때 이어진다. 철 장비의 공격범위는 뉴헬로 병장의 비접촉 발동거리(+8)와 같고 다이아·네더라이트에서 더 넓어진다. 기존 장비별 공격력·피해감소와 네더 귀환 체력30 감소는 유지한다."};'''
-          damage_new='''if(c.id==="steve_miner")return {damage:"맨손5 / 나무검7 / 돌검9 / 철검11 / 다이아검14 / 네더라이트검17 · 날카로움 IV 획득 시 검 피해+3 · 공격범위 보너스 +4/+6/+7/+8/+10/+12",tick:"근접 공격1.05초 · 자원 1개만 존재 · 채굴 나무0.6/돌0.9/철1.2/다이아1.6초 · 나무1→돌2→철3→다이아4 · 다이아 이후 인챈트 북 1권씩 · 네더10초",tip:"다이아 장비부터 남은 인챈트 중 한 권이 랜덤 위치에 등장한다. 날카로움 IV는 검 피해+3, 넉백 IV는 검 적중 시 추가 넉백, 수선 IV는 실제 피해를 준 검 적중 시 체력3 회복(내부 쿨1.5초). 획득 인챈트는 중복되지 않으며 네더 진입과 네더라이트 전환 뒤에도 모두 유지된다. 기존 채굴·장비별 피해감소·네더 귀환 체력30 감소 구조는 유지한다."};'''
-          if s.count(damage_old)!=1:
-              raise SystemExit('Steve damage info marker missing')
-          s=s.replace(damage_old,damage_new,1)
-
-          status_old='''if(s.tier===4)return {ratio:s.portal?clamp(s.portal.life/s.portal.maxLife,0,1):clamp(1-(s.portalCd||0)/STEVE.portalGap,0,1),className:"skill-fill",text:s.portal?`다이아 장비 · 포탈 ${s.portal.life.toFixed(1)}초`:`다이아 장비 · 포탈 대기 ${(s.portalCd||0).toFixed(1)}초`,extraTextHtml:'<div class="status-skill-label">포탈 접촉 → 네더 10초</div>'};return {ratio:1,className:"skill-fill",text:"네더라이트 장비 · 최종 단계",extraTextHtml:'<div class="status-skill-label">검17 · 일반 피해 20% 감소</div>'};}'''
-          status_new='''if(s.tier===4){const ench=s.enchants.map(id=>(STEVE_ENCHANTS.find(e=>e.id===id)||{}).name).filter(Boolean).join(" · ")||"없음";return {ratio:s.portal?clamp(s.portal.life/s.portal.maxLife,0,1):clamp(1-(s.portalCd||0)/STEVE.portalGap,0,1),className:"skill-fill",text:s.portal?`다이아 장비 · 포탈 ${s.portal.life.toFixed(1)}초`:`다이아 장비 · 포탈 대기 ${(s.portalCd||0).toFixed(1)}초`,extraTextHtml:`<div class="status-skill-label">인챈트 ${s.enchants.length}/3 · ${ench}</div>`};}const ench=s.enchants.map(id=>(STEVE_ENCHANTS.find(e=>e.id===id)||{}).name).filter(Boolean).join(" · ")||"없음";return {ratio:1,className:"skill-fill",text:"네더라이트 장비 · 최종 단계",extraTextHtml:`<div class="status-skill-label">인챈트 ${s.enchants.length}/3 · ${ench}</div>`};}'''
-          if s.count(status_old)!=1:
-              raise SystemExit('Steve status marker missing')
-          s=s.replace(status_old,status_new,1)
-
-          note_marker='      "v225: 자동 시뮬레이션 백그라운드 대응.'
-          if s.count(note_marker)!=1:
-              raise SystemExit('v225 patch note marker missing')
-          v226='      "v226: 스티브 다이아 이후 인챈트 북 시스템 추가. 다이아 장비부터 날카로움 IV·넉백 IV·수선 IV 중 미획득 책이 랜덤 위치에 한 권씩 등장하며 접촉 시 영구 획득. 날카로움은 검 피해+3, 넉백은 검 적중 시 추가 넉백, 수선은 실제 검 피해 적중 시 체력3 회복(1.5초 내부 쿨). 중복 획득은 없고 네더 진입 및 네더라이트 전환 뒤에도 모든 인챈트가 유지된다. 기존 채굴·장비 성장·포탈·네더 구조는 유지.",\n'
-          s=s.replace(note_marker,v226+note_marker,1)
-
-          checks=[
-            '볼배틀 리뉴얼 v226',
-            'const STEVE_ENCHANTS = [',
-            'function steveUpdateEnchantBook(f,dt)',
-            'steveHasEnchant(f,"sharpness")',
-            'if(s.enchantBook){',
-            'v226: 스티브 다이아 이후 인챈트 북 시스템 추가.'
+          needle='      mineTimes:{wood:.6,stone:.9,iron:1.2,diamond:1.6},\n'
+          insert=needle+'      enchantBookSpawnDelay:1, enchantPickupBonus:24, enchantBookRadius:10,\n      sharpnessBonus:3, knockbackSpeed:330, knockbackTime:.16, mendingHeal:3, mendingCooldown:1.5,\n'
+          if s.count(needle)!=1: raise SystemExit('STEVE config marker missing')
+          s=s.replace(needle,insert,1)
+          helper_lines=[
+            '    const STEVE_ENCHANTS = [',
+            '      {id:"sharpness",name:"날카로움 IV",color:"#c084fc"},',
+            '      {id:"knockback",name:"넉백 IV",color:"#60a5fa"},',
+            '      {id:"mending",name:"수선 IV",color:"#34d399"}',
+            '    ];',
+            '    function steveHasEnchant(f,id){return !!f?.steve?.enchants?.includes(id);}',
+            '    function steveSpawnEnchantBook(f){',
+            '      const s=f?.steve;if(!s||s.tier<4||s.nether>0||s.enchantBook)return false;',
+            '      const remain=STEVE_ENCHANTS.filter(e=>!s.enchants.includes(e.id));if(!remain.length)return false;',
+            '      const e=remain[Math.floor(rand(0,remain.length))]||remain[0],pad=28;',
+            '      s.enchantBook={id:e.id,x:rand(arena.x+pad,arena.x2-pad),y:rand(arena.y+pad,arena.y2-pad),r:STEVE.enchantBookRadius};return true;',
+            '    }',
+            '    function steveCollectEnchantBook(f){',
+            '      const s=f?.steve,b=s?.enchantBook;if(!s||!b)return false;const info=STEVE_ENCHANTS.find(e=>e.id===b.id);if(!info)return false;',
+            '      if(!s.enchants.includes(b.id))s.enchants.push(b.id);s.enchantBook=null;s.enchantBookSpawnCd=STEVE.enchantBookSpawnDelay;',
+            '      if(!fastSimMode){spawnBlast(f.x,f.y,38,info.color);spawnParticles(f.x,f.y,info.color,14);spawnFloatingText(f.x,f.y-f.r-38,info.name+" 획득",info.color);playSound("magic",.65);}return true;',
+            '    }',
+            '    function steveUpdateEnchantBook(f,dt){',
+            '      const s=f?.steve;if(!s||s.tier<4)return;s.mendingCd=Math.max(0,(s.mendingCd||0)-dt);if(s.nether>0)return;',
+            '      if(!s.enchantBook){if(s.enchants.length>=STEVE_ENCHANTS.length)return;s.enchantBookSpawnCd=Math.max(0,(s.enchantBookSpawnCd||0)-dt);if(s.enchantBookSpawnCd<=0)steveSpawnEnchantBook(f);return;}',
+            '      const b=s.enchantBook;if(Math.hypot(f.x-b.x,f.y-b.y)<=f.r+b.r+STEVE.enchantPickupBonus)steveCollectEnchantBook(f);',
+            '    }',
+            ''
           ]
-          for x in checks:
+          helper='\n'.join(helper_lines)
+          marker='    function initSteve(f){'
+          if s.count(marker)!=1: raise SystemExit('initSteve marker missing')
+          s=s.replace(marker,helper+marker,1)
+          old='      f.steve={tier:0,count:0,resource:null,resourceSpawnCd:0,attackCd:.35,swing:0,mining:false,mineAnim:0,portal:null,portalCd:0,nether:0,baseSpeed:f.baseSpeed||f.speed||2.6};'
+          new='      f.steve={tier:0,count:0,resource:null,resourceSpawnCd:0,attackCd:.35,swing:0,mining:false,mineAnim:0,portal:null,portalCd:0,nether:0,enchants:[],enchantBook:null,enchantBookSpawnCd:0,mendingCd:0,baseSpeed:f.baseSpeed||f.speed||2.6};'
+          if s.count(old)!=1: raise SystemExit('Steve init state marker missing')
+          s=s.replace(old,new,1)
+          old='if(s.tier===4){s.portalCd=STEVE.portalFirst;s.resource=null;s.resourceSpawnCd=0;}'
+          new='if(s.tier===4){s.portalCd=STEVE.portalFirst;s.resource=null;s.resourceSpawnCd=0;s.enchantBookSpawnCd=STEVE.enchantBookSpawnDelay;}'
+          if s.count(old)!=1: raise SystemExit('tier4 marker missing')
+          s=s.replace(old,new,1)
+          old='      const tier=steveTier(f),dealt=damage(e,tier.damage,f,tier.name+" 검");s.attackCd=STEVE.attackPeriod;s.swing=.22;\n      if(dealt>0&&!fastSimMode){spawnHitFlash(e.x,e.y,tier.color,34);playSound("hit",.48);}'
+          new='      const tier=steveTier(f),power=tier.damage+(steveHasEnchant(f,"sharpness")?STEVE.sharpnessBonus:0),dealt=damage(e,power,f,tier.name+" 검");s.attackCd=STEVE.attackPeriod;s.swing=.22;\n      if(dealt>0&&steveHasEnchant(f,"knockback")){const dx=e.x-f.x,dy=e.y-f.y,d=Math.hypot(dx,dy)||1;applyKnockback(e,f,dx/d,dy/d,STEVE.knockbackSpeed,STEVE.knockbackTime,{wallDamageSource:null,wallDamage:0,resetWallHits:true});}\n      if(dealt>0&&steveHasEnchant(f,"mending")&&(s.mendingCd||0)<=0){f.hp=Math.min(f.maxHp,f.hp+STEVE.mendingHeal);s.mendingCd=STEVE.mendingCooldown;if(!fastSimMode)spawnFloatingText(f.x,f.y-f.r-28,"수선 +"+STEVE.mendingHeal,"#34d399");}\n      if(dealt>0&&!fastSimMode){spawnHitFlash(e.x,e.y,tier.color,34);playSound("hit",.48);}'
+          if s.count(old)!=1: raise SystemExit('steveAttack marker missing')
+          s=s.replace(old,new,1)
+          old='      steveAttack(f,dt);\n      if(s.tier===4){'
+          new='      steveUpdateEnchantBook(f,dt);\n      steveAttack(f,dt);\n      if(s.tier===4){'
+          if s.count(old)!=1: raise SystemExit('updateSteve marker missing')
+          s=s.replace(old,new,1)
+          portal_draw='        if(s.portal){const p=s.portal,[x1,y1,x2,y2]=stevePortalEndpoints(p),pulse=.5+.5*Math.sin(battleTime*9);'
+          book_draw='        if(s.enchantBook){const b=s.enchantBook,info=STEVE_ENCHANTS.find(e=>e.id===b.id),pulse=.5+.5*Math.sin(battleTime*6);if(info){ctx.save();ctx.translate(b.x,b.y);ctx.rotate(-.12);ctx.shadowColor=info.color;ctx.shadowBlur=10+8*pulse;ctx.fillStyle="#7e22ce";ctx.strokeStyle="#e9d5ff";ctx.lineWidth=2;ctx.fillRect(-10,-8,20,16);ctx.strokeRect(-10,-8,20,16);ctx.strokeStyle="#f5d0fe";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(0,7);ctx.stroke();ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle=info.color;ctx.strokeStyle="rgba(0,0,0,.82)";ctx.lineWidth=3;ctx.strokeText(info.name,b.x,b.y-16);ctx.fillText(info.name,b.x,b.y-16);ctx.restore();}}\n'
+          if s.count(portal_draw)!=1: raise SystemExit('Steve portal draw marker missing')
+          s=s.replace(portal_draw,book_draw+portal_draw,1)
+          old='다이아 장비가 되면 네더 포탈이 나타나며 10초 뒤 네더라이트 장비로 귀환하면서 체력30을 잃는다.'
+          new='다이아 장비가 되면 날카로움 IV·넉백 IV·수선 IV 인챈트 북이 랜덤 위치에 한 권씩 등장하며 접촉하면 영구 획득한다. 획득한 인챈트는 네더 원정과 네더라이트 전환 뒤에도 유지된다. 네더 포탈에 진입하면 10초 뒤 네더라이트 장비로 귀환하면서 체력30을 잃는다.'
+          if s.count(old)!=1: raise SystemExit('Steve description marker missing')
+          s=s.replace(old,new,1)
+          pattern=r'if\(c\.id==="steve_miner"\)return \{damage:"[^\n]*?"\};'
+          replacement='if(c.id==="steve_miner")return {damage:"맨손5 / 나무검7 / 돌검9 / 철검11 / 다이아검14 / 네더라이트검17 · 날카로움 IV 획득 시 검 피해+3 · 공격범위 보너스 +4/+6/+7/+8/+10/+12",tick:"근접 공격1.05초 · 자원 1개만 존재 · 채굴 나무0.6/돌0.9/철1.2/다이아1.6초 · 나무1→돌2→철3→다이아4 · 다이아 이후 인챈트 북 1권씩 · 네더10초",tip:"다이아 장비부터 남은 인챈트 중 한 권이 랜덤 위치에 등장한다. 날카로움 IV는 검 피해+3, 넉백 IV는 검 적중 시 추가 넉백, 수선 IV는 실제 피해를 준 검 적중 시 체력3 회복(내부 쿨1.5초). 획득 인챈트는 중복되지 않으며 네더 진입과 네더라이트 전환 뒤에도 모두 유지된다. 기존 채굴·장비별 피해감소·네더 귀환 체력30 감소 구조는 유지한다."};'
+          s,n=re.subn(pattern,replacement,s,count=1)
+          if n!=1: raise SystemExit('Steve damage info marker missing')
+          note='      "v226: 스티브 다이아 이후 인챈트 북 시스템 추가. 다이아 장비부터 날카로움 IV·넉백 IV·수선 IV 중 미획득 책이 랜덤 위치에 한 권씩 등장하며 접촉 시 영구 획득. 날카로움은 검 피해+3, 넉백은 검 적중 시 추가 넉백, 수선은 실제 검 피해 적중 시 체력3 회복(1.5초 내부 쿨). 중복 획득은 없고 네더 진입 및 네더라이트 전환 뒤에도 모든 인챈트가 유지된다. 기존 채굴·장비 성장·포탈·네더 구조는 유지.",\n'
+          marker='      "v225: 자동 시뮬레이션 백그라운드 대응.'
+          if s.count(marker)!=1: raise SystemExit('v225 patch note marker missing')
+          s=s.replace(marker,note+marker,1)
+          for x in ['볼배틀 리뉴얼 v226','const STEVE_ENCHANTS = [','steveUpdateEnchantBook(f,dt);','steveHasEnchant(f,"sharpness")','if(s.enchantBook){','v226: 스티브 다이아 이후 인챈트 북 시스템 추가.']:
               if x not in s: raise SystemExit('missing after patch: '+x)
-
           p.write_text(s,encoding='utf-8')
           PY
       - name: Syntax check
