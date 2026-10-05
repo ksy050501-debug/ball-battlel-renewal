@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v226</title>
+  <title>볼배틀 리뉴얼 v227</title>
   <style>
     :root {
       --bg: #020617;
@@ -3207,7 +3207,7 @@
 
 
     const STEVE = {
-      pickupBonus:24, resourceRadius:10, resourceSpawnDelay:1,
+      pickupBonus:24, resourceRadius:14, resourceSpawnDelay:1,
       attackPeriod:1.05, attackBonuses:[4,6,7,8,10,12],
       mineTimes:{wood:.6,stone:.9,iron:1.2,diamond:1.6},
       enchantBookSpawnDelay:1, enchantPickupBonus:24, enchantBookRadius:10,
@@ -3337,7 +3337,7 @@
     }
     function drawSteveWorld(){
       if(fastSimMode)return;for(const f of fighters){const s=f.alive&&f.steve;if(!s)continue;
-        if(s.resource){const r=s.resource,info=STEVE_RES[r.type],pulse=.5+.5*Math.sin(battleTime*5);ctx.save();ctx.translate(r.x,r.y);ctx.shadowColor=info.color;ctx.shadowBlur=8+7*pulse;ctx.fillStyle=info.color;ctx.strokeStyle=info.edge;ctx.lineWidth=2;ctx.fillRect(-9,-9,18,18);ctx.strokeRect(-9,-9,18,18);ctx.globalAlpha=.55;ctx.fillStyle="#fff";ctx.fillRect(-5,-5,4,4);ctx.fillRect(2,1,4,4);ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle=info.color;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.lineWidth=3;ctx.strokeText(info.name,r.x,r.y-16);ctx.fillText(info.name,r.x,r.y-16);ctx.restore();}
+        if(s.resource){const r=s.resource,info=STEVE_RES[r.type],pulse=.5+.5*Math.sin(battleTime*5);ctx.save();ctx.translate(r.x,r.y);ctx.shadowColor=info.color;ctx.shadowBlur=8+7*pulse;ctx.fillStyle=info.color;ctx.strokeStyle=info.edge;ctx.lineWidth=2;ctx.fillRect(-r.r,-r.r,r.r*2,r.r*2);ctx.strokeRect(-r.r,-r.r,r.r*2,r.r*2);ctx.globalAlpha=.55;ctx.fillStyle="#fff";ctx.fillRect(-r.r*.55,-r.r*.55,5,5);ctx.fillRect(r.r*.15,r.r*.1,5,5);ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle=info.color;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.lineWidth=3;ctx.strokeText(info.name,r.x,r.y-r.r-7);ctx.fillText(info.name,r.x,r.y-r.r-7);ctx.restore();}
         if(s.enchantBook){const b=s.enchantBook,info=STEVE_ENCHANTS.find(e=>e.id===b.id),pulse=.5+.5*Math.sin(battleTime*6);if(info){ctx.save();ctx.translate(b.x,b.y);ctx.rotate(-.12);ctx.shadowColor=info.color;ctx.shadowBlur=10+8*pulse;ctx.fillStyle="#7e22ce";ctx.strokeStyle="#e9d5ff";ctx.lineWidth=2;ctx.fillRect(-10,-8,20,16);ctx.strokeRect(-10,-8,20,16);ctx.strokeStyle="#f5d0fe";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(0,7);ctx.stroke();ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle=info.color;ctx.strokeStyle="rgba(0,0,0,.82)";ctx.lineWidth=3;ctx.strokeText(info.name,b.x,b.y-16);ctx.fillText(info.name,b.x,b.y-16);ctx.restore();}}
         if(s.portal){const p=s.portal,[x1,y1,x2,y2]=stevePortalEndpoints(p),pulse=.5+.5*Math.sin(battleTime*9);ctx.save();ctx.strokeStyle="#a855f7";ctx.shadowColor="#c084fc";ctx.shadowBlur=18;ctx.lineWidth=13+3*pulse;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.strokeStyle="#e9d5ff";ctx.globalAlpha=.65;ctx.lineWidth=2.2;ctx.setLineDash([8,7]);ctx.lineDashOffset=-battleTime*25;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
       }
@@ -6227,6 +6227,7 @@
     }
 
       const patchNotes = [
+      "v227: 스티브 자원 크기 확대. 나무·돌·철·다이아 자원의 판정 반경을 10→14로 확대하고 화면 표시 크기도 판정 반경과 동일하게 키움. 기존 습득 보너스 +24, 채굴시간, 필요 자원 수, 전투 수치는 유지.",
       "v226: 스티브 다이아 이후 인챈트 북 시스템 추가. 다이아 장비부터 날카로움 IV·넉백 IV·수선 IV 중 미획득 책이 랜덤 위치에 한 권씩 등장하며 접촉 시 영구 획득. 날카로움은 검 피해+3, 넉백은 검 적중 시 추가 넉백, 수선은 실제 검 피해 적중 시 체력3 회복(1.5초 내부 쿨). 중복 획득은 없고 네더 진입 및 네더라이트 전환 뒤에도 모든 인챈트가 유지된다. 기존 채굴·장비 성장·포탈·네더 구조는 유지.",
       "v225: 자동 시뮬레이션 백그라운드 대응. 자동 50/100전·전체 테스트·전체 상성표는 탭이나 앱이 숨겨지면 기존 setTimeout 양보를 즉시 해제하고 렌더링 없는 고속 계산을 최대한 계속 시도한다. 일반 전투는 기존처럼 백그라운드에서 멈추며 복귀 시 숨겨진 시간을 따라잡지 않는다.",
       "v224: 스티브 채굴 구조 및 공격범위 개편. 자원 추적 이동을 삭제하고 습득반경을 +20→+24로 소폭 확대. 자원 접촉 시 이동·공격을 멈추고 곡괭이질하며 나무0.6/돌0.9/철1.2/다이아1.6초 후 획득. 다른 캐릭터 본체와 충돌 시 채굴은 중단되지만 진행도는 누적 유지. 공격범위 보너스는 맨손/나무/돌/철/다이아/네더라이트 +4/+6/+7/+8/+10/+12로 단계별 증가하며 철은 뉴헬로 비접촉 발동거리와 동일. 기존 공격력·피해감소·성장 필요량·네더 구조는 유지.",
