@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v227</title>
+  <title>볼배틀 리뉴얼 v228</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v227</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v228</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -3208,6 +3208,7 @@
 
     const STEVE = {
       pickupBonus:24, resourceRadius:14, resourceSpawnDelay:1,
+      resourceSteerFirst:12, resourceSteerRepeat:10,
       attackPeriod:1.05, attackBonuses:[4,6,7,8,10,12],
       mineTimes:{wood:.6,stone:.9,iron:1.2,diamond:1.6},
       enchantBookSpawnDelay:1, enchantPickupBonus:24, enchantBookRadius:10,
@@ -3260,7 +3261,7 @@
     function steveSpawnResource(f){
       const s=f?.steve,t=steveTier(f);if(!s||!t.resource){if(s)s.resource=null;return;}
       const r=STEVE.resourceRadius;
-      s.resource={type:t.resource,x:rand(arena.x+r+18,arena.x2-r-18),y:rand(arena.y+r+18,arena.y2-r-18),r,age:0,progress:0};s.mining=false;s.mineAnim=0;
+      s.resource={type:t.resource,x:rand(arena.x+r+18,arena.x2-r-18),y:rand(arena.y+r+18,arena.y2-r-18),r,age:0,progress:0,nextSteer:STEVE.resourceSteerFirst,inside:false};s.mining=false;s.mineAnim=0;
     }
     function steveCollectResource(f){
       const s=f?.steve,t=steveTier(f),res=s?.resource;if(!s||!res||!t.resource||res.type!==t.resource)return false;
@@ -3315,6 +3316,13 @@
         const r=s.resource;
         if(r){
           r.age+=dt;const pickup=f.r+r.r+STEVE.pickupBonus,inRange=Math.hypot(f.x-r.x,f.y-r.y)<=pickup;
+          const entering=inRange&&!r.inside;r.inside=inRange;
+          if(entering){r.age=0;r.nextSteer=STEVE.resourceSteerFirst;}
+          if(!inRange&&r.age>=(r.nextSteer??STEVE.resourceSteerFirst)&&!steveBlocked(f)){
+            const dx=r.x-f.x,dy=r.y-f.y,d=Math.hypot(dx,dy)||1,speed=(s.baseSpeed||f.baseSpeed||f.speed||2.6)*44;
+            f.vx=dx/d*speed;f.vy=dy/d*speed;
+            r.nextSteer=(r.nextSteer??STEVE.resourceSteerFirst)+STEVE.resourceSteerRepeat;
+          }
           if(inRange){
             const collided=fighters.some(o=>o!==f&&o.alive&&!o.isSummon&&Math.hypot(f.x-o.x,f.y-o.y)<=f.r+o.r);
             if(collided||steveBlocked(f)){s.mining=false;s.mineAnim=0;}
@@ -6227,6 +6235,7 @@
     }
 
       const patchNotes = [
+      "v228: 공통 이동 고착 복구 및 스티브 장기 미획득 방향 보정. 헐크크 점프 중 넉백 시 점프 상태를 정상 종료해 위치 고정 버그를 막고, 기절·빙결·속박·시전·채굴·네더·고유 이동 등 의도된 정지를 제외한 상태에서 2초간 좌표 변화가 거의 없으면 기본 속도로 이동을 복구한다. 스티브는 자원을 12초간 못 얻은 경우 현재 이동방향을 자원 쪽으로 한 번만 돌리며, 이후에도 못 얻으면 10초 간격으로 한 번씩만 재보정한다. 속도 증가·지속 추적·강제 이동은 없고 벽 반사나 상대 충돌로 바뀐 방향을 그대로 따른다.",
       "v227: 스티브 자원 크기 확대. 나무·돌·철·다이아 자원의 판정 반경을 10→14로 확대하고 화면 표시 크기도 판정 반경과 동일하게 키움. 기존 습득 보너스 +24, 채굴시간, 필요 자원 수, 전투 수치는 유지.",
       "v226: 스티브 다이아 이후 인챈트 북 시스템 추가. 다이아 장비부터 날카로움 IV·넉백 IV·수선 IV 중 미획득 책이 랜덤 위치에 한 권씩 등장하며 접촉 시 영구 획득. 날카로움은 검 피해+3, 넉백은 검 적중 시 추가 넉백, 수선은 실제 검 피해 적중 시 체력3 회복(1.5초 내부 쿨). 중복 획득은 없고 네더 진입 및 네더라이트 전환 뒤에도 모든 인챈트가 유지된다. 기존 채굴·장비 성장·포탈·네더 구조는 유지.",
       "v225: 자동 시뮬레이션 백그라운드 대응. 자동 50/100전·전체 테스트·전체 상성표는 탭이나 앱이 숨겨지면 기존 setTimeout 양보를 즉시 해제하고 렌더링 없는 고속 계산을 최대한 계속 시도한다. 일반 전투는 기존처럼 백그라운드에서 멈추며 복귀 시 숨겨진 시간을 따라잡지 않는다.",
@@ -6475,7 +6484,7 @@
         tip:"그루브는 더 이상 단계별 별도 진행도가 아니라 하나의 0~300 수치다. 피해7을 받으면 35, 피해10을 받으면 50이 즉시 빠지며 경계값 아래로 내려가면 그루브 단계도 곧바로 하락한다. 별도 WHIPLASH 게이지는 일반 킥이 적에게 실제 피해를 준 경우에만 5씩 오르고 솔로 중에는 충전되지 않는다. 100이 되면 다음 마디 첫 박에서 2마디 솔로를 시작하고 게이지를 0으로 소모한다."};
       if(c.id==="tracer_pan")return {damage:"단일 70° 부채꼴 판정1×9 / 점착 폭탄36(반경72·자해 가능)",tick:"사격 종료 후0.9초 · 점멸2.6초마다1회 충전 · 빈 사거리면0.2초 뒤 다음 점멸",tip:"점멸은 적의 이동 흔적 방향으로 최대68만큼 짧게 이동하며 매번 사격 쿨타임을 초기화한다. 적이 사격권에 있으면 윤곽 없는 부채꼴 9연타를 끝낸 직후 다음 점멸, 적이 없으면0.2초 후 다음 점멸을 한다. 점멸 도중 넉백되면 해당 점멸 경로는 즉시 폐기된다. 마지막에는 시작 위치만 되감으며 체력은 회복하지 않는다."};
       if(c.id==="kirby")return {damage:"소드 회전베기10+출혈1×4 / 빔 채찍7+둔화 / 파이어5+화상1×3 / 밤 폭탄12×2(반경58) / 뱉기 벽충돌12",tick:"기본 흡입10초 주기·3.2초 지속·전방120°·느린 흡입 / 배회형 중립 몬스터6.5초마다·최대2 / 카피 누적피해45에서 별 이탈(연출)·재획득 불가",tip:"중립 몬스터는 적을 추적하지 않고 임의 방향으로 돌아다니다 사거리 안에 캐릭터가 들어왔을 때만 기술을 사용한다. 소드는 회전베기, 빔은 휘어지는 별 채찍, 파이어는 좁은 화염방사, 밤은 한 번 튀는 폭탄이며 카피 자가비는 강화판을 사용한다."};
-      if(c.id==="steve_miner")return {damage:"맨손5 / 나무검7 / 돌검9 / 철검11 / 다이아검14 / 네더라이트검17 · 날카로움 IV 획득 시 검 피해+3 · 공격범위 보너스 +4/+6/+7/+8/+10/+12",tick:"근접 공격1.05초 · 자원 1개만 존재 · 채굴 나무0.6/돌0.9/철1.2/다이아1.6초 · 나무1→돌2→철3→다이아4 · 다이아 이후 인챈트 북 1권씩 · 네더10초",tip:"다이아 장비부터 남은 인챈트 중 한 권이 랜덤 위치에 등장한다. 날카로움 IV는 검 피해+3, 넉백 IV는 검 적중 시 추가 넉백, 수선 IV는 실제 피해를 준 검 적중 시 체력3 회복(내부 쿨1.5초). 획득 인챈트는 중복되지 않으며 네더 진입과 네더라이트 전환 뒤에도 모두 유지된다. 기존 채굴·장비별 피해감소·네더 귀환 체력30 감소 구조는 유지한다."};
+      if(c.id==="steve_miner")return {damage:"맨손5 / 나무검7 / 돌검9 / 철검11 / 다이아검14 / 네더라이트검17 · 날카로움 IV 획득 시 검 피해+3 · 공격범위 보너스 +4/+6/+7/+8/+10/+12",tick:"근접 공격1.05초 · 자원 1개만 존재 · 채굴 나무0.6/돌0.9/철1.2/다이아1.6초 · 나무1→돌2→철3→다이아4 · 다이아 이후 인챈트 북 1권씩 · 네더10초",tip:"자원을 12초 동안 습득하지 못하면 이동속도는 그대로 둔 채 현재 이동방향만 자원 쪽으로 한 번 보정한다. 그래도 못 얻으면 10초마다 한 번씩 다시 방향만 보정하며 지속 추적이나 강제 이동은 하지 않는다. 다이아 장비부터 남은 인챈트 중 한 권이 랜덤 위치에 등장한다. 날카로움 IV는 검 피해+3, 넉백 IV는 검 적중 시 추가 넉백, 수선 IV는 실제 피해를 준 검 적중 시 체력3 회복(내부 쿨1.5초). 획득 인챈트는 중복되지 않으며 네더 진입과 네더라이트 전환 뒤에도 모두 유지된다. 기존 채굴·장비별 피해감소·네더 귀환 체력30 감소 구조는 유지한다."};
       if(c.id==="wok_wok")return {damage:"Q 깨물기18+회복5 / R 제압7×3+타격당 회복4",tick:"Q 시작 준비·접촉+8·재충전7→3.5초 / W HP35% 이하 감지·4초·이속×2.6·종료 후8초 / R 주기30초·W 종료 후5초 대기·지속0.55초",tip:"W는 각도·거리·흔적 조건 없이 가장 낮은 체력 비율의 적을 선택하고 대상 변경 없이 곡선 추적한다. Q 사용·처치·4초 경과 시 종료. 단순 몸 접촉으로는 종료하지 않는다. 넉백 중 조향 중지. W 중 R 사용 불가. W 종료 후5초와30초 재사용 대기를 모두 충족하면 직전 사냥감을 우선하며 아니면 가장 가까운 적을 선택한다. Q는 소환수도 깨물며 R은 소환수도 대상으로 선택하고 경로를 가로막은 소환수에 적중해 종료·제압한다. W 마킹은 본체만 대상으로 유지한다. 첫 적이나 벽에 막히면 종료하며 실제 적중한 상대를 제압한다. R 중 넉백은 무시하지만 피해와 일반 기절 면역은 아니다. 기존 Q 무적 대상 회복 및 R 실제 피해 시 회복 유지."};
       if(c.id==="newhello_sergeant")return {damage:"일반 광역 회전베기8 / 와이어 광역 강습15 + 출혈1×5회 · 재타격 시 남은 출혈 즉시 폭발 후 재적용 · HP 열세 보정 최대 ×1.6",
         tick:"검 발동 사거리: 몸 충돌보다 +8 · 광역 베기 범위: 몸 반경보다 +28 · 기동7초 · 준비0.45초 · 고속이동1초(초당650) · 와이어 강습 최대 3연속 · 일반 베기 재사용1.2초 · 출혈 약1초마다 5회",
@@ -9105,6 +9114,8 @@
       const vx = directionX * speed, vy = directionY * speed;
       if (options.preserveExistingStrongerKnockback && target.punchFlight > 0 &&
           Math.hypot(target.vx, target.vy) > Math.hypot(vx, vy)) return false;
+      // 공통 넉백이 고유 좌표이동을 덮을 때 점프 상태가 매달려 영구 정지하는 것을 방지한다.
+      if(target?.logo?.jump){target.logo.jump=null;target.logo.airHeight=0;target.logo.fistTime=0;}
       if (options.additive) { target.vx += vx; target.vy += vy; }
       else { target.vx = vx; target.vy = vy; }
       if (duration !== undefined) target.punchFlight = options.replaceDuration
@@ -11732,6 +11743,32 @@
     }
 
 
+    const ANTI_STUCK = { duration:2, epsilon:.08 };
+    function antiStuckBlocked(f){
+      return !f?.alive||f.isSummon||!!f.marioBlock||!!f.kirbySwallowedBy
+        ||isStunned(f)||(f.hardFreeze||0)>0||(f.bindStun||0)>0||(f.punchHold||0)>0||(f.punchFlight||0)>0
+        ||(f.vampSuppressed||0)>0||(f.joltStop||0)>0||isCasting(f)
+        ||!!f.steve?.mining||(f.steve?.nether||0)>0||!!f.logo?.jump
+        ||(f.newhello?.windup||0)>0||(f.newhello?.dash||0)>0||!!f.hinta?.dash
+        ||(f.wok&&battleTime<(f.wok.dashUntil||0))||!!f.tracer?.sequence
+        ||(f.iron?.dash||0)>0||(f.duelMonster?.channel||0)>0||(f.duelMonster?.cast||0)>0||!!f.duelMonster?.fusing
+        ||(f.toriMeteorWalk||0)>0||(f.rioStormRush||0)>0||f.baldCape?.dash>0||f.baldCape?.serious?.timer>0||!!f.baldCape?.combo
+        ||!!f.koopa?.shellActive||f.baseId==="wind_rio"||(f.tano?.hidden||0)>0||(f.dodoVoid||0)>0
+        ||(f.riddle?.horcruxTimer||0)>0||!!f.mario?.pipeTransit;
+    }
+    function updateAntiStuck(f,dt){
+      if(!f?.alive)return;
+      const a=f._antiStuck||(f._antiStuck={x:f.x,y:f.y,still:0});
+      const moved=Math.hypot(f.x-a.x,f.y-a.y);
+      a.x=f.x;a.y=f.y;
+      if(antiStuckBlocked(f)){a.still=0;return;}
+      if(moved>ANTI_STUCK.epsilon){a.still=0;return;}
+      a.still+=dt;
+      if(a.still<ANTI_STUCK.duration)return;
+      const v=randomVelocity(f.baseSpeed||f.speed||2.35);
+      f.vx=v.vx;f.vy=v.vy;a.still=0;
+    }
+
     // 충돌 방향은 유지하되 각 개체의 기본 속력으로 부드럽게 복귀한다.
     function recoverOwnMoveSpeed(f, dt) {
       if (!f?.alive || f.punchFlight > 0 || f.punchHold > 0 || isCasting(f)
@@ -13190,6 +13227,7 @@
         updateKirbyWorld(sub);
         updateCoyoteFlings(sub);
         handleCircleCollisions(sub);
+        fighters.forEach(f => updateAntiStuck(f, sub));
         fighters.forEach(f => { if(f.wok)wokProximityBite(f); });
         updateProjectiles(sub);
         updateIronObjects(sub);
