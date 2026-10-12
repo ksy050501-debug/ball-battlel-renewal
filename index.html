@@ -8643,10 +8643,10 @@
       }
       if(f.steve){
         const s=f.steve,t=steveTier(f),bread=steveBreadStatusHtml(s),tnt=steveTntStatusHtml(s);
-        if(s.nether>0)return {ratio:clamp(1-s.nether/STEVE.netherTime,0,1),className:"skill-fill",text:"네더 탐험 · "+s.nether.toFixed(1)+"초",extraTextHtml:'<div class="status-skill-label">귀환 시 네더라이트 · 체력 -30</div>'+bread};
+        if(s.nether>0)return {ratio:clamp(1-s.nether/STEVE.netherTime,0,1),className:"skill-fill",text:"네더 탐험 · "+s.nether.toFixed(1)+"초",extraTextHtml:'<div class="status-skill-label">귀환 시 네더라이트 · 체력 -30</div>'+bread+tnt};
         if(s.tier<4){const r=s.resource,spawn=Math.max(0,s.resourceSpawnCd||0),needTime=r?(STEVE.mineTimes[r.type]||1):0,prog=r?(r.progress||0):0,remain=Math.max(0,needTime-prog);return {ratio:s.mining&&needTime?clamp(prog/needTime,0,1):(t.need?clamp(s.count/t.need,0,1):1),className:"skill-fill",text:t.name+" · "+t.resourceName+" "+s.count+"/"+t.need,extraTextHtml:'<div class="status-skill-label">'+(r?(s.mining?"채굴 중 · "+remain.toFixed(1)+"초 남음":prog>0?"채굴 누적 "+prog.toFixed(1)+"/"+needTime.toFixed(1)+"초":"자원 접근 시 "+needTime.toFixed(1)+"초 채굴"):"다음 자원 "+spawn.toFixed(1)+"초")+'</div>'+bread+tnt};}
-        if(s.tier===4)return {ratio:s.portal?clamp(s.portal.life/s.portal.maxLife,0,1):clamp(1-(s.portalCd||0)/STEVE.portalGap,0,1),className:"skill-fill",text:s.portal?"다이아 장비 · 포탈 "+s.portal.life.toFixed(1)+"초":"다이아 장비 · 포탈 대기 "+(s.portalCd||0).toFixed(1)+"초",extraTextHtml:'<div class="status-skill-label">포탈 접촉 → 네더 10초</div>'+bread};
-        return {ratio:1,className:"skill-fill",text:"네더라이트 장비 · 최종 단계",extraTextHtml:'<div class="status-skill-label">검20 · 일반 피해 20% 감소</div>'+bread};
+        if(s.tier===4)return {ratio:s.portal?clamp(s.portal.life/s.portal.maxLife,0,1):clamp(1-(s.portalCd||0)/STEVE.portalGap,0,1),className:"skill-fill",text:s.portal?"다이아 장비 · 포탈 "+s.portal.life.toFixed(1)+"초":"다이아 장비 · 포탈 대기 "+(s.portalCd||0).toFixed(1)+"초",extraTextHtml:'<div class="status-skill-label">포탈 접촉 → 네더 10초</div>'+bread+tnt};
+        return {ratio:1,className:"skill-fill",text:"네더라이트 장비 · 최종 단계",extraTextHtml:'<div class="status-skill-label">검20 · 일반 피해 20% 감소</div>'+bread+tnt};
       }
       if(f.hinta){
         const h=f.hinta,b=h.ball;
