@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v231</title>
+  <title>볼배틀 리뉴얼 v232</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v231</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v232</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -6255,6 +6255,7 @@
     }
 
       const patchNotes = [
+      "v232: 백그라운드 자동 시뮬레이션 가속 기능 제거. 숨김 탭에서 대기를 강제로 해제하던 분기와 관련 리졸버·pagehide 처리를 삭제하고, 자동 테스트도 일반 이벤트 루프의 setTimeout 양보를 따르도록 복구했다. 일반 전투 복귀 시 숨겨진 시간을 따라잡지 않는 처리는 유지.",
       "v231: 스티브 채굴 시간을 성장 단계에 따라 재조정. 나무 0.3초, 돌 0.7초, 철 1.2초, 다이아 2.0초로 변경해 초반 장비 진입은 빠르게 하고 후반 고급 장비 완성은 더 신중하게 만들었다.",
       "v230: 스티브 빵 발동 구조 개편. 전장 빵 접촉 시 1~5개를 무작위로 획득하고 최대 5개까지 보유한다. 획득한 첫 빵은 즉시 사용하며 효과는 5초간 이동속도 36% 증가와 초당 체력1 회복. 효과가 없을 때 피해를 받으면 빵 1개를 즉시 사용하고, 효과 중 피격 시 다음 빵 1개만 섭취 대기로 지정해 현재 효과가 끝난 뒤 이어서 사용한다. 지속시간과 대기 수량은 중첩되지 않는다. 기존 자원·인챈트 획득 시 자동 섭취는 제거.",
       "v229: 스티브 빵 시스템 추가. 전투 시작 6초 후부터 9초마다 빵이 하나씩 등장하며 지나가면 습득하고 최대 3개까지 보유한다. 체력 조건과 제자리 자동 섭취는 사용하지 않는다. 자원 채굴 또는 인챈트 획득에 성공했을 때만 빵 1개를 즉시 먹고 멈추지 않은 채 4초간 이동속도 36% 증가와 초당 체력1 회복을 얻는다. 최근 10초 안에 먹었다면 2초간 이동속도 18% 증가와 초당 체력1 회복으로 반감한다. 빵 3개 보유 중에는 새 빵이 등장하지 않으며 공격력·장비·채굴 수치는 유지.",
@@ -15620,31 +15621,12 @@
       return chosen;
     }
 
-    const simulationYieldResolvers = new Set();
-    function flushSimulationYields(){
-      for(const finish of [...simulationYieldResolvers]) finish();
-      simulationYieldResolvers.clear();
-    }
     function simulationYield(){
-      if(document.hidden) return Promise.resolve();
-      return new Promise(resolve=>{
-        let done=false,timer=null;
-        const finish=()=>{
-          if(done)return;
-          done=true;
-          if(timer!==null)clearTimeout(timer);
-          simulationYieldResolvers.delete(finish);
-          resolve();
-        };
-        timer=setTimeout(finish,0);
-        simulationYieldResolvers.add(finish);
-      });
+      return new Promise(resolve=>setTimeout(resolve,0));
     }
     document.addEventListener("visibilitychange",()=>{
-      if(document.hidden&&fastSimMode)flushSimulationYields();
       lastFrame=performance.now();
     });
-    window.addEventListener("pagehide",()=>{if(fastSimMode)flushSimulationYields();});
 
     async function simulateQuickPair(chosen, count, progressText = "") {
       const score = {
