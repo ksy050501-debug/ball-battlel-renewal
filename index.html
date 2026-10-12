@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v234</title>
+  <title>볼배틀 리뉴얼 v235</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v234</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v235</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1265,7 +1265,7 @@
       { id:"kirby", name:"자가비", mark:"★", role:"게임", color:"#f472b6", hp:180, attack:0, speed:2.55, range:0,
         skillName:"흡입 · 카피 능력", condition:"기본 10초 주기 흡입 · 카피 피해45 시 별 이탈(연출) · 별 재획득 불가", desc:"기본 상태에서는 진행방향 전방120도를 3.2초 동안 흡입한다. 블레이드 나이트는 제자리 전방180도 베기, 웨이들 두는 160도 빔 채찍, 핫 헤드는 멈춰서 다단히트 화염방사, 포피 브라더스 Jr.는 예상 위치로 폭탄을 던진다. 자가비가 카피하면 소드는 공격과 별개로 주기적으로 돌진하며 제자리 180도 베기와 출혈을 주고, 빔은 넓은 160도 공격에 둔화를 추가하며, 파이어는 사거리와 화상 피해가 강화되고, 밤은 적중한 상대에게 붙은 뒤 폭발한다. 능력 획득 순간에는 잠깐 느려진다. 카피 상태에서 누적 체력 피해가 45에 도달하면 능력이 별로 튕겨 나가지만 별은 연출용으로만 남고 재획득할 수 없다. 이후 다시 중립 몬스터를 흡입해야 새로운 카피 능력을 얻는다. 흡입은 처음에는 완만하지만 유지할수록 점점 강해진다." },
       { id:"steve_miner", name:"스티브", mark:"⛏", role:"게임", color:"#3b82f6", hp:170, attack:0, speed:2.6, range:0,
-        skillName:"채굴 · 장비 진화 · 네더 원정 · 빵 · TNT", condition:"빵 1~5개 무작위 획득 · 첫 1개 즉시 섭취 · 피격 시 다음 빵 섭취", desc:"전투 시작 6초 뒤부터 9초마다 빵이 등장하며 접촉 시 1~5개를 무작위로 획득하고 최대 5개까지 보유한다. 획득한 첫 빵은 즉시 먹어 5초간 이동속도가 36% 증가하고 초당 체력1을 회복한다. 효과 중에는 지속시간이 겹치지 않으며, 피해를 받으면 다음 빵 1개가 섭취 대기 상태가 되어 현재 효과가 끝난 뒤 이어서 사용된다. 효과가 없을 때 피해를 받으면 보유한 빵 1개를 즉시 사용한다. 추가 피격으로 대기 수량이 중첩되지는 않는다. 빵을 5개 보유하면 새 빵은 등장하지 않는다. 맨손으로 시작한다. 현재 단계에 필요한 자원은 맵의 랜덤 위치에 항상 1개만 존재하며 자원을 향해 추적 이동하지 않는다. 자원이 습득반경 안에 들어오면 제자리에서 곡괭이질을 하며 채굴하고, 채굴 중에는 이동과 공격을 할 수 없다. 나무·돌·철·다이아는 각각 0.3/0.7/1.2/2.0초가 필요하며 다른 캐릭터와 몸이 부딪히면 채굴이 중단되지만 진행도는 남아 다음 접촉 시 이어서 채굴한다. 나무1개, 돌2개, 철3개, 다이아4개를 차례로 모아 장비가 진화하고 성장 단계가 높을수록 공격범위도 넓어진다. 다이아 장비가 되면 날카로움 IV·넉백 IV·수선 IV 인챈트 북이 랜덤 위치에 한 권씩 등장하며 접촉하면 영구 획득한다. 획득한 인챈트는 네더 원정과 네더라이트 전환 뒤에도 유지된다. 네더 포탈에 진입하면 10초 뒤 네더라이트 장비로 귀환하면서 체력30을 잃는다. 철 장비부터 10초마다 가장 가까운 상대 방향으로 TNT를 던지며 2.4초 뒤 폭발한다. 철·다이아·네더라이트는 각각 1·2·3개를 던지고, 스티브도 폭발 범위 안에 있으면 자해 피해를 받는다." },
+        skillName:"채굴 · 장비 진화 · 네더 원정 · 빵 · TNT", condition:"빈 보관칸만큼 빵 등장 · 첫 1개 즉시 섭취 · 효과 종료 시 자동 연속 섭취", desc:"전투 시작 6초 뒤부터 9초마다 현재 빈 보관칸만큼 빵이 전장에 동시에 등장한다. 빵은 각각 1개로 취급하며 접촉해 최대 5개까지 보유한다. 획득한 첫 빵은 즉시 먹어 5초간 이동속도가 36% 증가하고 초당 체력1을 회복한다. 효과가 끝났을 때 보유한 빵이 있으면 다음 빵을 즉시 자동 사용하며, 연속 사용에도 효과가 약해지지 않는다. 효과가 없을 때 피해를 받으면 보유한 빵 1개를 즉시 사용한다. 보유 중인 빵과 전장에 남은 빵의 합이 5개면 새 빵은 등장하지 않는다. 맨손으로 시작한다. 현재 단계에 필요한 자원은 맵의 랜덤 위치에 항상 1개만 존재하며 자원을 향해 추적 이동하지 않는다. 자원이 습득반경 안에 들어오면 제자리에서 곡괭이질을 하며 채굴하고, 채굴 중에는 이동과 공격을 할 수 없다. 나무·돌·철·다이아는 각각 0.3/0.7/1.2/2.0초가 필요하며 다른 캐릭터와 몸이 부딪히면 채굴이 중단되지만 진행도는 남아 다음 접촉 시 이어서 채굴한다. 나무1개, 돌2개, 철3개, 다이아4개를 차례로 모아 장비가 진화하고 성장 단계가 높을수록 공격범위도 넓어진다. 다이아 장비가 되면 날카로움 IV·넉백 IV·수선 IV 인챈트 북이 랜덤 위치에 한 권씩 등장하며 접촉하면 영구 획득한다. 획득한 인챈트는 네더 원정과 네더라이트 전환 뒤에도 유지된다. 네더 포탈에 진입하면 10초 뒤 네더라이트 장비로 귀환하면서 체력30을 잃는다. 철 장비부터 10초마다 가장 가까운 상대 방향으로 TNT를 던지며 2.4초 뒤 폭발한다. 철·다이아·네더라이트는 각각 1·2·3개를 던지고, 스티브도 폭발 범위 안에 있으면 자해 피해를 받는다." },
       { id:"wok_wok", name:"웍웍", mark:"🐺", role:"게임", color:"#7f1d1d", hp:140, attack:0, speed:1.6, range:0,
         skillName:"피의 사냥 · 야수의 돌진", condition:"Q 준비+적 HP35% 이하 → W · E 야수의 끈기 · R 돌진", desc:"Q는 시작 즉시 준비되며 몸 접촉거리+8에서 피해18와 회복5. W는 Q 깨물기가 준비된 상태에서만 시작하며, 맵 전체에서 HP35% 이하인 적 중 체력 비율이 가장 낮은 한 명을 선택해 최대4초간 이속×2.6으로 곡선 추적한다. 추격 대상과 무관하게 누구든 Q 깨물기를 사용하면 즉시 끝나며 종료 후12초 대기한다. 마킹 즉시 두 캐릭터 사이에 피구름을 표시하고 붉은 눈과 두 줄 안광 잔상을 남긴다. W 중 R은 잠기며 종료 후5초와 R 쿨타임30초가 모두 지나야 발동한다. 직전 사냥감이 살아 있으면 우선 돌진하고 없으면 가장 가까운 적을 선택한다. R은 기본 돌진거리가 길며, 추적 대상의 HP가 50% 아래로 낮아질수록 사거리가 더 늘고 도달 시간은 짧아진다. 첫 적 또는 벽에 닿으면 끝난다. 돌진 중 넉백 면역, 적중 시0.9초 제압과7피해×3 및 타격당 회복4. E 야수의 끈기는 피해로 HP가50% 이하가 될 때 해당 피해부터 0.8초간 35% 감소시키며, 12초 쿨타임은 HP50% 이하인 동안에만 감소한다. 저체력일수록 Q 충전과 흡혈이 최대1.5배까지 강화된다." },
       { id: "dummy_unit", name: "훈련용 더미", mark: "木", role: "더미", color: "#9ca3af", hp: 500, attack: 0, speed: 2.35, range: 0, simOnly: true,
@@ -3215,7 +3215,7 @@
       sharpnessBonus:3, knockbackSpeed:330, knockbackTime:.16, mendingHeal:3, mendingCooldown:1.5,
       portalFirst:5, portalLife:4.5, portalGap:4.5, portalLength:96,
       netherTime:10, netherCost:30,
-      breadFirst:6, breadPeriod:9, breadMax:5, breadRadius:10, breadPickupBonus:8,
+      breadFirst:6, breadPeriod:9, breadMax:5, breadRadius:10, breadPickupBonus:20,
       breadDuration:5, breadSpeed:1.36, breadHealPeriod:1, breadHeal:1,
       tntFirst:3, tntPeriod:10, tntFuse:2.4, tntFlight:.62, tntSpeed:190, tntRadius:58, tntDamage:18, tntSelfRatio:.5, tntKnockback:290
     };
@@ -3258,21 +3258,29 @@
     function steveBreadSpeedMultiplier(f){return f?.steve?.breadBuff>0?(f.steve.breadSpeed||1):1;}
     function steveTntStatusHtml(s){const count=steveTntCount(s);if(!count)return "";return '<div class="status-skill-label" style="color:#fca5a5">TNT ×'+count+' · 다음 투척 '+Math.max(0,s.tntCd||0).toFixed(1)+'초 · 신관 '+STEVE.tntFuse.toFixed(1)+'초</div>';}
     function steveBreadStatusHtml(s){
-      let label;if((s.breadBuff||0)>0)label="효과 "+s.breadBuff.toFixed(1)+"초"+(s.breadPending?" · 다음 섭취 대기":"");else if(s.bread)label=(s.breadCount||0)+"/5 · 전장에 등장";else if((s.breadCount||0)>=STEVE.breadMax)label="5/5 · 최대 보유";else label=(s.breadCount||0)+"/5 · 다음 "+Math.max(0,s.breadSpawnCd||0).toFixed(1)+"초";
+      const field=(s.breads||[]).length,stored=s.breadCount||0;
+      let label;if((s.breadBuff||0)>0)label="효과 "+s.breadBuff.toFixed(1)+"초 · 보유 "+stored+"/5"+(field?" · 전장 "+field+"개":"");else if(field)label=stored+"/5 · 전장 "+field+"개";else if(stored>=STEVE.breadMax)label="5/5 · 최대 보유";else label=stored+"/5 · 다음 "+Math.max(0,s.breadSpawnCd||0).toFixed(1)+"초";
       return '<div class="status-skill-label" style="color:#fde68a">빵 '+label+'</div>';
     }
-    function steveSpawnBread(f){const s=f?.steve;if(!s||s.bread||(s.breadCount||0)>=STEVE.breadMax)return false;const r=STEVE.breadRadius;s.bread={x:rand(arena.x+r+18,arena.x2-r-18),y:rand(arena.y+r+18,arena.y2-r-18),r};return true;}
-    function steveConsumeBread(f){
-      const s=f?.steve;if(!s||s.breadCount<=0||s.breadBuff>0)return false;s.breadCount--;s.breadPending=false;s.breadBuff=STEVE.breadDuration;s.breadSpeed=STEVE.breadSpeed;s.breadHealTick=0;if(!fastSimMode){spawnBlast(f.x,f.y,28,"#fbbf24");spawnParticles(f.x,f.y,"#fde68a",8);spawnFloatingText(f.x,f.y-f.r-30,"빵 섭취 · 신속","#fde68a");}return true;
+    function steveSpawnBread(f){
+      const s=f?.steve;if(!s)return false;s.breads=s.breads||[];
+      const room=Math.max(0,STEVE.breadMax-(s.breadCount||0)-s.breads.length);if(room<=0)return false;
+      const r=STEVE.breadRadius;for(let i=0;i<room;i++)s.breads.push({x:rand(arena.x+r+18,arena.x2-r-18),y:rand(arena.y+r+18,arena.y2-r-18),r});
+      return true;
     }
-    function steveBreadOnDamage(f){const s=f?.steve;if(!s||s.breadCount<=0)return false;if(s.breadBuff>0){s.breadPending=true;return false;}return steveConsumeBread(f);}
+    function steveConsumeBread(f){
+      const s=f?.steve;if(!s||s.breadCount<=0||s.breadBuff>0)return false;s.breadCount--;s.breadBuff=STEVE.breadDuration;s.breadSpeed=STEVE.breadSpeed;s.breadHealTick=0;if(!fastSimMode){spawnBlast(f.x,f.y,28,"#fbbf24");spawnParticles(f.x,f.y,"#fde68a",8);spawnFloatingText(f.x,f.y-f.r-30,"빵 섭취 · 신속","#fde68a");}return true;
+    }
+    function steveBreadOnDamage(f){const s=f?.steve;if(!s||s.breadCount<=0||s.breadBuff>0)return false;return steveConsumeBread(f);}
     function steveUpdateBread(f,dt){
-      const s=f?.steve;if(!s)return;
-      if(s.breadBuff>0){s.breadBuff=Math.max(0,s.breadBuff-dt);s.breadHealTick=(s.breadHealTick||0)+dt;while(s.breadHealTick>=STEVE.breadHealPeriod){s.breadHealTick-=STEVE.breadHealPeriod;const got=heal(f,STEVE.breadHeal);if(got>0&&!fastSimMode)spawnFloatingText(f.x,f.y-f.r-22,"빵 +"+got,"#86efac");}if(s.breadBuff<=0){s.breadSpeed=1;if(s.breadPending&&s.breadCount>0)steveConsumeBread(f);else s.breadPending=false;}}
-      if(s.nether>0)return;if(s.bread){const b=s.bread;if(Math.hypot(f.x-b.x,f.y-b.y)<=f.r+b.r+STEVE.breadPickupBonus){const rolled=1+Math.floor(rand(0,5)),before=s.breadCount||0;s.bread=null;s.breadCount=Math.min(STEVE.breadMax,before+rolled);const gained=s.breadCount-before;s.breadSpawnCd=STEVE.breadPeriod;if(gained>0){if(s.breadBuff>0)s.breadPending=true;else steveConsumeBread(f);}if(!fastSimMode){spawnParticles(f.x,f.y,"#fde68a",6);spawnFloatingText(f.x,f.y-f.r-28,"빵 "+gained+"개 획득 · "+s.breadCount+"/5","#fde68a");}}}else if((s.breadCount||0)<STEVE.breadMax){s.breadSpawnCd=Math.max(0,(s.breadSpawnCd||0)-dt);if(s.breadSpawnCd<=0){steveSpawnBread(f);s.breadSpawnCd=STEVE.breadPeriod;}}
+      const s=f?.steve;if(!s)return;s.breads=s.breads||[];
+      if(s.breadBuff>0){s.breadBuff=Math.max(0,s.breadBuff-dt);s.breadHealTick=(s.breadHealTick||0)+dt;while(s.breadHealTick>=STEVE.breadHealPeriod){s.breadHealTick-=STEVE.breadHealPeriod;const got=heal(f,STEVE.breadHeal);if(got>0&&!fastSimMode)spawnFloatingText(f.x,f.y-f.r-22,"빵 +"+got,"#86efac");}if(s.breadBuff<=0){s.breadSpeed=1;if(s.breadCount>0)steveConsumeBread(f);}}
+      if(s.nether>0)return;
+      for(let i=s.breads.length-1;i>=0;i--){const b=s.breads[i];if((s.breadCount||0)<STEVE.breadMax&&Math.hypot(f.x-b.x,f.y-b.y)<=f.r+b.r+STEVE.breadPickupBonus){s.breads.splice(i,1);s.breadCount=(s.breadCount||0)+1;s.breadSpawnCd=STEVE.breadPeriod;if(s.breadBuff<=0)steveConsumeBread(f);if(!fastSimMode){spawnParticles(f.x,f.y,"#fde68a",6);spawnFloatingText(f.x,f.y-f.r-28,"빵 1개 획득 · "+s.breadCount+"/5","#fde68a");}}}
+      if((s.breadCount||0)+s.breads.length<STEVE.breadMax){s.breadSpawnCd=Math.max(0,(s.breadSpawnCd||0)-dt);if(s.breadSpawnCd<=0){steveSpawnBread(f);s.breadSpawnCd=STEVE.breadPeriod;}}
     }
         function initSteve(f){
-      f.steve={tier:0,count:0,resource:null,resourceSpawnCd:0,attackCd:.35,swing:0,mining:false,mineAnim:0,portal:null,portalCd:0,nether:0,enchants:[],enchantBook:null,enchantBookSpawnCd:0,mendingCd:0,baseSpeed:f.baseSpeed||f.speed||2.6,bread:null,breadCount:0,breadSpawnCd:STEVE.breadFirst,breadBuff:0,breadSpeed:1,breadHealTick:0,breadPending:false,tntCd:STEVE.tntFirst,tnts:[]};
+      f.steve={tier:0,count:0,resource:null,resourceSpawnCd:0,attackCd:.35,swing:0,mining:false,mineAnim:0,portal:null,portalCd:0,nether:0,enchants:[],enchantBook:null,enchantBookSpawnCd:0,mendingCd:0,baseSpeed:f.baseSpeed||f.speed||2.6,breads:[],breadCount:0,breadSpawnCd:STEVE.breadFirst,breadBuff:0,breadSpeed:1,breadHealTick:0,tntCd:STEVE.tntFirst,tnts:[]};
       steveSpawnResource(f);
     }
     function steveTier(f){return STEVE_TIERS[f?.steve?.tier||0]||STEVE_TIERS[0];}
@@ -3386,7 +3394,7 @@
       if(fastSimMode)return;
       for(const owner of fighters){for(const t of owner.steve?.tnts||[]){const flight=t.maxFlight?1-t.flight/t.maxFlight:1,lift=t.flight>0?Math.sin(clamp(flight,0,1)*Math.PI)*22:0,pulse=.5+.5*Math.sin(battleTime*18),warn=t.fuse<.75;ctx.save();ctx.globalAlpha=.18;ctx.fillStyle="#020617";ctx.beginPath();ctx.ellipse(t.x,t.y,11+lift*.12,6+lift*.05,0,0,Math.PI*2);ctx.fill();ctx.restore();if(warn){ctx.save();ctx.globalAlpha=.18+.16*pulse;ctx.fillStyle="#ef4444";ctx.beginPath();ctx.arc(t.x,t.y,STEVE.tntRadius,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#fca5a5";ctx.lineWidth=2;ctx.setLineDash([7,6]);ctx.lineDashOffset=-battleTime*20;ctx.stroke();ctx.restore();}ctx.save();ctx.translate(t.x,t.y-lift);ctx.rotate(t.spin||0);ctx.shadowColor=warn?"#ef4444":"#fb923c";ctx.shadowBlur=warn?18:8;ctx.fillStyle=warn&&pulse>.5?"#dc2626":"#991b1b";ctx.strokeStyle="#450a0a";ctx.lineWidth=2;ctx.fillRect(-9,-9,18,18);ctx.strokeRect(-9,-9,18,18);ctx.fillStyle="#f8fafc";ctx.fillRect(-9,-3,18,6);ctx.fillStyle="#111827";ctx.font="900 6px monospace";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("TNT",0,0);ctx.strokeStyle="#78350f";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(4,-9);ctx.quadraticCurveTo(9,-15,12,-10);ctx.stroke();ctx.fillStyle=pulse>.45?"#fef08a":"#fb923c";ctx.beginPath();ctx.arc(12,-10,2.5+pulse,0,Math.PI*2);ctx.fill();ctx.restore();}}
       for(const f of fighters){const s=f.alive&&f.steve;if(!s)continue;
-        if(s.bread){const b=s.bread,p=.5+.5*Math.sin(battleTime*6);ctx.save();ctx.translate(b.x,b.y);ctx.shadowColor="#fbbf24";ctx.shadowBlur=8+6*p;ctx.fillStyle="#d97706";ctx.strokeStyle="#fde68a";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-11,-4);ctx.quadraticCurveTo(-9,-12,0,-12);ctx.quadraticCurveTo(9,-12,11,-4);ctx.lineTo(9,9);ctx.lineTo(-9,9);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle="#fef3c7";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-4,-8);ctx.lineTo(-6,2);ctx.moveTo(2,-9);ctx.lineTo(0,2);ctx.moveTo(7,-6);ctx.lineTo(5,3);ctx.stroke();ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle="#fde68a";ctx.strokeStyle="rgba(0,0,0,.8)";ctx.lineWidth=3;ctx.strokeText("빵",b.x,b.y-b.r-8);ctx.fillText("빵",b.x,b.y-b.r-8);ctx.restore();}
+        for(const b of s.breads||[]){const p=.5+.5*Math.sin(battleTime*6);ctx.save();ctx.translate(b.x,b.y);ctx.shadowColor="#fbbf24";ctx.shadowBlur=8+6*p;ctx.fillStyle="#d97706";ctx.strokeStyle="#fde68a";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-11,-4);ctx.quadraticCurveTo(-9,-12,0,-12);ctx.quadraticCurveTo(9,-12,11,-4);ctx.lineTo(9,9);ctx.lineTo(-9,9);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle="#fef3c7";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-4,-8);ctx.lineTo(-6,2);ctx.moveTo(2,-9);ctx.lineTo(0,2);ctx.moveTo(7,-6);ctx.lineTo(5,3);ctx.stroke();ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle="#fde68a";ctx.strokeStyle="rgba(0,0,0,.8)";ctx.lineWidth=3;ctx.strokeText("빵",b.x,b.y-b.r-8);ctx.fillText("빵",b.x,b.y-b.r-8);ctx.restore();}
         if((s.breadBuff||0)>0){const sp=Math.hypot(f.vx,f.vy)||1,dx=f.vx/sp,dy=f.vy/sp;ctx.save();ctx.strokeStyle="rgba(253,224,71,.72)";ctx.lineWidth=2;ctx.lineCap="round";for(let i=-1;i<=1;i++){const ox=-dx*(f.r+8+i*7)-dy*i*5,oy=-dy*(f.r+8+i*7)+dx*i*5;ctx.beginPath();ctx.moveTo(f.x+ox,f.y+oy);ctx.lineTo(f.x+ox-dx*(10+Math.abs(i)*4),f.y+oy-dy*(10+Math.abs(i)*4));ctx.stroke();}ctx.restore();}
         if(s.resource){const r=s.resource,info=STEVE_RES[r.type],pulse=.5+.5*Math.sin(battleTime*5);ctx.save();ctx.translate(r.x,r.y);ctx.shadowColor=info.color;ctx.shadowBlur=8+7*pulse;ctx.fillStyle=info.color;ctx.strokeStyle=info.edge;ctx.lineWidth=2;ctx.fillRect(-r.r,-r.r,r.r*2,r.r*2);ctx.strokeRect(-r.r,-r.r,r.r*2,r.r*2);ctx.globalAlpha=.55;ctx.fillStyle="#fff";ctx.fillRect(-r.r*.55,-r.r*.55,5,5);ctx.fillRect(r.r*.15,r.r*.1,5,5);ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle=info.color;ctx.strokeStyle="rgba(0,0,0,.8)";ctx.lineWidth=3;ctx.strokeText(info.name,r.x,r.y-r.r-7);ctx.fillText(info.name,r.x,r.y-r.r-7);ctx.restore();}
         if(s.enchantBook){const b=s.enchantBook,info=STEVE_ENCHANTS.find(e=>e.id===b.id),pulse=.5+.5*Math.sin(battleTime*6);if(info){ctx.save();ctx.translate(b.x,b.y);ctx.rotate(-.12);ctx.shadowColor=info.color;ctx.shadowBlur=10+8*pulse;ctx.fillStyle="#7e22ce";ctx.strokeStyle="#e9d5ff";ctx.lineWidth=2;ctx.fillRect(-10,-8,20,16);ctx.strokeRect(-10,-8,20,16);ctx.strokeStyle="#f5d0fe";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(0,7);ctx.stroke();ctx.restore();ctx.save();ctx.font="900 10px system-ui";ctx.textAlign="center";ctx.fillStyle=info.color;ctx.strokeStyle="rgba(0,0,0,.82)";ctx.lineWidth=3;ctx.strokeText(info.name,b.x,b.y-16);ctx.fillText(info.name,b.x,b.y-16);ctx.restore();}}
@@ -6278,6 +6286,7 @@
     }
 
       const patchNotes = [
+      "v235: 스티브 빵 다중 스폰·연속 섭취 개편. 9초마다 보유 빵과 전장 빵을 합쳐 최대 5개가 되도록 빈 보관칸 수만큼 개별 빵이 동시에 등장한다. 각 빵은 1개씩 습득하며 첫 빵은 즉시 사용, 5초 효과 종료 시 보유 빵이 있으면 약화 없이 다음 빵을 자동 사용한다. 효과가 없을 때의 피격 섭취는 유지하고 기존 섭취 대기와 연속 사용 제약은 제거했다. 접촉 판정 보너스는 +8→+20으로 확대.",
       "v234: 스티브 철 이상 장비에 TNT 투척 추가. 철·다이아·네더라이트 단계에서 10초마다 최근접 상대 방향으로 각각 1·2·3개를 부채꼴로 던지고, 모든 TNT는 2.4초 뒤 반경58에 피해18과 넉백을 준다. 스티브도 범위 안에 있으면 피해9를 받는다. 단계가 높아져도 주기·신관·피해·범위는 고정.",
       "v233: 스티브 철·다이아·네더라이트 장비 공격 성능 상향. 검 피해는 11/14/17→12/16/20, 공격범위 보너스는 +8/+10/+12→+10/+13/+16으로 증가. 맨손·나무·돌 단계와 공격주기, 방어력, 인챈트는 유지.",
       "v232: 백그라운드 자동 시뮬레이션 가속 기능 제거. 숨김 탭에서 대기를 강제로 해제하던 분기와 관련 리졸버·pagehide 처리를 삭제하고, 자동 테스트도 일반 이벤트 루프의 setTimeout 양보를 따르도록 복구했다. 일반 전투 복귀 시 숨겨진 시간을 따라잡지 않는 처리는 유지.",
