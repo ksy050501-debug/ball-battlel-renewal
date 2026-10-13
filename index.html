@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v244</title>
+  <title>볼배틀 리뉴얼 v245</title>
   <style>
     :root {
       --bg: #020617;
@@ -180,26 +180,14 @@
         linear-gradient(90deg, rgba(52,211,153,.16), rgba(15,23,42,.88) 44%);
     }
 
-    .char-card.team-a {
-      border-color: rgba(96,165,250,.86);
-      background:
-        linear-gradient(90deg, rgba(96,165,250,.17), rgba(15,23,42,.88) 44%);
+    .char-card.team-assigned {
+      border-color: var(--team-color);
+      background: linear-gradient(90deg, var(--team-tint), rgba(15,23,42,.88) 44%);
     }
 
-    .char-card.team-b {
-      border-color: rgba(248,113,113,.86);
-      background:
-        linear-gradient(90deg, rgba(248,113,113,.16), rgba(15,23,42,.88) 44%);
-    }
-
-    .char-card.team-a .selected-mark {
-      background: #60a5fa;
-      color: #031a35;
-    }
-
-    .char-card.team-b .selected-mark {
-      background: #f87171;
-      color: #3b0505;
+    .char-card.team-assigned .selected-mark {
+      background: var(--team-color);
+      color: #06101f;
     }
 
     .portrait {
@@ -407,83 +395,48 @@
     .team-scoreboard {
       width: min(700px, 100%);
       display: none;
-      grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
-      gap: 10px;
-      align-items: stretch;
       margin-bottom: 10px;
     }
 
-    .team-scoreboard.show { display: grid; }
+    .team-scoreboard.show { display: block; }
+
+    .team-score-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+      gap: 7px;
+    }
 
     .team-score-side {
-      border-radius: 16px;
-      padding: 10px 12px;
-      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 13px;
+      padding: 8px 10px;
+      border: 1px solid color-mix(in srgb, var(--team-color) 48%, transparent);
+      box-shadow: inset 3px 0 0 var(--team-color);
       background: rgba(15,23,42,.94);
       min-width: 0;
     }
 
-    .team-score-side.a {
-      border-color: rgba(96,165,250,.42);
-      box-shadow: inset 3px 0 0 rgba(96,165,250,.78);
-      text-align: left;
-    }
-
-    .team-score-side.b {
-      border-color: rgba(248,113,113,.42);
-      box-shadow: inset -3px 0 0 rgba(248,113,113,.78);
-      text-align: right;
-    }
+    .team-score-side.eliminated { opacity: .42; filter: grayscale(.65); }
 
     .team-score-name {
-      font-size: 13px;
+      color: var(--team-color);
+      font-size: 12px;
       font-weight: 1000;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
 
-    .team-score-side.a .team-score-name { color:#93c5fd; }
-    .team-score-side.b .team-score-name { color:#fca5a5; }
-
     .team-score-main {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 900;
       color: #f8fafc;
     }
 
     .team-score-sub {
-      margin-top: 3px;
+      margin-top: 2px;
       color: #94a3b8;
-      font-size: 11px;
+      font-size: 10px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-
-    .team-score-center {
-      min-width: 112px;
-      border-radius: 16px;
-      padding: 8px 12px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(2,6,23,.94);
-    }
-
-    .team-score-label {
-      color:#94a3b8;
-      font-size:10px;
-      font-weight:900;
-      letter-spacing:.08em;
-      margin-bottom:1px;
-    }
-
-    .team-score-value {
-      font-size: 27px;
-      line-height: 1;
-      font-weight: 1000;
-      letter-spacing: .03em;
     }
 
     .hud-item {
@@ -588,8 +541,28 @@
       color: #e2e8f0;
     }
 
-    .team-title.a { color: #bfdbfe; }
-    .team-title.b { color: #fecaca; }
+    .team-title {
+      color: var(--team-color, #e2e8f0);
+      cursor: pointer;
+    }
+
+    .team-config {
+      display: none;
+      margin: 0 0 10px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      background: rgba(2,6,23,.48);
+    }
+
+    .team-config.show { display: block; }
+    .team-count-row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+    .team-count-row label { color:#cbd5e1; font-size:12px; font-weight:900; }
+    .team-count-select { min-width:82px; padding:6px 9px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:#172033; color:#fff; font-weight:900; }
+    .team-picker { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:5px; }
+    .team-pick { padding:6px 3px; min-height:0; border-radius:9px; color:#e2e8f0; background:#172033; border:1px solid var(--team-color); font-size:11px; }
+    .team-pick.active { color:#06101f; background:var(--team-color); box-shadow:0 0 12px color-mix(in srgb,var(--team-color) 42%,transparent); }
+    .team-pick-count { display:block; font-size:9px; opacity:.78; }
 
     .mode-row {
       display: grid;
@@ -852,7 +825,7 @@
 
     .status-panel.team-status-panel {
       align-items: start;
-      grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 10px;
     }
 
@@ -874,24 +847,14 @@
       border: 1px solid rgba(255,255,255,.09);
     }
 
-    .team-status-column.team-a .team-status-heading {
-      color: #93c5fd;
-      border-color: rgba(96,165,250,.36);
+    .team-status-column .team-status-heading {
+      color: var(--team-color);
+      border-color: color-mix(in srgb, var(--team-color) 42%, transparent);
     }
 
-    .team-status-column.team-b .team-status-heading {
-      color: #fca5a5;
-      border-color: rgba(248,113,113,.36);
-    }
-
-    .team-status-column.team-a .fighter-status.current {
-      border-color: rgba(96,165,250,.62);
-      box-shadow: 0 0 0 1px rgba(96,165,250,.16), 0 8px 22px rgba(37,99,235,.10);
-    }
-
-    .team-status-column.team-b .fighter-status.current {
-      border-color: rgba(248,113,113,.62);
-      box-shadow: 0 0 0 1px rgba(248,113,113,.14), 0 8px 22px rgba(220,38,38,.09);
+    .team-status-column .fighter-status.current {
+      border-color: color-mix(in srgb, var(--team-color) 68%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--team-color) 18%, transparent), 0 8px 22px rgba(2,6,23,.28);
     }
 
     .team-status-empty {
@@ -1028,20 +991,7 @@
 
     <section class="panel arena-panel">
       <div class="team-scoreboard" id="teamScoreboard">
-        <div class="team-score-side a">
-          <div class="team-score-name">A팀</div>
-          <div class="team-score-main" id="teamAAlive">남은 인원 0/0</div>
-          <div class="team-score-sub" id="teamACurrent">현재 · 대기</div>
-        </div>
-        <div class="team-score-center">
-          <div class="team-score-label">탈락 스코어</div>
-          <div class="team-score-value" id="teamScoreValue">0 : 0</div>
-        </div>
-        <div class="team-score-side b">
-          <div class="team-score-name">B팀</div>
-          <div class="team-score-main" id="teamBAlive">남은 인원 0/0</div>
-          <div class="team-score-sub" id="teamBCurrent">현재 · 대기</div>
-        </div>
+        <div class="team-score-grid" id="teamScoreGrid"></div>
       </div>
 
       <div class="hud">
@@ -1109,6 +1059,14 @@
         <button class="active" id="soloModeBtn">개인전</button>
         <button class="ghost" id="teamModeBtn">팀전</button>
       </div>
+      <div class="team-config" id="teamConfig">
+        <div class="team-count-row">
+          <label for="teamCountSelect">팀 개수</label>
+          <select class="team-count-select" id="teamCountSelect"></select>
+        </div>
+        <div class="team-picker" id="teamPicker"></div>
+        <div class="tip" style="margin-top:8px;">배정할 팀을 먼저 누른 뒤 도감의 캐릭터를 클릭하세요.</div>
+      </div>
       <div class="side-list" id="selectedList"></div>
       <div class="button-row">
         <button class="ghost" id="clearSelectionBtn">선택 해제</button>
@@ -1121,7 +1079,7 @@
 
       <div class="tip">
         <b>도움말</b><br>
-        카드 클릭: 참가/해제 또는 A팀→B팀→해제<br>
+        팀전: 팀 버튼 선택 후 도감 카드를 클릭해 배정/해제<br>
         캐릭터 이미지 클릭: 피해량 확인<br>
         맨 아래 버튼: 패치노트 확인
       </div>
@@ -1212,8 +1170,11 @@
     const roleLabels = ["전체", "영화", "애니", "게임"];
     let currentFilter = "전체";
     let battleMode = "solo";
-    let teamA = [];
-    let teamB = [];
+    const TEAM_IDS = "ABCDEFGHIJKL".split("");
+    const TEAM_COLORS = ["#60a5fa","#f87171","#34d399","#fbbf24","#a78bfa","#22d3ee","#fb7185","#a3e635","#f97316","#818cf8","#2dd4bf","#e879f9"];
+    let teamCount = 2;
+    let activeTeamId = "A";
+    let teamAssignments = Object.fromEntries(TEAM_IDS.map(id => [id, []]));
     let teamState = null;
     let fighterSerial = 0;
     let statusHpState = {};
@@ -6497,6 +6458,7 @@
     }
 
       const patchNotes = [
+      "v245: 팀전을 A/B 고정 방식에서 2~12팀 선택형 태그전으로 확장. 팀 개수를 고른 뒤 A~L 팀 버튼을 선택하고 도감 카드를 클릭해 배정·이동·해제할 수 있다. 각 팀은 한 명씩 동시 출전하고 사망 시 다음 대기 캐릭터로 교대하며, 마지막 생존 팀을 승자로 판정한다. 다팀용 원형 스폰, 동적 팀 색상, 팀별 전광판·상태창, 랜덤 1명/2명 편성 및 전원 자동 편성을 추가.",
       "v244: 빨강 포켓몬 체력 재조정. 피카츄 25→30, 리자몽 40→35, 잠만보 55→50, 라프라스 40→35. 이상해꽃·거북왕은 각각 35 유지, 총 체력은 230→220으로 변경.",
       "v243: 빨강 포켓몬별 체력 재배분. 피카츄 27→25, 리자몽 38→40, 이상해꽃 37→35, 거북왕 40→35, 잠만보 50→55, 라프라스 38→40. 여섯 마리 총 체력 230은 유지.",
       "v242: 빨강 체력 조정. 6마리 포켓몬의 총 체력을 253→230으로 약 9% 하향. 피카츄 30→27, 리자몽 42→38, 이상해꽃 40→37, 거북왕 44→40, 잠만보 55→50, 라프라스 42→38. 공격 성능, 기술 주기, 무작위 출전 순서, 교대 시 상태 초기화 및 초과 피해 비이월 구조는 유지.",
@@ -6894,13 +6856,74 @@
       $("damageModal").classList.remove("show");
     }
 
-    function teamOfCharacter(id) {
-      if (teamA.includes(id)) return "A";
-      if (teamB.includes(id)) return "B";
-      return "";
+    function activeTeamIds() {
+      return TEAM_IDS.slice(0, teamCount);
     }
 
-    // 도감도 실제 전투 렌더러를 사용한다. 미리보기는 전투 상태/RNG를 생성하거나 변경하지 않는다.
+    function teamColor(teamId) {
+      return TEAM_COLORS[Math.max(0, TEAM_IDS.indexOf(teamId))] || "#94a3b8";
+    }
+
+    function teamTint(teamId, alpha = 0.17) {
+      const hex = teamColor(teamId).replace("#", "");
+      const value = parseInt(hex, 16);
+      return `rgba(${(value >> 16) & 255},${(value >> 8) & 255},${value & 255},${alpha})`;
+    }
+
+    function clearTeamAssignments() {
+      TEAM_IDS.forEach(id => { teamAssignments[id] = []; });
+    }
+
+    function removeFromAllTeams(characterId) {
+      TEAM_IDS.forEach(id => {
+        teamAssignments[id] = teamAssignments[id].filter(x => x !== characterId);
+      });
+    }
+
+    function setTeamCount(value) {
+      const next = clamp(Math.round(Number(value) || 2), 2, 12);
+      if (next === teamCount) return;
+      TEAM_IDS.slice(next).forEach(id => { teamAssignments[id] = []; });
+      teamCount = next;
+      if (!activeTeamIds().includes(activeTeamId)) activeTeamId = activeTeamIds()[0];
+      teamState = null;
+      resetBattle();
+      renderAll();
+    }
+
+    function teamOfCharacter(id) {
+      return activeTeamIds().find(teamId => teamAssignments[teamId].includes(id)) || "";
+    }
+
+    function renderTeamControls() {
+      const config = $("teamConfig");
+      const select = $("teamCountSelect");
+      const picker = $("teamPicker");
+      if (!config || !select || !picker) return;
+      config.classList.toggle("show", battleMode === "team");
+      if (!select.options.length) {
+        for (let count = 2; count <= 12; count++) {
+          const option = document.createElement("option");
+          option.value = String(count);
+          option.textContent = `${count}팀`;
+          select.appendChild(option);
+        }
+      }
+      select.value = String(teamCount);
+      picker.innerHTML = activeTeamIds().map(teamId => `
+        <button class="team-pick ${teamId === activeTeamId ? "active" : ""}" data-team-pick="${teamId}" style="--team-color:${teamColor(teamId)}">
+          ${teamId}팀<span class="team-pick-count">${teamAssignments[teamId].length}명</span>
+        </button>
+      `).join("");
+      picker.querySelectorAll("[data-team-pick]").forEach(button => {
+        button.addEventListener("click", () => {
+          activeTeamId = button.dataset.teamPick;
+          renderAll();
+        });
+      });
+    }
+
+    // 도감도 실제 전투 렌더러를 사용한다.    // 도감도 실제 전투 렌더러를 사용한다. 미리보기는 전투 상태/RNG를 생성하거나 변경하지 않는다.
     function inGamePortrait(c) {
       if (!inGamePortraitCache.has(c.id)) {
         const imageCanvas = document.createElement("canvas");
@@ -6962,7 +6985,11 @@
         const card = document.createElement("div");
         const team = battleMode === "team" ? teamOfCharacter(c.id) : "";
         const isSelected = battleMode === "solo" ? selected.has(c.id) : !!team;
-        card.className = "char-card" + (isSelected ? " selected" : "") + (team ? ` team-${team.toLowerCase()}` : "");
+        card.className = "char-card" + (isSelected ? " selected" : "") + (team ? " team-assigned" : "");
+        if (team) {
+          card.style.setProperty("--team-color", teamColor(team));
+          card.style.setProperty("--team-tint", teamTint(team));
+        }
         card.innerHTML = `
           <div class="selected-mark">${battleMode === "team" && team ? team : "✓"}</div>
           <div class="portrait" style="background:#0f172a;">${inGamePortrait(c)}</div>
@@ -7041,11 +7068,14 @@
       if (!soloBtn || !teamBtn) return;
       soloBtn.className = battleMode === "solo" ? "active" : "ghost";
       teamBtn.className = battleMode === "team" ? "active" : "ghost";
-      $("selectionTitle").textContent = battleMode === "team" ? "팀전 대기열" : "선택된 참가자";
+      $("selectionTitle").textContent = battleMode === "team" ? `${teamCount}팀 태그 대기열` : "선택된 참가자";
       $("clearSelectionBtn").textContent = battleMode === "team" ? "팀 초기화" : "선택 해제";
-      $("selectAllBtn").textContent = battleMode === "team" ? "자동 편성" : "전원 참가";
+      $("selectAllBtn").textContent = battleMode === "team" ? "전원 자동 편성" : "전원 참가";
       const shuffleTeamBtn = $("shuffleTeamBtn");
       if (shuffleTeamBtn) shuffleTeamBtn.style.display = battleMode === "team" ? "" : "none";
+      $("randomBtn").textContent = battleMode === "team" ? "랜덤 2명씩" : "랜덤 5명";
+      $("bossBtn").textContent = battleMode === "team" ? "랜덤 1명씩" : "랜덤 1대1";
+      renderTeamControls();
     }
 
     function shuffleTeamArray(arr) {
@@ -7057,10 +7087,9 @@
 
     function shuffleTeamOrders() {
       if (battleMode !== "team") return;
-      shuffleTeamArray(teamA);
-      shuffleTeamArray(teamB);
+      activeTeamIds().forEach(teamId => shuffleTeamArray(teamAssignments[teamId]));
       renderSelectedList();
-      showOverlay("팀 순서 섞기", "A팀과 B팀의 내부 출전 순서를 각각 섞었습니다.");
+      showOverlay("팀 순서 섞기", `${teamCount}개 팀의 내부 출전 순서를 각각 섞었습니다.`);
     }
 
     function renderSelectedList() {
@@ -7068,27 +7097,30 @@
       const box = $("selectedList");
 
       if (battleMode === "team") {
-        const aHtml = teamA.length
-          ? teamA.map((id, i) => teamMini(id, "A", i)).join("")
-          : `<div class="tip">A팀이 비어 있습니다.</div>`;
-        const bHtml = teamB.length
-          ? teamB.map((id, i) => teamMini(id, "B", i)).join("")
-          : `<div class="tip">B팀이 비어 있습니다.</div>`;
-
         box.innerHTML = `
-          <div class="tip">카드 클릭: 미편성 → A팀 → B팀 → 해제</div>
-          <div class="team-title a">A팀 · ${teamA.length}명</div>
-          ${aHtml}
-          <div class="team-title b">B팀 · ${teamB.length}명</div>
-          ${bHtml}
+          <div class="tip">현재 <b style="color:${teamColor(activeTeamId)}">${activeTeamId}팀</b> 배정 중 · 이미 배정된 카드를 누르면 현재 팀으로 이동하며, 같은 팀 카드를 다시 누르면 해제됩니다.</div>
+          ${activeTeamIds().map(teamId => {
+            const queue = teamAssignments[teamId];
+            const list = queue.length
+              ? queue.map((id, i) => teamMini(id, teamId, i)).join("")
+              : '<div class="team-status-empty">비어 있음</div>';
+            return `
+              <div class="team-title" data-team-title="${teamId}" style="--team-color:${teamColor(teamId)}">${teamId}팀 · ${queue.length}명${activeTeamId === teamId ? " · 배정 중" : ""}</div>
+              ${list}
+            `;
+          }).join("")}
         `;
 
+        box.querySelectorAll("[data-team-title]").forEach(title => {
+          title.addEventListener("click", () => {
+            activeTeamId = title.dataset.teamTitle;
+            renderAll();
+          });
+        });
         box.querySelectorAll("[data-team-remove]").forEach(btn => {
           btn.addEventListener("click", e => {
             e.stopPropagation();
-            const id = btn.dataset.teamRemove;
-            teamA = teamA.filter(x => x !== id);
-            teamB = teamB.filter(x => x !== id);
+            removeFromAllTeams(btn.dataset.teamRemove);
             renderAll();
           });
         });
@@ -7123,7 +7155,7 @@
 
 
     function renderAll() {
-      if (!running && fighters.length === 0) setArenaSize(battleMode === "team" ? 2 : (selected.size || 6));
+      if (!running && fighters.length === 0) setArenaSize(battleMode === "team" ? teamCount : (selected.size || 6));
       renderCharacterList();
       renderSelectedList();
       if (!fastSimMode) {
@@ -7134,14 +7166,9 @@
 
     function toggleSelect(id) {
       if (battleMode === "team") {
-        if (!teamA.includes(id) && !teamB.includes(id)) {
-          teamA.push(id);
-        } else if (teamA.includes(id)) {
-          teamA = teamA.filter(x => x !== id);
-          teamB.push(id);
-        } else {
-          teamB = teamB.filter(x => x !== id);
-        }
+        const current = teamOfCharacter(id);
+        removeFromAllTeams(id);
+        if (current !== activeTeamId) teamAssignments[activeTeamId].push(id);
       } else {
         if (selected.has(id)) selected.delete(id);
         else selected.add(id);
@@ -7454,11 +7481,16 @@
     }
 
     function teamSpawnPosition(teamId) {
+      const ids = activeTeamIds();
+      const index = Math.max(0, ids.indexOf(teamId));
       const center = arenaCenter();
-      const offset = arena.size * 0.25;
+      const radius = arena.size * (ids.length <= 2 ? 0.25 : 0.34);
+      const angle = ids.length === 2
+        ? (index === 0 ? Math.PI : 0)
+        : -Math.PI / 2 + Math.PI * 2 * index / ids.length;
       return {
-        x: clamp(center.x + (teamId === "A" ? -offset : offset), arena.x + 46, arena.x2 - 46),
-        y: center.y + rand(-arena.size * 0.10, arena.size * 0.10)
+        x: clamp(center.x + Math.cos(angle) * radius + rand(-10, 10), arena.x + 46, arena.x2 - 46),
+        y: clamp(center.y + Math.sin(angle) * radius + rand(-10, 10), arena.y + 46, arena.y2 - 46)
       };
     }
 
@@ -7474,28 +7506,29 @@
       const f = makeFighter(c, teamSpawnPosition(teamId), fighterSerial++, null, teamId);
       f.teamOrder = state.next - 1;
       fighters.push(f);
-      spawnBlast(f.x, f.y, 64, f.color);
-      spawnParticles(f.x, f.y, f.color, 18);
-      log(`<strong>${teamId}팀</strong> ${escapeHtml(f.name)} 출전 (${state.next}/${state.queue.length})`, "팀전");
+      spawnBlast(f.x, f.y, 64, teamColor(teamId));
+      spawnParticles(f.x, f.y, teamColor(teamId), 18);
+      log(`<strong style="color:${teamColor(teamId)}">${teamId}팀</strong> ${escapeHtml(f.name)} 출전 (${state.next}/${state.queue.length})`, "팀전");
       return f;
     }
 
     function startTeamBattle() {
-      if (teamA.length < 1 || teamB.length < 1) {
-        showOverlay("팀 편성 필요", "팀전은 A팀과 B팀에 각각 1명 이상 필요합니다.");
+      const ids = activeTeamIds();
+      const emptyTeams = ids.filter(teamId => teamAssignments[teamId].length < 1);
+      if (emptyTeams.length) {
+        showOverlay("팀 편성 필요", `${emptyTeams.join("·")}팀에 캐릭터를 1명 이상 배정하세요.`);
         return;
       }
 
-      setArenaSize(2);
+      setArenaSize(ids.length);
       prepareBattleState();
-      teamState = {
-        A: { queue: [...teamA], next: 0 },
-        B: { queue: [...teamB], next: 0 }
-      };
+      teamState = Object.fromEntries(ids.map(teamId => [
+        teamId,
+        { queue: [...teamAssignments[teamId]], next: 0 }
+      ]));
       fighters = [];
-      spawnTeamFighter("A");
-      spawnTeamFighter("B");
-      log(`팀전 시작! A팀 ${teamA.length}명 vs B팀 ${teamB.length}명 · 교대식 전투 · v93`, "시작");
+      ids.forEach(spawnTeamFighter);
+      log(`${ids.length}팀 태그전 시작! ${ids.map(id => id + "팀 " + teamAssignments[id].length + "명").join(" · ")}`, "시작");
       updateHud();
       updateStatusPanel();
     }
@@ -7537,7 +7570,7 @@
       paused = false;
       ended = false;
       teamState = null;
-      setArenaSize(battleMode === "team" ? 2 : (selected.size || 6));
+      setArenaSize(battleMode === "team" ? teamCount : (selected.size || 6));
       fighters = [];
       projectiles = [];
       particles = [];
@@ -7553,7 +7586,7 @@
       $("stateText").textContent = "대기";
       $("pauseBtn").textContent = "일시정지";
       showOverlay(characters.length ? "전투 준비" : "새 캐릭터 준비 중", !characters.length ? "게임 시스템 이식 완료. 새 캐릭터를 등록하면 전투할 수 있습니다." : battleMode === "team"
-        ? "팀전은 A팀/B팀을 편성한 뒤 시작합니다. 한 명이 쓰러지면 다음 캐릭터가 이어서 출전합니다."
+        ? `${teamCount}개 팀을 편성한 뒤 시작합니다. 각 팀은 한 명이 쓰러지면 다음 캐릭터가 이어서 출전합니다.`
         : "왼쪽 도감에서 캐릭터 2명 이상 선택하세요. 인원 수에 따라 맵 크기가 조절됩니다.");
       updateHud();
       updateStatusPanel();
@@ -7568,36 +7601,43 @@
     }
 
     function teamBattleSummary() {
-      const main=fighters.filter(f=>!f.isSummon);
-      const result={};
-      ["A","B"].forEach(teamId=>{
-        const state=teamState?.[teamId];
-        const total=state?state.queue.length:(teamId==="A"?teamA.length:teamB.length);
-        const active=main.find(f=>f.alive&&f.teamId===teamId)||null;
-        const used=state?state.next:0;
-        const queued=state?Math.max(0,state.queue.length-state.next):Math.max(0,total-(active?1:0));
-        const remaining=Math.max(0,queued+(active?1:0));
-        result[teamId]={total,active,queued,remaining,eliminated:Math.max(0,total-remaining),used};
+      const main = fighters.filter(f => !f.isSummon);
+      const result = {};
+      activeTeamIds().forEach(teamId => {
+        const state = teamState?.[teamId];
+        const total = state ? state.queue.length : teamAssignments[teamId].length;
+        const active = main.find(f => f.alive && f.teamId === teamId) || null;
+        const used = state ? state.next : 0;
+        const queued = state ? Math.max(0, state.queue.length - state.next) : Math.max(0, total - (active ? 1 : 0));
+        const remaining = Math.max(0, queued + (active ? 1 : 0));
+        result[teamId] = { total, active, queued, remaining, eliminated: Math.max(0, total - remaining), used };
       });
       return result;
     }
 
     function updateTeamScoreboard() {
-      const board=$("teamScoreboard");
-      if(!board)return;
-      if(battleMode!=="team"){
+      const board = $("teamScoreboard");
+      const grid = $("teamScoreGrid");
+      if (!board || !grid) return;
+      if (battleMode !== "team") {
         board.classList.remove("show");
+        grid.innerHTML = "";
         return;
       }
 
       board.classList.add("show");
-      const s=teamBattleSummary();
-      $("teamAAlive").textContent=`남은 인원 ${s.A.remaining}/${s.A.total} · 탈락 ${s.A.eliminated}`;
-      $("teamBAlive").textContent=`남은 인원 ${s.B.remaining}/${s.B.total} · 탈락 ${s.B.eliminated}`;
-      $("teamACurrent").textContent=`현재 · ${s.A.active?s.A.active.name:"대기"}${s.A.queued>0?" · 대기 "+s.A.queued+"명":""}`;
-      $("teamBCurrent").textContent=`현재 · ${s.B.active?s.B.active.name:"대기"}${s.B.queued>0?" · 대기 "+s.B.queued+"명":""}`;
-      // A의 점수는 B팀 탈락 인원, B의 점수는 A팀 탈락 인원.
-      $("teamScoreValue").textContent=`${s.B.eliminated} : ${s.A.eliminated}`;
+      const summary = teamBattleSummary();
+      grid.innerHTML = activeTeamIds().map(teamId => {
+        const side = summary[teamId];
+        const eliminated = side.total > 0 && side.remaining <= 0;
+        return `
+          <div class="team-score-side ${eliminated ? "eliminated" : ""}" style="--team-color:${teamColor(teamId)}">
+            <div class="team-score-name">${teamId}팀${eliminated ? " · 탈락" : ""}</div>
+            <div class="team-score-main">남은 인원 ${side.remaining}/${side.total} · 탈락 ${side.eliminated}</div>
+            <div class="team-score-sub">현재 · ${side.active ? escapeHtml(side.active.name) : "대기"}${side.queued > 0 ? " · 대기 " + side.queued + "명" : ""}</div>
+          </div>
+        `;
+      }).join("");
     }
 
     function updateHud() {
@@ -7607,12 +7647,12 @@
       updateTeamScoreboard();
 
       if (battleMode === "team") {
-        const s=teamBattleSummary();
-        if (running || fighters.length || teamState) {
-          $("aliveText").textContent = `A ${s.A.remaining}/${s.A.total} · B ${s.B.remaining}/${s.B.total}`;
-        } else {
-          $("aliveText").textContent = `A ${teamA.length} · B ${teamB.length}`;
-        }
+        const summary = teamBattleSummary();
+        const livingTeams = activeTeamIds().filter(id => summary[id].remaining > 0).length;
+        const totalMembers = activeTeamIds().reduce((sum, id) => sum + teamAssignments[id].length, 0);
+        $("aliveText").textContent = running || fighters.length || teamState
+          ? `생존팀 ${livingTeams}/${teamCount}`
+          : `${teamCount}팀 · ${totalMembers}명`;
       } else {
         $("aliveText").textContent = running || fighters.length ? `${aliveMain.length}/${main.length}` : `${selected.size}명`;
       }
@@ -9131,7 +9171,7 @@
         <div class="status-skill-label">${skill.text}</div>
         ${skill.extraTextHtml || ""}
       ` : `<div class="status-skill-label">주기형 스킬 없음</div>`;
-      const teamTag = battleMode==="team" && f.teamId ? `<span style="color:${f.teamId==="A"?"#93c5fd":"#fca5a5"}">${f.teamId}팀 · </span>` : "";
+      const teamTag = battleMode==="team" && f.teamId ? `<span style="color:${teamColor(f.teamId)}">${f.teamId}팀 · </span>` : "";
 
       return `
         <div class="fighter-status${statusClass}">
@@ -9162,7 +9202,7 @@
         ? side.map(f=>fighterStatusCardHtml(f,!!active&&f.id===active.id)).join("")
         : '<div class="team-status-empty">아직 출전한 캐릭터가 없습니다.</div>';
       return `
-        <div class="team-status-column team-${teamId.toLowerCase()}">
+        <div class="team-status-column" style="--team-color:${teamColor(teamId)}">
           <div class="team-status-heading">${teamId}팀 · ${active?"현재 "+escapeHtml(active.name):"대기"}</div>
           ${cards}
         </div>
@@ -9188,7 +9228,7 @@
 
       if(battleMode==="team"){
         panel.classList.add("team-status-panel");
-        panel.innerHTML=teamStatusColumnHtml("A",main)+teamStatusColumnHtml("B",main);
+        panel.innerHTML=activeTeamIds().map(teamId=>teamStatusColumnHtml(teamId,main)).join("");
         return;
       }
 
@@ -13429,9 +13469,11 @@
     function handleTeamReplacements() {
       if (battleMode !== "team" || !teamState || ended) return;
       cleanupOrphanSummons();
-      ["A", "B"].forEach(teamId => {
+      activeTeamIds().forEach(teamId => {
+        const state = teamState[teamId];
+        if (!state) return;
         const hasAlive = fighters.some(f => f.alive && !f.isSummon && f.teamId === teamId);
-        if (!hasAlive && teamState[teamId].next < teamState[teamId].queue.length) {
+        if (!hasAlive && state.next < state.queue.length) {
           spawnTeamFighter(teamId);
         }
       });
@@ -13484,22 +13526,21 @@
 
       if (battleMode === "team") {
         handleTeamReplacements();
-        const aLive = teamHasLivingOrQueued("A");
-        const bLive = teamHasLivingOrQueued("B");
+        const survivingTeams = activeTeamIds().filter(teamHasLivingOrQueued);
 
-        if (!aLive || !bLive) {
+        if (survivingTeams.length <= 1) {
           ended = true;
           running = false;
-          const winnerTeam = aLive && !bLive ? "A" : (!aLive && bLive ? "B" : null);
+          const winnerTeam = survivingTeams[0] || null;
           playSound("win");
           if (winnerTeam) {
             const alive = fighters.find(f => f.alive && !f.isSummon && f.teamId === winnerTeam);
-            log(`<strong>${winnerTeam}팀</strong> 최종 승리!`, "승리");
-            showOverlay(`${winnerTeam}팀 승리!`, alive ? `${alive.name} 생존 · 전투 시간 ${battleTime.toFixed(1)}초` : `전투 시간 ${battleTime.toFixed(1)}초`);
+            log(`<strong style="color:${teamColor(winnerTeam)}">${winnerTeam}팀</strong> 최종 승리!`, "승리");
+            showOverlay(`${winnerTeam}팀 승리!`, alive ? `${alive.name} 생존 · ${teamCount}팀 태그전 · 전투 시간 ${battleTime.toFixed(1)}초` : `${teamCount}팀 태그전 · 전투 시간 ${battleTime.toFixed(1)}초`);
             showBattleAnalysis();
           } else {
-            log(`양 팀 전멸`, "승리");
-            showOverlay("무승부", "양 팀이 모두 쓰러졌습니다.");
+            log("모든 팀 전멸", "승리");
+            showOverlay("무승부", "모든 팀이 쓰러졌습니다.");
             showBattleAnalysis();
           }
           $("stateText").textContent = "종료";
@@ -16242,54 +16283,61 @@
     $("randomBtn").addEventListener("click", () => {
       const shuffled = [...battleRosterCharacters()].sort(() => Math.random() - 0.5);
       if (battleMode === "team") {
-        teamA = shuffled.slice(0, 3).map(c => c.id);
-        teamB = shuffled.slice(3, 6).map(c => c.id);
+        clearTeamAssignments();
+        shuffled.slice(0, Math.min(shuffled.length, teamCount * 2)).forEach((character, index) => {
+          teamAssignments[activeTeamIds()[index % teamCount]].push(character.id);
+        });
       } else {
         selected.clear();
-        shuffled.slice(0, 5).forEach(c => selected.add(c.id));
+        shuffled.slice(0, 5).forEach(character => selected.add(character.id));
       }
       renderAll();
     });
     $("bossBtn").addEventListener("click", () => {
       const shuffled = [...battleRosterCharacters()].sort(() => Math.random() - 0.5);
-      if (shuffled.length < 2) {
-        showOverlay("새 캐릭터 준비 중", "랜덤 1대1에는 캐릭터가 2명 이상 필요합니다.");
+      const required = battleMode === "team" ? teamCount : 2;
+      if (shuffled.length < required) {
+        showOverlay("캐릭터 부족", battleMode === "team" ? `${teamCount}팀에는 캐릭터가 최소 ${teamCount}명 필요합니다.` : "랜덤 1대1에는 캐릭터가 2명 이상 필요합니다.");
         return;
       }
       if (battleMode === "team") {
-        teamA = [shuffled[0].id];
-        teamB = [shuffled[1].id];
+        clearTeamAssignments();
+        activeTeamIds().forEach((teamId, index) => teamAssignments[teamId].push(shuffled[index].id));
       } else {
         selected.clear();
-        shuffled.slice(0, 2).forEach(c => selected.add(c.id));
+        shuffled.slice(0, 2).forEach(character => selected.add(character.id));
       }
       renderAll();
     });
     $("clearSelectionBtn").addEventListener("click", () => {
-      if (battleMode === "team") {
-        teamA = [];
-        teamB = [];
-      } else {
-        selected.clear();
-      }
+      if (battleMode === "team") clearTeamAssignments();
+      else selected.clear();
       renderAll();
     });
     $("shuffleTeamBtn").addEventListener("click", shuffleTeamOrders);
     $("selectAllBtn").addEventListener("click", () => {
       if (battleMode === "team") {
-        teamA = [];
-        teamB = [];
-        battleRosterCharacters().forEach((c, i) => (i % 2 === 0 ? teamA : teamB).push(c.id));
+        clearTeamAssignments();
+        battleRosterCharacters().forEach((character, index) => {
+          teamAssignments[activeTeamIds()[index % teamCount]].push(character.id);
+        });
       } else {
         const pool = battleRosterCharacters();
-        const selectedBattleCount = pool.filter(c => selected.has(c.id)).length;
+        const selectedBattleCount = pool.filter(character => selected.has(character.id)).length;
         if (selectedBattleCount === pool.length) selected.clear();
         else {
           selected.clear();
-          pool.forEach(c => selected.add(c.id));
+          pool.forEach(character => selected.add(character.id));
         }
       }
       renderAll();
+    });
+    $("teamCountSelect").addEventListener("change", event => {
+      if (running) {
+        event.target.value = String(teamCount);
+        return;
+      }
+      setTeamCount(event.target.value);
     });
     $("soloModeBtn").addEventListener("click", () => {
       if (running) return;
@@ -16326,7 +16374,7 @@
     });
 
     // 기본값은 전원 불참 상태로 시작한다.
-    setArenaSize(battleMode === "team" ? 2 : (selected.size || 6));
+    setArenaSize(battleMode === "team" ? teamCount : (selected.size || 6));
 
     renderFilters();
     renderAll();
