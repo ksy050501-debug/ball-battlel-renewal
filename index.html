@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v245</title>
+  <title>볼배틀 리뉴얼 v246</title>
   <style>
     :root {
       --bg: #020617;
@@ -51,9 +51,9 @@
 
     .layout {
       width: min(1420px, 96vw);
-      margin: 0 auto 38px;
+      margin: 0 auto 14px;
       display: grid;
-      grid-template-columns: 450px 1fr 340px;
+      grid-template-columns: 450px minmax(0, 1fr) 360px;
       gap: 14px;
       align-items: start;
     }
@@ -815,17 +815,33 @@
       text-align: center;
     }
 
+    .status-side-panel {
+      position: sticky;
+      top: 12px;
+      max-height: calc(100vh - 24px);
+      overflow: hidden;
+    }
+
+    .status-side-panel > h2 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
     .status-panel {
-      width: min(700px, 100%);
-      margin-top: 10px;
+      width: 100%;
+      margin-top: 0;
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr;
       gap: 8px;
+      max-height: calc(100vh - 86px);
+      overflow-y: auto;
+      padding-right: 3px;
     }
 
     .status-panel.team-status-panel {
       align-items: start;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: 1fr;
       gap: 10px;
     }
 
@@ -874,8 +890,39 @@
     }
 
     .fighter-status.dead {
-      opacity: .42;
-      filter: grayscale(.7);
+      opacity: .56;
+      filter: grayscale(.72);
+      cursor: pointer;
+    }
+
+    .fighter-status.dead:hover {
+      opacity: .72;
+      border-color: rgba(148,163,184,.42);
+    }
+
+    .fighter-status.dead.collapsed {
+      padding: 7px 9px;
+    }
+
+    .fighter-status.dead.collapsed .status-top {
+      margin-bottom: 0;
+    }
+
+    .dead-status-hint {
+      margin-top: 4px;
+      color: #64748b;
+      font-size: 9px;
+      text-align: right;
+    }
+
+    .team-status-queue {
+      margin-top: -4px;
+      padding: 0 8px 2px;
+      color: #64748b;
+      font-size: 9px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .status-top {
@@ -960,6 +1007,26 @@
       text-align: right;
     }
 
+    .team-console-panel {
+      width: min(1420px, 96vw);
+      margin: 0 auto 38px;
+    }
+
+    .team-console-grid {
+      display: grid;
+      grid-template-columns: minmax(320px, .9fr) minmax(420px, 1.4fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .team-console-panel .side-list { max-height: 420px; }
+    .team-console-panel .log { height: 420px; }
+
+    @media (max-width: 760px) {
+      .team-console-grid { grid-template-columns: 1fr; }
+      .team-console-panel .log { height: 280px; }
+    }
+
     @media (max-width: 620px) {
       .status-panel { grid-template-columns: 1fr; }
     }
@@ -970,15 +1037,21 @@
         width: min(760px, 100%);
         margin-inline: auto;
       }
+      .status-side-panel {
+        position: static;
+        max-height: none;
+      }
+      .status-panel { max-height: 620px; }
       .card-list { max-height: 470px; }
       .hud { grid-template-columns: repeat(2, 1fr); }
       .log { height: 240px; }
+      .team-console-panel { width:min(760px,96vw); }
     }
   </style>
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v244</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v246</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -1025,8 +1098,6 @@
         </div>
       </div>
 
-      <div class="status-panel" id="statusPanel"></div>
-
       <div class="button-row three" style="width:min(700px,100%);">
         <button class="good" id="startBtn">전투 시작</button>
         <button class="ghost" id="pauseBtn">일시정지</button>
@@ -1053,7 +1124,16 @@
       <p class="status" id="tipText">1인 전체 테스트는 선택한 1명을 나머지 전원과 각각 50전, 전체 테스트는 모든 조합을 각각 50전, 1대1 100전은 선택한 2명을 100전 시뮬레이션합니다.</p>
     </section>
 
-    <section class="panel">
+    <section class="panel status-side-panel">
+      <h2>전투 상태 <span style="color:#64748b;font-size:10px;font-weight:700;">사망 캐릭터 클릭 시 상세</span></h2>
+      <div class="status-panel" id="statusPanel"></div>
+    </section>
+  </main>
+
+  <section class="panel team-console-panel">
+    <div class="team-console-grid">
+      <div class="team-console-selection">
+
       <h2 id="selectionTitle">선택된 참가자</h2>
       <div class="mode-row">
         <button class="active" id="soloModeBtn">개인전</button>
@@ -1074,7 +1154,9 @@
         <button class="danger" id="selectAllBtn">전원 참가</button>
       </div>
 
-      <h2 style="margin-top:18px;">전투 로그</h2>
+      </div>
+      <div class="team-console-log">
+      <h2 style="margin:0 0 12px;">전투 로그</h2>
       <div class="log" id="log"></div>
 
       <div class="tip">
@@ -1083,8 +1165,9 @@
         캐릭터 이미지 클릭: 피해량 확인<br>
         맨 아래 버튼: 패치노트 확인
       </div>
-    </section>
-  </main>
+          </div>
+    </div>
+  </section>
 
   <div class="bottom-actions">
     <button class="primary" id="patchNoteBtn">패치노트 보기</button>
@@ -1178,6 +1261,7 @@
     let teamState = null;
     let fighterSerial = 0;
     let statusHpState = {};
+    let expandedDeadStatus = new Set();
     let matchupHistory = [];
 
     // 리뉴얼 캐릭터와 훈련용 더미.
@@ -6458,6 +6542,7 @@
     }
 
       const patchNotes = [
+      "v246: 팀전 정보 배치 개편. 전투 상태창을 로그가 있던 오른쪽 측면으로 옮기고, 태그 대기열·팀 편성 조작과 전투 로그는 경기장 아래의 2열 콘솔로 이동했다. 팀별 상태에는 현재 주자·남은 인원·다음 대기열을 함께 표시하며, 사망 캐릭터는 이름과 0 HP만 남긴 최소 행으로 자동 접고 클릭하거나 키보드로 선택할 때만 상세 게이지를 펼친다.",
       "v245: 팀전을 A/B 고정 방식에서 2~12팀 선택형 태그전으로 확장. 팀 개수를 고른 뒤 A~L 팀 버튼을 선택하고 도감 카드를 클릭해 배정·이동·해제할 수 있다. 각 팀은 한 명씩 동시 출전하고 사망 시 다음 대기 캐릭터로 교대하며, 마지막 생존 팀을 승자로 판정한다. 다팀용 원형 스폰, 동적 팀 색상, 팀별 전광판·상태창, 랜덤 1명/2명 편성 및 전원 자동 편성을 추가.",
       "v244: 빨강 포켓몬 체력 재조정. 피카츄 25→30, 리자몽 40→35, 잠만보 55→50, 라프라스 40→35. 이상해꽃·거북왕은 각각 35 유지, 총 체력은 230→220으로 변경.",
       "v243: 빨강 포켓몬별 체력 재배분. 피카츄 27→25, 리자몽 38→40, 이상해꽃 37→35, 거북왕 40→35, 잠만보 50→55, 라프라스 38→40. 여섯 마리 총 체력 230은 유지.",
@@ -7466,6 +7551,7 @@
       cinematicFreeze = 0;
       deathEffects = [];
       statusHpState = {};
+      expandedDeadStatus.clear();
       running = true;
       paused = false;
       ended = false;
@@ -7583,6 +7669,7 @@
       cinematicFreeze = 0;
       deathEffects = [];
       statusHpState = {};
+      expandedDeadStatus.clear();
       $("stateText").textContent = "대기";
       $("pauseBtn").textContent = "일시정지";
       showOverlay(characters.length ? "전투 준비" : "새 캐릭터 준비 중", !characters.length ? "게임 시스템 이식 완료. 새 캐릭터를 등록하면 전투할 수 있습니다." : battleMode === "team"
@@ -9159,7 +9246,9 @@
       const shieldHtml = shieldMaxValue > 0 ? `
         <div class="bar"><div class="bar-fill shield-fill" style="width:${shieldRatio * 100}%"></div></div>
       ` : "";
-      const statusClass = f.alive ? (current ? " current" : "") : " dead";
+      const isDead = !f.alive;
+      const collapsed = isDead && !expandedDeadStatus.has(f.id);
+      const statusClass = f.alive ? (current ? " current" : "") : ` dead${collapsed ? " collapsed" : ""}`;
       const conanTargetMeter = f.alive ? conanMeterForTarget(f) : 0;
       const conanTargetHtml = conanTargetMeter > 0
         ? `<div class="status-skill-label" style="color:#ef4444;font-weight:1000;">사신 ${Math.floor(conanTargetMeter)}/${CONAN.maxMeter}</div>`
@@ -9173,12 +9262,9 @@
       ` : `<div class="status-skill-label">주기형 스킬 없음</div>`;
       const teamTag = battleMode==="team" && f.teamId ? `<span style="color:${teamColor(f.teamId)}">${f.teamId}팀 · </span>` : "";
 
-      return `
-        <div class="fighter-status${statusClass}">
-          <div class="status-top">
-            <span class="status-name" style="color:${f.color}">${teamTag}${escapeHtml(f.name)}</span>
-            <span class="status-num">${f.logo?.mode==="hulk"?"분노 ":""}${Math.ceil(Math.max(0, f.hp))}/${f.maxHp}${shieldText}</span>
-          </div>
+      const detailsHtml = collapsed
+        ? '<div class="dead-status-hint">사망 · 클릭하여 상세 보기</div>'
+        : `
           <div class="bar hp-delay-bar">
             <div class="bar-fill ${f.logo?.mode==="hulk"?"logo-rage-fill":"hp-fill"}" style="width:${hpView.actualRatio * 100}%"></div>
             <div class="bar-fill hp-damage-fill" style="left:${hpView.actualRatio * 100}%; width:${hpView.pendingRatio * 100}%"></div>
@@ -9186,27 +9272,59 @@
           ${shieldHtml}
           ${conanTargetHtml}
           ${skillHtml}
+          ${isDead ? '<div class="dead-status-hint">클릭하여 다시 접기</div>' : ""}
+        `;
+      return `
+        <div class="fighter-status${statusClass}"${isDead ? ` data-dead-status="${f.id}" role="button" tabindex="0" aria-expanded="${!collapsed}"` : ""}>
+          <div class="status-top">
+            <span class="status-name" style="color:${f.color}">${teamTag}${escapeHtml(f.name)}</span>
+            <span class="status-num">${f.logo?.mode==="hulk"?"분노 ":""}${Math.ceil(Math.max(0, f.hp))}/${f.maxHp}${shieldText}</span>
+          </div>
+          ${detailsHtml}
         </div>
       `;
     }
 
     function teamStatusColumnHtml(teamId, main) {
-      const side=main
-        .filter(f=>f.teamId===teamId)
-        .sort((a,b)=>{
-          if(a.alive!==b.alive)return a.alive?-1:1;
-          return (a.teamOrder??999)-(b.teamOrder??999);
+      const side = main
+        .filter(f => f.teamId === teamId)
+        .sort((a, b) => {
+          if (a.alive !== b.alive) return a.alive ? -1 : 1;
+          return (a.teamOrder ?? 999) - (b.teamOrder ?? 999);
         });
-      const active=side.find(f=>f.alive)||null;
-      const cards=side.length
-        ? side.map(f=>fighterStatusCardHtml(f,!!active&&f.id===active.id)).join("")
+      const active = side.find(f => f.alive) || null;
+      const summary = teamBattleSummary()[teamId];
+      const state = teamState?.[teamId];
+      const waitingIds = state ? state.queue.slice(state.next) : teamAssignments[teamId];
+      const waitingNames = waitingIds.map(id => characterById(id)?.name).filter(Boolean);
+      const cards = side.length
+        ? side.map(f => fighterStatusCardHtml(f, !!active && f.id === active.id)).join("")
         : '<div class="team-status-empty">아직 출전한 캐릭터가 없습니다.</div>';
       return `
         <div class="team-status-column" style="--team-color:${teamColor(teamId)}">
-          <div class="team-status-heading">${teamId}팀 · ${active?"현재 "+escapeHtml(active.name):"대기"}</div>
+          <div class="team-status-heading">${teamId}팀 · ${active ? "현재 " + escapeHtml(active.name) : summary.remaining > 0 ? "출전 대기" : "전멸"} · ${summary.remaining}/${summary.total}</div>
+          <div class="team-status-queue">${waitingNames.length ? "대기: " + waitingNames.map(escapeHtml).join(" → ") : active ? "마지막 주자" : "남은 대기 없음"}</div>
           ${cards}
         </div>
       `;
+    }
+
+    function bindStatusPanelInteractions(panel) {
+      panel.querySelectorAll("[data-dead-status]").forEach(card => {
+        const toggle = () => {
+          const id = card.dataset.deadStatus;
+          if (expandedDeadStatus.has(id)) expandedDeadStatus.delete(id);
+          else expandedDeadStatus.add(id);
+          updateStatusPanel();
+        };
+        card.addEventListener("click", toggle);
+        card.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggle();
+          }
+        });
+      });
     }
 
     function updateStatusPanel() {
@@ -9214,26 +9332,29 @@
       if (!panel) return;
 
       const main = fighters.filter(f => !f.isSummon);
-      if (main.length === 0) {
-        panel.innerHTML = "";
-        panel.classList.toggle("team-status-panel",battleMode==="team");
-        statusHpState = {};
-        return;
-      }
-
       const activeIds = new Set(main.map(f => f.id));
       Object.keys(statusHpState).forEach(id => {
         if (!activeIds.has(id)) delete statusHpState[id];
       });
+      [...expandedDeadStatus].forEach(id => {
+        if (!activeIds.has(id)) expandedDeadStatus.delete(id);
+      });
 
-      if(battleMode==="team"){
+      if (battleMode === "team") {
         panel.classList.add("team-status-panel");
-        panel.innerHTML=activeTeamIds().map(teamId=>teamStatusColumnHtml(teamId,main)).join("");
+        panel.innerHTML = activeTeamIds().map(teamId => teamStatusColumnHtml(teamId, main)).join("");
+        bindStatusPanelInteractions(panel);
         return;
       }
 
       panel.classList.remove("team-status-panel");
-      panel.innerHTML = main.map(f => fighterStatusCardHtml(f,false)).join("");
+      if (main.length === 0) {
+        panel.innerHTML = '<div class="team-status-empty">전투를 시작하면 캐릭터 상태가 표시됩니다.</div>';
+        statusHpState = {};
+        return;
+      }
+      panel.innerHTML = main.map(f => fighterStatusCardHtml(f, false)).join("");
+      bindStatusPanelInteractions(panel);
     }
 
     function enemiesOf(f) {
