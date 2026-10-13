@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v246</title>
+  <title>볼배틀 리뉴얼 v247</title>
   <style>
     :root {
       --bg: #020617;
@@ -1051,7 +1051,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v246</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v247</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -4048,9 +4048,9 @@
       if(f.redTrainer.sleep>0){ctx.save();ctx.font="900 16px system-ui";ctx.textAlign="center";ctx.fillStyle="#bfdbfe";ctx.strokeStyle="rgba(0,0,0,.8)";ctx.lineWidth=4;ctx.strokeText("Z z",f.x,f.y-f.r-43);ctx.fillText("Z z",f.x,f.y-f.r-43);ctx.restore();}
     }
     function drawRedTrainerWorld(){
-      fighters.filter(f=>f.redTrainer).forEach(f=>{
-        const t=f.redTrainer,pos=redTrainerPosition(f),remaining=redTrainerRemaining(f),ratio=f.alive?remaining/RED_POKEMON.length:0;
-        ctx.save();ctx.translate(pos.x,pos.y);if(!f.alive)ctx.globalAlpha=.48;ctx.shadowColor="rgba(0,0,0,.55)";ctx.shadowBlur=10;drawRedTrainerBustLocal();ctx.shadowBlur=0;
+      fighters.filter(f=>f.alive&&f.redTrainer).forEach(f=>{
+        const t=f.redTrainer,pos=redTrainerPosition(f),remaining=redTrainerRemaining(f),ratio=remaining/RED_POKEMON.length;
+        ctx.save();ctx.translate(pos.x,pos.y);ctx.shadowColor="rgba(0,0,0,.55)";ctx.shadowBlur=10;drawRedTrainerBustLocal();ctx.shadowBlur=0;
         const w=74,hy=-52;ctx.fillStyle="rgba(0,0,0,.76)";ctx.fillRect(-w/2,hy,w,8);ctx.fillStyle=ratio>.5?"#22c55e":ratio>.2?"#fbbf24":"#ef4444";ctx.fillRect(-w/2+1,hy+1,(w-2)*ratio,6);ctx.strokeStyle="rgba(255,255,255,.76)";ctx.lineWidth=1;ctx.strokeRect(-w/2,hy,w,8);
         t.order.forEach((sourceIndex,i)=>{const x=-28+i*11.2,y=-39,dead=t.fainted[i],active=i===t.index&&!dead;ctx.save();ctx.translate(x,y);if(active){ctx.shadowColor="#fde047";ctx.shadowBlur=8;}ctx.fillStyle=dead?"#64748b":"#f8fafc";ctx.strokeStyle=dead?"#334155":"#111827";ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,4.6,0,Math.PI*2);ctx.fill();ctx.stroke();if(!dead){ctx.fillStyle=active?"#fde047":"#ef4444";ctx.beginPath();ctx.arc(0,0,4,Math.PI,Math.PI*2);ctx.fill();ctx.strokeStyle="#111827";ctx.beginPath();ctx.moveTo(-4,0);ctx.lineTo(4,0);ctx.stroke();ctx.fillStyle="#f8fafc";ctx.beginPath();ctx.arc(0,0,1.15,0,Math.PI*2);ctx.fill();ctx.stroke();}ctx.restore();});
         ctx.font="900 12px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="rgba(0,0,0,.85)";ctx.lineWidth=4;ctx.strokeText("빨강",0,43);ctx.fillText("빨강",0,43);ctx.restore();
@@ -4326,27 +4326,27 @@
     };
     let coyoteTrails = [];
     function initCoyote(f){
-      f.coyote={trailCd:0,contactCd:new Map(),dirX:1,dirY:0,liandry:false,riftmaker:false,riftDot:0,rylai:false};
+      f.coyote={activeTime:0,trailCd:0,contactCd:new Map(),dirX:1,dirY:0,liandry:false,riftmaker:false,riftDot:0,rylai:false};
     }
     function updateCoyote(f,dt){
-      if(!f.coyote)return;
+      if(!f.coyote||!f.alive)return;
       const c=f.coyote;
-      if(!c.liandry&&battleTime>=COYOTE.liandryAt){
+      c.activeTime=(c.activeTime||0)+dt;
+      if(!c.liandry&&c.activeTime>=COYOTE.liandryAt){
         c.liandry=true;
         if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-36,"리안드리 획득!","#f97316");spawnBlast(f.x,f.y,48,"#f97316");}
       }
-      if(!c.riftmaker&&battleTime>=COYOTE.riftmakerAt){
+      if(!c.riftmaker&&c.activeTime>=COYOTE.riftmakerAt){
         c.riftmaker=true;c.riftDot=0;
         if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-36,"균열생성기 획득!","#a78bfa");spawnBlast(f.x,f.y,50,"#a78bfa");}
       }
-      if(!c.rylai&&battleTime>=COYOTE.rylaiAt){
+      if(!c.rylai&&c.activeTime>=COYOTE.rylaiAt){
         c.rylai=true;
         if(!fastSimMode){spawnFloatingText(f.x,f.y-f.r-36,"라일라이 획득!","#60a5fa");spawnBlast(f.x,f.y,52,"#60a5fa");}
       }
       for(const [id,cd] of c.contactCd){const n=cd-dt;if(n<=0)c.contactCd.delete(id);else c.contactCd.set(id,n);}
       const sp=Math.hypot(f.vx,f.vy);
       if(sp>.5){c.dirX=f.vx/sp;c.dirY=f.vy/sp;}
-      if(!f.alive)return;
       c.trailCd-=dt;
       while(c.trailCd<=0){
         coyoteTrails.push({owner:f,x:f.x,y:f.y,life:COYOTE.trailLife});
@@ -6542,6 +6542,7 @@
     }
 
       const patchNotes = [
+      "v247: 팀전 교대 수명주기 수정. 빨강이 최종 전투불능이 되면 경기장 밖 트레이너·체력바·몬스터볼 표시도 즉시 사라지도록 생존 조건을 통일했다. 코요테드의 리안드리·균열생성기·라일라이 획득 시간을 경기 전체 시간이 아니라 실제 출전 후 경과 시간으로 변경해 후반 교대 즉시 모든 아이템을 얻던 문제를 수정. 전투 수치는 유지.",
       "v246: 팀전 정보 배치 개편. 전투 상태창을 로그가 있던 오른쪽 측면으로 옮기고, 태그 대기열·팀 편성 조작과 전투 로그는 경기장 아래의 2열 콘솔로 이동했다. 팀별 상태에는 현재 주자·남은 인원·다음 대기열을 함께 표시하며, 사망 캐릭터는 이름과 0 HP만 남긴 최소 행으로 자동 접고 클릭하거나 키보드로 선택할 때만 상세 게이지를 펼친다.",
       "v245: 팀전을 A/B 고정 방식에서 2~12팀 선택형 태그전으로 확장. 팀 개수를 고른 뒤 A~L 팀 버튼을 선택하고 도감 카드를 클릭해 배정·이동·해제할 수 있다. 각 팀은 한 명씩 동시 출전하고 사망 시 다음 대기 캐릭터로 교대하며, 마지막 생존 팀을 승자로 판정한다. 다팀용 원형 스폰, 동적 팀 색상, 팀별 전광판·상태창, 랜덤 1명/2명 편성 및 전원 자동 편성을 추가.",
       "v244: 빨강 포켓몬 체력 재조정. 피카츄 25→30, 리자몽 40→35, 잠만보 55→50, 라프라스 40→35. 이상해꽃·거북왕은 각각 35 유지, 총 체력은 230→220으로 변경.",
@@ -8975,9 +8976,9 @@
         return {ratio:boxRatio,className:m.superStance?"rage-fill":"skill-fill",text:`${state} · ${boxText}${chase}`,extraBarsHtml:contactBar+extraBar,extraTextHtml:`<div class="status-skill-label">${m.power==="fire"||m.power==="mushroom"?`보호막 ${m.shield}/${MARIO.shieldMax}${fireInfo} · `:""}벽 접촉 ${m.wallContacts}/${MARIO.kartWallNeed} · 50회 → 토관 카트 전환</div><div class="status-skill-label">파이어 ${MARIO.firePeriod.toFixed(2)}초 간격 · 5발마다 1칸 소모 · 화상1×3 중첩 없이 갱신</div>`};
       }
       if(f.coyote){
-        const c=f.coyote,liandryRatio=c.liandry?1:clamp(battleTime/COYOTE.liandryAt,0,1),riftRatio=c.riftmaker?1:clamp(battleTime/COYOTE.riftmakerAt,0,1),rylaiRatio=c.rylai?1:clamp(battleTime/COYOTE.rylaiAt,0,1);
-        const riftText=c.riftmaker?`획득 · 도트 ${Math.floor(c.riftDot||0)}/${COYOTE.riftThreshold}`:Math.max(0,COYOTE.riftmakerAt-battleTime).toFixed(1)+"초";
-        return {ratio:liandryRatio,className:c.liandry?"rage-fill":"skill-fill",text:c.liandry?"리안드리 획득":"리안드리 "+Math.max(0,COYOTE.liandryAt-battleTime).toFixed(1)+"초",extraBarsHtml:`<div class="bar" title="균열생성기"><div class="bar-fill rage-fill" style="width:${riftRatio*100}%"></div></div><div class="bar" title="라일라이"><div class="bar-fill shield-fill" style="width:${rylaiRatio*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">균열생성기 ${riftText} · 도트 피해10마다 HP3 회복</div><div class="status-skill-label">라일라이 ${c.rylai?"획득":Math.max(0,COYOTE.rylaiAt-battleTime).toFixed(1)+"초"} · 독구름 피해2 / 1초 · 리안드리 잔류독1 ×3 / 0.5초</div>`};
+        const c=f.coyote,elapsed=c.activeTime||0,liandryRatio=c.liandry?1:clamp(elapsed/COYOTE.liandryAt,0,1),riftRatio=c.riftmaker?1:clamp(elapsed/COYOTE.riftmakerAt,0,1),rylaiRatio=c.rylai?1:clamp(elapsed/COYOTE.rylaiAt,0,1);
+        const riftText=c.riftmaker?`획득 · 도트 ${Math.floor(c.riftDot||0)}/${COYOTE.riftThreshold}`:Math.max(0,COYOTE.riftmakerAt-elapsed).toFixed(1)+"초";
+        return {ratio:liandryRatio,className:c.liandry?"rage-fill":"skill-fill",text:c.liandry?"리안드리 획득":"리안드리 "+Math.max(0,COYOTE.liandryAt-elapsed).toFixed(1)+"초",extraBarsHtml:`<div class="bar" title="균열생성기"><div class="bar-fill rage-fill" style="width:${riftRatio*100}%"></div></div><div class="bar" title="라일라이"><div class="bar-fill shield-fill" style="width:${rylaiRatio*100}%"></div></div>`,extraTextHtml:`<div class="status-skill-label">균열생성기 ${riftText} · 도트 피해10마다 HP3 회복</div><div class="status-skill-label">라일라이 ${c.rylai?"획득":Math.max(0,COYOTE.rylaiAt-elapsed).toFixed(1)+"초"} · 독구름 피해2 / 1초 · 리안드리 잔류독1 ×3 / 0.5초</div>`};
       }
       if(f.wok){
         const w=f.wok,biteRatio=clamp(w.biteCharge||0,0,1),huntLeft=Math.max(0,(w.huntReadyAt||0)-battleTime),huntRatio=w.huntTargetId?1:clamp(1-huntLeft/WOK.huntCooldown,0,1),dashLeft=Math.max(0,Math.max(w.nextDashAt||0,w.dashAfterHuntAt||0)-battleTime),dashRatio=clamp(1-dashLeft/WOK.dashPeriod,0,1),enduranceActive=battleTime<(w.enduranceUntil||0),enduranceLeft=Math.max(0,w.enduranceCooldownLeft||0),enduranceRatio=enduranceActive?1:clamp(1-enduranceLeft/WOK.enduranceCooldown,0,1),blood=wokBloodSpeedMultiplier(f).toFixed(2);
