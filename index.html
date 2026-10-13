@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>볼배틀 리뉴얼 v242</title>
+  <title>볼배틀 리뉴얼 v243</title>
   <style>
     :root {
       --bg: #020617;
@@ -1015,7 +1015,7 @@
 </head>
 <body>
   <header>
-      <h1 id="mainTitle">볼배틀 리뉴얼 v242</h1>
+      <h1 id="mainTitle">볼배틀 리뉴얼 v243</h1>
     <p>자동 전투 시뮬레이터</p>
   </header>
 
@@ -3805,12 +3805,12 @@
 
 
     const RED_POKEMON = [
-      {id:"pikachu",name:"피카츄",hp:27,speed:3.15,r:14,color:"#facc15",period:4.2},
-      {id:"charizard",name:"리자몽",hp:38,speed:2.55,r:19,color:"#f97316",period:5.5},
-      {id:"venusaur",name:"이상해꽃",hp:37,speed:2.2,r:19,color:"#22c55e",period:4.8},
-      {id:"blastoise",name:"거북왕",hp:40,speed:2.15,r:19,color:"#3b82f6",period:6.0},
-      {id:"snorlax",name:"잠만보",hp:50,speed:1.55,r:22,color:"#0f766e",period:0},
-      {id:"lapras",name:"라프라스",hp:38,speed:2.15,r:20,color:"#38bdf8",period:4.6}
+      {id:"pikachu",name:"피카츄",hp:25,speed:3.15,r:14,color:"#facc15",period:4.2},
+      {id:"charizard",name:"리자몽",hp:40,speed:2.55,r:19,color:"#f97316",period:5.5},
+      {id:"venusaur",name:"이상해꽃",hp:35,speed:2.2,r:19,color:"#22c55e",period:4.8},
+      {id:"blastoise",name:"거북왕",hp:35,speed:2.15,r:19,color:"#3b82f6",period:6.0},
+      {id:"snorlax",name:"잠만보",hp:55,speed:1.55,r:22,color:"#0f766e",period:0},
+      {id:"lapras",name:"라프라스",hp:40,speed:2.15,r:20,color:"#38bdf8",period:4.6}
     ];
     const RED = {
       totalHp:230, pikachuContactDamage:3, pikachuStun:.55, pikachuShock:1.8, thunderDamage:13, thunderAccuracy:.70,
@@ -6497,6 +6497,7 @@
     }
 
       const patchNotes = [
+      "v243: 빨강 포켓몬별 체력 재배분. 피카츄 27→25, 리자몽 38→40, 이상해꽃 37→35, 거북왕 40→35, 잠만보 50→55, 라프라스 38→40. 여섯 마리 총 체력 230은 유지.",
       "v242: 빨강 체력 조정. 6마리 포켓몬의 총 체력을 253→230으로 약 9% 하향. 피카츄 30→27, 리자몽 42→38, 이상해꽃 40→37, 거북왕 44→40, 잠만보 55→50, 라프라스 42→38. 공격 성능, 기술 주기, 무작위 출전 순서, 교대 시 상태 초기화 및 초과 피해 비이월 구조는 유지.",
       "v241: 빨강과 포켓몬 6마리의 이미지를 기존 뉴헬로·거미남 계열의 굵은 실루엣과 얼굴 중심 흉상 스타일로 전면 재작업. 도감 초상화는 포켓몬이 아닌 빨강을 표시하고, 전투 중 포켓몬 이름표는 체력바 위에 유지한다. 화염방사·덩굴채찍·하이드로펌프·냉동빔·번개도 기존 볼배틀의 부채꼴·브레스·타격 연출 문법에 맞춰 다시 정리했다. 무작위 출전 순서와 판정·밸런스 수치는 유지.",
       "v240: 빨강의 포켓몬 출전 순서를 매 경기 무작위로 변경. 경기장 밖 빨강 트레이너와 피카츄·리자몽·이상해꽃·거북왕·잠만보·라프라스 이미지를 전면 재작업하고, 번개·화염방사·덩굴채찍·하이드로펌프·냉동빔 연출을 강화했다. 공격 판정과 밸런스 수치는 유지.",
